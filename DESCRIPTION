@@ -5,3 +5,5 @@ Author: R.A. Fisher
 Description: More about what it does
 Maintainer: Who to complain to <yourfault@somewhere.net>
 License: ???
+Imports: Rcpp (>= 0.12.11)
+LinkingTo: Rcpp, RcppArmadillo

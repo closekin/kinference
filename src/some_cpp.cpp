@@ -1,10 +1,25 @@
-// Already in "master" file:
-//#include <Rcpp.h>
-//using namespace Rcpp;
-
-// already in...
-// #include <RcppArmadillo.h> 
+#include <RcppArmadillo.h> 
+using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
+
+// Assertions: ought to control this via NDEBUG or similar def
+#define STRINGIZE(x) STRINGIZE2(x)
+#define STRINGIZE2(x) #x
+#define LINE_STRING STRINGIZE(__LINE__)
+bool stoppity(
+    std::string errmsg
+){
+  Function Rstop = Environment::base_env()[ "stop"];
+  Rcpp::StringVector Rerrmsg (1);
+  Rerrmsg[0] = errmsg;
+  Rstop( Rerrmsg);
+  return false;
+}
+// Rcpp::stop...
+#define ASSERTO(EX) (void)((EX) || (stoppity( "Failed: " #EX " in " __FILE__ " line " LINE_STRING "!"), 0))
+
+
+
 
 
 // [[Rcpp::export]]

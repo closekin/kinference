@@ -22,3 +22,7 @@ S3method( "as.character", "snpgeno")
 S3method( "dim", "NGS_count_ar")
 S3method( "==", "snpgeno")
 
+useDynLib(kinference, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+
