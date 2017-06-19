@@ -1,0 +1,24 @@
+export( "[.NGS_count_ar",
+"choose_geno6_thresholds",
+"dim.NGS_count_ar",
+"drop_dups_pairwise_equiv",
+"find_duplicates",
+"find_HSPs",
+"find_POPs",
+"find_POPs_v2",
+"geno6way",
+"ilglk_geno",
+"make_playback",
+"print.NGS_count_ar",
+"record",
+"recordar",
+"set_recording")
+S3method( "[", "NGS_count_ar")
+S3method( "[", "playback")
+S3method( "[", "selfrecording_array")
+S3method( "[<-", "playback")
+S3method( "print", "NGS_count_ar")
+S3method( "as.character", "snpgeno")
+S3method( "dim", "NGS_count_ar")
+S3method( "==", "snpgeno")
+
