@@ -1,85 +1,3 @@
-# This is package kinference 
-
-"[.NGS_count_ar" <-
-function( x, i, j, k){
-###########################################
-# drop not allowed
-  # Allow missing k (ie only 1 comma), but nothing else
-stopifnot( nargs() >= 3)    
-  no_k <- nargs() == 3
-
-  info <- x@info
-  locinfo <- x@locinfo
-  max_n_alleles <- max( locinfo$n_alleles)
-  seqinfo <- x@seqinfo
-  samps <- dimnames( x)[[1]]
-  loci <- named( dimnames( x)[[2]])
-
-  # Other stuff, eg: print for specialprint; genotypes if x is really read-counts
-  other_atts <- attributes( x) %without.name% cq( dim, dimnames, info, seqinfo, locinfo)
-
-  x <- unclass( x)
-  if( missing( i)) {
-    i <- 1 %upto% nrow( x)
-  } else {
-    i <- structure( seq_along( samps), names=samps)[ i] # ensure integer
-  }
-
-  if( !missing( j)) {
-    if( !is.logical( j) && any( duplicated( j))) {
-stop( 'Duplicated loci not allowed')    
-    }
-
-    j <- structure( 1 %upto% nrow( locinfo), names=locinfo$Locus)[ j]
-    
-    # Need to allow for changes in locus ordering (sigh...)
-    msa <- match( seqinfo$Locus, locinfo$Locus[ j], 0) # 222200111
-    o <- order( msa)  
-    seq_allele <- o[ msa[ o] > 0]
-    
-    if( !my.all.equal( seq_allele, seq_along( seqinfo))) {
-      x <- x[ , seq_allele, drop=FALSE]
-      seqinfo <- seqinfo[ seq_allele,,drop=FALSE]
-      locinfo <- locinfo[j,,drop=FALSE]
-      locinfo$end_col <- cumsum( locinfo$n_alleles)
-      locinfo$start_col <- c( 1L, head( locinfo$end_col, -1)+1L)
-    }
-  } 
-  
-  # do we REALLY need to do an i-subset?
-  if( !my.all.equal( i, seq_along( samps))){
-    x <- x[ i,,drop=FALSE]
-    info <- info[ i,,drop=FALSE]
-    samps <- samps[ i]
-  }
-  
-  # Under certain circumstances, we *might* subscript by k too
-  # Returns a pure 3D array
-  # k >= n_alleles for that locus => NA
-  if( !no_k || !missing( k)) {
-    k <- (1 %upto% max_n_alleles)[ k] # logical to integer
-# stopifnot( all( k) <= min( locinfo$n_alleles))
-    xx <- do.call( 'cbind', FOR( 1 %upto% nrow( locinfo), 
-        x[ , (locinfo$start_col[.] : locinfo$end_col[.])[k],drop=FALSE]))
-    if( length( k) > 1) {
-      dim( xx) <- c( nrow( x), length( k), nrow( locinfo))
-      xx <- aperm( xx, c( 1, 3, 2))
-      dimnames( xx) <- list( samps, locinfo$Locus, NULL) # cannot assign names to the alleles, since they'll differ by locus
-    } else { # save some work in the common case that length( k)==1
-      dim( xx) <- c( nrow( x), nrow( locinfo))
-      dimnames( xx) <- list( samps, locinfo$Locus)
-    }
-return( xx)    
-  }
-
-  x@locinfo <- locinfo
-  x@seqinfo <- seqinfo
-  x@info <- info
-  attributes( x) <- c( attributes( x), other_atts)
-return( x)
-}
-
-
 "[.playback" <-
 function( x, ...) {
   where <- x@where
@@ -116,15 +34,15 @@ function( x, ...) {
   si@where <- NULL
   mc[[1]] <- `[`
   mc[[2]] <- si
-  
+
   res <- NextMethod('[')
-  
+
   index <- unname( c( eval.parent( mc)))
   index@dim <- dim( res)
   if( !length( where$subs[[ whoami]])) { # record original dim(x), used by make_playback
     index@orig_full_dim <- odimx
   }
-  
+
   # index@dimnames <- dimnames( res)
   where$subs[[ whoami]] <- c( where$subs[[ whoami]], list( index))
 res
@@ -138,7 +56,7 @@ function( x, ..., value) {
   which <- where$counter[[ who]]
   where$counter[[ who]] <- which+1
   index <- as.vector( where$subs[[ who]][[ which]])
-  acall <- call( '[<-', quote( x)) 
+  acall <- call( '[<-', quote( x))
   lpf <- length( where$prefixdims)
   for( ipref in 1 %upto% lpf) {
     acall[[ length( acall)+1]] <- alist(y=)$y # missing
@@ -150,7 +68,7 @@ function( x, ..., value) {
     odimx <- dim( x)
     dim( x) <- c( where$prefixdims, prod( dim( x)[-(1:lpf)]))
   } # if not lpf, vector subscripting works fine for arrays
-  
+
   x[] <- eval( acall)
   if( lpf) {
     dim( x) <- odimx
@@ -160,33 +78,33 @@ x
 }
 
 
-"==.snpgeno" <-
-function( e1, e2) {
-  if( e1 %is.a% 'snpgeno') {
-    if( is.character( e2)) {
-      e2 <- as.raw( match( e2, e1@diplos, 0))
+#' @importFrom mvbutils %is.a%
+#' @importFrom atease @ @<-
+"==.snpgeno" <- function(e1, e2) {
+  if(e1 %is.a% 'snpgeno'){
+    if(is.character(e2)){
+      e2 <- as.raw(match( e2, e1@diplos, 0))
     }
-return( unclass( e1)==e2)
-  } else {
-    if( is.character( e1)) {
-      e1 <- as.raw( match( e1, e1@diplos, 0))
+    return(unclass(e1)==e2)
+  }else{
+    if(is.character(e1)) {
+      e1 <- as.raw(match(e1, e1@diplos, 0))
     }
   }
-return( unclass( e2)==e1)
+  return( unclass(e2)==e1)
 }
 
 
-"add_list_defaults" <-
-function( l, ...) {
+#' @importFrom mvbutils %without.name% ?
+"add_list_defaults" <- function( l, ...) {
 ###### Add defaults to list 'l' if not already in 'l'
   defaults <- list(...)
   l <- c( l, defaults %without.name% names( l))
 return( l)
 }
 
-
-"add_pairprob_error" <-
-function( nlocal=sys.parent()) mlocal({
+#' @importFrom mvbutils named mlocal ? FOR
+"add_pairprob_error" <- function( nlocal=sys.parent()) mlocal({
 ## Needs pp_true and snerr
 
   g_err <- named( genotypes_C) ? 0 # recorded because it makes perr easy to define
@@ -201,24 +119,24 @@ function( nlocal=sys.parent()) mlocal({
   AO_BO <- (g_1==A | g_1==B) & g_2==O
   g_err[ AO_BO] <- g_1[ AO_BO] %&% g_1[ AO_BO]
   perr[ AO_BO] <- snerr[ sprintf( '%1$sO2%1$s%1$s', g_1[ AO_BO])] ? 0 # XO2XX
-  
+
   # Original version: not sure it's selfrecordable
 #  make_pp_err <- function( g1, g2) {
 #      g1_err <- g_err[ g1]
 #      g2_err <- g_err[ g2]
-#      pp_true[ cbind( g1, g2) ] * (1-perr[ g1]) * (1-perr[ g2]) + 
-#      pp_true[ cbind( g1_err, g2) ] * perr[ g1_err] * (1-perr[ g2]) + 
-#      pp_true[ cbind( g1, g2_err) ] * (1-perr[ g1]) * perr[ g2_err] + 
-#      pp_true[ cbind( g1_err, g2_err) ] * perr[ g1_err] * perr[ g2_err] 
+#      pp_true[ cbind( g1, g2) ] * (1-perr[ g1]) * (1-perr[ g2]) +
+#      pp_true[ cbind( g1_err, g2) ] * perr[ g1_err] * (1-perr[ g2]) +
+#      pp_true[ cbind( g1, g2_err) ] * (1-perr[ g1]) * perr[ g2_err] +
+#      pp_true[ cbind( g1_err, g2_err) ] * perr[ g1_err] * perr[ g2_err]
 #    }
 #
   # pp_err[] <- outer( named( genotypes_C), named( genotypes_C), make_pp_err)
-  
+
   # Need 2-stage setup here so selfrec works: "pure" assignment can't be overloaded in R
   pp_err <- matrix( -1, length( genotypes_C), length( genotypes_C), dimnames=rep( list( genotypes_C), 2)) ? 1
-  
+
   gg <- list() ? 0 # this is a trick to allow with(gg,...) in playback, since the "real" gg isn't kept
- 
+
   gg <- expand.grid( g1=genotypes_C, g2=genotypes_C, stringsAsFactors=FALSE)
   gg <- within( gg, {
      g1_err <- g_err[ g1]
@@ -226,13 +144,13 @@ function( nlocal=sys.parent()) mlocal({
   })
   extract.named( gg)
 
-  pp_err[ cbind( g1, g2)] <- 
-      pp_true[ cbind( g1, g2) ] * (1-perr[ g1]) * (1-perr[ g2]) + 
-      pp_true[ cbind( g1_err, g2) ] * perr[ g1_err] * (1-perr[ g2]) + 
-      pp_true[ cbind( g1, g2_err) ] * (1-perr[ g1]) * perr[ g2_err] + 
+  pp_err[ cbind( g1, g2)] <-
+      pp_true[ cbind( g1, g2) ] * (1-perr[ g1]) * (1-perr[ g2]) +
+      pp_true[ cbind( g1_err, g2) ] * perr[ g1_err] * (1-perr[ g2]) +
+      pp_true[ cbind( g1, g2_err) ] * (1-perr[ g1]) * perr[ g2_err] +
       pp_true[ cbind( g1_err, g2_err) ] * perr[ g1_err] * perr[ g2_err]        ? 0
 
-  
+
   # Merge C with O. Has to be mlocal() to avoid <<- which buggers playback. Things before 'nlocal' are args; things after are temporaries
   add_up <- function( i, result, ..., nlocal=sys.parent(), dimor, other)  mlocal({
       result <- match( result, genotypes_C)
@@ -249,19 +167,18 @@ function( nlocal=sys.parent()) mlocal({
     add_up( i, AO, AC)
     add_up( i, BO, BC)
   }
- 
-# IE: 
+
+# IE:
 # pp_err2[,OO] <- pp_err2[,CC] + pp_err2[,CO] + pp_err2[,OO]
 # pp_err2[,CC] <- pp_err2[,CO] <- 0
 # pp_err2[AO,] <- pp_err2[AC,] + pp_err2[AO,]
 # pp_err2[AC,] <- 0
-  
+
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
 
-
-"as.character.snpgeno" <-
-function( x, ...) {
+#' @importFrom atease @ @<-
+"as.character.snpgeno" <- function( x, ...) {
   y <- matrix( '', nrow( x), ncol( x))
   y[] <- x@diplos[ as.integer( x)]
   dimnames( y) <- list( rownames( x@info), x@locinfo$Locus)
@@ -269,6 +186,8 @@ return( y)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils FOR
 "calc_g6probs" <-
 function( pA, pB, pC, snerr) {
   # snerr = P( misclassifying true XX as XO, and vice versa)
@@ -300,20 +219,21 @@ function( pA, pB, pC, snerr) {
   pBB <- pBB * (1-snerr[,'BB2BO']) + pB0 * snerr[,'BO2BB']
 
   p6 <- do.call( 'cbind', FOR( genotypes6, get( 'p' %&% .)))
-  perr <- cbind( 
-      AAO=pA0 * snerr[,'AO2AA'] + pAA * snerr[,'AA2AO'], 
-      BBO=pB0 * snerr[,'BO2BB'] + pBB * snerr[,'BB2BO']) 
+  perr <- cbind(
+      AAO=pA0 * snerr[,'AO2AA'] + pAA * snerr[,'AA2AO'],
+      BBO=pB0 * snerr[,'BO2BB'] + pBB * snerr[,'BB2BO'])
   colnames( p6) <- genotypes6
   if( no_dim) {
     p6 <- p6[1,]
     perr <- perr[1,]
   }
-  
+
   p6@perr <- perr
 return( p6)
 }
 
 
+#' @importFrom mvbutils cq ?
 "calc_g6probs_IBD0_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -329,32 +249,33 @@ function( P, snerr, record=FALSE) {
 stopifnot( my.all.equal( names( P), names( ABCO)))
 
   snerr <- drop( snerr) # for scalar version
-  
+
   snerr <- snerr            ? 0
   pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C), dimnames=list( genotypes_C, genotypes_C))         ? 1
 
 
   g_1 <- substring( genotypes_C, 1, 1)
   g_2 <- substring( genotypes_C, 2, 2)
-  pr2 <-  nchar( named( genotypes_C))    ? 1 # named 
+  pr2 <-  nchar( named( genotypes_C))    ? 1 # named
 
-  is_het <- g_1 != g_2           
+  is_het <- g_1 != g_2
   pr2[] <- P[ g_1] * P[ g_2]             ? 0
   pr2[ is_het] <- 2 * pr2[ is_het]       ? 0
 
-  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C), 
+  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
       dimnames=rep( list( genotypes_C), 2))        ? 1
 
   extract.named( expand.grid( gp1=genotypes_C, gp2=genotypes_C, stringsAsFactors=FALSE))
   pp_true[ cbind( gp1, gp2)] <- pr2[ gp1] * pr2[ gp2]                       ? 0
-  
+
   # NB that for this UP case, XX/XO errors shouldn't change the overall probs because the cutoffs are chosen to do exactly that!
   add_pairprob_error()
-  
+
 return( pp6_err)
 }
 
 
+#' @importFrom mvbutils cq ?
 "calc_g6probs_IBD1_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -362,7 +283,7 @@ function( P, snerr, record=FALSE) {
 
   set_recording( cq( P, snerr, pp_true, pp3, pp_err, perr, pp6_err), record)
   define_genotypes()           ? 0
-  
+
   P <- drop( P) # for scalar version
   P <- P               ? 0
 stopifnot( my.all.equal( names( P), names( ABCO)))
@@ -392,10 +313,10 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
   # eg AB/AB <- ABB or BAA
   # AB/CD <- nothing
   # AB/AC <- ABC
-  
+
   implstr <- cimplied[,1] %&% cimplied[,2]
   has_impl2 <- which( duplicated( implstr))
-  
+
   first_impl <- match( implstr[ -has_impl2], implstr)
   second_impl <- match( implstr[has_impl2], implstr, 0)
   cimpl2 <- cimplied[ second_impl,]
@@ -413,19 +334,19 @@ return( pp6_err)
 }
 
 
-"cg" <-
-function( P, snerr, record=FALSE) {
+#' @importFrom mvbutils cq extract.named named ?
+"cg" <- function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
 ## Though can be called with 1-row matrix args, eg with( x@locinfo[1,], calc_g6probs_IBD1( pbonzer, snerr))
 
   set_recording( cq( P, snerr, pp_true, pp3, pp_err, perr, pp6_err), record)
   define_genotypes() ? 0
-  
+
   # Could include the next lines in previous recordar call, since grouping boring things inside {} is OK...
   # ... but there's no need!
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
-  
+
   P <- drop( P) # for scalar version
   P <- P ? 0
 stopifnot( my.all.equal( names( P), names( ABCO)))
@@ -455,15 +376,15 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
   # eg AB/AB <- ABB or BAA
   # AB/CD <- nothing
   # AB/AC <- ABC
-  
+
   implstr <- cimplied[,1] %&% cimplied[,2]
   has_impl2 <- which( duplicated( implstr))
-  
+
   first_impl <- match( implstr[ -has_impl2], implstr)
   second_impl <- match( implstr[has_impl2], implstr, 0)
   cimpl2 <- cimplied[ second_impl,]
 
-  pp_true[ cimplied[ first_impl,]] <- pp3[ -has_impl2] ? 0 
+  pp_true[ cimplied[ first_impl,]] <- pp3[ -has_impl2] ? 0
   pp_true[ cimpl2] <- pp_true[ cimpl2] + pp3[ has_impl2] ? 0
 
   # Allow for XX <-> XO errors--- hopefully the only ones! (Watch out for scaffoldy version)
@@ -476,20 +397,23 @@ return( pp6_err)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom tools md5sum
+#' @importFrom mvbutils %such.that% %not.in% %except%
 "check_baits" <-
-function( 
+function(
     pbtidy= NULL,
 
-    # Names in default lists "irrel" since should never actually be accessed, 
+    # Names in default lists "irrel" since should never actually be accessed,
     # ... but says what real names should be
     args_read_in= list(
         filename= NULL,
         filtered= NA
       ),
     args_zap_contams= list(
-        contam_file= 'KEEP EM ALL FOR NOW' 
+        contam_file= 'KEEP EM ALL FOR NOW'
       ),
-    args_dump_low_count_loci= list( 
+    args_dump_low_count_loci= list(
         min_med_het_tot= stop(),
         het_pc_limit= stop(),
         mintol_het= stop(),
@@ -501,16 +425,16 @@ function(
         polyrange_to_inspect= NULL
       ),
     args_refalt=list(
-        OOthresh_tc= stop(), 
-        OK_med_min= stop(), 
-        selector= stop(), 
+        OOthresh_tc= stop(),
+        OK_med_min= stop(),
+        selector= stop(),
         rescale_alleles= stop(),
         plot.=FALSE
       ),
     args_geno_deambig_ABC= list(
         OOthresh_tc= stop(),
         het_cut= stop(),
-        tc_hist_pars= list(), # OK to have default, for plot; no comput effects; 
+        tc_hist_pars= list(), # OK to have default, for plot; no comput effects;
         # ... having default should mean non-triggering re-run
         ppnA_hist_pars= list()
       ),
@@ -521,13 +445,13 @@ function(
         thresh_pchisq_loci= stop(),
         test= stop(),
         seq_paxis=NULL # graphical, default OK
-      ), 
+      ),
     args_dump_badhetz_fish= list(
         multhresh_badhetz_fish= stop(),
         badhetz_hist_pars= list(),
         method= stop()
-      ),      
-#    args_dump_genomic_paralogs=list( 
+      ),
+#    args_dump_genomic_paralogs=list(
 #        which_BLAST=stop()
 #      ),
     args_choose_geno6_thresholds= list(
@@ -541,7 +465,7 @@ function(
         plots= NULL,
         comment_file= 'locus_comments.txt'
       ),
-    args_check6and4= list( 
+    args_check6and4= list(
         thresh_pchisq_6and4= stop(),
         manual_6and4_file= stop() # '' for "everything fine"
       ),
@@ -576,7 +500,7 @@ function(
 
  og <- options( vecless.print=FALSE) # suppress renamex(...) output!
  on.exit( options( og))
- 
+
  define_genotypes() # AA etc, as variables: mode raw
 
 ## Self-configuration (prepare to record steps; always updating 'pbtidy')
@@ -593,10 +517,10 @@ setup_recordo_check_baits()
         }
       }
     }
-    
+
     if( is.null( pbtidy)) { # force read from file
       redo <- TRUE
-      pbtidy <- read_cluster_dart3( filename, filtered=filtered, use_rownames=FALSE) 
+      pbtidy <- read_cluster_dart3( filename, filtered=filtered, use_rownames=FALSE)
     }
   })
 
@@ -627,16 +551,16 @@ setup_recordo_check_baits()
 
 ## Counts too low (per locus)
   recordo( 'dump_low_count_loci', # also adds 'med_het_tot' field to locinfo
-    pbtidy <- dump_low_count_loci( pbtidy, 
-        min_med_het_tot=min_med_het_tot, 
-        het_pc_limit=het_pc_limit, 
+    pbtidy <- dump_low_count_loci( pbtidy,
+        min_med_het_tot=min_med_het_tot,
+        het_pc_limit=het_pc_limit,
         mintol_het=mintol_het,
         nearly_max=nearly_max,
         show_progress=TRUE)
   )
-  
+
 ## 3+-allele cluster zap
-  # How many fish with 3+ biggish scores? IE "polyzygotes". 
+  # How many fish with 3+ biggish scores? IE "polyzygotes".
   # Not rock-solid (EG paralog with null, but no SNP at either place)
   # ... but should pick up  *most* paralogs if number-of-fish is reasonably big
   # XS hetz should pick up the rest
@@ -645,50 +569,50 @@ setup_recordo_check_baits()
   # ... but often seeing eg 4M in AC and in BD etc
   # ... But that's a lot of work (DArT probably does this), so for now just kill 'em all
   recordo( 'check_polyploids', {
-    pbtidy <- check_polyploids( pbtidy, 
+    pbtidy <- check_polyploids( pbtidy,
         cutoff_ppn=polycutoff_ppn,
         cutoff_npolysamps=max_npolysamps,
         range_to_inspect=polyrange_to_inspect,
         show_progress=TRUE)
   })
-  
-## Ref & Alt chosen by locus, based on total counts: no options here, but nice to have this version saved  
+
+## Ref & Alt chosen by locus, based on total counts: no options here, but nice to have this version saved
   recordo( 'refalt', {
     pbtidy <- pick_ref_alt( pbtidy) # counts now stored in Ref/Alt/Others F*L*3 array masquerading as 'loc.ar'
-    pbtidy <- ppn_ref_alt_check2( pbtidy, 
-      OOthresh_tc= OOthresh_tc, 
-      OK_med_min= OK_med_min, 
-      selector= selector, 
+    pbtidy <- ppn_ref_alt_check2( pbtidy,
+      OOthresh_tc= OOthresh_tc,
+      OK_med_min= OK_med_min,
+      selector= selector,
       rescale_alleles= rescale_alleles,
       plot.=plot.)
   })
 
 ## Apply thresholds and score genotypes--- maybe remove ambig fish & loci
   recordo( 'geno_deambig_ABC', {
-    pbtidy <- geno_deambig_ABC( pbtidy, 
-        OOthresh_tc= OOthresh_tc, 
+    pbtidy <- geno_deambig_ABC( pbtidy,
+        OOthresh_tc= OOthresh_tc,
         het_cut= het_cut,
         ppnA_hist_pars= ppnA_hist_pars,
         tc_hist_pars= tc_hist_pars
       )
   })
-  
+
 ## MALF/NALF estimates--- also adds attribs for obs & pred geno4 per locus
   recordo( 'est_ALF_ABCO', {
     pbtidy <- est_ALF_ABCO( pbtidy)
     # Junk pointlessly uninformative loci
     pbtidy <- pbtidy[, pbtidy@locinfo$pambig[,1] %in.range% c( 1-max_useful_prob, max_useful_prob)]
   })
-  
+
 ## How do they look? Paralogs and other locus weirdness...
-  recordo( 'genofreq_check_4way', 
+  recordo( 'genofreq_check_4way',
     pbtidy <- genofreq_check_4way( pbtidy, thresh_pchisq_loci= thresh_pchisq_loci, seq_paxis=seq_paxis, test=test)
   )
-  
+
 ## Final bad fish check: XS hetz
   recordo( 'dump_badhetz_fish', {
     pbtidy <- dump_badhetz_fish( pbtidy, multhresh_badhetz_fish, badhetz_hist_pars, method=method)
-    # Next was in chisq_geno_freq, but that seems "heavy". 
+    # Next was in chisq_geno_freq, but that seems "heavy".
     # I guess it's true that we don't need these atts now
     # ... but we do need them for newer xshetz check
     pbtidy@gpred <- pbtidy@gobs <- NULL
@@ -696,9 +620,9 @@ setup_recordo_check_baits()
   })
 
 ## Prep for 6-way genotyping. Lots of graphs
-  recordo( 'choose_geno6_thresholds', {  
+  recordo( 'choose_geno6_thresholds', {
     pbtidy <- choose_geno6_thresholds( pbtidy,
-      nquants_bump= nquants_bump, 
+      nquants_bump= nquants_bump,
       max_dat_quantile= max_dat_quantile,
       distro= distro,
       minpO_rethresh= minpO_rethresh,
@@ -708,29 +632,29 @@ setup_recordo_check_baits()
       plots= plots,
       show_progress=TRUE,
       comment_file=comment_file)
-  })           
+  })
 
 ## 6-way genotyping: this discards orig counts
-  recordo( 'geno6way', {  
+  recordo( 'geno6way', {
     pbtidy <- geno6way( pbtidy)
-  })           
+  })
 
 
 ## Check 6way GoF and decide 4-or-6
   recordo( 'check6and4', {
-    pvals <- check6and4( pbtidy, 
+    pvals <- check6and4( pbtidy,
       thresh_pchisq_6and4= thresh_pchisq_6and4,  # can use 2 numbers to highlight marginal ones
       return_what='just_pvals')
     pbtidy@locinfo$pval6 <- pvals$pval6
     pbtidy@locinfo$pval4 <- pvals$pval4
-    
+
     # Only now do the selection/elimination, manually
     pbtidy@locinfo$use6 <- TRUE
-    if( nzchar( manual_6and4_file) && file.exists( manual_6and4_file)) { 
+    if( nzchar( manual_6and4_file) && file.exists( manual_6and4_file)) {
       # Had trouble with next line--- factors, and spaces :/
       # dodgy <- read.table( manual_6and4_file, header=TRUE, row=NULL, sep=':')
       dodgy_text <- scan("jcnov-geno-comments.txt", sep='\n', what='', quiet=T)
-      
+
       # Needs to start Locus: Comment
 stopifnot( grepl( '^ *Locus *:', dodgy_text[1]))
 
@@ -751,7 +675,7 @@ stopifnot( grepl( '^ *Locus *:', dodgy_text[1]))
       if( any( !as4f)) {
         discardo <- match( dodgy$Locus[ !as4f], pbtidy@locinfo$Locus, 0)
         if( !all( discardo)) {
-  stop( sprintf( "Can't find locus [%s] to discard...", 
+  stop( sprintf( "Can't find locus [%s] to discard...",
       paste( dodgy$Locus[ which( !as4f)[ !discardo]], collapse=', ')))
         }
         pbtidy <- pbtidy[ , -discardo]
@@ -760,30 +684,30 @@ stopifnot( grepl( '^ *Locus *:', dodgy_text[1]))
     } # if nzchar file
     pbtidy
   })
-  
+
   recordo( 'hsp_power', {
     pbtidy <- hsp_power( pbtidy, want_LOD_table=TRUE, k=0.5)
     scatn( 'Ediff HSP: %5.3f', sum( pbtidy@locinfo$Ediff))
-    scatn( 'SD(UP): %5.3f', sqrt( sum( pbtidy@locinfo$V.UP))) 
+    scatn( 'SD(UP): %5.3f', sqrt( sum( pbtidy@locinfo$V.UP)))
     # plot( something)
     pbtidy
   })
 
 
 ## (Moved here from higher up, but maybe shouldn't do at all...) Paralog check from genome assembly
-#  recordo( 'dump_genomic_paralogs', 
+#  recordo( 'dump_genomic_paralogs',
 #    if( !is.null( which_BLAST)) {
 #      pbtidy <- dump_genomic_paralogs( pbtidy, which_BLAST=which_BLAST)
 #    }
 #  )
 #
 
-## DID HAVE THIS BUT NOT USING IT NOW... Rough MALF/NALF estimates. Not required for solo clones (biallelic by defn) and 
+## DID HAVE THIS BUT NOT USING IT NOW... Rough MALF/NALF estimates. Not required for solo clones (biallelic by defn) and
 #  recordo( 'rough_MALF_NALF',
 #    pbtidy <- rough_MALF_NALF( pbtidy, hetrule)
 #  )
 
-    
+
     # make Ref commoner
     # threshold setting
     ## OO
@@ -799,20 +723,22 @@ return( pbtidy)
 }
 
 
-"check_FPosity" <-
-function( snpg, nsim=0){ 
+#' @importFrom mvbutils cq %without.name%
+#' @importFrom handy2 sqr
+#' @importFrom atease @ @<-
+"check_FPosity" <- function( snpg, nsim=0){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
-  define_genotypes()  
+  define_genotypes()
   for( iwhat in cq( LOD, PUP, PUPLOD, PUPLOD2)) {
     assign( 'O' %&% iwhat, snpg@Kenv[[ iwhat]])
   }
   mg <- OLOD@mg
-  
+
   use6 <- snpg@locinfo$use6
   use4 <- !use6
   temp_snpg <- snpg
@@ -822,9 +748,9 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   # For 4way loci, temporarily treat XO as XX...
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
   # ... use the LOD that's in Kenv, where SPA is calculated
-  
+
   # Genofreqs could've/should've be done at the start in hsp_power, but here will do
-  
+
   # LOD and PUP are stored in compacted 2D form to save space... need to fix that
   # Can't quite do this with vecless!
   OLOD[ is.na( OLOD)] <- 0 # set to NA for 4way loci
@@ -832,21 +758,21 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   NPUP <- PUP <- LOD <- array( 0, c( n_loci, 6, 6))
   for( ig in 1:6) {
     gjseq <- mg[ , ig]
-    XXi[ l, gj] := OPUP[ l, gj=gjseq] # Shouldn't work with new vecless syntax... but does !? 
+    XXi[ l, gj] := OPUP[ l, gj=gjseq] # Shouldn't work with new vecless syntax... but does !?
     PUP[ l, {ig}, gj] := XXi[ l, gj]
     NPUP[,ig,] <- OPUP[ , mg[,ig]]
-    
+
     XXi[ l, gj] := OLOD[ l, gj=gjseq]
     LOD[ l, {ig}, gj] := XXi[ l, gj]
   }
-  
+
   Pg[ l, gi] := sqrt( PUP[ l, gi, gi])
   # PHSP[l,gj,gi] := exp( LOD[ l, gj, gi]) * Pg[ l, gj] * Pg[ l, gi]
   # Pg2_g1_H[ l, gj, gi] := PHSP[ l, gj, gi] / Pg[ l, gi]
 
   e_CLOD[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg[ l, gj]  # since gj indept gi
   e2_CLOD[ l, gi] := sqr( LOD[ l, gi, gj]) %[gj]% Pg[ l, gj]
-  # e_CLOD_HSP[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg2_g1_H[ l, gj, gi] 
+  # e_CLOD_HSP[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg2_g1_H[ l, gj, gi]
   # returnList( e_CLOD, e2_CLOD, e_CLOD_HSP)
 
   # Int version needed for vecless lookups
@@ -860,21 +786,21 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   my_e_CLOD[ l, i] := e_CLOD[ l, g1] %[g1]% (geno[i,l] == g1seq[ g1])
   my_e2_CLOD[ l, i]:= e2_CLOD[l,g1] %[g1]% (geno[i,l] == g1seq[ g1])
   my_v_CLOD[ l, i]:= my_e2_CLOD[ l, i] - sqr( my_e_CLOD[ l, i])
-  my_rat_CLOD[ i]:= (SUM_ %[l]% my_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% my_v_CLOD[ l, i]) 
+  my_rat_CLOD[ i]:= (SUM_ %[l]% my_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% my_v_CLOD[ l, i])
 
   if( nsim) {
     gsim <- matrix( 0L, nsim, n_loci)
     for( il in seq_len( n_loci)) {
       gsim[,il] <- rsample( nsim, 1:6, prob=Pg[il,], replace=TRUE)
     }
-    
+
     sim_e_CLOD[ l, i] := e_CLOD[ l, g1] %[g1]% (gsim[i,l] == g1seq[ g1])
     sim_e2_CLOD[ l, i]:= e2_CLOD[l,g1] %[g1]% (gsim[i,l] == g1seq[ g1])
     sim_v_CLOD[ l, i]:= sim_e2_CLOD[ l, i] - sqr( sim_e_CLOD[ l, i])
-    sim_rat_CLOD[ i]:= (SUM_ %[l]% sim_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% sim_v_CLOD[ l, i]) 
+    sim_rat_CLOD[ i]:= (SUM_ %[l]% sim_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% sim_v_CLOD[ l, i])
   }
 
-  
+
   # Vectorized individual KGFs, for each sample (columns) and numerous t-values (row)
   K <- function( tt) {
     # need to lookupize this until vecless 2.0 is out...
@@ -906,7 +832,7 @@ stop()
   # Remove extranea
   attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
   temp_snpg <- t( temp_snpg)
-  
+
   if( is.null( bins)) {
     qq <- (2:nq-1)/nq
     bins <- inv_CDF( qq)
@@ -936,19 +862,19 @@ stop()
       min_keep_PLOD= keep_thresh,
       bins= bins)
   } else { # different subsets
-stop( "Fix the non-symm code, bozo...")   
+stop( "Fix the non-symm code, bozo...")
     result <- HSP_cond_paircomps_lots( this+will+fail,
-        pair_geno= temp_LOD@mg, 
-        LOD= t( temp_LOD), 
-        geno1= temp_snpg[ , subset1], 
-        geno2= temp_snpg[ , subset2], 
-        symmo= FALSE, 
-        eta= eta, 
-        min_keep_PLOD= keep_thresh, 
+        pair_geno= temp_LOD@mg,
+        LOD= t( temp_LOD),
+        geno1= temp_snpg[ , subset1],
+        geno2= temp_snpg[ , subset2],
+        symmo= FALSE,
+        eta= eta,
+        min_keep_PLOD= keep_thresh,
         bins= bins
       )
   }
-  
+
   result$bigs <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
   result <- result %without.name% cq( big_PLOD, big_i, big_j)
   result$bins <- bins
@@ -956,15 +882,17 @@ stop( "Fix the non-symm code, bozo...")
   result$eta <- eta
   result$keep_thresh <- keep_thresh
   result$call <- sys.call()
-  
-return( result)    
+
+return( result)
 }
 
 
-"check_polyploids" <-
-function( 
-    darta, 
-    cutoff_npolysamps, 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq %without.name% %except% as.cat
+#' @importFrom utils capture.output
+"check_polyploids" <- function(
+    darta,
+    cutoff_npolysamps,
     cutoff_ppn,
     range_to_inspect=NULL,
     show_progress=TRUE,
@@ -993,39 +921,39 @@ function(
 
   n_al_pres <- matrix( 0, n_fish, n_loci)
   n_al_pres[ lf_tabbo] <- c( tabbo) # c() avoids class <- table
-  
+
   is_polyzyg <- n_al_pres > 2L
-  
+
   n_polyzygs_by_locus <- colSums( is_polyzyg)
   n_polyzygs_by_fish <- rowSums( is_polyzyg)
-  
+
   # For inspecting *loci*, you don't want contam fish which will be super-likely
   # ... to generate polyzygs for ANY locus
-  
+
   # Here's useful (but I *didn't* remove dodgy fish first...):
 #  D(13)> table( n_polyzygs_by_locus)
 #  n_polyzygs_by_locus
-#     0    1    2    3    4    5    6    7   17   23   24   28  ...  870  947  970 1004 1118 1229 1300 1419 1426 
-#  1618  119   17    3    2    2    2    1    2    1    1    1  ...    1    1    1    1    1    1    1    1    1 
-# 
+#     0    1    2    3    4    5    6    7   17   23   24   28  ...  870  947  970 1004 1118 1229 1300 1419 1426
+#  1618  119   17    3    2    2    2    1    2    1    1    1  ...    1    1    1    1    1    1    1    1    1
+#
 
   # So it looks like there's a clear gap in the distro from 17 up
   # I would set eg 'range_to_inspect < c( 2, 25)' in the debugger
   # ... and execute the loop below
-  
+
   if( length( range_to_inspect)) {
     # Improve "printing experience"
     adart <- darta
     adart@calls <- adart@args <- NULL
-    adart@info <- adart@info %without.name% cq( Our_sample, File, MD5) 
+    adart@info <- adart@info %without.name% cq( Our_sample, File, MD5)
     these <- character()
     for( iloc in which( n_polyzygs_by_locus %in.range% range_to_inspect)) {
-      this_one <- capture.output( file=NULL, 
+      this_one <- capture.output( file=NULL,
           print( adart[ is_polyzyg[ ,iloc], iloc], dot_for_0=TRUE))
-      these <- c( 
-          these, 
-          character( 2), 
-          formatC( width=max( nchar( this_one)), 
+      these <- c(
+          these,
+          character( 2),
+          formatC( width=max( nchar( this_one)),
               sprintf( 'MEDIAN SINGLE: %4.0f', med_het_tot[ iloc])),
           this_one)
     }
@@ -1045,38 +973,39 @@ return( darta)
 }
 
 
-"check6and4" <-
-function( geno6, 
-    thresh_pchisq_6and4, 
+#' @importFrom mvbutils returnList
+#' @importFrom atease @ @<-
+"check6and4" <- function( geno6,
+    thresh_pchisq_6and4,
     return_what=c( 'just_pvals', 'all')) {
-##########    
+##########
   n_fish <- nrow( geno6)
   n_loci <- ncol( geno6)
   define_genotypes()
   diplos <- geno6@diplos
 stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
-  
-  p6 <- with( geno6@locinfo, 
-      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'], 
+
+  p6 <- with( geno6@locinfo,
+      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'],
           snerr=snerr))[,genotypes6]
   # At some point, will also need p6_IBD... later...
 
   # Chi-sq check: requires gpred & gobs attr on geno6
   g6pred <- p6 * n_fish
   g6obs <- matrix( 0, n_loci, 6, dimnames=list( NULL, genotypes6))
-  
+
   for( ig in genotypes6) {
     g6obs[,ig] <- colSums( geno6==match( ig, diplos))
   }
 
-  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', 
+  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G',
       thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE)@locinfo$pval
 
   g4obs <- gtab6to4( g6obs)
   g4pred <- gtab6to4( g6pred)
-  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G', 
+  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G',
       thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE)@locinfo$pval
-  
+
   return_what <- match.arg( return_what)
   if( return_what=='all') {
     geno6@locinfo$pval6 <- pval6
@@ -1088,60 +1017,64 @@ return( returnList( pval6, pval4))
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom handy2 sqr
+#' @importFrom stats pchisq
+#' @importFrom graphics plot points mtext legend
 "chisq_genofreq_check" <-
-function( lociar, 
+function( lociar,
     gpred= lociar@gpred,
     gobs= lociar@gobs,
     thresh_pchisq_loci,  # NULL to not worry; 1 value a threshold; 2 vals to inspect "iffy" ones
     test,  # 'Pearson' or 'G'
     trim, # TRUE to keep only above max thresh_pchisq_loci. Arguably better done post hoc...
     seq_paxis=0.025) {
-##########    
+##########
 # Either 6- or 4-geno version should work
 # 1 DoF in either case
 # Assumed null distro of chisq(1) is pretty approximate
   n_loci <- nrow( gobs)
 
   # After ML, should never happen that gobs>0 & gpred==0... but we'll check
-stopifnot( !any( gobs>0 & gpred==0))  
+stopifnot( !any( gobs>0 & gpred==0))
 
-  chistat <- if( test=='Pearson') 
-      rowSums( sqr( gobs - gpred) / gpred) 
+  chistat <- if( test=='Pearson')
+      rowSums( sqr( gobs - gpred) / gpred)
     else if( test=='G') # must handle 0log0 which is 0 but R doesn't know that (cf nlogp func in my Pascal armoury)
       2 * rowSums( gobs * log( ifelse( gobs>0, gobs/gpred, 1)))
-    else 
+    else
 stop( 'test must be "Pearson" or "G"')
-      
+
   DoF <- ncol( gpred)-3 # ... maybe ... !?
   pval <- pchisq( chistat, df=DoF, lower.tail=FALSE) ### df = ???
   lociar@locinfo$pval <- pval
   liffies <- length( thresh_pchisq_loci)
   keep_loci <- if( liffies) pval > max( thresh_pchisq_loci) else rep( TRUE, n_loci)
   iffy_loci <- !keep_loci & (pval > min( thresh_pchisq_loci))
-  
+
   # Plot histogram of pvals - should be approximately uniformly distributed if the loci are behaving as we would like
   # [ should follow recordo paradigm as per geno_deambig ]
   par( mfrow=c(1,1)) # just one plot on first page
-  hist(pval, 
-      main=sprintf( "%s GoF of %i-genotypes: pval from chisq( %i)", test, ncol( gpred), DoF), 
-      xlab="P-value: LOW == BAD", 
+  hist(pval,
+      main=sprintf( "%s GoF of %i-genotypes: pval from chisq( %i)", test, ncol( gpred), DoF),
+      xlab="P-value: LOW == BAD",
       breaks=seq(0,1,seq_paxis),
       xlim=c(0,1))
   abline( v=thresh_pchisq_loci, col='red')
-  
+
   # Locussy fits
-  opar <- par(mfrow=c(2, ncol( gpred) %/% 2), 
+  opar <- par(mfrow=c(2, ncol( gpred) %/% 2),
       mar=c( 3, 3, 0, 0)+0.1, oma=c( 2, 2, 3, 1))
   # omi=c(0,0,.6,0),mai=c(.8,.8,.2,.2)) Paige uses absolute margins
   on.exit( par( opar))
-  
+
   gtypes <- colnames( gobs)
   for( g in 1:ncol( gpred)) {
     # all of 'em
     plot(gpred[,g], gobs[,g], pch=16, cex=0.4, col='lightblue', # pch='.' is too small
-        xlab='', ylab='', main='', 
-        xlim=c( 0, max( c( gpred[,g], gobs[,g]))),  
-        ylim=c( 0, max( c( gpred[,g], gobs[,g]))))          
+        xlab='', ylab='', main='',
+        xlim=c( 0, max( c( gpred[,g], gobs[,g]))),
+        ylim=c( 0, max( c( gpred[,g], gobs[,g]))))
     abline(0,1,col=8,lwd=2)
     points( gpred[ keep_loci,g], gobs[ keep_loci,g], pch=16, cex=0.4, col='green') # overplot to make visible against the line
     mtext( side=3, gtypes[ g], line=-1)
@@ -1154,345 +1087,29 @@ stop( 'test must be "Pearson" or "G"')
   mtext( 'Green = "good"', side=3, cex=1.5, outer=TRUE, line=1.5)
   mtext( 'Expected', side=1, cex=1.5, outer=TRUE)
   mtext( 'Observed', side=2, cex=1.5, outer=TRUE)
-  
+
   if( liffies) {
     legend( 'bottomright', pch=c( 4, rep( 16, liffies)), col=c( 'orange', if( liffies>1) 'magenta', 'green'), pt.cex=c( 0.6, if( liffies>1) 1, 0.6),
         legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 1]), if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[2]), '... < 1') )
   }
-  
-  if( trim) { 
+
+  if( trim) {
     lociar <- lociar[ , keep_loci, ,drop=FALSE]
   }
 return( lociar)
 }
 
 
-"choose_geno6_thresholds" <-
-function( lociar,
-    li= NULL, # could supply presets here
-    OOthresh_tc= lociar@args$geno_deambig$OOthresh_tc,
-    nquants_bump, # 10,
-    max_dat_quantile, # 0.95,
-    nhistbreaks=101,
-    distro, # 'normal' or 't6' etc
-    minpO_rethresh, # 0.05 since 0.05 * 0.05 = bugger all
-    m_for_rethresh, # eg 5 means: split widest gap containing 5 fish
-    max_refits, # at least 1, maybe 2 to shift the upper-tail outlier-trap "hix"
-    minbin, # only for plots
-    show_progress= interactive(),
-    plots=TRUE,
-    comment_file= NULL
-){ 
-#################    
-  # Updated 2016 version for check_baits() pipeline
-  # Assumes ambig genotypes (AAO = AA|AO) with poss 3rd allele (C), have been set earlier on
-  # plotting controlled by "..._args" 
-
-  n_loci <- ncol( lociar)
-  n_fish <- nrow( lociar)
-
-  define_genotypes()  
-  
-  dimnames( lociar)[[3]] <- cq( A, B, C)
-  
-  if( is.null( li)) { # use own data
-    li <- lociar@locinfo 
-  } else { # check preset definitions match this OK... 
-    mm <- match( lociar@locinfo$consensus, li$consensus, 0)
-stopifnot( all( mm>0))
-    li <- li[ mm,]
-stopifnot( all( lociar@locinfo$FullAltSeq==li$FullAltSeq))    
-stopifnot( all( lociar@locinfo$FullRefSeq==li$FullRefSeq))    
-stopifnot( my.all.equal( lociar@locinfo$FullThirdSeq, li$FullThirdSeq)) # NA-friendly
-  }
-  
-  c3 <- unclass( lociar)
-  locus_name <- li$Locus
-  mht <- li$med_het_tot
-  pambig <- li$pambig
-  if( is.null( mht)) {
-stop( "Need med_het_tot column in locinfo/li")  
-  }
-
-  # counts normed by locus
-  c3[f,l,all] := c3[f,l,all] / mht[ l]
-  cA <- c3[,,A]
-  cB <- c3[,,B]
-  cC <- c3[,,C]
-  # guard against length-1 dims cRazies
-  dim( cA) <- dim( cB) <- dim( cC) <- dim( c3)[1:2]
-
-  geno <- lociar@geno_amb
-  gobs <- matrix( 0, n_loci, length( genotypes_ambig), dimnames=list( NULL, genotypes_ambig))
-  for( ig in genotypes_ambig) {
-    gobs[,ig] <- colSums( geno==ig)
-  }
-
-  dname <- paste( deparse( substitute( lociar), width=30, nlines=1), collapse='')
-
-  opar <- par( mar=c( 2, 3, 2, 0)+0.1, no.readonly=TRUE)
-
-  allres <- NULL
-  comments <- structure( character( length( mht)), names=locus_name) # for graphics "annotation"
-
-  if( tolower( distro)=='normal') {
-    CDF <- pnorm
-    PDF <- dnorm
-  } else {
-    tdof <- as.numeric( sub( 't', '', tolower( distro)))
-    CDF <- function( x, mean, sd, lower) pt( (x-mean)/sd, df=tdof, lower.tail=lower)
-    PDF <- function( x, mean, sd, lower) (1/sd) * dt( (x-mean)/sd, df=tdof)
-  }
-
-  # Function needed later: optimal split is when tail-probs are equal, so their diff should be zero
-  diffprob <- function( x, pX, pO) {
-      cond_pXX <- pX / (pX + 2*pO) # num & denom should be mult by pX, but this simpler form avoids rounding error
-      cond_pXX * CDF( x, mean=mu[2], sd=sigma[2], lower=TRUE) - (1-cond_pXX) * CDF( x, mean=mu[1], sd=sigma[1], lower=FALSE)
-    }
-
-  alid <- li$AlleleID
-  loclabs <- NULL
-
-  if( !show_progress) {
-    tt <- tempfile()
-    sink( tt)
-    on.exit( {sink(); unlink( tt)})
-  }
-
-  # More careful about totals, to zap splatter from 3rd allele
-  tot2 <- make_tot2( cA, cB, cC, geno)
-
-  pbonzer <- structure( rep( 0, 4), names=cq( A, B, C, O))
-
-  new_OOthresh <- rep( OOthresh_tc, n_loci)
-  for( i in 1:n_loci) {
-    if( show_progress) {
-      cat( '\r', i); flush.console()
-    }
-
-    dat <- unname( tot2[,i])
-
-    genoi <- as.character( geno[,i]) # as.character() needed so that match() works
-    is_OO <- genoi==OO
-    is_hetz <- genoi %in% c( AB, BC, AC)
-
-    bumpiq <- seq( 0, 1, length=nquants_bump+1) 
-    qdat <- quantile( dat[ !is_OO], bumpiq)
-    dqd <- diff( qdat)
-    big_bumpi <- which.min( dqd) 
-    qdat <- c( qdat, tail( qdat, 1)) # to avoid OOR on next step
-    big_bump <- mean( qdat[ big_bumpi+0:1])
-
-
-    # Outlier protection: counts above hix get treated as just "above hix"
-    # hix SHOULD be substantially more than mean of higher bump, otherwise silly... so, make sure it is
-    # Rarely, can end up too low after fitting bump properly, in which case it will be upped and then a refit
-    hix <- quantile( dat[ is_hetz], max_dat_quantile)
-    hix <- max( hix, big_bump * 1.8) # arbitrary; for mean counts of 10000000 it could be too large... will refit if required
-    setup_counts_and_nhi()
-
-    # Bumps are where quantiles are closest; max 2 bumps in theory
-    # Biggest bump is-- presumably-- either single-nulls or no-nulls; try both poss
-    # Don't use too many quantiles... 10 might be too many with just one plate
-
-
-    # Sigma based on ppn of (single) Normal within interval at bump
-    # Ignore centering...
-    # Big bump is 50% -- 100% of prob mass, centred around median of its own Normal
-    # So Pnorm( next_quant, mean= bb, sd=sigma) - 0.5 = dquant * (1--2)
-    # => qnorm( dquant*(1--2) + 0.5) = (next_quant-bb) / sd
-    # => sd = (next_quant-bb) / qnorm
-
-    sigma_hat <- dqd[ big_bumpi] /  qnorm( (bumpiq[2]-bumpiq[1])*(1:2) + 0.5)
-    sigma_hat <- max( sigma_hat) # min seems to go too small...
-
-    # Work with trimmed data to avoid crazy ****
-    # Would be better to censor values above say 0.95 (ie not too high a quantile), but normalmixEM can't
-
-    # Use bespoke constrained/"ML" fit using OO as well
-
-    # These will be overwritten by lglk_shebang
-    mulo <- unname( if( big_bump > hix/2) big_bump/2 else big_bump) # FUCKING names
-    siglo <- sigma_hat
-    muhi <- sighi <- NULL
-
-    nobs <- gobs[i,]
-    environment( lglk_shebang) <- environment()
-
-    phat <- pA <- pB <- pC <- pO <- NULL # set by lglk_shebang
-    penscale <- 0
-    repeat{ 
-      pstart <- unname( c( 
-          logit( 2* mulo / hix), 
-          log( siglo), 
-          logit( pambig[i,1]), 
-          logit( pambig[i,2] / (1-pambig[i,1]) ),
-          if( pambig[i,3]>0) logit( pambig[i,3] / (1-pambig[i,1]-pambig[i,2]) ) # else no 5th param
-        ))
-
-      if( !is.finite( lglk_shebang( pstart))) {
-        siglo <- siglo * 2
-      } else {
-    break
-      }
-    } # until OK startval
-
-    # Set penscale, following eg of est_ALF_ABCO
-    testo <- numeric( 3)
-    for( tempi in 1:3) {
-      testo[ tempi] <- lglk_shebang( pstart+0.01*c( -1, 0, 1)[tempi])
-    }
-    openscale <- max( abs( diff( testo))) / 1e2
-
-    for( n_refits in 0:(max_refits-1)) { # in case changing OOthresh & having to regenotype, or changed hix
-      penscale <- openscale
-      res <- nlminb( pstart, NEG( lglk_shebang), #method='BFGS', oops that's optim
-          control=list( trace=6))
-
-      # Should be able to reduce penscale now
-      repeat{
-        ophat <- phat
-        penscale <- penscale / 10
-        res <- nlminb( res$par, NEG( lglk_shebang), #method='BFGS', oops that's optim
-            control=list( trace=6))
-        if( rel.delta( phat, ophat) < 1e-2)
-      break
-      }
-
-      # For now, organize the results to match 'normalmixEM'
-      # ... so they can be extracted
-      lglk_shebang( res$par) # ensure up-to-date
-      res$lambda <- c( 2*pO*(1-pO), sqr( 1-pO))
-      res$mu <- c( mulo, muhi)
-      res$sigma <- c( siglo, sighi)
-      res$loglik <- (-res$objective) # not comparable with normalmixEM since different data
-
-      pbonzer[] <- c( pA, pB, pC, pO)
-
-      if( n_refits == max_refits) { # ... then no need to check
-    break
-      }
-
-      # May revise OOthresh and/or hix
-      refit_needed <- FALSE # unless changed by checks below
-      check_OOthresh <- pO > minpO_rethresh # otherwise not worth bothering with
-      phix <- CDF( hix, muhi, sighi, lower=TRUE)
-      shift_hix <- ! (phix %in.range% c( 0.6, 0.95)) # 0.6 since muhi is constrained <= hix; 0.98 for outliers
-      # Can still result in constraint being hit, but only for crap locus I think
-
-      if( check_OOthresh) {
-        # Try to split "widest gap". Need a rough upper limit to start: 2X as many in bump as at OO
-        new_OOthresh[ i] <- find_new_OOthresh( pO, mulo, siglo, dat, m_for_rethresh)
-        new_is_OO <- dat < new_OOthresh[i]
-        refit_needed <- !all( new_is_OO == is_OO)
-        if( refit_needed) { # because genotypes have changed
-          scatn( 'OO changed from %i to %i: regenotyping %s', sum( is_OO), sum( new_is_OO), locus_name[ i])
-          geno[,i] <- genoi <- geno_deambig_ABC( lociar[,i,,drop=FALSE], 
-              mht=mht[i], 
-              OOthresh_tc=new_OOthresh[i], 
-              het_cut=lociar@het_cut,
-              tc_hist_pars= NULL,
-              ppnA_hist_pars= NULL,
-              return_what= 'just_geno')
-
-          # Prepare for refit                        
-          for( ig in genotypes_ambig) {
-            nobs[ig] <- sum( genoi==ig)
-          }
-
-          # Total counts shouldn't change much, except tot[OO] still has A+B counts, and may ...
-          # ... get regenoed to AAO which includes only A counts
-          tot2[,i] <- make_tot2( cA[,i], cB[,i], cC[,i], genoi) # 
-          dat <- tot2[,i]
-
-          setup_counts_and_nhi()
-        } # # if genotypes change
-      } # if  check_OOthresh
-
-      if( shift_hix) {
-        scatn( 'Changing the outlier limit; refitting') 
-        refit_needed <- TRUE
-        hix <- qnorm( pmax( 0.6, pmin( 0.98, phix)), mean=muhi, sd=sighi)
-        setup_counts_and_nhi()
-      }
-
-      if( !refit_needed) {
-    break
-      }
-
-      pstart <- res$par  # start from same place, except...
-      pstart[1] <- logit( mulo / (hix/2))
-    } # for n_refits
-
-    # Now choose cutoff for distinguishing ZO from ZZ where Z is Ref or Alt (A or B) and O is "true" null ie not allele C
-    # If allele C is present, will always be scored as ZO (or OO)
-
-    # Has been fitted to TOTAL counts, so including allele C etc
-    # Choose allele-specific cutoff to min errors based on already-calculated pA etc, using *widths* of distros just calced here...
-    # ... but only A & B alleles
-
-    environment( diffprob) <- list2env( res) # and also variables defined here
-
-    # *Conditional* error rate for XXO as XX or XO (does not apply if C present)
-    best_cut <- c( A=0, B=0)
-    snerr <- structure( rep( 0, 4), names=cq( AA2AO, AO2AA, BB2BO, BO2BB))
-    for( al in cq( A, B)) {
-      pal <- get( 'p' %&% al)
-      best_cut[ al] <- if( diffprob( new_OOthresh[i], pX=pal, pO=pO) > 0) 
-          new_OOthresh[i] # did have OOthresh_tc instead here, though shouldn't matter much
-        else # Paige's cutoff: starting value for root-finder
-          find.root( diffprob, start=mulo * sqrt( 2), step=mulo / 6, pX=pal, pO=pO)
-
-      # snerr: technically wrong if on OOthresh bdy, but small...    
-      snerr[ gsub( 'X', al, 'XX2XO')] <- diffprob( best_cut[ al], pX=1, pO=0) 
-      snerr[ gsub( 'X', al, 'XO2XX')] <- (-diffprob( best_cut[ al], pX=0, pO=1) ) # NB sign !!!
-    }
-
-    if( plots) {
-      geno6_plot_counts()
-    }
-
-    # Obscure syntax, but it works
-    this_res <- with( res, returnList( 
-        mu, sigma, lambda, loglik, best_cut, snerr, pbonzer))
-    if( is.null( allres)) {
-      allres <- data.frame( FOR( this_res, I( matrix( ., nrow=n_loci, ncol=length( .), 
-          byrow=TRUE, dimnames= list( NULL, names( .))))))
-    }
-    for( thing in names( this_res)) {
-      allres[[thing]][i,] <- this_res[[thing]]
-    }
-  } # for loci
-
-  if( !show_progress) {
-    sink()
-    unlink( tt)
-    on.exit()
-  }
-
-  for( scalar_thing in which( sapply( allres, ncol)==1)) {
-    allres[[ scalar_thing]] <- c( allres[[ scalar_thing]])
-  } 
-
-  li$OOthresh_tc <- lociar@locinfo$OOthresh_tc <- new_OOthresh
-
-  p6 <- with( allres, calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'], snerr))
-
-  lociar@locinfo <- cbind( li, allres[ cq( snerr, best_cut, pbonzer)])
-  lociar@locinfo$perr <- p6@perr # gets messed up if in previous c() call  
-return( lociar)  
-}
-
-
-"deduce_dart_header_rows" <-
-function( nlocal=sys.parent()) mlocal({
-  metafish <- matrix( unlist( strsplit( metafish, ',')), 
+#' @importFrom mvbutils mlocal %except% %such.that% do.on
+#' @importFrom tools md5sum
+"deduce_dart_header_rows" <- function( nlocal=sys.parent()) mlocal({
+  metafish <- matrix( unlist( strsplit( metafish, ',')),
       ncol=ncols, byrow=TRUE)
   # What are the header rows? Following usually gives no information...
-  # metafish.type <- apply( metafish, 1, function( x) 
+  # metafish.type <- apply( metafish, 1, function( x)
   #     (x[ !is.fish.col] %except% '*') %such.that% nzchar(.)) # 5/5/2015: some are '' and some '*' :/
 
-  metafish <- metafish[,is.fish.col]      
+  metafish <- metafish[,is.fish.col]
   suppressWarnings( # fucking NA warning--- that's the fucking POINT
     metamean <- apply( metafish, 1, function(x) mean( as.numeric(x), na.rm=FALSE))
   )
@@ -1501,15 +1118,15 @@ function( nlocal=sys.parent()) mlocal({
   which.fishtot <- which( !is.na( metamean)) %except% which.dartjob
   if( length( which.fishtot)>1) {
     # ... see gripe below
-warning( 'Silly plate "names" apparently used (numerical)--- taking a guess...') 
+warning( 'Silly plate "names" apparently used (numerical)--- taking a guess...')
     which.fishtot <- which.fishtot %such.that% (metamean[.] > 10000) # ... guess, to weed out 1,2,etc
   }
-  
+
   # Also need a check that fishtot really is total-reads, even if numeric. EG it is not in the giant ABT/NBT file... fuck knows what it is there.
   if( metamean[ which.fishtot] < 10000) {
 warning( sprintf( 'WTF is line %i?? Supposed to be total reads per fish :/ Either job went wrong or datafile SNAFU', which.fishtot))
   }
-  
+
   is.well <- grepl( '^[A-Z][0-9]{1,2}$', metafish)
   dim( is.well) <- dim( metafish)
   which.well <- which.max( rowSums( is.well)) # was: which( rowSums( is.well) > 10)  but mebbe not 10 fish
@@ -1521,7 +1138,7 @@ warning( sprintf( 'WTF is line %i?? Supposed to be total reads per fish :/ Eithe
   # We SHOULD send Dart a plate specifier but eg School-shark first two plates are "1" and "2"
   # ... which is not very bloody informative :/
   # Code below worked for single-plate files, but a multi-plate analysis is different
-  # which.ourplate <- which( apply( metafish, 1, function( x) all( x==x[1]))) %except% which.dartjob    
+  # which.ourplate <- which( apply( metafish, 1, function( x) all( x==x[1]))) %except% which.dartjob
   # So: by elimination I guess :/
   which.ourplate <- (1:nrow( metafish)) %except%  c( which.dartjob, which.fishtot, which.fishname, which.well)
 
@@ -1529,11 +1146,11 @@ warning( sprintf( 'WTF is line %i?? Supposed to be total reads per fish :/ Eithe
     lu <- do.on( which.ourplate, length( unique( metafish[.,])))
     which.fishname <- which.ourplate[ which.max( lu)]
     which.ourplate <- which.ourplate[ which.min( lu)]
-warning( sprintf( '"Fishname" not in agreed format. Guessing that row %i is "our plate name" and row %i is "fishname"', 
+warning( sprintf( '"Fishname" not in agreed format. Guessing that row %i is "our plate name" and row %i is "fishname"',
         which.ourplate, which.fishname))
   }
 
-stopifnot( length( which.fishname)==1 && 
+stopifnot( length( which.fishname)==1 &&
     length( which.ourplate)==1 &&
     length( which.fishtot)==1 &&
     length( which.well)==1 &&
@@ -1552,27 +1169,28 @@ stopifnot( length( which.fishname)==1 &&
   # rownames( metafish) <- wells[ is.fish.col] # not sure why needed... and wells may not be unique
   metafish$File <- filename
   metafish$MD5 <- md5sum( filename)
-  
+
   nfish <- ncol( fishinfo)
 })
 
 
+#' @importFrom atease @ @<-
 "define" <-
 function( expr, expand_dim=FALSE) {
   expr <- substitute( expr)
   stopifnot( ((expr %is.a% '<-') || ((expr %is.a% 'call') && (expr[[1]]==as.name( '<<-')) ) ) && (expr[[2]] %is.a% 'name'))
   obj <- expr[[2]] # name/symbol
   name <- as.character( obj)
-  
+
   eval.parent( expr)
   if( expand_dim && length( prefixdims)) { # known from environment
     prefixdims <- prefixdims # since these live in the parent, and substitute() won't find them
     dimorlen <- function( x) { if( is.null( d <- dim( x))) d <- length( x); d}
-    eval.parent( substitute( 
+    eval.parent( substitute(
         obj <- structure( rep( obj, prod( prefixdims)), dim=c( prefixdims, dimorlen( obj)))
       ))
   }
-  
+
   e <- environment( sys.function())
   eval.parent( substitute( {
     dimnames( obj) <- NULL # they just slow things down
@@ -1580,12 +1198,12 @@ function( expr, expand_dim=FALSE) {
     obj@where <- e
     obj@whoami <- name
   }))
-eval.parent( obj)  
+eval.parent( obj)
 }
 
 
-"define_genotypes" <-
-function( nlocal=sys.parent()) mlocal({
+#' @importFrom mvbutils cq extract.named named mlocal
+"define_genotypes" <- function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
 
@@ -1594,7 +1212,7 @@ function( nlocal=sys.parent()) mlocal({
   genotypes4_ambig <- cq( OO, AB, AAO, BBO)
   genotypes6 <- cq( AA, AB, AO, BB, BO, OO)
   genotypes_C <- cq( AA, AB, AC, AO, BB, BC, BO, CC, CO, OO)
-  
+
   for( ig in genotypes) {
     # assign( ig, structure( as.raw( match( ig, genotypes)), class='ABOSNP'))
     assign( ig, structure( ig, class='noquote')) # for nicer printing
@@ -1602,14 +1220,10 @@ function( nlocal=sys.parent()) mlocal({
 })
 
 
-"defish_csv" <-
-function( 
-    csvfile, 
-    just_count_the_fish=FALSE, 
-    subset_fish=NULL, 
-    loci=TRUE,
-    outfile=sub( '([.][^.]+)$', '-short\\1', csvfile)) {
-#########    
+"defish_csv" <- function(csvfile, just_count_the_fish=FALSE, subset_fish=NULL,
+                         loci=TRUE,
+                         outfile=sub( '([.][^.]+)$', '-short\\1', csvfile)){
+
   first_line <- scan( csvfile, what='', sep='\n', nmax=1, quiet=TRUE)
   first_nonblank <- regexpr( '[^,*]', first_line)
   n_locinfo_fields <- length( strsplit( substring( first_line, 1, first_nonblank), split=',')[[1]])-1
@@ -1618,10 +1232,10 @@ function(
   if( just_count_the_fish) {
 return( n_fish)
   }
-  
+
   # Needs 'cut' utility
   # ... Actually would be much fater without it, using instead something like
-  # scannee <- scan(..., what='', sep='\n') to read in all lines, then 
+  # scannee <- scan(..., what='', sep='\n') to read in all lines, then
   # line_len <- regexpr( '([^,]*,){2000}', scannee, perl=T)@match.length-1
   # cat( substring( humungo7, 1, line_len), sep='\n', file=outfile)
   # perl regex needed to handle large repeat counts eg {2000}
@@ -1630,24 +1244,24 @@ return( n_fish)
 stopifnot( nzchar( Sys.which( 'cut')[1]))
 
   subset_fish <- seq.int( n_fish)[ subset_fish]
-  
+
   if( any( is.na( subset_fish))) {
 stop( sprintf( "Invalid subset: only max %i available", n_fish))
   }
-  
+
   if( any( duplicated( subset_fish))) {
     warn( "Duplicates in 'subset_fish' are being discarded") # but carry on
   }
-  
+
   subset_fish <- sort( unique( subset_fish))
-  subset_fish <- c( 
+  subset_fish <- c(
       if( loci) seq.int( n_locinfo_fields), # else don't...
       subset_fish + n_locinfo_fields)
 
   if( !length( subset_fish)) {
 stop( "Pick some fish (or at least set loci=TRUE), dammit")
   }
-  
+
   # Concoct the "--fields=..." arg to 'cut', called 'subbo': contiguous ranges eg 2,3-7,9-11,12
   if( length( subset_fish)==1) {
     subbo <- as.character( subset_fish)
@@ -1668,20 +1282,20 @@ stop( "Pick some fish (or at least set loci=TRUE), dammit")
       subranges[ !singletons] <- paste( subgroups[ !singletons,1], subgroups[ !singletons,2], sep='-')
       subbo <- paste( subranges, collapse=',')
     }
-    if( max( subset_fish) == n_locinfo_fields + n_fish) { # drop final thing to avoid hunt for final comma 
+    if( max( subset_fish) == n_locinfo_fields + n_fish) { # drop final thing to avoid hunt for final comma
       subbo <- sub( '[0-9]+$', '', subbo)
     }
-  }  
-  
+  }
+
   if( grepl( ' ', csvfile)) { # stupid stupid
     csvfile <- sprintf( '"%s"', csvfile)
   }
 
-  OK <- system2( 'cut', 
-      args=c( '--delimiter=,', sprintf( '--fields=%s', subbo), csvfile), 
+  OK <- system2( 'cut',
+      args=c( '--delimiter=,', sprintf( '--fields=%s', subbo), csvfile),
       stdout=outfile,
       invisible=TRUE)
-      
+
   if( OK!=0) {
 stop( sprintf( 'Summat wrong... look at %s', outfile))
   }
@@ -1689,69 +1303,15 @@ return( outfile)
 }
 
 
+#' @importFrom atease @ @<-
 "dim.NGS_count_ar" <-
 function( x) c( nrow( unclass( x)), nrow( x@locinfo))
 
 
-"drop_dups_pairwise_equiv" <-
-function( ij, want_groups=FALSE) {
-  ij <- as.matrix( ij) # in case it was a data.frame
-  uij <- unique( c( ij))
-  ij[] <- match( ij, uij)
-
-  n <- max( ij)
-  m <- nrow( ij)
-  nf <- 1:n # Initialize each element its own class
-  
-  for( l in 1:m) {
-    j <- ij[l,1]
-    while( nf[ j] != j) {
-      j <- nf[ j]
-    }
-    k <- ij[l,2]
-    while( nf[ k] != k) {
-      k <- nf[ k]
-    }
-    if( j != k) {
-      nf[ j] <- k
-    }
-  }
-  
-  for( j in 1:n) {
-    while( nf[ j] != nf[ nf[ j]]) {
-      nf[ j] <- nf[ nf[ j]]
-    }
-  }
-  
-  # Keep first member of each nf-group
-  groups <- split( 1:n, nf)
-  keeps <- do.on( groups, .[1])
-  drops <- (1:n) %except% keeps
-  drops <- sort( uij[ drops])
-  
-  if( want_groups) {
-    drops@groups <- FOR( groups, uij[.])
-  }
-  
-return( drops)
-
-#for (k=1;k<=n;k++) nf[k]=k; Initialize each element its own class.
-#for (l=1;l<=m;l++) { For each piece of input information...
-#  j=lista[l];
-#  while (nf[j] != j) j=nf[j]; Track 1st element up to its ancestor.
-#  k=listb[l];
-#  while (nf[k] != k) k=nf[k]; Track second element up to its ancestor.
-#  if (j != k) nf[j]=k; // If they are not already related, make them so
-#} 
-#for (j=1;j<=n;j++) Final sweep up to highest ancestors.
-#while (nf[j] != nf[nf[j]]) nf[j]=nf[nf[j]];
-#}
-#Alternatively, we may be able to construct a function
-#
-
-}
-
-
+#' @importFrom atease @ @<-
+#' @importFrom handy2 sqr
+#' @importFrom stats approx
+#' @importFrom mvbutils do.on
 "dump_badhetz_fish" <-
 function( lociar,  # either 'loc.ar' with 'geno_amb' field, or 'snpgeno'
     multhresh_badhetz_fish,
@@ -1774,8 +1334,8 @@ function( lociar,  # either 'loc.ar' with 'geno_amb' field, or 'snpgeno'
   if( is.null( pamb)) {
     pamb <- lociar@locinfo$pambig
   }
-  
-  # Code below expects 
+
+  # Code below expects
   if( my.all.equal( gamb@diplos, genotypes6)) {
     # No C in this encoding of genotypes; fudge the probs accordingly
     pamb[,'O'] <- pamb[,'O'] + pamb[,'C']
@@ -1783,13 +1343,13 @@ function( lociar,  # either 'loc.ar' with 'geno_amb' field, or 'snpgeno'
   } else if( !my.all.equal( gamb@diplos, genotypes_ambig)) {
 stop( "'dump_badhetz_fish' requires either 'genotypes6' or 'genotypes_ambig' encoding")
   }
-  
+
 
   cutto <- multhresh_badhetz_fish / n_fish
   pcuts <- c( cutto, 1-cutto)
-  
+
   if( method=='Nhetz') {
-stop( "Haven't finished SPA version of Nhetz method yet")  
+stop( "Haven't finished SPA version of Nhetz method yet")
     phet_loci <- 2*pamb[ ,'A'] * pamb[,'B']
     hetz_stat <- nhet <- rowSums( gamb==AB)
 
@@ -1797,10 +1357,10 @@ stop( "Haven't finished SPA version of Nhetz method yet")
     # Should reeeeeeally do the interp backwards & forwards to avoid roundoff error---
     # ... these are fairly small probs. But...
     # patleast <- rev( cumsum( rev( bsp)))
-    
+
     # bernoulli.sum.probs() is exact, but uses obsolete DLL
     # Use SPA instead--- code pinched from find_POPs
-    K <- function( tt) { 
+    K <- function( tt) {
         pel <- outer( phet_loci / (1-phet_loci), exp( tt))
         colSums( log1p( -phet_loci) + log1p( pel))
       }
@@ -1815,12 +1375,12 @@ stop( "Haven't finished SPA version of Nhetz method yet")
         ipel <- 1/(1+pel)
         colSums( ipel) - colSums( sqr( ipel))
       }
-  
+
     # check: dK(0) == sum( phet_loci)
     # ddK(0) == sum( p) - sum( phet_loci)^2
     CDF <- renorm_SPA_cumul( K, dK, ddK)$CDF
     patleast <- 1-CDF( ....) # or use renorm_SPA as below
-    
+
     ncuts <- approx( patleast, seq_along( bsp)-1, xout=pcuts)$y
   } else if( method=='hetzminoo') {
     delta <- (gamb==AB) + (gamb==AC) + (gamb==BC) - (gamb==OO)
@@ -1829,15 +1389,15 @@ stop( "Haven't finished SPA version of Nhetz method yet")
     comp_pq <- 1-pXY-pOO
 
     hetz_stat <- hetzminoo <- rowSums( delta)
-    
+
     # The none-too-clear use of eval etc next, is so that the intermediate variables
     # ... are shared by the K-related functions, without needing to use '<<-'
     # I don't understand why it's necessary to add 'list( s=s)'; sometimes things
     # ... seems to work without that, but sometimes they do not. Ideally
-    # ... (i) 's' would not need to be 'force'd, and 
+    # ... (i) 's' would not need to be 'force'd, and
     # ... (ii) there would be an automatic way to add in all the args
     # ... presumably all this crap is why 'do.in.envir()' really does have a role!
-    
+
     Kdiff <- function( s) eval( envir=environment( sys.function()), substitute({
         last_s <- s
         es <- exp( s)
@@ -1859,7 +1419,7 @@ stop( "Haven't finished SPA version of Nhetz method yet")
     ddKdiff <- function( s) eval( envir=environment( sys.function()), substitute({
         Kdiff( s)
       return( sum( ( pPqC * pPq - sqr( pNq)  )  / sqr( pPqC)))
-      }, list(s=s)))    
+      }, list(s=s)))
     e <- new.env( environment())
     e$last_s <- Inf
     # evalq( env=e, { last_s <- last_dK <- pPq <- pNq <- pPqC <- 0 })
@@ -1869,12 +1429,12 @@ stop( "Haven't finished SPA version of Nhetz method yet")
   } else {
 stop( "Method==WTF?? %s")
   }
-  
+
   # optional graphics and/or user-specified outputs
-  switch( mode( badhetz_hist_pars), 
-    list = { 
-        badhetz_hist_pars <- add_list_defaults( badhetz_hist_pars, 
-            main=sprintf( '%s by FISH: multhresh=%5.2f', method, multhresh_badhetz_fish), 
+  switch( mode( badhetz_hist_pars),
+    list = {
+        badhetz_hist_pars <- add_list_defaults( badhetz_hist_pars,
+            main=sprintf( '%s by FISH: multhresh=%5.2f', method, multhresh_badhetz_fish),
             xlim= range( c( hetz_stat, ncuts)), # so cutoff lines show
             xlab='', nclass=50)
         lv <- do.call( 'hist', c( list( x=hetz_stat), badhetz_hist_pars))
@@ -1894,11 +1454,12 @@ return( lociar)
 }
 
 
+#' @importFrom atease @ @<-
 "dump_low_count_loci" <-
-function( 
-    countar, 
-    min_med_het_tot, # eg 100 
-    het_pc_limit, # eg 1.3 
+function(
+    countar,
+    min_med_het_tot, # eg 100
+    het_pc_limit, # eg 1.3
     mintol_het, # eg 0.1
     nearly_max, # 1 to use max( top2) * mintol_het as crit for hetz, <1 to use that quantile of top2 instead
     MByte_comfy=50,
@@ -1919,14 +1480,14 @@ function(
   median_het_total <- numeric( n_loci)
   keep_locus <- rep( TRUE, n_loci)
   names( median_het_total) <- names( keep_locus) <- loci_names <- countar@locinfo$Locus
-  
+
   ## Find HIGHEST count by fish and locus, across *all* alleles at that locus...
   ## ... and 2nd highest count
   ## ... and pick "likely hetz" based on ratio of highest/2nd being "close to 1"
   ## ... and filter out too-tiny "hetz" that are really double-nulls with splatter
   ## ... and take the median
-  
-  # Some loci have LOADS of alleles. Expanding to a full-size array straightaway will eat too much memory  
+
+  # Some loci have LOADS of alleles. Expanding to a full-size array straightaway will eat too much memory
   # Rather, loop over groups of loci sorted by n_alleles, trying to avoid massive arrays
   n_alleles <- countar@locinfo$n_alleles
   tablo <- table( n_alleles)
@@ -1937,7 +1498,7 @@ function(
     # Do all locus-selection first, to avoid forgetting it after the "main" calcs!
     # Exceed MBytes_comfy, but by as little as possible...
     # ... can't risk not being able to do any at all!
-    
+
     first_undone <- next_first_undone
     upto <- first_undone
     for( upto in first_undone %upto% length( MBytes)) {
@@ -1948,12 +1509,12 @@ function(
     }
     next_first_undone <- upto + 1
     if( show_progress) {
-      cat( sprintf( '\r  Tackling %i loci with %i:%i alleles', 
-          sum( tablo[ first_undone %upto% upto]), 
-          first_undone, 
+      cat( sprintf( '\r  Tackling %i loci with %i:%i alleles',
+          sum( tablo[ first_undone %upto% upto]),
+          first_undone,
           upto))
     }
-    
+
     # Make regular 3D array--- NB 3rd dimension being (max) num alleles
     these_loci <- which( n_alleles %in.range% nal_group[ c( first_undone, upto)])
     counts <- countar[ , these_loci, 1 %upto% nal_group[ upto]]
@@ -1975,7 +1536,7 @@ function(
   }
 
   rm( ordo, counts, ocounts)
-  
+
   if( just_top2) { # used by geno_deambig()
 return( abind( top_count, next_count, along=3))
   }
@@ -1983,12 +1544,12 @@ return( abind( top_count, next_count, along=3))
   # Are they similar enough to be a het, say <=30% diff? (and both > 0)
   top2_counts <- top_count + next_count
   couldbe_het <- (next_count > 0) & (top_count <= het_pc_limit * next_count)
-  
+
   # Trick for speed, using max.col to avoid apply. there's no max.row, so transpose
   if( nearly_max==1) {
     t_het_counts <- t( top2_counts * couldbe_het)
     maxsamp_by_locus <- max.col( t_het_counts)
-    maxcount_het <- t_het_counts[ cbind( 1:n_loci, maxsamp_by_locus)] 
+    maxcount_het <- t_het_counts[ cbind( 1:n_loci, maxsamp_by_locus)]
     rm( t_het_counts)
   } else { # slightly slower thx2 apply
     t2 <- top2_counts
@@ -1997,7 +1558,7 @@ return( abind( top_count, next_count, along=3))
     rm( t2)
   }
 
-  # Eliminate tiny "hetz"--- really OO--- assuming CNVariation is not more than say 10fold... 
+  # Eliminate tiny "hetz"--- really OO--- assuming CNVariation is not more than say 10fold...
   # ... could do some kind of graphical check here, dunno wot tho
   couldbe_het <- couldbe_het & (top2_counts > rep( maxcount_het, each=n_samps) * mintol_het)
 
@@ -2011,17 +1572,19 @@ return( abind( top_count, next_count, along=3))
   # ... just dumped the low ones
   # EG for checks: hist( median_het_total, nc=200, xlim=c( 0, 500))
   # abline( v=min_med_het_tot, col='red')
-  
-  rm( top2_counts, couldbe_het, top_count, next_count) 
-  
+
+  rm( top2_counts, couldbe_het, top_count, next_count)
+
   countar@locinfo$med_het_tot <- median_het_total
-  
+
 return( countar[,keep_locus])
 }
 
 
-"est_ALF_ABCO" <-
-function( lociar) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq
+#' @importFrom handy2 NEG
+"est_ALF_ABCO" <- function(lociar){
 ########## Taken largely from "pipeline_for_SBT_baits.r"
 ########## MVB: I'd like to clean this up
 ########## Careful "parallel Newton-Raphson" could allow vectorization and whoosh-factor, but NFN I guess
@@ -2037,12 +1600,12 @@ stop( "No 'geno_amb' attribute :(")
   lglk <- function( params, nobs, return_expected=FALSE) {
       has_C <- length( params)==3
 
-      # Reparamed for with-C case to logit scale, to avoid probs when pC~=0      
+      # Reparamed for with-C case to logit scale, to avoid probs when pC~=0
       pA <<- inv.logit( params[1])
       pB <<- (1-pA) * inv.logit( params[2])
       pC <<- if( has_C) (1-pA-pB) * inv.logit( params[ 3]) else 0
       pO <<- max( 0, 1 - pA - pB - pC) # rounding error guard
-                                                 
+
       phat <- make_pgeno( pA, pB, pC, which_genotypes=genotypes_ambig)
       expected <<- n_fish * phat
       lglk <- nobs %*% log(phat + (nobs==0))        # avoid 0log0 gotcha
@@ -2050,7 +1613,7 @@ stop( "No 'geno_amb' attribute :(")
     return( lglk - pen)
     }
   pA <- pB <- pC <- pO <- (-1) # overwritten when lglk runs
-  
+
   n_fish <- nrow( geno_amb)
   n_loci <- ncol( geno_amb)
   gobs <- gpred <- matrix( 0, n_loci, length( genotypes_ambig), dimnames=list( NULL, genotypes_ambig))
@@ -2058,21 +1621,21 @@ stop( "No 'geno_amb' attribute :(")
     gobs[,g] <- colSums( geno_amb==g)
   }
 
-  # MVB: Old code looks pretty slow. 
+  # MVB: Old code looks pretty slow.
   # Calc g.freq for all loci **BUT ONLY ACCEPTABLE FISH** to preserve matrix size
   # g.freq <- apply(gABO.obs[!iamb.f, ], 2, function(x) table(factor(x,levels=c("AA","AB","BB","OO"))))
 
   pambig_est <- matrix(NA, n_loci, 4, dimnames=list( NULL, cq( A, B, C, O)))   # nloci rows, 2 cols (pA, pB) (p0 = 1-rowSums(p.est))
   conv <- rep( NA, n_loci) # convergence diagnostic
-  
-  tiny <- 2^-12 # avoid rounding error 
-  
+
+  tiny <- 2^-12 # avoid rounding error
+
   scatn( 'Starting ambig-geno_amb MALF/NALF estimation on %i loci:\n', n_loci)
   evalq( # for debug speed
   for( ll in 1:n_loci)  {
     if( ll %% 50 == 0) { cat( '\r', ll); flush.console() }
     has_C <- sum( gobs[ll,cq( AC, BC, CCO)])>0
-    
+
     # Rough ests based on presence: mild overflow guard
     pA <- 1 - sqrt( 1- sum( gobs[ll, cq( AAO, AB, AC)]) / (1 + n_fish))
     pB <- 1 - sqrt( 1- sum( gobs[ll, cq( BBO, AB, BC)]) / (1 + n_fish))
@@ -2081,8 +1644,8 @@ stop( "No 'geno_amb' attribute :(")
     # Really, loci with rubbish pB (or pA) should have been chucked by now... but just in case...
     if( pA==0) pA <- 1/(2*n_fish)
     if( pB==0) pB <- 1/(2*n_fish)
-    
-     
+
+
     # Hard overflow guard...
     duhhh <- pA + pB + pC
     if( duhhh > 0.99) {
@@ -2092,9 +1655,9 @@ stop( "No 'geno_amb' attribute :(")
       pC <- pC / duhhh
     }
 
-    
+
     start_par <- c( logit( pA), logit( pB / (1-pA)), if( has_C) logit( pC / (1-pA-pB)))
-    
+
     # Set reasonable penalty scale
     penscale <- 0
     testo <- numeric( 3)
@@ -2102,12 +1665,12 @@ stop( "No 'geno_amb' attribute :(")
       testo[ i] <- lglk( start_par+c( -1, 0, 1)[i], nobs=gobs[ll,])
     }
     penscale <- max( abs( diff( testo))) / 1e4
-    
+
     fit <- nlminb( start_par, NEG( lglk), nobs=gobs[ll,])
     conv[ll] <- fit$convergence
     besto <- fit$par
 
-    # Try refit with reduced and recentred penalty    
+    # Try refit with reduced and recentred penalty
     start_par <- besto
     penscale <- penscale / 10
     fit <- nlminb( start_par, NEG( lglk), nobs=gobs[ll,])
@@ -2131,102 +1694,36 @@ return( lociar)
 }
 
 
-"find_duplicates" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    max_diff_genos) {
-###################
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq %without.name% returnList
+#' @importFrom handy2 sqr
+"find_HSPs_cond" <- function(snpg, subset1=1 %upto% nrow(snpg), subset2=subset1,
+    one_in_X_eta,
+    rough_n_pairs_to_keep,
+    eta= NULL,
+    keep_thresh= NULL,
+    nq= 50,
+    bins= NULL) {
+## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
+stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
-  # Count #loci with different 4way genos. Errors in 4ways should be low.
+  og <- options( vecless.print=FALSE)
+  on.exit( options( og))
+
+  # Here I'm using L-R tail approx SPA for CDF
+  # ... although Kenv$inv_CDF is likely more accurate for "moderate" tails but I don't quite trust it in the extremes
+  # ... actually they are pretty similar
+  # ... Possibly, Kenv$inv_CDF should check if arg exceeds the range it was fitted to, and if so call
+  # ... inv_CDF_SPA2() instead
+  # ... but the range used in fitting is very goddamn wide (say +/- 10 SD) !
+
   define_genotypes()
-  temp_snpg <- snpg
-  temp_snpg@diplos <- genotypes4_ambig
-  temp_snpg[ snpg==AO] <- AAO
-  temp_snpg[ snpg==AA] <- AAO
-  temp_snpg[ snpg==BO] <- BBO
-  temp_snpg[ snpg==BB] <- BBO
-  temp_snpg[ snpg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
-  temp_snpg[ snpg==AB] <- AB
 
-
-  # Sort loci to get most informative/random ones first  
-  # use snpg1 for this, arbitrarily
-  gtab <- matrix( 0, 4, ncol( snpg), dimnames=list( genotypes4_ambig, NULL))
-  for( ig in genotypes4_ambig) {
-    gtab[ ig,] <- colSums( temp_snpg==ig)
-  }
-  gtab <- gtab / nrow( snpg)
-  pid <- colSums( sqr( gtab))
-  o <- order( pid)
-  pid <- pid[ o]
-
-  # Remove extranea  
-  temp_snpg <- temp_snpg[ ,o]
-  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
-  temp_snpg <- t( temp_snpg)
-
-  # Trying special-cases here to minimize copying
-  if( my.all.equal( subset1, subset2)) {
-    if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
-      temp_snpg <- temp_snpg[, subset1]
-    }
-  
-    result <- DUP_paircomps_lots( 
-        geno1= temp_snpg,
-        geno2= temp_snpg,
-        symmo= TRUE, 
-        max_diff_genos = max_diff_genos
-      )
-  } else { # different subsets
-    result <- DUP_paircomps_lots( 
-        geno1= temp_snpg[ , subset1],
-        geno2= temp_snpg[ , subset2],
-        symmo= FALSE, 
-        max_diff_genos = max_diff_genos
-      )
-  }
-
-  
-  result$bigs <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
-  result <- result %without.name% cq( big_similar, big_i, big_j)
-  result$call <- sys.call()
-  
-return( result)    
-}
-
-
-"find_HSPs" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta, 
-    rough_n_pairs_to_keep, 
-    eta= NULL,
-    keep_thresh= NULL,
-    nq= 50,
-    bins= NULL) {
-## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
-stopifnot( 'Kenv' %in% names( attributes( snpg)))
-
-  # Sanity...
-stopifnot( is.numeric( subset1) && is.numeric( subset2))
-stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
-
-  og <- options( vecless.print=FALSE)
-  on.exit( options( og))
-
-  # Here I'm using L-R tail approx SPA for CDF
-  # ... although Kenv$inv_CDF is likely more accurate for "moderate" tails but I don't quite trust it in the extremes
-  # ... actually they are pretty similar
-  # ... Possibly, Kenv$inv_CDF should check if arg exceeds the range it was fitted to, and if so call
-  # ... inv_CDF_SPA2() instead
-  # ... but the range used in fitting is very goddamn wide (say +/- 10 SD) !
-
-  define_genotypes()  
-  
   for( iwhat in cq( K, dK, ddK, inv_CDF)) {
     assign( iwhat, snpg@Kenv[[ iwhat]])
   }
@@ -2235,116 +1732,19 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   # For 4way loci, temporarily treat XO as XX...
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
   # ... use the LOD that's in Kenv, where SPA is calculated
-  
-  extract.named( snpg@locinfo[ cq( use6, LOD6, LOD4)])
-  use4 <- !use6
-  temp_snpg <- snpg
-  recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg[ , use4] <- recode4to6temp( snpg[, use4]) # (AA,AO) -> AA; (BB,BO) -> BB
-  temp_LOD <- snpg@Kenv$LOD # already done in prepare_PLOD_SPA
 
-  # Remove extranea
-  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
-  temp_snpg <- t( temp_snpg)
-  
-  if( is.null( bins)) {
-    qq <- (2:nq-1)/nq
-    bins <- snpg@Kenv$inv_CDF( qq)
-  }
-  binprobs <- snpg@Kenv$CDF( bins)
-
-  # Trying special-cases here to minimize copying
-  if( symmo) {
-    if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
-      temp_snpg <- temp_snpg[, subset1]
-    }
-  
-    result <- HSP_paircomps_lots( 
-        pair_geno= temp_LOD@mg, 
-        LOD= t( temp_LOD), 
-        geno1= temp_snpg, 
-        geno2= temp_snpg, 
-        symmo= TRUE, 
-        eta= eta, 
-        min_keep_PLOD= keep_thresh, 
-        bins= bins
-      )
-  } else { # different subsets
-    result <- HSP_paircomps_lots( 
-        pair_geno= temp_LOD@mg, 
-        LOD= t( temp_LOD), 
-        geno1= temp_snpg[ , subset1], 
-        geno2= temp_snpg[ , subset2], 
-        symmo= FALSE, 
-        eta= eta, 
-        min_keep_PLOD= keep_thresh, 
-        bins= bins
-      )
-  }
-  
-  result$bigs <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
-  result <- result %without.name% cq( big_PLOD, big_i, big_j)
-  result$bins <- bins
-  result$binprobs <- binprobs
-  result$eta <- eta
-  result$keep_thresh <- keep_thresh
-  result$mean_theory <- snpg@Kenv$dK( 0)
-  result$var_theory <- snpg@Kenv$ddK( 0)
-  result$call <- sys.call()
-  
-return( result)    
-}
-
-
-"find_HSPs_cond" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta, 
-    rough_n_pairs_to_keep, 
-    eta= NULL,
-    keep_thresh= NULL,
-    nq= 50,
-    bins= NULL) {
-## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
-stopifnot( 'Kenv' %in% names( attributes( snpg)))
-
-  # Sanity...
-stopifnot( is.numeric( subset1) && is.numeric( subset2))
-stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
-
-  og <- options( vecless.print=FALSE)
-  on.exit( options( og))
-
-  # Here I'm using L-R tail approx SPA for CDF
-  # ... although Kenv$inv_CDF is likely more accurate for "moderate" tails but I don't quite trust it in the extremes
-  # ... actually they are pretty similar
-  # ... Possibly, Kenv$inv_CDF should check if arg exceeds the range it was fitted to, and if so call
-  # ... inv_CDF_SPA2() instead
-  # ... but the range used in fitting is very goddamn wide (say +/- 10 SD) !
-
-  define_genotypes()  
-  
-  for( iwhat in cq( K, dK, ddK, inv_CDF)) {
-    assign( iwhat, snpg@Kenv[[ iwhat]])
-  }
-  set_thresholds( keeping='hi')
-
-  # For 4way loci, temporarily treat XO as XX...
-  # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
-  # ... use the LOD that's in Kenv, where SPA is calculated
-  
   make_CLOD <- function( LOD, PUP) {
     # Could've/should've be done at the start in hsp_power, but here will do
     Pg[ l, gi] := sqrt( PUP[ l, gi, gi])
     PHSP[l,gj,gi] := exp( LOD[ l, gj, gi]) * Pg[ l, gj] * Pg[ l, gi]
     Pg2_g1_H[ l, gj, gi] := PHSP[ l, gj, gi] / Pg[ l, gi]
-  
+
     e_CLOD[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg[ l, gj]  # since gj indept gi
     e2_CLOD[ l, gi] := sqr( LOD[ l, gi, gj]) %[gj]% Pg[ l, gj]
-    e_CLOD_HSP[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg2_g1_H[ l, gj, gi] 
+    e_CLOD_HSP[ l, gi] := LOD[ l, gi, gj] %[gj]% Pg2_g1_H[ l, gj, gi]
   returnList( e_CLOD, e2_CLOD, e_CLOD_HSP)
   }
-  
+
   extract.named( snpg@locinfo[ cq( use6, LOD6, LOD4)])
   use4 <- !use6
   temp_snpg <- snpg
@@ -2355,7 +1755,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   # Remove extranea
   attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
   temp_snpg <- t( temp_snpg)
-  
+
   if( is.null( bins)) {
     qq <- (2:nq-1)/nq
     bins <- inv_CDF( qq)
@@ -2385,19 +1785,19 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       min_keep_PLOD= keep_thresh,
       bins= bins)
   } else { # different subsets
-stop( "Fix the non-symm code, bozo...")   
+stop( "Fix the non-symm code, bozo...")
     result <- HSP_cond_paircomps_lots( this+will+fail,
-        pair_geno= temp_LOD@mg, 
-        LOD= t( temp_LOD), 
-        geno1= temp_snpg[ , subset1], 
-        geno2= temp_snpg[ , subset2], 
-        symmo= FALSE, 
-        eta= eta, 
-        min_keep_PLOD= keep_thresh, 
+        pair_geno= temp_LOD@mg,
+        LOD= t( temp_LOD),
+        geno1= temp_snpg[ , subset1],
+        geno2= temp_snpg[ , subset2],
+        symmo= FALSE,
+        eta= eta,
+        min_keep_PLOD= keep_thresh,
         bins= bins
       )
   }
-  
+
   result$bigs <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
   result <- result %without.name% cq( big_PLOD, big_i, big_j)
   result$bins <- bins
@@ -2405,18 +1805,19 @@ stop( "Fix the non-symm code, bozo...")
   result$eta <- eta
   result$keep_thresh <- keep_thresh
   result$call <- sys.call()
-  
-return( result)    
+
+return( result)
 }
 
 
+#' @importFrom mvbutils %such.that%
 "find_new_OOthresh" <-
 function( pO, mulo, siglo, dat, m_for_rethresh) {
   pcut <- 2*pO/(2*(1-pO))
   while( pcut < 0.84) { # pnorm( 1) ish
-    cutto <- qnorm( pcut, mean=mulo, sd=siglo) 
+    cutto <- qnorm( pcut, mean=mulo, sd=siglo)
     # but that's theory; for small pO, cutto could be so small that too few from bump...
-    if( sum( dat < cutto) - sum( dat==0) > 2 * m_for_rethresh) { 
+    if( sum( dat < cutto) - sum( dat==0) > 2 * m_for_rethresh) {
   break # successfully grabbed a few points
     } else {
       pcut <- pcut * 2
@@ -2431,320 +1832,39 @@ return( widio( c( 0, dat %such.that% ((.>0) & (.<cutto))), m=m_for_rethresh))
 }
 
 
-"find_POPs" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    pOC_max, 
-    one_in_X_eta, 
-    rough_n_pairs_to_keep= NA, 
-    eta= NULL,
-    keep_thresh= NULL,
-    nq) {
-###################
-  # Sanity...
-stopifnot( is.numeric( subset1) && is.numeric( subset2))
-stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils returnList
+"geno_deambig" <- function(lociar, OOthresh_tc, het_cut, tc_hist_pars,
+                           ppnA_hist_pars) {
 
-  # Decide based #apparent exclusions of AA/BB form, using 4way genos, though 
-  # ... it's really AAO/BBO so not a true exclu but
-  # ... close among pop-loci
-  # Sticking with 4way genos so that genotyping errors are low
-  # ... but of course that generates some small "false exlcusion" rate thx2 nulls
-  # ... could diddle around with expected number of false exlcus for POPs but
-  # ... just see what comes out
-  
-  # For 4way loci, temporarily treat XO as XX...
-  # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
-  # ... use the LOD that's in Kenv, where SPA is calculated
+  # Pick OO, hetz
+  # Leave possible homoz as "possible" for now
 
-  define_genotypes()  
-  extract.named( snpg@locinfo[ cq( use6, PUP4, pbonzer)])
-  pop_loci <- which( pbonzer[,'O'] + pbonzer[,'C'] < pOC_max)
-  
-  temp_snpg <- snpg[ , pop_loci]
-  recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg <- recode4to6temp( temp_snpg) # (AA,AO) -> AA; (BB,BO) -> BB
-
-  # Remove extranea
-  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
-  temp_snpg <- t( temp_snpg)
-
-  
-  # Distro of #excl loci for UPs
-  opphetz <- c( 'AAO/BBO', 'BBO/AAO') %that.are.in% colnames( PUP4)
-  pex_up <- PUP4[ pop_loci, opphetz]
-  K <- function( tt) { 
-      pel <- outer( pex_up / (1-pex_up), exp( tt))
-      colSums( log1p( -pex_up) + log1p( pel))
-    }
-    
-  dK <- function( tt) {
-      pel <- outer( pex_up / (1-pex_up), exp( tt))
-      length( pex_up) - colSums( 1/(1+pel))
-    }
-  
-  ddK <- function( tt) {
-      pel <- outer( pex_up / (1-pex_up), exp( tt))
-      ipel <- 1/(1+pel)
-      colSums( ipel) - colSums( sqr( ipel))
-    }
-  
-  # check: dK(0) == sum( p)
-  # ddK(0) == sum( p) - sum( p)^2
-
-  symmo <- my.all.equal( subset1, subset2)
-  
-  set_thresholds( keeping='lo')
-  
-  # Prepare for diagnostics of #excl
-  # prolly not needed but HSP C code already does it
-  qq <- (2:nq-1)/nq
-  pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
-  
-  # Trying special-cases here to minimize copying
-  if( symmo){
-    if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
-      temp_snpg <- temp_snpg[, subset1]
-    }
-    result <- POP_paircomps_lots( 
-        geno1= temp_snpg,
-        geno2= temp_snpg,
-        symmo= TRUE,
-        eta= eta, 
-        max_keep_Nexclu= keep_thresh, 
-        bins= pciles,
-        AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
-      )
-  } else { # different subsets
-    result <- POP_paircomps_lots( 
-        geno1= temp_snpg[ ,subset1],
-        geno2= temp_snpg[ ,subset2],
-        symmo= FALSE,
-        eta= eta, 
-        max_keep_Nexclu= keep_thresh, 
-        bins= pciles,
-        AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
-      )
-  }
-  
-  result$bigs <- with( result, data.frame( Nexclu=big_Nexclu, i=big_i, j=big_j))
-  result <- result %without.name% cq( big_Nexclu, big_i, big_j)
-  result <- within( result, {
-    bins <- pciles
-    eta <- eta
-    n_loci <- length( pop_loci)
-    mean_theory <- dK( 0)
-    var_theory <- ddK( 0)
-  })
-  result$call <- sys.call() # iffy within within
-  
-return( result)    
-}
-
-
-"find_POPs_v2" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    alpha,
-    # pOC_max, 
-    one_in_X_eta, 
-    rough_n_pairs_to_keep= NA, 
-    eta= NULL,
-    keep_thresh= NULL,
-    nq,
-    quick=TRUE) {
-###################
-  # Sanity...
-stopifnot( is.numeric( subset1) && is.numeric( subset2))
-stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
-
-  # Decide based #apparent exclusions of AA/BB form, using 4way genos, though 
-  # ... it's really AAO/BBO so not a true exclu but
-  # ... close among pop-loci
-  # Sticking with 4way genos so that genotyping errors are low
-
-  # Instead of Nexclu, uses a wted sum of "exclus" in 4way genos to max expected diff between POP and UP
-  # This version doesn't allow for geno errors, but does realize that AO/BO could happen
-  # Doesn't bother with OO-AB
-  
-  define_genotypes()  
-  extract.named( snpg@locinfo[ cq( use6, PUP4, pbonzer)])
-  p0 <- pbonzer[,'O'] + pbonzer[,'C']
-  pA <- pbonzer[,'A']
-  pB <- pbonzer[,'B']
-  
-  # "Exclusion" whenever AAO & BBO, but this *could* be AO/BO
-  # I'm calling them "ex" for now anyway, hence pex_BLAH
-  pex <- cbind( 
-      POP= 2 * p0 * pA * pB,
-      UP= 2 * (2*pA*p0 + pA*pA) * (2*pB*p0 + pB*pB)
-    )
-
-  # Want to keep the POP and UP means as far apart as possible on the scale of SDs...
-  # ... but, which SD? Make it alpha * SD[UP] + (1-alpha) * SD[POP]
-  
-  # Optimal wt would depend on p0 and to some extent on pA 
-  # wt should be 1 if p0==0 and 0 if p0==1
-  delta <- pex[,'UP'] - pex[,'POP'] # mathematically I think this *can't* be -ve
-  SD <- sqrt( pex * (1-pex))
-  SD_combo <- alpha * SD[,'UP'] + (1-alpha) * SD[,'POP'] # %*% c( alpha, 1-alpha)
-  V_combo <- sqr( SD_combo)
-  ww <- delta / V_combo # considerable algebra appears to show this is optimal
-  ww <- c( ww / sum( ww) ) # else get 1-col matrix
-stopifnot( all( ww>0))   
-    
-  pop_loci <- which( ww > 0) # all of them, for now
-  # pop_loci <- which( pbonzer[,'O'] + pbonzer[,'C'] < pOC_max)
-  
-  temp_snpg <- snpg[ , pop_loci]
-  recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg <- recode4to6temp( temp_snpg) # (AA,AO) -> AA; (BB,BO) -> BB
-
-  # Remove extranea
-  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
-  temp_snpg <- t( temp_snpg)
-  
-  # Distro of #excl loci for UPs
-  opphetz <- c( 'AAO/BBO', 'BBO/AAO') %that.are.in% colnames( PUP4)
-  pex_up <- PUP4[ pop_loci, opphetz]
-  rr <- pex_up / (1-pex_up)
-  log1m_pexup <- log1p( -pex_up)
-  
-  K <- function( tt) { 
-      # vecless2 notation could 1-step this via SUM
-      KK[ l, j]:= log1m_pexup[ l] + log1p( rr[ l] * exp( tt[ j] * ww[ l]))
-      K[ j] := KK[ +., j]  
-    return( c( K)) # without the c(), you get a scalar xtensor, and trouble...
-    }
-    
-  dK <- function( tt) {
-      retw[l,j] := rr[ l] * exp( tt[ j] * ww[ l])
-      dKK[ l, j] := ww[ l] * retw[ l, j] / (1+retw[ l, j]) # guessing this is more accurate tahn 1-1/1+x
-      dK[ j] := dKK[ +., j]
-    return( c( dK))
-    }
-  
-  ddK <- function( tt) {
-     retw[l,j] := rr[ l] * exp( tt[ j] * ww[ l])
-      ddKK[ l, j] := sqr( ww[ l]) * retw[ l, j] / sqr( 1+retw[ l, j]) # guessing this is more accurate tahn 1-1/1+x
-      ddK[ j] := ddKK[ +., j]
-   return( c( ddK))
-   }
-   
-  n_loci <- ncol( snpg)
-  n_sim_check <- 1000
-  Ktest <- function( tt) {
-    x <- matrix( runif( n_sim_check * n_loci) < pex_up, n_loci, n_sim_check) 
-    ewx <- exp( x*ww*tt)
-    colSums( log( ewx))
-  } 
-    
-  if( quick) {
-    K <- compile_vecless( K(0))
-    dK <- compile_vecless( dK(0))
-    ddK <- compile_vecless( ddK(0))
-  }
-
-  symmo <- my.all.equal( subset1, subset2)
-  inv_CDF <- renorm_SPA_cumul( K, dK, ddK)$inv_CDF
-
-  set_thresholds( keeping='lo') # cf 'hi' for HSPs
-  
-  # Prepare for diagnostics of #excl
-  # prolly not needed but HSP C code already does it
-  qq <- (2:nq-1)/nq
-  pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
-  
-  # Trying special-cases here to minimize copying
-  if( symmo){
-    if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
-      temp_snpg <- temp_snpg[, subset1]
-    }
-    result <- POP_wt_paircomps_lots( 
-        geno1= temp_snpg,
-        geno2= temp_snpg,
-        w= ww,
-        symmo= TRUE,
-        eta= eta, 
-        max_keep_wpsex= keep_thresh, 
-        bins= pciles,
-        AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
-      )
-  } else { # different subsets
-    result <- POP_wt_paircomps_lots( 
-        geno1= temp_snpg[ ,subset1],
-        geno2= temp_snpg[ ,subset2],
-        w= ww,
-        symmo= FALSE,
-        eta= eta, 
-        max_keep_wpsex= keep_thresh, 
-        bins= pciles,
-        AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
-      )
-  }
-  
-  # bigs is a misnomer for POPs; smalls is more like it (since we want few exclusions)
-  result$bigs <- with( result, data.frame( wpsex=big_wpsex, i=big_i, j=big_j))
-  # Check nABOO, only for interesting pairs
-  snpg_i <- snpg[ subset1[ result$bigs$i], pop_loci]
-  snpg_j <- snpg[ subset2[ result$bigs$j], pop_loci]
-  isABOO <- ((snpg_i==OO) & (snpg_j==AB)) + ((snpg_i==AB) & (snpg_j==OO))
-  result$bigs$nABOO <- rowSums( isABOO)
-  
-  result <- result %without.name% cq( big_wpsex, big_i, big_j)
-  result <- within( result, {
-    bins <- pciles
-    eta <- eta
-    keep_thresh <- keep_thresh
-    n_loci <- length( pop_loci)
-    mean_theory <- dK( 0)
-    var_theory <- ddK( 0)
-  })
-  result$call <- sys.call() # iffy within within
-  
-return( result)    
-}
-
-
-"geno_deambig" <-
-function( lociar,
-  OOthresh_tc, 
-  het_cut, 
-  tc_hist_pars,  
-  ppnA_hist_pars) {
-##############
-# Pick OO, hetz
-# Leave possible homoz as "possible" for now
-  
   define_genotypes() # knows OO AB etc
-  
+
   mht <- lociar@locinfo$med_het_tot
   if( is.null( mht)) {
-stop( "Need med_het_tot column in locinfo")  
+stop( "Need med_het_tot column in locinfo")
   }
   count3ar <- unclass( lociar)
-  
+
   # count3ar normed by locus
   rmht <- rep( mht, each=nrow( count3ar))
   cA <- count3ar[,,1,drop=TRUE] / rmht
   cB <- count3ar[,,2,drop=TRUE] / rmht
   cX <- count3ar[,,3,drop=TRUE] / rmht
-  
+
   # Turns out there's little to gain from using cX at this 4-geno stage
   # ... it comes in at the 6-geno stage
 
   is_OO <- (cA+cB) < OOthresh_tc
-  switch( mode( tc_hist_pars), 
-    list = { 
+  switch( mode( tc_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        tc_hist_pars <- add_list_defaults( tc_hist_pars, 
-            xlim=c( 0, 1.5), 
-            main='Tot count3ar in FISHLOCI, normed so non-OO ~= 1', 
-            xlab='', 
+        tc_hist_pars <- add_list_defaults( tc_hist_pars,
+            xlim=c( 0, 1.5),
+            main='Tot count3ar in FISHLOCI, normed so non-OO ~= 1',
+            xlab='',
             nclass=1000)
         do.call( 'hist', c( list( x=c( cA+cB)), tc_hist_pars))
         abline( v=OOthresh_tc, col='red')
@@ -2753,19 +1873,19 @@ stop( "Need med_het_tot column in locinfo")
     expression = eval( tc_hist_pars),
     NULL = NULL
   )
-  
+
 
   # Proportion of "A" count3ar--- only wanted for non-nulls, but easier to calc for all.
   # Clusterized organization means count 1 always >= count 2 so lower limit is 0.5
   ppnA <- cA / (cA + cB)
 
   # optional graphics and/or user-specified outputs
-  switch( mode( ppnA_hist_pars), 
-    list = { 
+  switch( mode( ppnA_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars, 
-            main='Ppn Ref count3ar in non-OO FISHLOCI, normed by locus', 
-            xlab='', 
+        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars,
+            main='Ppn Ref count3ar in non-OO FISHLOCI, normed by locus',
+            xlab='',
             nclass=200)
         do.call( 'hist', c( list( x=c( ppnA[ !is_OO])), ppnA_hist_pars))
         abline( v=c( het_cut, 1-het_cut), col='lightblue')
@@ -2784,43 +1904,45 @@ stop( "Need med_het_tot column in locinfo")
   # couldbe_homoz <- !is_OO & !is_AB
 
   # 4-way genotypes: use raw for memory-size reasons. Lower-case!
-  geno4 <- matrix( AB, nrow( count3ar), ncol( count3ar), 
+  geno4 <- matrix( AB, nrow( count3ar), ncol( count3ar),
       dimnames=list( count3ar@info$Our_sample, count3ar@locinfo$AlleleID))
 
   geno4[ is_OO] <- OO
   geno4[ !is_OO & (ppnA < het_cut)] <- BBO
   geno4[ !is_OO & (ppnA > 1-het_cut)] <- AAO
   class( geno4) <- c( 'noquote', oldClass( geno4)) # so shows ABO not "ABO" etc
-  
+
   lociar@geno4 <- geno4 # but don't print it...
-  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno4') 
-  
-  lociar@print <- expression({ 
+  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno4')
+
+  lociar@print <- expression({
       attr( x, 'locinfo') <- attr( x, 'seqinfo') <- attr( x, 'geno4') <- attr( x, 'print') <- NULL
       class( x) <- class( x) %except% 'specialprint'
       print( x)
       cat( '\n\n<<"locinfo" and "geno4" attributes hidden for brevity>>\n')
     })
 
-  
+
 return( lociar)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq
 "geno_deambig_ABC" <-
 function( lociar,
   mht= lociar@locinfo$med_het_tot,
-  OOthresh_tc, 
-  het_cut, 
-  tc_hist_pars,  
+  OOthresh_tc,
+  het_cut,
+  tc_hist_pars,
   ppnA_hist_pars,
   return_what=c( 'lociar', 'just_geno', 'polyzyg_and_geno')) {
 ##############
 # Pick OO, hetz
 # Leave possible homoz as "possible" for now
-  
+
   define_genotypes() # knows OO AB etc
-  
+
   c3 <- unclass( lociar) # but can be passed in directly
 stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3rd might always be 0)
 
@@ -2842,20 +1964,20 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
     OOthresh_tc <- rep( OOthresh_tc, n_loci)
   } # else already locus-specific, eg when regenotyping in geno6()
 
-  is_OO[f,l] :=  
-      ((cA+cB)[f,l] < OOthresh_tc[l]) & 
-      ((cA+cC)[f,l] < OOthresh_tc[l]) & 
+  is_OO[f,l] :=
+      ((cA+cB)[f,l] < OOthresh_tc[l]) &
+      ((cA+cC)[f,l] < OOthresh_tc[l]) &
       ((cB+cC)[f,l] < OOthresh_tc[l])
-  
-  switch( mode( tc_hist_pars), 
-    list = { 
+
+  switch( mode( tc_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        tc_hist_pars <- add_list_defaults( tc_hist_pars, 
-            xlim=c( 0, 1.5), 
-            main='Tot c3 in FISHLOCI, normed so non-OO ~= 1', 
-            xlab='', 
+        tc_hist_pars <- add_list_defaults( tc_hist_pars,
+            xlim=c( 0, 1.5),
+            main='Tot c3 in FISHLOCI, normed so non-OO ~= 1',
+            xlab='',
             nclass=200)
-        # For some reason, directly using 'do.call( "hist"...)' is INCREDIBLY slow    
+        # For some reason, directly using 'do.call( "hist"...)' is INCREDIBLY slow
         # Dunno why
         # do.call( 'hist', c( list( x=pmax( c( cA+cB), c( cA+cC), c( cB+cC))), tc_hist_pars))
         yy <- pmax( c( cA+cB), c( cA+cC), c( cB+cC))
@@ -2875,12 +1997,12 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   ppnC <- cC / (cC + pmax( cA, cB))
 
   # optional graphics and/or user-specified outputs
-  switch( mode( ppnA_hist_pars), 
-    list = { 
+  switch( mode( ppnA_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars, 
-            main='Ppn Ref c3 in non-OO FISHLOCI, normed by locus', 
-            xlab='', 
+        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars,
+            main='Ppn Ref c3 in non-OO FISHLOCI, normed by locus',
+            xlab='',
             nclass=200)
         # See previous histo comments
         #  do.call( 'hist', c( list( x=c( ppnA[ !is_OO])), ppnA_hist_pars))
@@ -2904,10 +2026,10 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   A_lowest <- cA < pmin( cB, cC)
   B_lowest <- cB < pmin( cA, cC)
   C_lowest <- cC < pmin( cA, cB)
-  
+
   is_AB[ is_polyzyg & (A_lowest | B_lowest)] <- FALSE
   is_AC[ is_polyzyg & (A_lowest | C_lowest)] <- FALSE
-  is_BC[ is_polyzyg & (B_lowest | C_lowest)] <- FALSE  
+  is_BC[ is_polyzyg & (B_lowest | C_lowest)] <- FALSE
 
   # Use 1-byte 'snpgeno' format. requires info & locinfo atts; give it minimal ones
   geno_amb <- snpgeno( nrow( c3), ncol( c3), diplos=genotypes_ambig,
@@ -2926,185 +2048,54 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   geno_amb[ is_AB] <- AB
   geno_amb[ is_AC] <- AC
   geno_amb[ is_BC] <- BC
-  
+
   # class( geno_amb) <- c( 'noquote', oldClass( geno_amb)) # so shows ABO not "ABO" etc
-  
+
   return_what <- match.arg( return_what)
-  
+
   if( return_what=='just_geno') { # used when regenotyping during 'geno6', at least originally
-return( geno_amb) 
+return( geno_amb)
   } else if( return_what=='polyzyg_and_geno') {
 return( returnList( is_polyzyg, geno_amb))
   }
-  
+
   lociar@geno_amb <- geno_amb # but don't print it...
-  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno_amb') 
+  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno_amb')
   lociar@het_cut <- het_cut
-  
-  lociar@print <- expression({ 
+
+  lociar@print <- expression({
       attr( x, 'locinfo') <- attr( x, 'seqinfo') <- attr( x, 'geno_amb') <- attr( x, 'print') <- NULL
       class( x) <- class( x) %except% 'specialprint'
       print( x)
       cat( '\n\n<<"locinfo" and "geno_amb" attributes hidden for brevity>>\n')
     })
 
-  
+
 return( lociar)
 }
 
 
-"geno6_plot_counts" <-
-function( nlocal=sys.parent()) mlocal({
-    # Only do the binning once (slow); may *plot* twice
-    # All counts
-    h <- hist(
-      tot2[,i], 
-      breaks=seq(0, max( tot2[,i])*1.05, length=nhistbreaks),
-      plot=FALSE)
-    # Just Ref & Alt--- a bit misleading in case of 3rd-allele-splatter when really AC etc
-    h2 <- hist(
-      (cA+cB)[,i],
-      breaks=seq(0, max( c( tot2[,i], (cA+cB)[,i]))*1.05, length=nhistbreaks),
-      plot=FALSE) # bizarre breaks since cA+cB *can* exceed tot2... if..?
-
-  if( !is.null( comment_file) && !file.exists( comment_file)) {
-    cat( 'Locus: Comment\n', file=comment_file) # it shall be thus!
-    # Any comment where the first non-space is 4, will be treated as a 4-way locus
-    # Other comments lead to discarding the locus
-  }
-
-  # Display logic is probably nonsensical now
-  on_screen <- show_progress # TRUE # might want to save to file
-  
-  repeat{ # in case we want to re-do & save the plot to file
-    # Add hists of pA/(pA+pB); two on top row, then big count hist under
-    layout( matrix( c(
-      1, 2,
-      3, 3), 2, 2, byrow=T),
-      heights=c( 1, 3))       
-
-    for( isubbo in c( -1, +1)) {
-      pick <- which( isubbo * (cA[,i] + cB[,i]) > isubbo) # first <1, then >1
-      if( length( pick)) {
-        hist( cA[ pick, i] / (cA[ pick, i] + cB[ pick, i]), xlim=0:1, nc=40, xlab=NULL, ylab=NULL, main=NULL)
-        title( sprintf( 'Ppn A/(A+B): %s', if( isubbo>0) 'HI' else 'LO'), line=-1, cex=0.5)
-      } else { # skip the plot; nothing to see here
-        plot( 0, 0, type='n', xlab='', ylab='', main='', axes=FALSE)
-        # frame() 
-      }
-    }
-
-  # plot.histogram is fugly and funcontrollable, so plot separately
-
-    plot( h, freq=FALSE, 
-        col='black', border='black',
-        main= sub( ':[^:]*$', '', alid[i]),
-        ylim=c( 0, max( h$density[-1])*1.1), # avoid domination by OO, which is very concentrated but just one bar
-        axes=FALSE,  xlab='', ylab='', cex.main=1)
-    axis( side=1)
-
-    # Vertical lines to show A+B only
-    with( h2, lines( breaks[-1]-mean(diff(breaks))/2, density, type='h', col='magenta'))
-
-    x <- seq( 0, max( dat), length=101)
-    lines(x, (1-phat[OO]) * dnorm(x, res$mu[1], res$sigma[1])*res$lambda[1], col='red')
-    lines(x, (1-phat[OO]) * dnorm(x, res$mu[2], res$sigma[2])*res$lambda[2], col='green')
-    abline(v=res$mu,col=c( 'red', 'green'), lty=2, lwd=2) # OK to have red & green since they don't need to be distinguished!
-    # abline(v=mu.het,col='orange',lwd=2)
-    # abline( v=OOthresh_tc, lwd=2, col='purple') # cutoff for OO
-    abline( v=new_OOthresh[i], col='purple', lwd=2)
-    abline( v=best_cut, col='cyan', lwd=2) # two of them now
-    abline( v=hix, col='yellow2', lwd=2, lty=2)
-
-    # Obs & pred geno4
-    g4_pred <- gtab4( n_fish * phat)
-    gamb_obs <- do.on( names( phat), sum( geno[,i]==.))
-    g4_obs <- gtab4( gamb_obs)
-
-    # ... overall chisq for title
-    gofstat4 <- 2 * g4_obs %*% log( ifelse( g4_obs>0, g4_obs/g4_pred, 1))
-    this_pval4 <- pchisq( gofstat4, df=1, lower.tail=FALSE) 
-
-    pb <- pbinom( g4_obs, prob=g4_pred[ names( g4_obs)]/n_fish, size=n_fish) # phat itself includes C
-    # Don't flag excessively GOOD fits when 0 observed & predicted!
-    orright4 <-  (pb %in.range% c( minbin, 1-minbin)) | (g4_obs==0 & pb > minbin)
-
-    # Hideous trick to right-align legends; from ?legend
-    legend_items <- sprintf( '%3s %4i  %4.0f.', names( g4_obs), g4_obs, g4_pred)
-
-    # Might as well do geno6 while we're at it... though this duplicates post-hoc code in geno6
-    p6 <- calc_g6probs( pA, pB, pC, snerr=snerr)[ genotypes6] # paranoid post-subscript for order
-    g6_pred <- n_fish * p6
-    g6 <- split_geno_4to6( geno[,i], cA[,i], cB[,i], info=lociar@info, li=li,
-        best_cut= best_cut)
-    g6_obs <- do.on( as.raw( match( genotypes6, g6@diplos)), sum( g6==.))
-
-    # ... overall chisq for title
-    gofstat6 <- 2 * g6_obs %*% log( ifelse( g6_obs>0, g6_obs/g6_pred, 1))
-    this_pval6 <- pchisq( gofstat6, df=3, lower.tail=FALSE) 
-
-    legend_items <- c( legend_items, 
-        '', '', 
-        sprintf( '%3s %4i  %4.0f.', genotypes6, g6_obs, g6_pred))
-    pb <- pbinom( g6_obs, prob=p6, size=n_fish)
-    # Don't flag excessively GOOD fits when 0 observed & predicted!
-    orright6 <-  (pb %in.range% c( minbin, 1-minbin)) | (g6_obs==0 & pb > minbin)
-    
-    temp <- legend( 'topright', legend=rep( ' ', length( legend_items)), # presumably 4 but...
-        xjust=1, yjust=1, text.width=1.05 * max( strwidth( legend_items, family='mono')))
-    text( temp$rect$left + temp$rect$w, temp$text$y, pos=2, family='mono',
-        col= ifelse( c( orright4, TRUE, TRUE, orright6), 'black', 'orange'),
-        legend_items)
-    
-    title( sprintf( '%s:   MHT= %i   PVAL4= %s  PVAL6= %s   Pr[C]= %4.2f NPOLYFISH= %i', 
-        locus_name[ i], as.integer( mht[i]), formatC( this_pval4, 2), formatC( this_pval6, 2), pC, li$npoly[i]),
-        line=-2)
-    if( nzchar( comments[i])) { # only on 2nd pass, if comment was made
-      mtext( comments[i], side=3, outer=TRUE, col='orange2')
-    }
-    
-    if( on_screen) {
-      cat( 'Whaddya reckon? (Silence => assent) :')
-      comments[ i] <- sub( '^ *$', '', readLines( n=1)) # ignore all-space lines
-      if( nzchar( comments[i])) {
-        # write it to a file NOW, fool!
-        if( !is.null( comment_file)) {
-          cat( locus_name[ i], ': ', comments[ i], '\n', file=comment_file, append=TRUE)
-        }
-        on_screen <- FALSE
-        png( filename=sprintf( '%s-summary.png', locus_name[ i]), width=1024, height=768)
-        par( oma=c( 0, 0, 3, 0))
-next # re-do and save plot
-      } # if something is spotted
-    } else { # have done & saved 2nd round of plots
-        dev.off() # finish saved plot. Possibly a mistake if in "just-make-the-graphs" non-interactive mode since it generates alternate empty plots
-    }
-
-  break # normally don't save, so don't repeat
-  } # ... possible repeat to allow saving graph
-
-})
-
-
-"geno6way" <-
-function( lociar, li=NULL, het_cut=lociar@het_cut) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq
+#' @importFrom handy2 %<-%
+"geno6way" <- function( lociar, li=NULL, het_cut=lociar@het_cut) {
   n_loci <- ncol( lociar)
   n_fish <- nrow( lociar)
 
-  define_genotypes()  
-  
+  define_genotypes()
+
   dimnames( lociar)[[3]] <- cq( A, B, C)
-  
+
   if( is.null( li)) { # use own data
-    li <- lociar@locinfo 
+    li <- lociar@locinfo
   } else if( is.null( lociar@locinfo)) { # "raw" stuff passed; just check dims
 stopifnot( ncol( lociar) == nrow( li))
-  } else { # check preset definitions match this OK... 
+  } else { # check preset definitions match this OK...
     mm <- match( lociar@locinfo$consensus, li$consensus, 0)
 stopifnot( all( mm>0))
     li <- li[ mm,]
-stopifnot( all( lociar@locinfo$FullAltSeq==li$FullAltSeq))    
-stopifnot( all( lociar@locinfo$FullRefSeq==li$FullRefSeq))    
+stopifnot( all( lociar@locinfo$FullAltSeq==li$FullAltSeq))
+stopifnot( all( lociar@locinfo$FullRefSeq==li$FullRefSeq))
 stopifnot( my.all.equal( lociar@locinfo$FullThirdSeq, li$FullThirdSeq)) # NA-friendly
   }
 
@@ -3113,7 +2104,7 @@ stopifnot( my.all.equal( lociar@locinfo$FullThirdSeq, li$FullThirdSeq)) # NA-fri
   mht <- li$med_het_tot
   pambig <- li$pambig
   if( is.null( mht)) {
-stop( "Need med_het_tot column in locinfo/li")  
+stop( "Need med_het_tot column in locinfo/li")
   }
 
   # counts normed by locus
@@ -3126,8 +2117,8 @@ stop( "Need med_het_tot column in locinfo/li")
 
   # 4-way genotype first:
   { is_polyzyg; geno4} %<-% geno_deambig_ABC( lociar, # does its own norming (duplicated effort, but...)
-      mht=mht, 
-      OOthresh_tc=li$OOthresh_tc, 
+      mht=mht,
+      OOthresh_tc=li$OOthresh_tc,
       het_cut=het_cut,
       tc_hist_pars= NULL,
       ppnA_hist_pars= NULL,
@@ -3138,18 +2129,20 @@ stop( "Need med_het_tot column in locinfo/li")
   g6@het_cut <- het_cut
   g6@is_polyzyg <- is_polyzyg
   g6@subset_like_both <- c( g6@subset_like_both, 'is_polyzyg')
-return( g6)  
+return( g6)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq
 "genofreq_check_4way" <-
-function( lociar, 
+function( lociar,
     gpred= lociar@gpred,
     gobs= lociar@gobs,
-    thresh_pchisq_loci, 
+    thresh_pchisq_loci,
     test,  # 'Pearson' or 'G'
     seq_paxis=0.025) {
-##########    
+##########
 # Either 6- or 4-geno version should work
 # 1 DoF in either case
 # Assumed null distro of chisq(1) is pretty approximate
@@ -3166,7 +2159,7 @@ function( lociar,
   }
 
   # Do the geno4 check. don't trim yet, to keep dim of gobs & gpred consistent
-  lociar <- chisq_genofreq_check( lociar, gpred=agg_g( gpred), gobs=agg_g( gobs), test=test, 
+  lociar <- chisq_genofreq_check( lociar, gpred=agg_g( gpred), gobs=agg_g( gobs), test=test,
       thresh_pchisq_loci=thresh_pchisq_loci, trim=FALSE, seq_paxis=seq_paxis)
   pv1 <- lociar@locinfo$pval
 
@@ -3183,24 +2176,24 @@ function( lociar,
   # pre-4/2017 version didn't have BC in next--- looks like a mistake
   has_C <- gobs[,'AC'] + gobs[,'BC'] + gobs[,'CCO'] > 0.01 * nrow( lociar)
   pv2 <- 1+0*pv1
-  pv2[ has_C] <- chisq_genofreq_check( lociar[ , has_C], gpred=agg_g2( gpred[ has_C,]), gobs=agg_g2( gobs[ has_C,]), 
+  pv2[ has_C] <- chisq_genofreq_check( lociar[ , has_C], gpred=agg_g2( gpred[ has_C,]), gobs=agg_g2( gobs[ has_C,]),
       test=test, thresh_pchisq_loci=thresh_pchisq_loci, trim=FALSE, seq_paxis=seq_paxis)@locinfo$pval
   lociar@locinfo$pval2 <- pv2
-  
-  keep_loci <- pmin( pv1, pv2) > thresh_pchisq_loci 
+
+  keep_loci <- pmin( pv1, pv2) > thresh_pchisq_loci
 
   lociar <- lociar[ , keep_loci, ,drop=FALSE]
 return( lociar)
 }
 
 
-"get_chain" <-
-function( thing, seed) {
+#' @importFrom mvbutils %is.not.a% %where%
+"get_chain" <- function( thing, seed) {
   if( thing %is.not.a% 'data.frame') {
     thing <- thing$bigs
   }
   extract.named( thing)
-  
+
   oset <- integer()
   set <- seed
   while( length( set) != length( oset)) {
@@ -3209,21 +2202,21 @@ function( thing, seed) {
     oset <- set
     set <- unique( c( set, newi, newj))
   }
-  
+
   thing %where% (i %in% set | j %in% set)
 }
 
 
 "gtab4" <-
-function( x) { 
+function( x) {
 #### Combine 3rd-allele genos into geno4 (with ambig)
   # FUCKING R keeps the FUCKING names on FUCKING subsets of FUCKING vectors
   # for FUCK's sake
   # hence the FUCKING calls to unname()
-  result <- c( 
+  result <- c(
       AAO=unname( x['AAO'] + x['AC']),
-      AB=unname( x['AB']), 
-      BBO=unname( x['BBO'] + x['BC']), 
+      AB=unname( x['AB']),
+      BBO=unname( x['BBO'] + x['BC']),
       OO=unname( x['OO'] + x['CCO']))
 return( result)
 }
@@ -3237,20 +2230,24 @@ function( gt6) {
   gt4[,AB] <- gt6[,AB]
   gt4[,OO] <- gt6[,OO]
   gt4[,AAO] <- gt6[,AA] + gt6[,AO]
-  gt4[,BBO] <- gt6[,BB] + gt6[,BO] 
+  gt4[,BBO] <- gt6[,BB] + gt6[,BO]
 return( gt4)
 }
 
 
+#' @importFrom mvbutils cq
+#' @importFrom atease @ @<-
+#' @importFrom handy2 sqr
+#' @importFrom vecless compile_vecless
 "hetzminoo_fancy" <-
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################
-  define_genotypes()  
+  define_genotypes()
   extract.named( snpg@locinfo[ cq( use6, PUP4, pbonzer)])
   p0 <- pbonzer[,'O'] + pbonzer[,'C']
   pA <- pbonzer[,'A']
   pB <- pbonzer[,'B']
-  
+
   v <- 2*pA*pB + sqr( p0) - sqr( 2*pA*pB-sqr( p0))
   target <- match.arg( target)
   edash <- if( target=='rich') {
@@ -3258,11 +2255,11 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
     } else {
       edash <- 2*(pA*pB + pA*p0 + pB*p0) # minus sign
     }
-  
-  ww <- edash / v 
+
+  ww <- edash / v
   ww <- c( ww / sum( ww) ) # else get 1-col matrix
-stopifnot( all( ww>0))   
-    
+stopifnot( all( ww>0))
+
   use_loci <- which( ww > 0) # all of them, for now
   temp_snpg <- snpg[ , use_loci]
   recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
@@ -3273,19 +2270,19 @@ stopifnot( all( ww>0))
 
   # Null distro: P[S==1] = pAB; P[S==-1] = pOO; P[S==0] = 1-pAB - pOO
   # E[ exp( tt*S)] = (e(tt)+1) * pAB + 1 + (e(-tt) -1)* pOO
-  
+
   pAB <- 2*pA*pB
   pOO <- sqr( p0)
   four_pab_poo <- 4*pAB*pOO
   compaboo <- 1 - pAB - pOO
-  
-  K <- function( tt) { 
+
+  K <- function( tt) {
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
       KK[ j]:= SUM_ %[l]% log( compaboo[l] + etwab[ l, j] + etwoo[ l, j])
     return( c( KK)) # without the c(), you get a scalar xtensor, and trouble...
     }
-    
+
   dK <- function( tt) {
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
@@ -3293,7 +2290,7 @@ stopifnot( all( ww>0))
       dKK[ j] := ww[l] %[l]% ((etwab[l,j]-etwoo[l,j])/denom[l,j])
     return( c( dKK))
     }
-  
+
   ddK <- function( tt) {
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
@@ -3305,13 +2302,13 @@ stopifnot( all( ww>0))
   K <- compile_vecless( K(0))
   dK <- compile_vecless( dK(0))
   ddK <- compile_vecless( ddK(0))
-   
+
   dens_SPA <- renorm_SPA( K, dK, ddK, 'func')
 
   # optional graphics and/or user-specified outputs
-  switch( mode( hist_pars), 
-    list = { 
-        hist_pars <- add_list_defaults( hist_pars, 
+  switch( mode( hist_pars),
+    list = {
+        hist_pars <- add_list_defaults( hist_pars,
             main=sprintf( '%s: multhresh=%5.2f', target, multhresh),
             xlim= range( whmo), # so cutoff lines show
             xlab='', nclass=50)
@@ -3322,21 +2319,22 @@ stopifnot( all( ww>0))
     expression = eval( badhetz_hist_pars),
     NULL = NULL
   )
-  
+
 return( c( whmo))
 }
 
 
+#' @importFrom atease @ @<-
 "hsp_power" <-
-function( lociar, 
+function( lociar,
     want_LOD_table, # T/F
-    k # 0.5 for HSPs 
+    k # 0.5 for HSPs
 ){
-############    
+############
   define_genotypes()
   li <- lociar@locinfo
   li1 <- li[1,]
-  
+
   temp0 <- with( li1, calc_g6probs_IBD0_scalar( pbonzer, snerr, record=TRUE))
   cg6p0 <- make_playback( calc_g6probs_IBD0_scalar, temp0)
 
@@ -3345,14 +2343,14 @@ function( lociar,
 
   g6p0 <- with( li, cg6p0( pbonzer, snerr))
   g6p1 <- with( li, cg6p1( pbonzer, snerr))
-  
+
   s6 <- predict_hsp_util( g6p0, g6p1, want_LOD_table, k=k)
-  
+
   # For the 4-ways, must condense g6p's
-  
+
   map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
   # AB & OO are OK; AAO should receive both AA and AO; etc
-  mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"... 
+  mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
   yup <- cbind( which(mm>0), mm[ mm>0])
   map6to4[ yup] <- 1
   mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
@@ -3369,8 +2367,8 @@ function( lociar,
   g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
 
   s4 <- predict_hsp_util( g4p0, g4p1, want_LOD_table, k=k)
-  
-  if( want_LOD_table) { 
+
+  if( want_LOD_table) {
     li$LOD6 <- s6@LOD # matrix
     li$PUP6 <- s6@PUP
     li$LOD4 <- s4@LOD
@@ -3380,118 +2378,10 @@ function( lociar,
 
   li <- cbind( li, s6)
   li[ !li$use6, names( s4)] <- s4[ !li$use6,]
-  
+
   lociar@locinfo <- li
 return( lociar)
 }
-
-
-"ilglk_geno" <-
-function( snpg, indiv_lglk_hist_pars=list(), quick=TRUE) {
-  define_genotypes()  
-  extract.named( snpg@locinfo[ cq( pbonzer)])
-
-  p0 <- pbonzer[,'O'] + pbonzer[,'C']
-  pA <- pbonzer[,'A']
-  pB <- pbonzer[,'B']
-  
-  n_samps <- nrow( snpg)
-  n_loci <- ncol( snpg)
-  snpg4 <- snpgeno( n_samps, n_loci, genotypes4_ambig, 
-      info=snpg@info[,cq( Our_plate, Our_sample)], 
-      locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
-  snpg4[ snpg==OO] <- OO
-  snpg4[ snpg==AB] <- AB
-  snpg4[ snpg==AA] <- AAO
-  snpg4[ snpg==AO] <- AAO
-  snpg4[ snpg==BB] <- BBO
-  snpg4[ snpg==BO] <- BBO
-  
-  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
-  pgeno[ , OO] <- sqr( p0)
-  pgeno[ , AB] <- 2*pA*pB
-  pgeno[ , AAO] <- 2*pA*p0 + pA*pA
-  pgeno[ , BBO] <- 2*pB*p0 + pB*pB  
-  lpgeno <- log( pgeno) # lambda in doco
-
-
-  # These are slowish in vecless 1.0
-  # ... but less error-prone to write
-  K <- function( tt) {
-      ttp1 <- tt+1
-      KK[ j] := SUM_ %[l]% log( SUM_ %[g]% exp( ttp1[ j] * lpgeno[ l, g]))
-    return( c( KK))
-    }
-    
-  dK <- function( tt) {
-      ttp1 <- tt+1
-      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
-      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
-      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
-      dKK[ j] := SUM_ %[l]% (num[ j, l] / denom[ j, l])
-    return( c( dKK))
-    }
-    
-
-  ddK <- function( tt) {
-      ttp1 <- tt+1
-      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
-      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
-      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
-      num2[ j, l] := sqr( lpgeno[ l, g]) %[g]% etp1l[ j, l, g]
-      dKK[ j] := SUM_ %[l]% ( num2[ j, l] / denom[ j, l] -  sqr( num[ j, l] / denom[ j, l]))
-    return( c( dKK))
-    }
-
-  if( quick) {
-    K <- compile_vecless( K( -1))
-    dK <- compile_vecless( dK( -1))
-    ddK <- compile_vecless( ddK( -1))
-  }
-
-  if( FALSE) { # Checks: do manually in mtrace
-    ntest <- 1000
-    Ktest <- function( tt) { # scalar
-      Ksim <- meansim <- rep( 0, ntest)
-      for( l in 1:n_loci) {
-        # Can't directly sample from genotypes4_ambig since can't matrix-subscript mixed int and char
-        genos <- rsample( ntest, seq_along( genotypes4_ambig), prob=pgeno[l,], replace=TRUE)
-        lp <- lpgeno[ cbind( l, genos)]
-        Ksim <- Ksim + ( tt * lp) # actually log( exp( t*lp))
-        meansim <- meansim + lp # though see below for better way to check!
-      }
-      returnList( Ksim, meansim)
-    }
-  
-    dK( 0)
-    sum( pgeno * lpgeno) # should be the same
-  }
-  
-  ilglk <- indiv_lglk_geno(
-      lpgeno= lpgeno,
-      geno= snpg4)
-  
-  if( FALSE) { # "manual" check on calcs
-    lp <- lpgeno[ cbind( rep( 1 %upto% n_loci, n_samps), snpg)]
-    dim( lp) <- c( n_loci, n_samps)
-    ilglk_manual <- colSums( lp)
-  }
-  
-  # inv_CDF <- renorm_SPA_cumul( K, dK, ddK)$inv_CDF
-  dens_SPA <- renorm_SPA( K, dK, ddK, 'func')
-
-  indiv_lglk_hist_pars <- add_list_defaults( indiv_lglk_hist_pars, 
-      main='Geno lglk by FISH', #sprintf( 'Geno lglk by FISH: multhresh=%5.2f', method, multhresh_indiv_lglk_fish), 
-      xlim= range( ilglk), 
-      xlab='', nclass=50)
-  lv <- do.call( 'hist', c( list( x=ilglk), indiv_lglk_hist_pars))
-  with( lv, # then plot predicted density. Slowish with vecless 1.0
-    lines( mids, diff( breaks) * dens_SPA( mids) * n_samps, col='green')
-  )
-
-return( ilglk)
-}
-
 
 "inv_CDF_SPA2" <-
 function( p, K, dK, ddK, tol=formals( ridder)$tol) {
@@ -3501,7 +2391,7 @@ function( p, K, dK, ddK, tol=formals( ridder)$tol) {
 
   isqrt_2pi <- 1/sqrt(2*pi)
   x <- sqrt_ddK_s <- Leg_trans <- u <- w <- 0*p # vectorized
-  
+
   CSPA <- function( s) {
       x <<- dK(s)
       Leg_trans <<- s*x - K(s)
@@ -3512,26 +2402,26 @@ function( p, K, dK, ddK, tol=formals( ridder)$tol) {
     }
 
   p_target <- 0
-  isK2 <- 1/sqrt(ddK(0))  
+  isK2 <- 1/sqrt(ddK(0))
   seps <- 0.001 * isK2 # fraction of 1 SD; (tol/2) tends to give numeric errors...
   p0 <- (CSPA( seps) + CSPA( -seps)) / 2 # CSPA(0)==NA--- avoid!
   is_lower <- p0 > p
   # K3 <- 3 * (sqr(u)-sqr(w)) / seps^3 # yeh not bad FWIW
 
-  hi <- lo <- 0*p  
-  
+  hi <- lo <- 0*p
+
   # Shifted start...
   q0 <- qnorm( inv.logit( logit( p) - logit( p0)))
   bingo <- q0==0.5 # this case won't converge
   mean_x <- dK( 0)
-  
+
   # L-R does not work at x==E[X]..!
-  if( any( bingo)) { # bingo! 
+  if( any( bingo)) { # bingo!
     # This was in the original code, and needed vectorizing...
-    # I think p[bingo] corresponds exactly (??) to mean(X) 
+    # I think p[bingo] corresponds exactly (??) to mean(X)
     if( all( bingo)) {
-return( 0*x + mean_x) 
-    } 
+return( 0*x + mean_x)
+    }
 
     # change p for those cases to something that will converge and carry on
     # sub back correct x (ie mean) on exit
@@ -3540,11 +2430,11 @@ return( 0*x + mean_x)
   }
 
   p_target <- p # so CSPA gives 0 at solution
-  
+
   # Only risk I can see, is that if true s ~= 0, start may be on wrong side... and CSPA calcs go wrong.
   s0 <- 0.9 * q0 *isK2 # "zeroth-order" approx, times 0.9 for guess at lower bound
-  while( any( 
-      bad <- !is.finite( 
+  while( any(
+      bad <- !is.finite(
         C0 <- CSPA( s0)))) {
     s0[ bad] <- s0[ bad]/2
   }
@@ -3554,7 +2444,7 @@ return( 0*x + mean_x)
   bracketed <- s0 != s0
   step <- 1.2 ^ multor
   snext <- s0
-  
+
   repeat{
     snext[ !bracketed] <- s0[ !bracketed] * step[ !bracketed]
     bracketed[ !bracketed] <- xor( toobig, CSPA( snext) > 0)[ !bracketed]
@@ -3562,20 +2452,20 @@ return( 0*x + mean_x)
   break
     s0[ !bracketed] <- snext[ !bracketed]
   }
-    
+
   hi <- pmax( s0, snext)
   lo <- pmin( s0, snext)
-  
+
   s <- ridder( CSPA, lo, hi, tol=tol, skip_bounds=TRUE) # root finder
   CSPA( s)
-  
+
   x[ bingo] <- mean_x # any that hit first time
 return( x)
 }
 
 
-"lglk_shebang" <-
-function( pars) {
+#' @importFrom mvbutils FOR %**%
+"lglk_shebang" <- function( pars) {
 #### Combined lglk for all ABCO-ambig genos *and* for total counts
 #### Must have its environment reset before use (in geno6)...
   # ... to something already containing predigested data
@@ -3585,73 +2475,77 @@ function( pars) {
   # and data nobs, count, n_hi where...
   # ... count is a list, grouped by genotype but with all Hetz together
   # Very high scores just classed as "high" for outlier-robustness, grouped by genotype
-  
+
   # The "real params", and useful stuff. Note double-arrow assignment
   mulo <<- (hix/2) * inv.logit( pars[1])
   siglo <<- exp( pars[2])
   pA <<- inv.logit( pars[3])
   pB <<- (1-pA) * inv.logit( pars[4])
   pC <<- if( length( pars)==5) (1-pA-pB)*inv.logit( pars[ 5]) else 0
-  pO <<- max( 0, 1 - pA - pB - pC) # rounding error guard  
+  pO <<- max( 0, 1 - pA - pB - pC) # rounding error guard
 
   # HW totals
   phat <<- make_pgeno( pA, pB, pC, which_genotypes=genotypes) # in caller
   expected <- n_fish * phat[ genotypes_ambig]
   lglk_hw <- nobs %*% log(phat[ genotypes_ambig] + (nobs==0))        # avoid 0log0 gotcha
   # ... just gonna assume (count<OOthresh) <=> OOness exactly
-  
+
   pen <- penscale * sum( log( cosh( tail( pars-pstart, -2)))) # tame pA/pB/pC only
 
   # Count scores
   muhi <<- 2*mulo
   sighi <<- sqrt(2) * siglo
 
-  # For high scores:  
+  # For high scores:
   p_hi <- c( CDF( hix, mulo, siglo, lower=FALSE), CDF( hix, muhi, sighi, lower=FALSE))
-  
+
   p12 <- with( as.list( phat), list( # all things are probs
     Hetz= c( 0, 1),
     AAO= c( AO, AA) / (AO+AA),
-    BBO= c( BO, BB) / (BO+BB),  
-    CCO= if( pC>0) c( CO, CC) / (CO+CC) else c( 0.5, 0.5) # anti-NA 
+    BBO= c( BO, BB) / (BO+BB),
+    CCO= if( pC>0) c( CO, CC) / (CO+CC) else c( 0.5, 0.5) # anti-NA
   ))
 
   # and <OOthresh assumed negligible for non-truly-OO animals
-  
+
   dens <- FOR( names( p12), cbind( PDF( counts[[.]], mulo, siglo), PDF( counts[[.]], muhi, sighi)))
 
   lglk_counts <- 0
   for( g in names( p12)) {
     lglk_counts <- lglk_counts + sum( log( dens[[g]] %**% p12[[g]])) + n_hi[[g]] * log( p_hi %**% p12[[g]])
-  } 
-  
-return( lglk_counts + lglk_hw - pen)  
+  }
+
+return( lglk_counts + lglk_hw - pen)
 }
 
 
-"load_several_whoppers" <-
-function( zipfile, exclude=character(), template_gobj, cutoff_npoly, max_fish_at_once=5000) {
-stopifnot( template_gobj %is.a% 'snpgeno') # could check presence of certain atts, too
+#' @importFrom mvbutils %such.that% %not.in%
+"load_several_whoppers" <- function(zipfile, exclude=character(),
+                                    template_gobj, cutoff_npoly,
+                                    max_fish_at_once=5000) {
+
+  stopifnot( template_gobj %is.a% 'snpgeno') # could check presence of certain atts, too
 
   zippies <- unzip( zipfile, list=TRUE)$Name %such.that% (basename( .) %not.in% exclude)
   template_gobj <- template_gobj[0,]
-  
+
   for( ifile in zippies) {
     scatn( 'Reading %s', ifile); flush.console()
-    template_gobj <- load_whopper( 
-        csvfile= c( zipfile, ifile), 
-        gobj= template_gobj, 
+    template_gobj <- load_whopper(
+        csvfile= c( zipfile, ifile),
+        gobj= template_gobj,
         cutoff_npoly=cutoff_npoly,
-        max_fish_at_once=max_fish_at_once, 
+        max_fish_at_once=max_fish_at_once,
         dropped_fish_file= 'dropped-' %&% ifile)
   }
-  
+
 return( template_gobj)
 }
 
 
-"load_whopper" <-
-function( 
+#' @importFrom atease @ @<-
+#' @importFrom utils unzip
+"load_whopper" <- function(
     csvfile, # or length-2 where #1 is zipfilename, #2 is subfile
     gobj,
     max_fish_at_once=2000,
@@ -3669,9 +2563,9 @@ function(
     on.exit( unlink( unzippo))
     csvfile <- unzippo
   }
-  
+
   n_new_fish <- defish_csv( csvfile, just_count_the_fish=TRUE)
-  
+
   # for speed, work with stripped-down raw genotypes
   diplos <- gobj@diplos
   if( nrow( gobj)) {
@@ -3680,18 +2574,18 @@ function(
   } else {
     geno <- matrix( as.raw( 0), 0,  n_loci)
   }
-  
+
   # Grow the matrix only once, at the start
   n_preex <- nrow( geno)
   # Use of NA_integer_ works even if geno is 0-row
   geno <- rbind( geno, geno[rep(NA_integer_,n_new_fish),])
-  
+
   n_read <- 0
   n_remaining <- n_new_fish
-  
+
   tf <- tempfile() # will be re-used for each cut operation
   on.exit( unlink( tf))
-  
+
   # Read all the fish-info
   n_finfo_lines <- 0
   repeat{
@@ -3703,10 +2597,10 @@ function(
   }
 
   new_finfo <- read_cluster_dart3( csvfile, n_lines_max=n_finfo_lines+3)@info # at least 2 fish
-  
+
   scatn( 'checking locus info')
   defish_csv( csvfile, just_count_the_fish=FALSE, subset_fish=1:2, loci=TRUE, outfile=tf)
-  
+
   # Cannot use 'read_cluster_dart3' since it switches the order of rows without telling...
   # so would be permuted WRTO direct scan later on
   # What we really need is the "Tag" field, so we can later look up the original "FullAlleleSeq" etc
@@ -3714,23 +2608,23 @@ function(
 
   newloci <- scan( tf, skip=n_finfo_lines, what='', sep='\n', quiet=TRUE) # keep field-name line
   fields <- strsplit( newloci[1], ',')[[1]]
-  
+
   i_tag_field <- match( 'Tag', fields, 0)
   if( !i_tag_field) {
 stop( 'No "Tag" field..?')
-  } 
-  
+  }
+
   if( i_tag_field>1) {
     new_alleles <- sub( sprintf( '([^,]*,){%i}([^,]*),.*', i_tag_field-1), '\\2', newloci[-1])
   } else {
     new_alleles <- sub( ',.*', '', newloci-1)
   }
-  
+
   # Now match alleles...
-  
+
   mmseq1 <- match( locinfo$FullRefSeq, new_alleles, 0)
 stopifnot( all( mmseq1>0))
-  
+
   mmseq2 <- match( locinfo$FullAltSeq, new_alleles, 0)
 stopifnot( all( mmseq2>0))
 
@@ -3743,10 +2637,10 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
   mean_fish_tot <- gobj@mean_fish_tot
   poly_fish <- rep( 0, n_preex + n_new_fish)
   rescalor <- locinfo$rescalor
-  
+
   while( n_remaining) {
     this_subset <- seq( from=n_read+1, to=min( n_new_fish, n_read + max_fish_at_once))
-    
+
     # Originally tried not to use 'cut' if all-in-one read
     # But, locus fields at row-start in orginal are not expected after cut
     # ... and cause trouble. So lways cut
@@ -3756,17 +2650,17 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
 
     scatn( 'Reading fish %i:%i', this_subset[ 1], tail( this_subset, 1))
     defish_csv( csvfile, just_count_the_fish=FALSE, subset_fish=this_subset, loci=FALSE, outfile=tf)
-    
+
     n_fish_this_time <- length( this_subset)
     n_remaining <- n_remaining - n_fish_this_time
     n_read <- n_read + n_fish_this_time
-    
+
     counts <- scan( tf, skip=n_finfo_lines+1, what=0L, sep=',', quiet=TRUE) # +1 cos of field-names line
     dim( counts) <- c( n_fish_this_time, n_new_seqs)
-    
+
     # Put these counts into a temp F*L*3 array, like 'pick_ref_alt'
     # I hate vectoRization...
-    
+
     c3 <- array( 0, c( n_fish_this_time, n_loci, 3)) # Ref, Alt, Others
     c3[ ,,1] <- counts[ ,mmseq1] # ... at last got this right ...
     c3[ ,,2] <- counts[ ,mmseq2 ]
@@ -3778,7 +2672,7 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
     # c3[f,l,a] := c3[f,l,a] * mean_fish_tot / new_fish_tot_subset[ f]
     c3[f,l,a] := c3[f,l,a] / new_fish_tot_subset[ f]
     c3 <- c3 * mean_fish_tot
-    
+
     # Rescale alleles, as in ppn_ref_alt_check2
     c3[f,l,a]:= c3[f,l,a] * rescalor[l,a]
 
@@ -3786,17 +2680,17 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
 #    n_al_pres[ f, l]:= SUM_ %[a]% (c3[f,l,a] > 0.5 * cutoff_ppn * locinfo$med_het_tot[ l])
 #    is_poly[ f, l]:= n_al_pres[ f, l] == 3
 #    toopoly_fish[ n_preex + this_subset] <- rowSums( is_poly) > cutoff_npoly
-#    
+#
     # Just do it...
     g6 <- geno6way( c3, locinfo, het_cut=gobj@het_cut)
 stopifnot( my.all.equal( g6@diplos, diplos)) # paranoia...
 
-    poly_fish[ n_preex + this_subset] <- rowSums( g6@is_polyzyg) 
+    poly_fish[ n_preex + this_subset] <- rowSums( g6@is_polyzyg)
     geno[ n_preex + this_subset, ] <- g6
   }
 
   # Tack on attributes...
-  attributes( geno) <- c( attributes( geno), attributes( gobj)[ cq( locinfo, diplos, mean_fish_tot, het_cut, calls, args)])  
+  attributes( geno) <- c( attributes( geno), attributes( gobj)[ cq( locinfo, diplos, mean_fish_tot, het_cut, calls, args)])
   # May be an old "npoly" field in fish-info--- drop, since it won't exist for new data
   # Drop any other info fields that aren't in both old and new
   old_finfo <- gobj@info[ names( gobj@info) %that.are.in% names( new_finfo)]
@@ -3804,26 +2698,27 @@ stopifnot( my.all.equal( g6@diplos, diplos)) # paranoia...
   geno@info <- rbind( old_finfo, new_finfo)
   geno@locinfo$npoly <- NULL # also meaningless
   oldClass( geno) <- 'snpgeno'
-  
+
   toopoly <- poly_fish > cutoff_npoly
   if( length( as.character( dropped_fish_file)==1)) {
     dropped_fish <- geno@info$Our_sample[ toopoly] # really should have something to ID the *tube* kinda...
     cat( sprintf( '%s: %i', dropped_fish, poly_fish[ toopoly]), file=dropped_fish_file, sep='\n')
   }
-    
+
   geno <- geno[ !toopoly,]
-return( geno)  
+return( geno)
 }
 
 
-"make_pgeno" <-
-function( pA, pB, pC, which_genotypes) {
-### 
+#' @importFrom handy2 sqr
+#' @importFrom mvbutils FOR
+"make_pgeno" <- function( pA, pB, pC, which_genotypes) {
+###
 # which_genotypes eg genotypes_ambig. If no C-genos requested then pC is forced to 0 so new O includes C
   if( !any( grepl( 'C', which_genotypes))) {
     pC <- 0
   }
-  
+
   pO <- pmax( 0, 1 - pA - pB - pC) # rounding error guard
   pAO <- 2*pA*pO
   pAA <- sqr( pA)
@@ -3838,27 +2733,29 @@ function( pA, pB, pC, which_genotypes) {
   pCCO <- pCC + pCO
   pBC <- 2*pB*pC
   pOO  <- pO^2
-  
+
   # Could be scalar or vector: c or cbind
   funco <- if( length( pO) > 1) cbind else c
   phat <- do.call( funco, FOR( which_genotypes, get( 'p' %&% .)))
   names( phat) <- sub( '[.].*', '', names( phat)) # loco R name-extrusion habit FFS
-return( phat)    
+return( phat)
 }
 
-
+#' @export
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils %without.name%
 "make_playback" <-
 function( fhard, template, record_arg_name='record') {
   # template should come from calling 'fhard' with recording ON but with "normal" args
 
   original_fhard_env <- environment( fhard)
   recordo <- template@where
-  
+
   # Check for prefixdims
   recorded_formals <- names( formals( fhard)) %that.are.in% names( recordo$subs)
   one_recorded_arg <- recorded_formals[1]
 
-  # These need to exist when first called in playback-mode, so that <<- below will overwrite them 
+  # These need to exist when first called in playback-mode, so that <<- below will overwrite them
   recordo$prefixdims <- integer()
   recordo$counter <- NA # will get set
 
@@ -3867,9 +2764,9 @@ function( fhard, template, record_arg_name='record') {
   e$define <- define
   e$`[.playback` <- `[.playback`
   e$`[<-.playback` <- `[<-.playback`
-  recordo$ee <- e # 
+  recordo$ee <- e #
 
-  vf <- fhard  
+  vf <- fhard
   environment( vf) <- recordo
   formals( vf) <- formals( vf) %without.name% record_arg_name
   body( vf) <- substitute({
@@ -3883,7 +2780,7 @@ function( fhard, template, record_arg_name='record') {
       # ... which might not be so bad...
 
       counter <<- 1+0*lengths( subs) # named counters
-      
+
       # Arrange for args to be found, being paranoid to avoid name-clashes with things in ee
       argenv <- new.env( parent=ee)
       thisenv <- environment()
@@ -3891,7 +2788,7 @@ function( fhard, template, record_arg_name='record') {
         getme <- as.name( iarg)
         eval( substitute( delayedAssign( iarg, getme, eval.env=thisenv, assign.env=argenv), list( getme=getme)))
       }
-      
+
       res <- eval( exprs, argenv)
       if( res %is.a% 'playback') { # almost always..?
         res <- as.vector( res) # bareass nekkid
@@ -3911,7 +2808,7 @@ function( fhard, template, record_arg_name='record') {
       }
     return( res)
     })
-    
+
 return( vf)
 }
 
@@ -3924,33 +2821,31 @@ function( cA, cB, cC, geno) {
   tot2[ geno==BBO] <- cB[ geno==BBO]
   tot2[ geno==CCO] <- cC[ geno==CCO]
   tot2[ geno==AB] <- (cA + cB)[ geno==AB]
-  tot2[ geno==AC] <- (cA + cC)[ geno==AC]    
+  tot2[ geno==AC] <- (cA + cC)[ geno==AC]
   tot2[ geno==BC] <- (cB + cC)[ geno==BC]
 return( tot2)
 }
 
 
-"merge_new_samples" <-
-function( 
-    lociar, 
-    new_fish, 
-    drop_already # TRUE
-){ ######## 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq %without.name% %except%
+#' @importFrom handy2 multimatch do.to2
+"merge_new_samples" <- function(lociar, new_fish, drop_already){
   # rescale all counts and coerce to 3-allele format
   # could: zap poly fish
   # could: dump xshetz fish
   # apply geno6 rules
 
-  n_loci <- ncol( lociar)  
+  n_loci <- ncol( lociar)
   li <- lociar@locinfo
 
   if( drop_already) {
     already <- multimatch( new_fish@info, lociar@info[ names( new_fish@info)], 0)
     new_fish <- new_fish[ !already, ]
   }
-  
+
   n_new <- nrow( new_fish)
-  
+
   # Drop discarded loci
   lox <- match( lociar@locinfo$CloneID, new_fish@locinfo$CloneID, 0)
 stopifnot( all( lox)) # missing loci in new
@@ -3958,17 +2853,17 @@ stopifnot( all( lox)) # missing loci in new
 
   # Norm new fish
   nc <- unclass( new_fish)
-  new_fish[] <- nc * lociar@mean_fish_tot / new_fish@info$Fishtot # 
-  
+  new_fish[] <- nc * lociar@mean_fish_tot / new_fish@info$Fishtot #
+
  # Rescale alleles-within-locus
   newals <- new_fish@seqinfo$FullAlleleSeq
   new_counts <- array( 0, c( n_new, n_loci, 3))
   new_counts[,,1] <- nc[,match( li$FullRefSeq, newals)]
   new_counts[,,2] <- nc[,match( li$FullAltSeq, newals)]
-  
+
   hasC <- !is.na( li$FullThirdSeq)
   new_counts[,hasC,3] <- nc[,match( li$FullThirdSeq[ hasC], newals)]
-  
+
   for( i in 1:3) {
     new_counts[,,i] <- new_counts[,,i] * rep( li$rescalor[,i], each=n_new)
   }
@@ -3978,7 +2873,7 @@ stopifnot( all( lox)) # missing loci in new
   rimht <- rep( 1/mht, each=n_new)
   new_geno_amb <- geno_deambig_ABC( new_counts,
         mht=mht,
-        OOthresh_tc=li$OOthresh_tc, 
+        OOthresh_tc=li$OOthresh_tc,
         het_cut=lociar@het_cut,
         tc_hist_pars= NULL,
         ppnA_hist_pars= NULL,
@@ -3987,7 +2882,7 @@ stopifnot( all( lox)) # missing loci in new
 
   counts <- unclass( lociar)
   counts <- abind( counts, new_counts, along=1)
-  
+
   ninfo <- new_fish@info
   miss_cols <- names( lociar@info) %except% names( ninfo)
   if( length( miss_cols)) {
@@ -3996,46 +2891,48 @@ stopifnot( all( lox)) # missing loci in new
     ninfo <- cbind( ninfo, misso)
   }
   row.names( ninfo) <- row.names( new_fish@info) # since data.frame ops reliably **** 'em up
-  
-  updated_atts <- list( 
+
+  updated_atts <- list(
     info= rbind( lociar@info, ninfo),
     geno6= rbind( lociar@geno6, new_geno6),
     geno_amb= rbind( lociar@geno_amb, new_geno_amb)
   )
-  
+
   # Update counts and info parts of lociar, leaving all else unchanged
   other_atts <- attributes( lociar) %without.name% c( names( updated_atts), cq( dim, dimnames))
   nlociar <- do.call( 'structure', c( list( counts), updated_atts, other_atts))
-return( nlociar)  
+return( nlociar)
 }
 
 
-"old_pick_ref_alt" <-
-function( lociar) {
+#' @importFrom atease @ @<-
+#' @importFrom handy2 multimatch
+#' @importFrom mvbutils %except%
+"old_pick_ref_alt" <- function(lociar) {
   li <- lociar@locinfo
   n_fish <- nrow( lociar)
   n_loci <- ncol( lociar)
   count_fs <- unclass( lociar)
   count_rao <- array( 0, c( n_fish, n_loci, 3)) # Ref, Alt, Others
-  
+
   seqi <- lociar@seqinfo
   first_seq <- match( unique( seqi$Locus), seqi$Locus)
-  
+
   # Find alleles with highest & 2nd-highest total counts
   # Seemingly, this has already been done (sorted into total-count order with locus)
   # but it's quick so why not
-  
+
   ref <- do.to2( seqi, by=list( Locus), to=list( CountSum), fun='max')
   iseq <- multimatch( ref, seqi[ c( 'Locus', 'CountSum')])
   li$FullRefSeq <- seqi$FullAlleleSeq[ iseq]
   li$RefAllele <- seqi$Allele[ iseq]
   # li$RefNum <- iseq - first_seq + 1 # always 1 AFAICS
   count_rao[,,1] <- count_fs[ , iseq]
-  
+
   # Now get 2nd-placer, by -ving the max...
   seqi$CountSum[ iseq] <- -seqi$CountSum[ iseq]
   alt <- do.to2( seqi, by=list( Locus), to=list( CountSum), fun='max')
-  iseq <- multimatch( alt, seqi[ c( 'Locus', 'CountSum')])  
+  iseq <- multimatch( alt, seqi[ c( 'Locus', 'CountSum')])
   li$FullAltSeq <- seqi$FullAlleleSeq[ iseq]
   li$AltAllele <- seqi$Allele[ iseq]
   # li$AltNum <- iseq - first_seq + 1 # always 2 AFAICS
@@ -4044,14 +2941,14 @@ function( lociar) {
   # Now 3rd-placer, by also -ving the 2nd-placer...
   seqi$CountSum[ iseq] <- -seqi$CountSum[ iseq]
   alt <- do.to2( seqi, by=list( Locus), to=list( CountSum), fun='max')
-  iseq <- multimatch( alt, seqi[ c( 'Locus', 'CountSum')])  
+  iseq <- multimatch( alt, seqi[ c( 'Locus', 'CountSum')])
   li$FullThirdSeq <- seqi$FullAlleleSeq[ iseq]
   li$ThirdAllele <- seqi$Allele[ iseq]
   count_rao[,,3] <- count_fs[ , iseq]
   count_rao[, li$n_alleles<3,3] <- 0
   li$FullThirdSeq[ li$n_alleles<3] <- NA
   li$ThirdAllele[ li$n_alleles<3] <- NA
-  
+
   if( FALSE) { # used to have...
     # Count for Others := total_count - ref_count - alt_count
     # Hopefully efficient: add up all allele-1 counts, then allele-2 counts, ...
@@ -4065,32 +2962,33 @@ function( lociar) {
 
     count_rao[,,3] <- pmax( 0, tot - count_rao[,,1] - count_rao[,,2]) # rounding errors...
   }
-    
+
   count_rao@locinfo <- li
   count_rao@info <- lociar@info
-  other_atts <- names( attributes( lociar)) %except% 
+  other_atts <- names( attributes( lociar)) %except%
       c( names( attributes( count_rao)), 'class', 'seqinfo')
-  attributes( count_rao) <- c( attributes( count_rao), 
+  attributes( count_rao) <- c( attributes( count_rao),
       attributes( lociar)[ other_atts]) # calls, args, etc
   oldClass( count_rao) <- 'loc.ar'
-return( count_rao)  
+return( count_rao)
 }
 
 
+#' @importFrom atease @ @<-
 "orig_geno_deambig_ABC" <-
 function( lociar,
   mht= lociar@locinfo$med_het_tot,
-  OOthresh_tc, 
-  het_cut, 
-  tc_hist_pars,  
+  OOthresh_tc,
+  het_cut,
+  tc_hist_pars,
   ppnA_hist_pars,
   return_what=c( 'lociar', 'just_geno')) {
 ##############
 # Pick OO, hetz
 # Leave possible homoz as "possible" for now
-  
+
   define_genotypes() # knows OO AB etc
-  
+
   c3 <- unclass( lociar) # but can be passed in directly
 stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3rd might always be 0)
 
@@ -4114,20 +3012,20 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
     OOthresh_tc <- rep( OOthresh_tc, n_loci)
   } # else already locus-specific, eg when regenotyping in geno6()
 
-  is_OO[f,l] :=  
-      ((cA+cB)[f,l] < OOthresh_tc[l]) & 
-      ((cA+cC)[f,l] < OOthresh_tc[l]) & 
+  is_OO[f,l] :=
+      ((cA+cB)[f,l] < OOthresh_tc[l]) &
+      ((cA+cC)[f,l] < OOthresh_tc[l]) &
       ((cB+cC)[f,l] < OOthresh_tc[l])
-  
-  switch( mode( tc_hist_pars), 
-    list = { 
+
+  switch( mode( tc_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        tc_hist_pars <- add_list_defaults( tc_hist_pars, 
-            xlim=c( 0, 1.5), 
-            main='Tot c3 in FISHLOCI, normed so non-OO ~= 1', 
-            xlab='', 
+        tc_hist_pars <- add_list_defaults( tc_hist_pars,
+            xlim=c( 0, 1.5),
+            main='Tot c3 in FISHLOCI, normed so non-OO ~= 1',
+            xlab='',
             nclass=200)
-        # For some reason, directly using 'do.call( "hist"...)' is INCREDIBLY slow    
+        # For some reason, directly using 'do.call( "hist"...)' is INCREDIBLY slow
         # Dunno why
         # do.call( 'hist', c( list( x=pmax( c( cA+cB), c( cA+cC), c( cB+cC))), tc_hist_pars))
         yy <- pmax( c( cA+cB), c( cA+cC), c( cB+cC))
@@ -4147,12 +3045,12 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   ppnC <- cC / (cC + pmax( cA, cB))
 
   # optional graphics and/or user-specified outputs
-  switch( mode( ppnA_hist_pars), 
-    list = { 
+  switch( mode( ppnA_hist_pars),
+    list = {
         # Default settings for 'hist' that *can* be overridden, but...
-        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars, 
-            main='Ppn Ref c3 in non-OO FISHLOCI, normed by locus', 
-            xlab='', 
+        ppnA_hist_pars <- add_list_defaults( ppnA_hist_pars,
+            main='Ppn Ref c3 in non-OO FISHLOCI, normed by locus',
+            xlab='',
             nclass=200)
         # See previous histo comments
         #  do.call( 'hist', c( list( x=c( ppnA[ !is_OO])), ppnA_hist_pars))
@@ -4176,12 +3074,12 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   A_lowest <- cA < pmin( cB, cC)
   B_lowest <- cB < pmin( cA, cC)
   C_lowest <- cC < pmin( cA, cB)
-  
+
   is_AB[ is_polyzyg & (A_lowest | B_lowest)] <- FALSE
   is_AC[ is_polyzyg & (A_lowest | C_lowest)] <- FALSE
-  is_BC[ is_polyzyg & (B_lowest | C_lowest)] <- FALSE  
+  is_BC[ is_polyzyg & (B_lowest | C_lowest)] <- FALSE
 
-  geno_amb <- matrix( AB, nrow( c3), ncol( c3), 
+  geno_amb <- matrix( AB, nrow( c3), ncol( c3),
       dimnames=list( c3@info$Our_sample, c3@locinfo$Locus))
 
   geno_amb[ is_OO] <- OO
@@ -4193,33 +3091,34 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   geno_amb[ is_AB] <- AB
   geno_amb[ is_AC] <- AC
   geno_amb[ is_BC] <- BC
-  
+
   class( geno_amb) <- c( 'noquote', oldClass( geno_amb)) # so shows ABO not "ABO" etc
-  
+
   return_what <- match.arg( return_what)
-  
+
   if( return_what=='just_geno') { # used when regenotyping during 'geno6'
-return( geno_amb) 
-  } 
-  
+return( geno_amb)
+  }
+
   lociar@geno_amb <- geno_amb # but don't print it...
-  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno_amb') 
+  lociar@subset_like_both <- c( lociar@subset_like_both, 'geno_amb')
   lociar@het_cut <- het_cut
-  
-  lociar@print <- expression({ 
+
+  lociar@print <- expression({
       attr( x, 'locinfo') <- attr( x, 'seqinfo') <- attr( x, 'geno_amb') <- attr( x, 'print') <- NULL
       class( x) <- class( x) %except% 'specialprint'
       print( x)
       cat( '\n\n<<"locinfo" and "geno_amb" attributes hidden for brevity>>\n')
     })
 
-  
+
 return( lociar)
 }
 
 
-"pick_FSPs_from_HSPs" <-
-function( snpg, HSPs) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils do.on
+"pick_FSPs_from_HSPs" <- function( snpg, HSPs) {
   # For pairs already picked as HSPs, ie PLOD(HSP,UP) > eta: they might be FSPs. H
   # How would a FSP / HSP comparison look?
   # Don't need full pairwise screening for FSPs (do post hoc on a few hundred HSPs), hence all in R.
@@ -4245,81 +3144,83 @@ function( snpg, HSPs) {
   P_k1 <- 2*PHSP4 - PUP4
   P_k1[ P_k1 < 0] <- 0 # rounding error
 
-  samo <- do.on( strsplit( colnames( LOD4), '/'), .[1]==.[2]) 
+  samo <- do.on( strsplit( colnames( LOD4), '/'), .[1]==.[2])
   PFSP4 <- ...
-  # Number of ID locis should be 
-  
+  # Number of ID locis should be
+
   nsibs <- nrow( HSP)
-  
+
   n_loci_id <- sibg[ 1:nsib,] == sibg[ nsib + 1:nsib,]
   }
 
 
-"pick_ref_alt" <-
-function( lociar) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils %except%
+"pick_ref_alt" <- function( lociar) {
   li <- lociar@locinfo
   n_fish <- nrow( lociar)
   n_loci <- ncol( lociar)
   count_fs <- unclass( lociar)
   count_rao <- array( 0, c( n_fish, n_loci, 3)) # Ref, Alt, Others
-  
+
   seqi <- lociar@seqinfo
   first_seq <- match( unique( seqi$Locus), seqi$Locus)
-  
+
   # Find alleles with highest & 2nd-highest total counts
   # Seemingly, this has already been done (sorted into total-count order with locus)
   # but it's quick so why not
-  
+
   uclu <- with( seqi, match( Locus, unique( Locus)))
   o <- order( uclu, -seqi$count_sum) # NB ascending/descending; "count_sum" in case Dart's "CountSum" is missing
   if( !all( o==seq_along( o))) {
     seqi <- seqi[ o,]
     count_fs <- count_fs[ ,o]
   }
-  
+
   first_loc <- match( li$Locus, seqi$Locus)
   li$FullRefSeq <- seqi$FullAlleleSeq[ first_loc] # match
   li$RefAllele <- seqi$Allele[ first_loc]
   count_rao[,,1] <- count_fs[,first_loc]
-  
+
   li$FullAltSeq <- seqi$FullAlleleSeq[ first_loc+1]
   li$AltAllele <- seqi$Allele[ first_loc+1]
   count_rao[,,2] <- count_fs[,first_loc+1]
-  
+
   li$FullThirdSeq <- li$ThirdAllele <- NA_character_
   has2plus <- li$n_alleles > 2
   li$FullThirdSeq[ has2plus] <- seqi$FullAlleleSeq[ first_loc[ has2plus]+2]
   li$ThirdAllele[ has2plus] <- seqi$Allele[ first_loc[ has2plus]+2]
   count_rao[,has2plus,3] <- count_fs[,first_loc[has2plus]+2]
-  
+
   count_rao@locinfo <- li
   count_rao@info <- lociar@info
-  other_atts <- names( attributes( lociar)) %except% 
+  other_atts <- names( attributes( lociar)) %except%
       c( names( attributes( count_rao)), 'class', 'seqinfo')
-  attributes( count_rao) <- c( attributes( count_rao), 
+  attributes( count_rao) <- c( attributes( count_rao),
       attributes( lociar)[ other_atts]) # calls, args, etc
   oldClass( count_rao) <- 'loc.ar'
-return( count_rao)  
+return( count_rao)
 }
 
 
-"playback" <-
-function( P, snerr, recordo, prefixdims=numeric()) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils %is.not.an%
+"playback" <- function(P, snerr, recordo, prefixdims=numeric()){
   if( recordo %is.not.an% 'environment') {
     recordo <- recordo@where
   }
   recordo$prefixdims <- prefixdims
   recordo$counter <- 1+0*lengths( recordo$subs) # named
   environment( define) <- recordo # stuff it needs
-  # eval.parent( recordo$exprs)  
+  # eval.parent( recordo$exprs)
   res <- eval( recordo$exprs)
   if( res %is.a% 'playback') { # almost always..?
     res <- as.vector( res) # bareass nekkid
-    
+
     if( length( prefixdims) || (length( recordo$last_dim) > 1)) {
       dim( res) <- c( prefixdims, recordo$last_dim)
     } # else scalar is OK
-    
+
     rldn <- recordo$last_dimnames
     if( length( rldn)) {
       if( length( prefixdims) || (length( rldn) > 1)) {
@@ -4333,12 +3234,12 @@ return( res)
 }
 
 
-"ppn_ref_alt_check2" <-
-function( lociar, 
-    OOthresh_tc, 
-    OK_med_min, # keep loci (and keep 3rd allele if ditto) 
-    selector,  # 
-    rescale_alleles, # T/F
+#' @importFrom atease @ @<-
+#' @importFrom graphics title abline hist
+#' @importFrom mvbutils %except%
+"ppn_ref_alt_check2" <- function( lociar, OOthresh_tc,
+    OK_med_min, # keep loci (and keep 3rd allele if ditto)
+    selector, rescale_alleles, # T/F
     plot.=FALSE) {
 ### 3rd count is a real sequence BTW, but we might here decide not to trust it here
 
@@ -4347,7 +3248,7 @@ function( lociar,
   n_loci <- ncol( lociar)
 
   mht <- lociar@locinfo$med_het_tot
-  c3 <- unclass( lociar) # Should be 
+  c3 <- unclass( lociar) # Should be
 stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3rd might always be 0)
   attributes( c3) <- list( dim=dim( c3), dimnames=list( NULL, NULL, cq( A, B, C)))
 
@@ -4355,7 +3256,7 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
 
   OK_med_range <- sort( c( OK_med_min, 1-OK_med_min))
   plotto <- function( med_hetz, allele_type) {
-    hist( med_hetz, nclass=70, xlim=0:1, xlab=NULL, ylab=NULL, 
+    hist( med_hetz, nclass=70, xlim=0:1, xlab=NULL, ylab=NULL,
         main=sprintf( 'Med Ppn %s in plaus hetz', allele_type))
     abline( v=OK_med_range, col='lightgreen', lwd=2)
     abline( v=c( selector, 1-selector), col='orange')
@@ -4363,11 +3264,11 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   }
 
   find_med_hetz <- function( me, other) {
-    # Keep only "reasonable" ones, and not OOs  
+    # Keep only "reasonable" ones, and not OOs
       ppnal <- me / (me+other)
       is_OO <- (me+other) < OOthresh_tc
-      ppnal[ (ppnal < selector) | (ppnal > 1-selector)] <- NA 
-      ppnal[ is_OO] <- NA 
+      ppnal[ (ppnal < selector) | (ppnal > 1-selector)] <- NA
+      ppnal[ is_OO] <- NA
     return( apply( ppnal, 2, median, na.rm=TRUE))
     }
 
@@ -4376,10 +3277,10 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
     plotto( med_ppnA_hetz, 'Ref')
   }
 
-  med_ppnA_hetz[ is.na( med_ppnA_hetz)] <- (-1) # to drop NAs, which can occur if almost all OO and no hetz!  
+  med_ppnA_hetz[ is.na( med_ppnA_hetz)] <- (-1) # to drop NAs, which can occur if almost all OO and no hetz!
   keepo <- med_ppnA_hetz %in.range% OK_med_range
   lociar@locinfo$med_ppnA_hetz <- med_ppnA_hetz
-  
+
   if( rescale_alleles) { # want approx same score for Ref and Alt (and 3rd) if present--- based on medians
     # Preserve total count A+B
     totAB[loc,al] := c3[+.,loc,al=cq(A,B)]
@@ -4387,13 +3288,13 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
     rescalor <- cbind( A= 1/med_ppnA_hetz - 1, B= 1)
 
     # If we just Xed the count by rescalor, then med_ppnA_hetz would become 0.5
-    # But total A+B count would change, so re-rescale    
+    # But total A+B count would change, so re-rescale
     temp[loc]:= totAB[loc,al] %[al]% rescalor[loc,al]
     rescalor[loc,al] := rescalor[loc,al]  * (tot2[loc] / temp[loc])
     rescalor <- cbind( rescalor, C=1) # for now, to facilitate next line
     c3[f,l,al]:= c3[f,l,al] * rescalor[l,al]
   }
-  
+
   # Now 3rd allele C (after adjusting A vs B)
   pmaxAB <- pmax( c3[,,'A'], c3[,,'B'])
   dim( pmaxAB) <- dim( c3)[1:2]
@@ -4404,30 +3305,30 @@ stopifnot( length( dim( c3))==3 && dim( c3)[3]==3) # expect 3 allele counted (3r
   lociar[,bad3,3] <- c3[,bad3,'C'] <- 0
   lociar@locinfo$FullThirdSeq[ bad3] <- NA
   lociar@locinfo$ThirdAllele[ bad3] <- NA
-  
+
   if( plot.) {
     plotto( med_ppnC_hetz[ keepo], '3rd')
   }
 
-  if( rescale_alleles) {    
+  if( rescale_alleles) {
     # For Cs, need to use all the hetz we can find. Redo with new scores
     med_ppnC_hetz[ bad3] <- 0.5 # ensures no adjustment to A or B for these loci!
-    
+
     # Preserve total count A+B
     totCX <- colSums( c3)
     tot3[loc]:= totCX[loc,+.]
     orig_rescalor <- rescalor
-    
+
     rescalor <- cbind( A=1, B=1, C=1/med_ppnC_hetz-1)
 
     # If we just Xed the count by rescalor, then med_ppnC_hetz would become 0.5
-    # But total count would change, so re-rescale    
+    # But total count would change, so re-rescale
     # Questionable whether to base this on hetz only...
-    
+
     temp[loc]:= totCX[loc,al] %[al]% rescalor[loc,al]
     rescalor[loc,al] := rescalor[loc,al]  * (tot3[loc] / temp[loc])
     c3[f,l,al]:= c3[f,l,al] * rescalor[l,al]
-    
+
     rescalor[l,al] := rescalor[l,al] * orig_rescalor[l,al] # for 1-step application in fture
 
     c3[f,l,al] := c3[f,l,al] * mht[ l]
@@ -4442,12 +3343,14 @@ return( lociar)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom handy2 sqr
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
   # ... which should be pretty rare
 
-  define_genotypes()  
+  define_genotypes()
   nl <- nrow( pIBD1)
   Phsp <- pIBD1 * k + pIBD0 * (1-k)
   Pup <- pIBD0
@@ -4474,7 +3377,7 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
     double_wanted <- 1:ngp %in% omg
     # wrong for some reason:    double_wanted <- wanted %in% mg[ duplicated( c( mg))]
     gpPUP[ ,double_wanted] <- gpPUP[,double_wanted] * 2
-    
+
     dimnames( gpLOD) <- dimnames( gpPUP) <- list( dimnames( pIBD0)[[1]], mg@what)
     gpLOD@mg <- mg # why not
   }
@@ -4487,13 +3390,13 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   Ediff <- E.HSP - E.UP
 
   # Standardized difference ie locus power: not so useful post hoc, but possibly interesting for 6 vs 4 comps
-  sdiff <- (E.HSP - E.UP) / sqrt( V.UP)  
+  sdiff <- (E.HSP - E.UP) / sqrt( V.UP)
 
 #  Ediff <- unclass( Ediff)
 #  V.UP <- unclass( V.UP)
 #  sdiff <- unclass( sdiff)
-#  
-  
+#
+
   retval <- data.frame( Ediff, V.UP, sdiff)
   if( want_LOD_table) {
     retval@LOD <- gpLOD
@@ -4502,9 +3405,10 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
 return( retval)
 }
 
-
-"prepare_PLOD_SPA" <-
-function( geno6, n_pts_SPA_renorm=201) {
+#' @importFrom mvbutils cq %except% %not.in%
+#' @importFrom atease @ @<-
+#' @importFrom handy2 sqr
+"prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
 # n_pts_SPA_renorm should really be as big as R can handle without running out memory
 # ... but 201 should be OK I guess. If 201 and 301 give almost-identical results then all well!
@@ -4517,7 +3421,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
   # Combine 4way and 6way stuff into overall LOD and PUP
   extract.named( geno6@locinfo[ cq( use6, LOD6, LOD4, PUP6, PUP4)])
   use4 <- !use6
-  
+
   # DO NOT change actual genos though; they will be changed on-the-fly prior to kin-finding
   # ... code WOULD be this:
   # temp_snpg <- snpg
@@ -4528,7 +3432,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
   PUP <- PUP6
   cn6 <- colnames( LOD6)
   cn4 <- colnames( LOD4)
-  
+
   # Change only the entries with "full homz" since "single nulls" won't be accessed
   for( ichangio in grep( 'AA|BB', cn6) %except% grep( 'AO|BO', cn6)){
     was1 <- substring( cn6[ ichangio], 1, 2)
@@ -4539,7 +3443,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
     if( iget4 %not.in% cn4) { # reverse the order
       iget4 <- paste( now2, now1, sep='/')
     }
-      
+
     LOD[ use4, ichangio] <- LOD4[ use4, iget4]
     PUP[ use4, ichangio] <- PUP4[ use4, iget4]
   }
@@ -4550,14 +3454,14 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
   LOD@mg <- make_genopairer( geno6@diplos)
 
   make_K <- function( PUP, LOD) { # ... while the sun skines
-      
+
       e <- new.env( parent=asNamespace( 'vecless'))
       e$PUP <- PUP
       e$LOD <- e$LODOK <- LOD
       e$LODOK[ is.na( LOD)] <- 0 # leaving NAs in would mess up the calcs
       e$n_pts_SPA_renorm <- n_pts_SPA_renorm
-      
-      evalq( env=e, {
+
+      evalq( envir=e, {
         if( !nrow( PUP)) {
           K <- dK <- ddK <- function( tt) 0*tt
           inv_CDF <- CDF <- function( x) NA+x
@@ -4588,35 +3492,35 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 
           extract.named( renorm_SPA_cumul( K, dK, ddK, n_pts=n_pts_SPA_renorm))
           # ... CDF and inv_CDF but *not* for extreeeme values
-        } # if nrow PUP        
+        } # if nrow PUP
       })
-      
+
       # K and co will know PUP & co thru enviro magic
     return( e)
     } # function make_K
-  
+
 
   Kenv <- make_K( PUP, LOD)
   geno6@Kenv <- Kenv
-  
+
   # PUP and LOD are in Kenv now, so don't duplicate them in locinfo
-  # They are really the "workhorse" versions, and are a bit cheaty, so don't want 
+  # They are really the "workhorse" versions, and are a bit cheaty, so don't want
   # them too public
-  
+
 return( geno6)
 }
 
 
-"print.NGS_count_ar" <-
-function( x, 
-    trailing_dot=getOption( 'trailing_dot_NGS_count_ar', FALSE), 
-    dot_for_0=getOption( 'dot_for_zero_NGS_count_ar', FALSE),
-    ...) {
-######################    
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq do.on %except%
+"print.NGS_count_ar" <- function( x,
+    trailing_dot=getOption( 'trailing_dot_NGS_count_ar', FALSE),
+    dot_for_0=getOption( 'dot_for_zero_NGS_count_ar', FALSE), ...){
+
   attx <- attributes( x)
   df <- x@info
   rownames( df) <- NULL
-  
+
   x <- unclass( x)
   n_fish <- nrow( x)
   extract.named( x@locinfo)
@@ -4633,8 +3537,8 @@ function( x,
     }
   }
 
-  dot <- rawToChar( as.raw( 183))  
-  if( dot_for_0) {  
+  dot <- rawToChar( as.raw( 183))
+  if( dot_for_0) {
     zero <- if( trailing_dot) '0.' else '0'
     mi[ mi==zero] <- dot
   }
@@ -4650,16 +3554,16 @@ function( x,
   dim( m) <- c( n_fish, n_loci) # in case only 1 fish or 1 locus, whereupon do.on will strip dim
   # dimnames( m)[[2]] <- Locus # FFS R rejects this if m is N*1 ... so
   dimnames( m) <- list( NULL, Locus) # a compulsory column, albeit "made-up by Mark" sometimes
-  
+
   m[ grepl( 'NA', m, fixed=TRUE)] <- 'NA' # presumably only if binding several datasets?
-  
+
   # x <- cbind( df, m) # fucken cbind turns strings into fucken factors...
   x <- cbind( df, data.frame( m, stringsAsFactors=FALSE)) # a data.frame FFS
   print( x, quote=FALSE, right=TRUE, ...)
-  
+
   # Extra atts will not be printed by default (and print.data.frame ignores them)
-  # Set 'x@print_atts' to character to 
-  dont_print_atts <- names( attx) %except% c( attx$print_atts, 
+  # Set 'x@print_atts' to character to
+  dont_print_atts <- names( attx) %except% c( attx$print_atts,
       cq( class, dim, dimnames, print_atts, info, locinfo, seqinfo))
   if( length( dont_print_atts)) {
     scatn( '\nOmitting these attributes: %s', paste( dont_print_atts, collapse=', '))
@@ -4668,19 +3572,20 @@ function( x,
     scatn( '\nattr( ., %s):', att_to_print)
     print( attx[[ att_to_print]], ...)
   }
-    
+
   if( 'print_atts' %in% names( attx)) {
-    
-  
+
+
   }
-  
+
   invisible( x)
 }
 
 
+#' @importFrom atease @ @<-
 "re_est_ALF" <-
 function( snpg) {
-## check to be called after load_whopper loads entire dataset 
+## check to be called after load_whopper loads entire dataset
 
   define_genotypes()
   n_samp <- nrow( snpg)
@@ -4692,27 +3597,30 @@ function( snpg) {
   gamb[ snpg==AA] <- AAO
   gamb[ snpg==BO] <- BBO
   gamb[ snpg==BB] <- BBO
-  
+
   snpg@geno_amb <- gamb # required by...
   new_ALFs <- est_ALF_ABCO( snpg)
 return( new_ALFs)
 }
 
-
-"read_cluster_dart2" <-
-function( filename, filtered=FALSE, use_rownames=FALSE, show_progress=TRUE) {
-  # CSV file with a few header lines of plate info, then (unlike read_count_dart) each CLUSTER in several rows, one for each SNP sequence: 
+#' @importFrom openxlsx read.xlsx
+#' @importFrom gbasics loc.ar
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils FOR
+#' @importFrom utils head
+"read_cluster_dart2" <- function(filename, filtered=FALSE, use_rownames=FALSE,
+                                 show_progress=TRUE) {
+  # CSV file with a few header lines of plate info, then (unlike
+  # read_count_dart) each CLUSTER in several rows, one for each SNP sequence:
   # still needs to be reorganized (inefficiently) into pairs
   # ... first few cols are locus summaries, remainder are fishwise counts
   # Use either raw or filtered counts (before or after 2nd ClusterIdx column)
   # use_rownames default changed to FALSE
-  
-  require( ckn) # for loc.ar machinery
 
   if( grepl( '(?i)[.]xls(x)?$', filename)) {
-    library( openxlsx, quietly=TRUE) 
-    temp <- read.xlsx( filename, colNames=FALSE)
-    # No doubt could get stuff directly from data.frame 'temp', but simpler to use existing code
+    temp <- openxlsx::read.xlsx( filename, colNames=FALSE)
+    # No doubt could get stuff directly from data.frame 'temp', but simpler
+    # to use existing code
     # stuffo <- apply( temp, 1, paste, collapse=',')
     # ****ing NA is mishandled by paste(), so...
     temp <- FOR( temp, {z <- as.character(.); z[is.na(.)] <- ''; z})
@@ -4724,36 +3632,36 @@ function( filename, filtered=FALSE, use_rownames=FALSE, show_progress=TRUE) {
 
   # For some reason, there are completely blank rows in one spreadsheet
   stuffo <- stuffo[ grepl( '[^,]', stuffo)]
-  
+
   # Check format (standard or JC Nov 2016)
   if( !length( grep( 'ClusterIdx,', stuffo, fixed=TRUE))) {
 return( read_count_dart( filename, use_rownames=use_rownames, stuffo=stuffo))
   }
-  
+
   well.row <- grep( '(,[A-H][0-9]{0,2})+$', stuffo)
   #  well.row <- grep( 'Extract_well', stuffo, value=TRUE) not always labelled
 stopifnot( length( well.row)==1)
-  
+
   wells <- strsplit( stuffo[ well.row], ',')[[1]]
   is.fish.col <- grepl( '^[A-H][0-9]{1,2}$', wells)
-  
+
   # raw or filtered
 
   gap.col <- max( which( !is.fish.col))
-  if( any( which( is.fish.col) < gap.col)) { # then we do have to decide 
+  if( any( which( is.fish.col) < gap.col)) { # then we do have to decide
     nfish <- sum( is.fish.col) / 2
     nprefishcols <- sum( !is.fish.col)-1
 stopifnot( gap.col == nfish + nprefishcols + 1)
     if( filtered) {
       # drop RH end
       stuffo <- sub( sprintf( '^([^,]*)((?:,[^,]*){%i}).*', nfish+nprefishcols-1), '\\1\\2', stuffo, perl=TRUE)
-      dont_drop_yet <- 1 %upto% (nprefishcols + nfish) 
+      dont_drop_yet <- 1 %upto% (nprefishcols + nfish)
     } else {
       # drop middle
       stuffo <- sub( sprintf( '^((?:[^,]*,){%i})([^,]*,){%i}', nprefishcols, nfish+1), '\\1', stuffo, perl=TRUE)
-      dont_drop_yet <- c( 1 %upto% nprefishcols, nfish + nprefishcols + 1 + (1 %upto% nfish)) 
+      dont_drop_yet <- c( 1 %upto% nprefishcols, nfish + nprefishcols + 1 + (1 %upto% nfish))
     }
-    
+
     wells <- wells[ dont_drop_yet]
     is.fish.col <- is.fish.col[ dont_drop_yet]
   } else { # only one version of counts
@@ -4764,7 +3672,7 @@ stopifnot( gap.col == nfish + nprefishcols + 1)
   droppo <- which.max( cumprod( star.start) * cumsum( star.start))
   metafish <- stuffo[ (1 %upto% droppo)] # %except% well.row] now keeping that
   stuffo <- stuffo[ -(1 %upto% droppo)]
-  
+
   chardat <- strsplit( stuffo, ',', fixed=TRUE)
 stopifnot( length( unique( lengths( chardat))) == 1)
 
@@ -4772,20 +3680,20 @@ stopifnot( length( unique( lengths( chardat))) == 1)
   ncols <- length( cols)
   data <- matrix( unlist( chardat[-1]), ncol=ncols, byrow=TRUE)
   rm( chardat)
-  
+
   seqinfo <- data[,!is.fish.col,drop=FALSE]
 #   fishinfo <- data[,is.fish.col,drop=FALSE]
   fishinfo <- matrix( as.integer( data[,is.fish.col]), ncol=sum( is.fish.col))
   rm( data)
 
-  deduce_dart_header_rows()  
+  deduce_dart_header_rows()
 
-  # Loci: check numeric convertibelity by column  
+  # Loci: check numeric convertibelity by column
   # This doesn't *guarantee* numericism (eg 1..-2 is not convertible) but FFS...
   unint.char <- grepl( '[^0-9-]', seqinfo)
   unreal.char <- grepl( '[^0-9.eE+-]', seqinfo)
   dim( unint.char) <- dim( unreal.char) <- dim( seqinfo)
-  
+
   intable <- colSums( unint.char)==0
   realable <- (colSums( unreal.char)==0) & !intable
 
@@ -4793,41 +3701,41 @@ stopifnot( length( unique( lengths( chardat))) == 1)
   names( seqinfo) <- cols[ !is.fish.col]
   seqinfo[ intable] <- lapply( seqinfo[ intable], as.integer)
   seqinfo[ realable] <- lapply( seqinfo[ realable], as.numeric)
-  seqinfo <- seqinfo[ !duplicated( cols[ !is.fish.col])] # ClusterIdx can appear twice (well 3 times overall); 
+  seqinfo <- seqinfo[ !duplicated( cols[ !is.fish.col])] # ClusterIdx can appear twice (well 3 times overall);
   # ... name will be changed by names<- above
   seqinfo$count_sum <- rowSums( fishinfo)
 
-  dupseq <- duplicated( seqinfo$Tag) # shouldn't happen but does. This format is iffy... 
+  dupseq <- duplicated( seqinfo$Tag) # shouldn't happen but does. This format is iffy...
   # At least the entire row seems duplicated
   fishinfo <- fishinfo[ !dupseq,] # not yet transposed
-  seqinfo <- seqinfo[ !dupseq,] 
-  
+  seqinfo <- seqinfo[ !dupseq,]
+
   # Make sure "clusters" are contiguous, with commonest "ref" sequence first
   uclu <- with( seqinfo, match( ClusterIdx, unique( ClusterIdx)))
   o <- order( uclu, -seqinfo$count_sum) # NB ascending/descending; "count_sum" in case Dart's "CountSum" is missing
   if( !all( o==seq_along( o))) {
     seqinfo <- seqinfo[ o,]
   }
-  
+
   seqinfo <- within( seqinfo, {
     CloneID <- sprintf( 'L%i', ClusterIdx)
     Allele <- '' # abbreviated version, filled in later
   })
   names( seqinfo) <- sub( '^Tag$', 'FullAlleleSeq', names( seqinfo))
-  
+
   tot_alleles <- nrow( seqinfo)
   n_alleles <- table( seqinfo$ClusterIdx)
-  locinfo <- data.frame( 
+  locinfo <- data.frame(
       CloneID= sprintf( 'L%s', names( n_alleles)),
-      ClusterTempIndex= names( n_alleles), 
-      n_alleles= c( n_alleles), 
+      ClusterTempIndex= names( n_alleles),
+      n_alleles= c( n_alleles),
       consensus='',
       var_pos='',
       row.names=NULL, stringsAsFactors=FALSE)
   locinfo$end_col <- cumsum( n_alleles)
   locinfo$start_col <- c( 1L, head( locinfo$end_col, -1)+1)
 
-  
+
   for( iclu in seq_along( n_alleles)) {
     if( show_progress && (iclu %% 100 == 0)) {
       cat( '\r', sprintf( '%i of %i clusters', iclu, length( n_alleles)))
@@ -4842,14 +3750,14 @@ stopifnot( length( unique( lengths( chardat))) == 1)
     conseq <- raws[,1]
     conseq[ has_var] <- charToRaw( '.')
     locinfo$consensus[ iclu] <- rawToChar( conseq)
-    seqinfo$Allele[ which_seqs] <- sprintf( 'L%s_%s', 
-        names( n_alleles)[iclu], 
+    seqinfo$Allele[ which_seqs] <- sprintf( 'L%s_%s',
+        names( n_alleles)[iclu],
         apply( raws[ var_pos,,drop=FALSE], 2, rawToChar))
   }
   if( show_progress) {
     cat( '\n')
   }
-    
+
   # For compatibility with other funcs that expect ClusterTempIndex column
   names( seqinfo) <- sub( 'ClusterIdx', 'ClusterTempIndex', names( seqinfo), fixed=TRUE)
   names( locinfo) <- sub( 'ClusterIdx', 'ClusterTempIndex', names( locinfo), fixed=TRUE)
@@ -4869,20 +3777,22 @@ return( fishinfo)
 }
 
 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq %SUCH.THAT% %is.not.a% %except% FOR
+#' @importFrom gbasics loc.ar
+#' @importFrom openxlsx read.xlsx
+#' @importFrom utils head
 "read_cluster_dart3" <-
 function( filename, filtered=FALSE, use_rownames=FALSE, show_progress=TRUE, n_lines_max=-1){
-  # CSV file with a few header lines of plate info, then (unlike read_count_dart) each CLUSTER in several rows, one for each SNP sequence: 
+  # CSV file with a few header lines of plate info, then (unlike read_count_dart) each CLUSTER in several rows, one for each SNP sequence:
   # still needs to be reorganized (inefficiently) into pairs
   # ... first few cols are locus summaries, remainder are fishwise counts
   # Use either raw or filtered counts (before or after 2nd ClusterIdx column)
   # use_rownames default changed to FALSE
-  
-#   require( ckn) # for loc.ar machinery; now should be placed elsewhere
 
   if( grepl( '(?i)[.]xls(x)?$', filename)) {
     # n_lines_max is ignored here...
-    library( openxlsx, quietly=TRUE) 
-    temp <- read.xlsx( filename, colNames=FALSE)
+    temp <- openxlsx::read.xlsx( filename, colNames=FALSE)
     # No doubt could get stuff directly from data.frame 'temp', but simpler to use existing code
     # stuffo <- apply( temp, 1, paste, collapse=',')
     # ****ing NA is mishandled by paste(), so...
@@ -4895,37 +3805,37 @@ function( filename, filtered=FALSE, use_rownames=FALSE, show_progress=TRUE, n_li
 
   # For some reason, there are completely blank rows in one spreadsheet
   stuffo <- stuffo[ grepl( '[^,]', stuffo)]
-  
+
   # Check format (standard or JC Nov 2016)
   if( !length( grep( 'ClusterIdx,', stuffo, fixed=TRUE))) {
 #return( read_count_dart( filename, use_rownames=use_rownames, stuffo=stuffo))
-stop( "Looks like older, or 'new improved' format; try 'read_count_dart'")    
+stop( "Looks like older, or 'new improved' format; try 'read_count_dart'")
   }
-  
+
   well.row <- grep( '(,[A-H][0-9]{0,2})+$', stuffo)
   #  well.row <- grep( 'Extract_well', stuffo, value=TRUE) not always labelled
 stopifnot( length( well.row)==1)
-  
+
   wells <- strsplit( stuffo[ well.row], ',')[[1]]
   is.fish.col <- grepl( '^[A-H][0-9]{1,2}$', wells)
-  
+
   # raw or filtered
 
   gap.col <- max( which( !is.fish.col))
-  if( any( which( is.fish.col) < gap.col)) { # then we do have to decide 
+  if( any( which( is.fish.col) < gap.col)) { # then we do have to decide
     nfish <- sum( is.fish.col) / 2
     nprefishcols <- sum( !is.fish.col)-1
 stopifnot( gap.col == nfish + nprefishcols + 1)
     if( filtered) {
       # drop RH end
       stuffo <- sub( sprintf( '^([^,]*)((?:,[^,]*){%i}).*', nfish+nprefishcols-1), '\\1\\2', stuffo, perl=TRUE)
-      dont_drop_yet <- 1 %upto% (nprefishcols + nfish) 
+      dont_drop_yet <- 1 %upto% (nprefishcols + nfish)
     } else {
       # drop middle
       stuffo <- sub( sprintf( '^((?:[^,]*,){%i})([^,]*,){%i}', nprefishcols, nfish+1), '\\1', stuffo, perl=TRUE)
-      dont_drop_yet <- c( 1 %upto% nprefishcols, nfish + nprefishcols + 1 + (1 %upto% nfish)) 
+      dont_drop_yet <- c( 1 %upto% nprefishcols, nfish + nprefishcols + 1 + (1 %upto% nfish))
     }
-    
+
     wells <- wells[ dont_drop_yet]
     is.fish.col <- is.fish.col[ dont_drop_yet]
   } else { # only one version of counts
@@ -4936,7 +3846,7 @@ stopifnot( gap.col == nfish + nprefishcols + 1)
   droppo <- which.max( cumprod( star.start) * cumsum( star.start))
   metafish <- stuffo[ (1 %upto% droppo)] # %except% well.row] now keeping that
   stuffo <- stuffo[ -(1 %upto% droppo)]
-  
+
   chardat <- strsplit( stuffo, ',', fixed=TRUE)
 stopifnot( length( unique( lengths( chardat))) == 1)
 
@@ -4944,20 +3854,20 @@ stopifnot( length( unique( lengths( chardat))) == 1)
   ncols <- length( cols)
   data <- matrix( unlist( chardat[-1]), ncol=ncols, byrow=TRUE)
   rm( chardat)
-  
+
   seqinfo <- data[,!is.fish.col,drop=FALSE]
 #   fishinfo <- data[,is.fish.col,drop=FALSE]
   fishinfo <- matrix( as.integer( data[,is.fish.col]), ncol=sum( is.fish.col))
   rm( data)
 
-  deduce_dart_header_rows()  
+  deduce_dart_header_rows()
 
-  # Loci: check numeric convertibelity by column  
+  # Loci: check numeric convertibelity by column
   # This doesn't *guarantee* numericism (eg 1..-2 is not convertible) but FFS...
   unint.char <- grepl( '[^0-9-]', seqinfo)
   unreal.char <- grepl( '[^0-9.eE+-]', seqinfo)
   dim( unint.char) <- dim( unreal.char) <- dim( seqinfo)
-  
+
   intable <- colSums( unint.char)==0
   realable <- (colSums( unreal.char)==0) & !intable
 
@@ -4965,41 +3875,41 @@ stopifnot( length( unique( lengths( chardat))) == 1)
   names( seqinfo) <- cols[ !is.fish.col]
   seqinfo[ intable] <- lapply( seqinfo[ intable], as.integer)
   seqinfo[ realable] <- lapply( seqinfo[ realable], as.numeric)
-  seqinfo <- seqinfo[ !duplicated( cols[ !is.fish.col])] # ClusterIdx can appear twice (well 3 times overall); 
+  seqinfo <- seqinfo[ !duplicated( cols[ !is.fish.col])] # ClusterIdx can appear twice (well 3 times overall);
   # ... name will be changed by names<- above
   seqinfo$count_sum <- rowSums( fishinfo)
 
-  dupseq <- duplicated( seqinfo$Tag) # shouldn't happen but does. This format is iffy... 
+  dupseq <- duplicated( seqinfo$Tag) # shouldn't happen but does. This format is iffy...
   # At least the entire row seems duplicated
   fishinfo <- fishinfo[ !dupseq,] # not yet transposed
-  seqinfo <- seqinfo[ !dupseq,] 
-  
+  seqinfo <- seqinfo[ !dupseq,]
+
   # Make sure "clusters" are contiguous, with commonest "ref" sequence first
   uclu <- with( seqinfo, match( ClusterIdx, unique( ClusterIdx)))
   o <- order( uclu, -seqinfo$count_sum) # NB ascending/descending; "count_sum" in case Dart's "CountSum" is missing
   if( !all( o==seq_along( o))) {
     seqinfo <- seqinfo[ o,]
   }
-  
+
   seqinfo <- within( seqinfo, {
     CloneID <- sprintf( 'L%i', ClusterIdx)
     Allele <- '' # abbreviated version, filled in later
   })
   names( seqinfo) <- sub( '^Tag$', 'FullAlleleSeq', names( seqinfo))
-  
+
   tot_alleles <- nrow( seqinfo)
   n_alleles <- table( seqinfo$ClusterIdx)
-  locinfo <- data.frame( 
+  locinfo <- data.frame(
       CloneID= sprintf( 'L%s', names( n_alleles)),
-      ClusterTempIndex= names( n_alleles), 
-      n_alleles= c( n_alleles), 
+      ClusterTempIndex= names( n_alleles),
+      n_alleles= c( n_alleles),
       consensus='',
       var_pos='',
       row.names=NULL, stringsAsFactors=FALSE)
   locinfo$end_col <- cumsum( n_alleles)
   locinfo$start_col <- c( 1L, head( locinfo$end_col, -1)+1)
 
-  
+
   for( iclu in seq_along( n_alleles)) {
     if( show_progress && (iclu %% 100 == 0)) {
       cat( '\r', sprintf( '%i of %i clusters', iclu, length( n_alleles)))
@@ -5014,14 +3924,14 @@ stopifnot( length( unique( lengths( chardat))) == 1)
     conseq <- raws[,1]
     conseq[ has_var] <- charToRaw( '.')
     locinfo$consensus[ iclu] <- rawToChar( conseq)
-    seqinfo$Allele[ which_seqs] <- sprintf( 'L%s_%s', 
-        names( n_alleles)[iclu], 
+    seqinfo$Allele[ which_seqs] <- sprintf( 'L%s_%s',
+        names( n_alleles)[iclu],
         apply( raws[ var_pos,,drop=FALSE], 2, rawToChar))
   }
   if( show_progress) {
     cat( '\n')
   }
-    
+
   # For compatibility with other funcs that expect ClusterTempIndex column
   names( seqinfo) <- sub( 'ClusterIdx', 'ClusterTempIndex', names( seqinfo), fixed=TRUE)
   names( locinfo) <- sub( 'ClusterIdx', 'ClusterTempIndex', names( locinfo), fixed=TRUE)
@@ -5036,10 +3946,10 @@ stopifnot( length( unique( lengths( chardat))) == 1)
   # Rename...
   locinfo <- locinfo %SUCH.THAT% (. %is.not.a% 'numeric')
   locinfo$Locus <- locinfo$CloneID
-  locinfo <- locinfo[ c( 'Locus', names( locinfo) %except% 
+  locinfo <- locinfo[ c( 'Locus', names( locinfo) %except%
       cq( Locus, CloneID, ClusterTempIndex))]
   seqinfo$Locus <- seqinfo$CloneID
-  seqinfo <- seqinfo[ c( 'Locus', names( seqinfo) %except% 
+  seqinfo <- seqinfo[ c( 'Locus', names( seqinfo) %except%
       cq( Locus, CloneID, ClusterTempIndex))]
 
   fishinfo@info <- metafish
@@ -5050,66 +3960,9 @@ return( fishinfo)
 }
 
 
-"record" <-
-function( expr, var, name_of_call=NULL, these_args=NULL) {
-  expr <- substitute( expr)
-  pf <- parent.frame()
-  calls <- get( var, pf)@calls
-  calls <- c( calls, expr)
-  if( !is.null( name_of_call)) {
-    names( calls)[ length( calls)] <- name_of_call
-  }
-
-  # expr <- substitute( { expr; get( var)})
-  eval( expr, pf) # no side-effects
-  res <- pf[[ var]]
-  res@calls <- calls
-  if( !is.null( these_args) && !is.null( name_of_call)) {
-    res@args[[ name_of_call]] <- these_args
-  }
-  
-  assign( var, res, envir=pf)
-  res
-}
-
-
-"recordar" <-
-function( assig, expand_dim=FALSE) {
-  assig <- substitute( assig)
-  envo <- environment( sys.function())
-  x <- eval.parent( assig)  # always needed
-  if( is.null( dim( x))) {
-    envo$last_dimnames <- names( x)
-    envo$last_dim <- length( x)
-  } else {
-    envo$last_dimnames <- dimnames( x)
-    envo$last_dim <- dim( x)
-  }
-  
-  is_assign <- (assig %is.a% '<-') || ((assig %is.a% 'call') && (assig[[1]]==as.name( '<<-')))
-  if( is_assign && (assig[[2]] %is.not.a% 'name')) { # eg x[] <- y
-    # eval.parent( assig) will have created all indices for RHS
-    subassig <- assig[[2]]
-    eval.parent( subassig) # create index for LHS
-  } else if( is_assign) { # x is being created
-    name <- as.character( assig[[2]])
-    if( name %in% names( envo$subs)) { # make x self-recording
-      x@where <- envo
-      x@whoami <- name
-      oldClass( x) <- c( 'selfrecording_array', oldClass( x))
-      assign( name, x, parent.frame())
-      assig <- substitute( define( assig, expand_dim)) # to allow adding prefix-dims
-    }
-  } # else do nothing special, eg nonreturning function call
-
-  # How to grow a {}-object...
-  envo$exprs[[ length( envo$exprs)+1]] <- assig
-return( x)
-}
-
-
-"refit_whopper" <-
-function( 
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils cq do.on FOR
+"refit_whopper" <- function(
     csvfiles, # or length-2 where #1 is zipfilename, #2 is subfile
     gobj,
     max_loci_at_once=100,
@@ -5121,15 +3974,15 @@ function(
   define_genotypes()
   locinfo <- gobj@locinfo
   n_loci <- nrow( locinfo)
-  
+
   n_fish <- do.on( csvfiles, defish_csv( ., just_count_the_fish=TRUE))
-  
+
   n_read <- 0
   n_loc_left <- n_loci
-  
+
   tf <- tempfile() # will be re-used for each cut operation
   on.exit( unlink( tf))
-  
+
   # Read all the fish-info
   n_finfo_lines <- 0
   repeat{
@@ -5144,14 +3997,14 @@ function(
   rescalor <- locinfo$rescalor
 
   new_finfo <- FOR( csvfiles, read_cluster_dart3( ., n_lines_max=n_finfo_lines+3)@info) # at least 2 fish from each
-  
+
   scatn( 'checking locus info')
   defish_csv( csvfiles[1], just_count_the_fish=FALSE, subset_fish=1:2, loci=TRUE, outfile=tf)
 
   mean_fish_tot <- gobj@mean_fish_tot
   rescalor <- locinfo$rescalor
 
-  
+
   # Cannot use 'read_cluster_dart3' since it switches the order of rows without telling...
   # so would be permuted WRTO direct scan later on
   # What we really need is the "Tag" field, so we can later look up the original "FullAlleleSeq" etc
@@ -5159,26 +4012,26 @@ function(
 
   newloci <- scan( tf, skip=n_finfo_lines, what='', sep='\n', quiet=TRUE) # keep field-name line
   fields <- strsplit( newloci[1], ',')[[1]]
-  
+
   i_tag_field <- match( 'Tag', fields, 0)
   if( !i_tag_field) {
 stop( 'No "Tag" field..?')
-  } 
-  
+  }
+
   clusters <- sub( ',.*', '', newloci)
   nseqs <- table( clusters)[ as.character( unique( clusters))] # ensure matching order
-  
+
   if( i_tag_field>1) {
     new_alleles <- sub( sprintf( '([^,]*,){%i}([^,]*),.*', i_tag_field-1), '\\2', newloci[-1])
   } else {
     new_alleles <- sub( ',.*', '', newloci-1)
   }
-  
+
   # Now match alleles...
-  
+
   mmseq1 <- match( locinfo$FullRefSeq, new_alleles, 0)
 stopifnot( all( mmseq1>0))
-  
+
   mmseq2 <- match( locinfo$FullAltSeq, new_alleles, 0)
 stopifnot( all( mmseq2>0))
 
@@ -5194,32 +4047,32 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
   while( loci_read < n_loci) {
     n_loci_this_time <- min( max_loci_at_once, n_loci-n_loci_read)
     these_loci <- loci_read + seq_len( n_loci_this_time)
-    
-    scatn( 'Fitting loci %i:%i of %i', loci_read+1, loci_read + n_loci_this_time, n_loci)    
+
+    scatn( 'Fitting loci %i:%i of %i', loci_read+1, loci_read + n_loci_this_time, n_loci)
 
     c3 <- array( 0, c( n_fish, n_loci_this_time, 3)) # Ref, Alt, Others
 
     for( ifile in csvfiles) {
-      these_fish <- 
-      counts <- scan( ifile, skip=n_finfo_lines+1+sum( nseqs[ seq_len( loci_read)]), 
+      these_fish <-
+      counts <- scan( ifile, skip=n_finfo_lines+1+sum( nseqs[ seq_len( loci_read)]),
           nlines= sum( nseqs[ n_loci_this_time]),
           what=0L, sep=',', quiet=TRUE) # +1 cos of field-names line
       dim( counts) <- c( length( these_fish), n_new_seqs)
-    
+
       # Put these counts into a temp F*L*3 array, like 'pick_ref_alt'
-    
-      c3[ these_fish,,1] <- counts[ ,mmseq1[ these_loci]] 
+
+      c3[ these_fish,,1] <- counts[ ,mmseq1[ these_loci]]
       c3[ these_fish,,2] <- counts[ ,mmseq2[ these_loci]]
       c3[ these_fish, polyallelic[ these_loci], 3] <- counts[ ,mmseq3[ these_loci] ]
     }
 
     # Renorm by fish...
     c3[f,l,a] := c3[f,l,a] * (mean_fish_tot / new_finfo$Fishtot[ f])
-    
+
     # Rescale alleles, as in ppn_ref_alt_check2
     c3[f,l,a]:= c3[f,l,a] * rescalor[l,a]
 
-    
+
     n_loci_read <- n_loci_read + n_loci_this_time
   }
 
@@ -5227,7 +4080,7 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
   new_locinfo <- choose_geno6_thresholds( ...)
 
   # Tack on attributes...
-  attributes( geno) <- c( attributes( geno), attributes( gobj)[ cq( locinfo, diplos, mean_fish_tot, het_cut, calls, args)])  
+  attributes( geno) <- c( attributes( geno), attributes( gobj)[ cq( locinfo, diplos, mean_fish_tot, het_cut, calls, args)])
   # May be an old "npoly" field in fish-info--- drop, since it won't exist for new data
   # Drop any other info fields that aren't in both old and new
   old_finfo <- gobj@info[ names( gobj@info) %that.are.in% names( new_finfo)]
@@ -5235,30 +4088,30 @@ stopifnot( all( mmseq3>0)) # some loci don't have 3rd alleles
   geno@info <- rbind( old_finfo, new_finfo)
   geno@locinfo$npoly <- NULL # also meaningless
   oldClass( geno) <- 'snpgeno'
-  
+
   toopoly <- poly_fish > cutoff_npoly
   if( length( as.character( dropped_fish_file)==1)) {
     dropped_fish <- geno@info$Our_sample[ toopoly] # really should have something to ID the *tube* kinda...
     cat( sprintf( '%s: %i', dropped_fish, poly_fish[ toopoly]), file=dropped_fish_file, sep='\n')
   }
-    
+
   geno <- geno[ !toopoly,]
-return( geno)  
+return( geno)
 }
 
-
-"renorm_SPA" <-
-function( K, dK, ddK, return_what=c( 'func', 'mulfuncby'), tol=formals( ridder)$tol
+#' @importFrom handy2 integ
+"renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
+                         tol=formals( ridder)$tol
   # , ... ; should really allow extra args to K & co, and build them in...
 ){
   isqrt_2pi <- 1/sqrt( 2*pi)
   absmax <- 10 / sqrt( ddK( 0)) # x between +/- 10SD of mean
-  
+
   # mc <- as.list( match.call( expand.dots=FALSE)$...)
   K <- Vectorize( K) # names( formals( K)) %except% names( list( ...)) kinda thing
   dK <- Vectorize( dK)
   ddK <- Vectorize( ddK)
-  
+
   itotto <- 1
   sfunc <- function( s, ddK_s=ddK(s)) {
       x <- dK( s)
@@ -5266,17 +4119,17 @@ function( K, dK, ddK, return_what=c( 'func', 'mulfuncby'), tol=formals( ridder)$
     }
 
   itotto <- 1 / integ( sfunc( x), -absmax, absmax)
-  
+
   return_what <- match.arg( return_what)
-  if( return_what=='mulfuncby') 
+  if( return_what=='mulfuncby')
 return( itotto)
 
   # Otherwise we need the x-ready version, with (vectorized) root-finding
   xfunc <- function( x) {
     # Lower & upper bounds for s
-    
+
     # Aim for exact, miss, then try to get equal dist the other side
-    iddK0 <- 1/ddK( 0)    
+    iddK0 <- 1/ddK( 0)
     s1 <- (x-dK(0)) * iddK0
 
     dK1 <- dK( s1)
@@ -5294,22 +4147,21 @@ return( itotto)
       s2 <- s2 - same_sign * (dK1-x)/ddK1
       dK2[ same_sign] <- dK( s2[ same_sign])
     }
-    
+
     # 'ridder' wants a vector func with no args
     dK_min_x <- function( s) dK(s)-x
     s <- ridder( dK_min_x, pmin( s1, s2), pmax( s1, s2), tol=tol) # root finder
     ddK_s <- ddK( s)
-    
+
     # Undo the reordering
   return( sfunc( s, ddK_s) / ddK_s)
   }
-  
+
 return( xfunc)
 }
 
-
-"renorm_SPA_cumul" <-
-function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
+#' @importFrom mvbutils returnList
+"renorm_SPA_cumul" <- function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
   x <- 0
   SPA_s_dxds <- function( s) {
     x <<- dK( s)
@@ -5333,7 +4185,7 @@ function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
 returnList( CDF, inv_CDF)
 }
 
-
+#' @export
 "set_recording" <-
 function( vars, record=TRUE) {
   if( record) {
@@ -5348,7 +4200,7 @@ function( vars, record=TRUE) {
 return( invisible( recordar))
 }
 
-
+#' @importFrom mvbutils cq mlocal
 "set_thresholds" <-
 function( keeping, nlocal=sys.parent()) mlocal({
 stopifnot( keeping %in% cq( hi, lo))
@@ -5360,17 +4212,17 @@ stopifnot( keeping %in% cq( hi, lo))
       probinverts <- 1/one_in_X_eta
     }
     if( is.null( keep_thresh)) {
-      probinverts <- c( probinverts, 
+      probinverts <- c( probinverts,
           rough_n_pairs_to_keep / (length( subset1) * length( subset2) / (1+symmo)))
     }
 
     if( keeping == 'hi') {
       probinverts <- 1-probinverts
     }
-    
+
     XX <- try( inv_CDF_SPA2( probinverts, K, dK, ddK))
     if( XX %is.a% 'try-error') {
-  warning( "Couldn't set thresholds via Lugannini-Rice SPA (will use alternative); ' %&% 
+  warning( "Couldn't set thresholds via Lugannini-Rice SPA (will use alternative); ' %&%
       'probably too extreme for this distro too.")
       # Use renormed sum-of-pdf:
       XX <- inv_CDF( probinverts)
@@ -5387,13 +4239,13 @@ stopifnot( keeping %in% cq( hi, lo))
 })
 
 
-"setup_counts_and_nhi" <-
-function( nlocal=sys.parent()) mlocal({
+#' @importFrom mvbutils mlocal FOR
+"setup_counts_and_nhi" <- function( nlocal=sys.parent()) mlocal({
 #### Called either at start of locus-fit, or before refit
   # First two lines may be done already, but cheap to redo
   is_OO <- genoi==OO
   is_hetz <- genoi %in% c( AB, BC, AC)
-  
+
   is_moderate <- !is_OO & (dat < hix)
   counts <- FOR( c( AAO, BBO, CCO), dat[ is_moderate & geno[,i]==.])
   counts$Hetz <- dat[ is_moderate & is_hetz]
@@ -5404,8 +4256,10 @@ function( nlocal=sys.parent()) mlocal({
 })
 
 
-"setup_recordo_check_baits" <-
-function( nlocal=sys.parent()) mlocal({
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils mlocal mvb.match.call %not.in%
+#' @importFrom debug mtrace
+"setup_recordo_check_baits" <- function( nlocal=sys.parent()) mlocal({
 ### Declutter parent function
   nfish <- nloci <- -1
   force_redo <- skip_step <- FALSE
@@ -5415,12 +4269,12 @@ function( nlocal=sys.parent()) mlocal({
   }
 
   mc <- mvb.match.call() # to check args
-  
+
   if( mtrace.) {
     record <- record # move it here
     mtrace( record)
   }
-  
+
   recordo <- function( name, expr) {
       if( skip_step) { # iff 'stop_after' is in force
         scatn( 'Skipping step "%s"', name)
@@ -5429,7 +4283,7 @@ function( nlocal=sys.parent()) mlocal({
       } else {
         name_args <- mc[[ sprintf( 'args_%s', name)]] # default NULL
         # Did have: get0( sprintf( 'args_%s', name)) but triggers error in new incremental version because of stop() in default parameters
-        
+
         # Don't redo (unless forced) if no name_arg specifically set--- assume happy with existing args
         doing <- force_redo || (name %not.in% names( pbtidy@calls))
         if( !doing) { # staged checks to allow message
@@ -5438,7 +4292,7 @@ function( nlocal=sys.parent()) mlocal({
             scatn( 'Arguments have changed: re-doing "%s"', name)
           }
         }
-        
+
         if( doing) {
           mc <- match.call()
           mc$var <- 'pbtidy'
@@ -5448,12 +4302,12 @@ function( nlocal=sys.parent()) mlocal({
           eval.parent( mc)
           force_redo <<- TRUE # all subsequent steps (until stop_after, if any)
         }
-        
+
         new_nloci <- length( unique( pbtidy@locinfo$Locus))
         new_nfish <- nrow( pbtidy)
         if( doing) { # show progress
           if( nloci > 0) {
-            scatn( '%s: elim %i fish, %i loci', 
+            scatn( '%s: elim %i fish, %i loci',
                 name, nfish-new_nfish, nloci-new_nloci)
           } else { # reloading
             scatn( '%s: starting from %i fish, %i loci',
@@ -5463,28 +4317,30 @@ function( nlocal=sys.parent()) mlocal({
         nfish <<- new_nfish
         nloci <<- new_nloci
       } # if not skipping
-      
+
       if( name == stop_after) {
         skip_step <<- TRUE # next
       }
-      
+
     return( NULL)
     } # recordo
-    
+
 })
 
 
-"simtest_Kstuff" <-
-function( ck, n, nq=20) {
+#' @importFrom atease @ @<-
+#' @importFrom handy2 rsample
+#' @importFrom stats var
+"simtest_Kstuff" <- function( ck, n, nq=20) {
   # ck needs locinfo$LOD
   extract.named( ck@Kenv) # 4ways pretending to be 6ways
   mg <- LOD@mg
   n_loci <- nrow( PUP)
-  
+
   # Direct simulation of genotypes is tricky because of errors
   # ... though for completeness SHOULD really try that here
   # Instead, use PUP table
-  
+
   g12_code <- matrix( 0L, n, n_loci)
   for( il in 1:n_loci) {
     this_g12 <- rsample( n, colnames( PUP), prob=PUP[il,], replace=TRUE)
@@ -5492,27 +4348,27 @@ function( ck, n, nq=20) {
     g2 <- substring( this_g12, 4, 5)
     g12_code[ ,il] <- mg[ cbind( g1, g2)]
   }
-  
+
   # NYI in vecless:
   # LOD_obs[ l, i] := LOD[ l, g12[ l, i]]
   # PLOD[ i] := LOD_obs[ +., i]
-  
+
   LOD_obs <- matrix( 0, n, n_loci)
   LOD_obs[] <- LOD[ cbind( rep( 1:n_loci, each=n), c( g12_code)) ]
   PLOD <- rowSums( LOD_obs)
-  
+
   scatn( 'Emp mean %6.4f SPA %6.4f', mean( PLOD), dK( 0))
   scatn( 'Emp var %6.4f SPA %6.4f', var( PLOD), ddK( 0))
-  
+
   # %les:
   qq <- (2:nq-1)/nq
   pciles <- inv_CDF( qq)
-  
+
   bin <- 1+findInterval( PLOD, pciles)
   counts <- tabulate( bin, nbins=nq)
   scatn( 'Expect %5.1f PLODs in each of %i percentile-bins; got this:', n/nq, nq)
   print( counts)
-  
+
 return( invisible( PLOD))
 }
 
@@ -5533,18 +4389,18 @@ function( geno, cA, cB, info, li, best_cut=li$best_cut) {
     n_fish <- length( geno) # not a matrix...
     n_loci <- 1
   }
-  
+
   g6 <- snpgeno( n_fish, n_loci, diplos=genotypes6, info=info, locinfo=li)
   diplos <- as.raw( seq_along( genotypes6))
   names( diplos) <- genotypes6
-  
+
   g6[ geno==OO] <- diplos[ OO]
   g6[ geno==AB] <- diplos[ AB]
-  
+
   g6[ geno==AC] <- diplos[ AO]
-  g6[ geno==BC] <- diplos[ BO] 
+  g6[ geno==BC] <- diplos[ BO]
   g6[ geno==CCO] <- diplos[ OO]
-  
+
   g6[ geno==AAO] <- diplos[ AA] # default: if has_C, or big-enough A-count
   g6[ geno==AAO & (cA < rep( best_cut[,'A'], each=n_fish) ) ] <- diplos[ AO] # ... the non-default
 
@@ -5554,37 +4410,38 @@ return( g6)
 }
 
 
-"splug_transform" <-
-function( delta) {
-#### Define a controlled monotone mapping from [0,1] to [0,1]: 0 -> 0, 1 -> 1
-#### Mapping will be determined by delta, a vec of vals in [-inf,inf]
-#### delta=rep(0,n) should return linear map
-#### Thing returned is a map function that can be applied to arby input vec (all elts in [0,1])
+#' @importFrom stats splinefun
+"splug_transform" <- function( delta) {
+  # Define a controlled monotone mapping from [0,1] to [0,1]: 0 -> 0, 1 -> 1
+  # Mapping will be determined by delta, a vec of vals in [-inf,inf]
+  # delta=rep(0,n) should return linear map
+  # Thing returned is a map function that can be applied to arby
+  #  input vec (all elts in [0,1])
 
   n <- length( delta)
-stopifnot( n>0)
-  
+  stopifnot( n>0)
+
   p <- rep( 0, n+2)
   for( i in 1:n) {
     p[ i+1] <- p[ i] + (1-p[ i]) * inv.logit( logit( 1 / (n+2-i)) + delta[ i])
   }
   p[ n+2] <- 1
-    
+
   # Sneakily, return the INVERSE, which allows more drastic tmfns
-#return( approxfun( p, seq( 0, 1, length=n+2)))
+  #return( approxfun( p, seq( 0, 1, length=n+2)))
   # Smooth version is nice
-return( splinefun( p, seq( 0, 1, length=n+2), method='hyman'))
+  return( splinefun( p, seq( 0, 1, length=n+2), method='hyman'))
 }
 
 
 "widio" <-
 function( x, m) {
-### Find widest interval in x that contains at least m datapoints and split 
+### Find widest interval in x that contains at least m datapoints and split
 
-  xx <- sort( x)  
+  xx <- sort( x)
   gapi <- which.max( diff( xx, m))
   xx <- xx[ gapi+1:m-1]
-  
+
   # Original version started with quantiles
   #   n <- length( x)
   #   qq <- quantile( x, seq( 0, 1, length=2*n/m))
@@ -5592,7 +4449,7 @@ function( x, m) {
   # Now just a few points; sort them and look for biggest gap(s)
   #   xx <- x %such.that% (. %in.range% qq[ gapi + c( 0, 2)])
   #  xx <- sort( xx)
-  
+
   gapi <- mean( which.max( diff( xx)))
   rangio <- floor( gapi):(1 + ceiling( gapi))
   res <- mean( xx[ rangio])

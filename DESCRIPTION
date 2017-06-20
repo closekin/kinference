@@ -1,9 +1,17 @@
 Package: kinference
 Title: What the package does
-Version: 1.0.0
-Author: R.A. Fisher
+Version: 0.0.1
+Author: Mark V Bravington
 Description: More about what it does
-Maintainer: Who to complain to <yourfault@somewhere.net>
-License: ???
-Imports: Rcpp (>= 0.12.11)
+Maintainer: David L Miller <dave@ninepointeightone.net>
+License: GPL
+Imports: Rcpp (>= 0.12.11),
+  atease,
+  mvbutils,
+  gbasics,
+  openxlsx,
+  vecless,
+  debug,
+  handy2
 LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 6.0.1
