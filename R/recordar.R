@@ -1,6 +1,6 @@
 #' Quasi-automatic vectorization
-#' @alias set_recording make_playback
 #'
+#' @description
 #' Suppose you have a cooked up a complicated numerical function \code{fhard} that works for a "scalar" case (say, one locus at a time), using lots of intricate subset-via-lookups. And say it's vectorizable in principle, but the task is beyond you. (The real crunch comes if you want to use matrix-subsetting of matrix, or vector-subsetting of matrix; you cannot "just" vectorize those cases by adding dimensions at the start.) Then, after a few slight tweaks, you can apply the \code{recordar} tools to generate a Quasi-Auto-Vectorized version, that will run \bold{quickly} ie using proper R{} vectorization.
 #'
 #' The sequence of ops is:
@@ -25,6 +25,7 @@
 #'
 #' One trick lies in the redefinition of \code{?} to record an operation, rather than summon up help! This is the only way to get the tweak to work, because of operator precedence rules; if you hate it, you can instead wrap your statements in \code{recordar( <blah>)} but it makes the code harder to read.
 # Easy tweaking via eg x[ cbind( a1, a2)] <- y[ lu] ? 0
+#' @aliases set_recording make_playback
 #' @usage recordar(assig, expand_dim = FALSE) # It's easier to tweak with '?' but you can instead wrap your statement with 'recordar(...)'
 #' @usage set_recording( vars, record=TRUE) # put eg 'set_recording( c( "ar1", "vec2"))' in the first line in your 'fhard'
 #' @usage make_playback( fhard, template, record_arg_name='record')

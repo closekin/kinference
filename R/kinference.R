@@ -1455,16 +1455,13 @@ return( lociar)
 
 
 #' @importFrom atease @ @<-
-"dump_low_count_loci" <-
-function(
-    countar,
+#' @importFrom abind abind
+"dump_low_count_loci" <- function(countar,
     min_med_het_tot, # eg 100
     het_pc_limit, # eg 1.3
     mintol_het, # eg 0.1
     nearly_max, # 1 to use max( top2) * mintol_het as crit for hetz, <1 to use that quantile of top2 instead
-    MByte_comfy=50,
-    just_top2=FALSE,
-    show_progress=TRUE) {
+    MByte_comfy=50, just_top2=FALSE, show_progress=TRUE) {
 # Want a "robust" criterion for "this locus (AKA cluster) is crap"
 # Mean counts are stuffed by Nulls
 # Max counts are vulnerable to occasional Copy-Number Variation
@@ -1538,7 +1535,7 @@ function(
   rm( ordo, counts, ocounts)
 
   if( just_top2) { # used by geno_deambig()
-return( abind( top_count, next_count, along=3))
+    return( abind( top_count, next_count, along=3))
   }
 
   # Are they similar enough to be a het, say <=30% diff? (and both > 0)
@@ -2078,6 +2075,7 @@ return( lociar)
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils cq
 #' @importFrom handy2 %<-%
+#' @export
 "geno6way" <- function( lociar, li=NULL, het_cut=lociar@het_cut) {
   n_loci <- ncol( lociar)
   n_fish <- nrow( lociar)
@@ -4100,6 +4098,7 @@ return( geno)
 }
 
 #' @importFrom handy2 integ
+#' @importFrom gbasics ridder
 "renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
                          tol=formals( ridder)$tol
   # , ... ; should really allow extra args to K & co, and build them in...

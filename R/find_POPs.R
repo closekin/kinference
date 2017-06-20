@@ -1,6 +1,7 @@
 #' Kin-finders for loads-of-SNPs datasets
-#' @alias find_POPs find_POPs_v2 find_HSPs find_duplicates
+#' @aliases find_POPs find_POPs_v2 find_HSPs find_duplicates
 #'
+#' @description
 #' These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: eg first subset for the adults, second for the juves.
 #'
 #' First you need to have loaded the DLL, via eg \code{source( "load_genobasics_dll.r")} (which does considerably more than \code{dyn.load}) and make sure you have the path right in that.

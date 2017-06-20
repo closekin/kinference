@@ -2,6 +2,8 @@
 % Please edit documentation in R/recordar.R
 \name{recordar}
 \alias{recordar}
+\alias{set_recording}
+\alias{make_playback}
 \title{Quasi-automatic vectorization}
 \usage{
 recordar(assig, expand_dim = FALSE) # It's easier to tweak with '?' but you can instead wrap your statement with 'recordar(...)'
@@ -25,5 +27,27 @@ recordar(assig, expand_dim = FALSE) # It's easier to tweak with '?' but you can 
 \code{set_recording}: returns a function which is a tuned version of \code{recordar}, ready for your specific tasks. See \bold{Examples}. \code{recordar}: result of the expression. \code{make_playback}: a function, the quasi-auto-vectorized version of your
 }
 \description{
-Quasi-automatic vectorization
+Suppose you have a cooked up a complicated numerical function \code{fhard} that works for a "scalar" case (say, one locus at a time), using lots of intricate subset-via-lookups. And say it's vectorizable in principle, but the task is beyond you. (The real crunch comes if you want to use matrix-subsetting of matrix, or vector-subsetting of matrix; you cannot "just" vectorize those cases by adding dimensions at the start.) Then, after a few slight tweaks, you can apply the \code{recordar} tools to generate a Quasi-Auto-Vectorized version, that will run \bold{quickly} ie using proper R{} vectorization.
+
+The sequence of ops is:
+
+\itemize{
+\item make some tweaks to \code{fhard}, specifically:
+}
+
+ -- add a \code{\link{record}} arg to \code{fhard}, default FALSE
+
+ -- say which arrays/matrices/vectors/scalars in \code{fhard} need to have their ops recorded (ie could have extra dims at the start), using \code{set_recording}
+
+ -- postfix key numerical and definitional statements of \code{fhard} with \code{ ? 0} or sometimes \code{ ? 1}
+
+\itemize{
+\item run \code{template <- fhard( <example>, record=TRUE)}
+\item run \code{vfhard <- make_playback( fhard, template)}
+\item then you are good to go with \code{vfhard( <realvectorargs>)}
+}
+
+Any arguments of \code{fhard} that themselves need recording, must all be pre-vectorized in the same way during playback, I think... but it's OK to have other args that aren't.
+
+One trick lies in the redefinition of \code{?} to record an operation, rather than summon up help! This is the only way to get the tweak to work, because of operator precedence rules; if you hate it, you can instead wrap your statements in \code{recordar( <blah>)} but it makes the code harder to read.
 }

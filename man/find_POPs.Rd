@@ -2,6 +2,9 @@
 % Please edit documentation in R/find_POPs.R
 \name{find_POPs}
 \alias{find_POPs}
+\alias{find_POPs_v2}
+\alias{find_HSPs}
+\alias{find_duplicates}
 \title{Kin-finders for loads-of-SNPs datasets}
 \usage{
 find_POPs_v2(snpg,
@@ -53,7 +56,24 @@ For POPs and HSPs, the following are also returned in the list. The main point i
 \item{ bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \description{
-Kin-finders for loads-of-SNPs datasets
+These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: eg first subset for the adults, second for the juves.
+
+First you need to have loaded the DLL, via eg \code{source( "load_genobasics_dll.r")} (which does considerably more than \code{dyn.load}) and make sure you have the path right in that.
+\subsection{Kinformation}{
+The idea is that kin-finding is based on a statistic and a threshold \code{eta}, where the latter is chosen to keep false-positives down to a user-specified level. Anything "beyond" \code{eta} will be treated as a kin-pair ("beyond" depends on how the statistic is defined, i.e. whether a kin-pair should come out very low or very high). However, you're also likely to want to look post hoc at the distro of computed statistics \emph{near} \code{eta}, to see whether separation is as clean (or otherwise) as expected--- and also very unbeyond \code{eta} into the zone where UPs are entirely dominant, to check that theory is OK. So, as well as returning the "interesting" pairs that have a statistic close to or on the non-UP size of \code{eta}, the POP and HSP versions also return \emph{summaries} of the distribution of the statistic. The thing is that there will be zillions of statistics from UPs--- enough to blow out computer memory--- and they are not individually interesting. Specifically, the main things returned are:
+
+\itemize{
+\item mean and variance of stats. Computation is restricted to those on the UP-side of \code{eta} (which is nearly all of them, usually) in order to avoid distortion from non-UP cases. The latter will often be so rare that distortion would be negligible--- but means and variances are not "robust", so . Almost all will be include
+\item counts of binned stats, regardless of whether above or below \code{eta}. The bins are set based on SPAs to the theoretical distributions, and chosen so that an equal number of UP-pairs should fall into each bin.
+\item cases where the stat is "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a \code{data.frame}. See \bold{Value} for details
+}
+
+The process is controlled by three numbers: \code{nq} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
+
+But, sometimes it doesn't. In that case, the predicted values of \code{eta} and \code{keep_thresh} may be way off the mark, and lead to retaining faaar too few or too many pairs. If so, then look at the histogram of retained statistics from an initial run, and try setting \code{eta} and/or \code{keep_thresh} manually, rather than futzing around with the indirect parameters until you get what you were after.
+
+There is a risk that you'll set too generous a \code{keep_thresh}, and thereby attempt to retain 100000000000000000 pairs. What I should maybe do, is add a trap so that as soon as more than \code{trap} pairs are found, the procedure gives up and returns a warning. Then you could change \code{keep_thresh} and try again.
+}
 }
 \section{Pops}{
  POP-finding is based on 4way genotypes (OO, AAO, BBO, AB) to avoid complications from genotyping-error-rates, and uses pseudo-exclusions rather than likelihood-ratios; the latter is very sensitive to false-negative-exclusions arising from typing-error, or even from mutation with so many SNPs. You can get round that by including estimates of typing-error-rate, but that's not necessarily easy to estimate in advance insofar as it applies per-locus to POPs. Instead, the 4way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO, which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but \emph{could} mean AO/BO (not an exclusion). \code{find_POPs} merely counts these, for loci where \code{Pr[O]+Pr[C]<pOC_max} in order to avoid excess noise from AO/BO cases. \code{find_POPs_v2} is probably better; it uses all loci (by default) but weights them semi-optimally so that pseudo-exclusions from loci with high "false pseudo-exclusion prob" (ie high \code{Pr[AO/BO|UP]}) count much less than ones from loci with very low null rates, for which AAO/BBO almost certainly means AA/BB. The abbreviation "wpsex" is for "weighted pseudo-exclusion".

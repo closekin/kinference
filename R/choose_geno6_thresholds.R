@@ -2,7 +2,7 @@
 # - document return items
 #' Genotyping pre-processed DartCap
 #'
-#' @alias geno6way
+#' @aliases geno6way
 #'
 #' \code{choose_geno6_thresholds} is to be run on a generous subset of the data, to figure out the thresholds for single nulls etc etc. Then, actually \bold{doing} the genotyping is handled by \code{geno6way}. You can call the latter separately, so that you can apply thresholds etc derived from one subset of the data to a new dataset, so that your genotyping is consistent.
 #'
@@ -40,8 +40,10 @@
 #' @importFrom graphics par
 #' @importFrom vecless :=
 #' @importFrom stats dnorm pnorm pt dt quantile qnorm nlminb
-#' @importFrom utils flush.console
-#' @importFrom handy2 sqr find.root
+#' @importFrom utils flush.console tail
+#' @importFrom handy2 sqr find.root rel.delta
+#' @importFrom gbasics logit
+#' @export
 "choose_geno6_thresholds" <- function( lociar,
     li= NULL, # could supply presets here
     OOthresh_tc= lociar@args$geno_deambig$OOthresh_tc,

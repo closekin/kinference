@@ -2,6 +2,8 @@
 % Please edit documentation in R/X[.NGS_count_ar.R
 \name{[.NGS_count_ar}
 \alias{[.NGS_count_ar}
+\alias{print.NGS_count_ar}
+\alias{dim.NGS_count_ar}
 \title{Support routines for storage ngs genotypes}
 \usage{
 \method{[}{NGS_count_ar}(x, i, j, k)

@@ -19,7 +19,7 @@
 #'
 #' @return The subset method returns another \code{NGS_count_ar} object, \emph{unless} \code{k} is set. If \code{k} is looking for just one allele per locus, then the result is a 2D array of sample*locus; if \code{k} is looking for 2 or more alleles, the result is a 3D array of sample*locus*allele, with NA counts added when \code{k} refers to allele "number" that doesn't exist for that locus. These "pure array" results don't preserve the detailed sample or locus information (except via the \code{dimnames}) but can be useful for subsequent manipulation. \code{print} displays a data.frame-esque output, with the sample-info columns preceding a column-per-locus. The central-dot character (Latin-1 and Unicode 0xb7) is used to pad the formatting, for readability. In non-English locales, this might not display properly; I'd need expert advice to fix that, though.
 #'
-#' @alias print.NGS_count_ar dim.NGS_count_ar
+#' @aliases print.NGS_count_ar dim.NGS_count_ar
 #'
 #' @examples
 #' # x[ i, j, k] # S3 method for NGS_count_ar
