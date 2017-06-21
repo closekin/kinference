@@ -3,6 +3,7 @@
 
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
+#' @export
 "find_HSPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,

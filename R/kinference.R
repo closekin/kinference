@@ -1,6 +1,7 @@
 
-
-
+# first two lines here are for Rcpp to work
+#' @useDynLib kinference
+#' @importFrom Rcpp evalCpp
 #' @importFrom mvbutils %without.name% ?
 "add_list_defaults" <- function( l, ...) {
 ###### Add defaults to list 'l' if not already in 'l'
@@ -9,8 +10,8 @@
 return( l)
 }
 
-
-
+## TODO
+# - CDF calls commented out
 #' @importFrom mvbutils cq %without.name% %&%
 #' @importFrom gbasics sqr
 #' @importFrom atease @ @<-
@@ -123,9 +124,9 @@ stop()
 
   if( is.null( bins)) {
     qq <- (2:nq-1)/nq
-    bins <- inv_CDF( qq)
+#CDF COMMENTED OUT    bins <- inv_CDF( qq)
   }
-  binprobs <- CDF( bins)
+#CDF COMMENTED OUT  binprobs <- CDF( bins)
 
   mean_theory <- dK( 0)
   var_theory <- ddK( 0)

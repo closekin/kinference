@@ -1,7 +1,6 @@
 # see find_POPs for documentation
 #' @export
 #' @importFrom gbasics sqr
-
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%
 "find_duplicates" <- function(snpg, subset1=1 %upto% nrow( snpg),

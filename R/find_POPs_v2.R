@@ -5,7 +5,6 @@
 #' @importFrom vecless := compile_vecless
 #' @importFrom stats runif
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
-
 "find_POPs_v2" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     alpha,
