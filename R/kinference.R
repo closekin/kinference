@@ -111,7 +111,7 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
     S[ it, l] := PUP[ l, g12] %[g12]% ETT[ it, l, g12]
     SL[ it, l] := PUPLOD[ l, g12] %[g12]% ETT[ it, l, g12]
     SLL[ it, l] := PUPLOD2[ l, g12] %[g12]% ETT[ it, l, g12]
-    rowSums( (SLL/S-sqr( SL/S)))
+    rowSums( (SLL/S-gbasics::sqr( SL/S)))
   }
 
 
@@ -582,7 +582,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
             S[ it, l] := PUP[ l, g12] %[g12]% ETT[ it, l, g12]
             SL[ it, l] := PUPLOD[ l, g12] %[g12]% ETT[ it, l, g12]
             SLL[ it, l] := PUPLOD2[ l, g12] %[g12]% ETT[ it, l, g12]
-            rowSums( (SLL/S-sqr( SL/S)))
+            rowSums( (SLL/S-gbasics::sqr( SL/S)))
           }
 
           extract.named( renorm_SPA_cumul( K, dK, ddK, n_pts=n_pts_SPA_renorm))
