@@ -1200,9 +1200,6 @@ return( outfile)
 }
 
 
-#' @importFrom atease @ @<-
-"dim.NGS_count_ar" <-
-function( x) c( nrow( unclass( x)), nrow( x@locinfo))
 
 
 #' @importFrom atease @ @<-
@@ -3305,76 +3302,6 @@ return( geno6)
 }
 
 
-#' @importFrom atease @ @<-
-#' @importFrom mvbutils cq do.on %except%
-"print.NGS_count_ar" <- function( x,
-    trailing_dot=getOption( 'trailing_dot_NGS_count_ar', FALSE),
-    dot_for_0=getOption( 'dot_for_zero_NGS_count_ar', FALSE), ...){
-
-  attx <- attributes( x)
-  df <- x@info
-  rownames( df) <- NULL
-
-  x <- unclass( x)
-  n_fish <- nrow( x)
-  extract.named( x@locinfo)
-  n_loci <- length( start_col)
-
-  # If non-integer, can either use trailing dot, or merely round
-
-  if( is.integer( x)) {
-    mi <- as.character( x)
-  } else {
-    mi <- as.character( round( x))
-    if( trailing_dot) {
-      mi <- paste0( mi, '.')
-    }
-  }
-
-  dot <- rawToChar( as.raw( 183))
-  if( dot_for_0) {
-    zero <- if( trailing_dot) '0.' else '0'
-    mi[ mi==zero] <- dot
-  }
-  dim( mi) <- dim( x)
-
-  m <- do.on( 1:n_loci, {
-      z <- mi[, start_col[ .]:end_col[ .], drop=FALSE]
-      fw <- max( nchar( z))
-      z[] <- format( z, width=fw, justify='right')
-      z[] <- gsub( ' ', dot, z, fixed=TRUE)
-      sprintf( '%s  ', apply( z, 1, paste, collapse='/'))
-    })
-  dim( m) <- c( n_fish, n_loci) # in case only 1 fish or 1 locus, whereupon do.on will strip dim
-  # dimnames( m)[[2]] <- Locus # FFS R rejects this if m is N*1 ... so
-  dimnames( m) <- list( NULL, Locus) # a compulsory column, albeit "made-up by Mark" sometimes
-
-  m[ grepl( 'NA', m, fixed=TRUE)] <- 'NA' # presumably only if binding several datasets?
-
-  # x <- cbind( df, m) # fucken cbind turns strings into fucken factors...
-  x <- cbind( df, data.frame( m, stringsAsFactors=FALSE)) # a data.frame FFS
-  print( x, quote=FALSE, right=TRUE, ...)
-
-  # Extra atts will not be printed by default (and print.data.frame ignores them)
-  # Set 'x@print_atts' to character to
-  dont_print_atts <- names( attx) %except% c( attx$print_atts,
-      cq( class, dim, dimnames, print_atts, info, locinfo, seqinfo))
-  if( length( dont_print_atts)) {
-    scatn( '\nOmitting these attributes: %s', paste( dont_print_atts, collapse=', '))
-  }
-  for( att_to_print in attx$print_atts) {
-    scatn( '\nattr( ., %s):', att_to_print)
-    print( attx[[ att_to_print]], ...)
-  }
-
-  if( 'print_atts' %in% names( attx)) {
-
-
-  }
-
-  invisible( x)
-}
-
 
 #' @importFrom atease @ @<-
 "re_est_ALF" <-
@@ -4189,33 +4116,7 @@ function( geno, cA, cB, info, li, best_cut=li$best_cut) {
 return( g6)
 }
 
-
-#' @importFrom stats splinefun
-"splug_transform" <- function( delta) {
-  # Define a controlled monotone mapping from [0,1] to [0,1]: 0 -> 0, 1 -> 1
-  # Mapping will be determined by delta, a vec of vals in [-inf,inf]
-  # delta=rep(0,n) should return linear map
-  # Thing returned is a map function that can be applied to arby
-  #  input vec (all elts in [0,1])
-
-  n <- length( delta)
-  stopifnot( n>0)
-
-  p <- rep( 0, n+2)
-  for( i in 1:n) {
-    p[ i+1] <- p[ i] + (1-p[ i]) * inv.logit( logit( 1 / (n+2-i)) + delta[ i])
-  }
-  p[ n+2] <- 1
-
-  # Sneakily, return the INVERSE, which allows more drastic tmfns
-  #return( approxfun( p, seq( 0, 1, length=n+2)))
-  # Smooth version is nice
-  return( splinefun( p, seq( 0, 1, length=n+2), method='hyman'))
-}
-
-
-"widio" <-
-function( x, m) {
+"widio" <- function( x, m) {
 ### Find widest interval in x that contains at least m datapoints and split
 
   xx <- sort( x)
