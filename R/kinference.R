@@ -1,98 +1,4 @@
-"[.playback" <-
-function( x, ...) {
-  where <- x@where
-  who <- x@whoami
-  which <- where$counter[[ who]]
-  where$counter[[ who]] <- which+1
-  index <- where$subs[[ who]][[ which]]
-  acall <- call( '[', quote( x)) # quote( x[]) returns length-3 with 3rd arg missing
-  lpf <- length( where$prefixdims)
-  for( ipref in 1 %upto% lpf) {
-    acall[[ length( acall)+1]] <- alist(y=)$y # missing
-  }
-  acall[[ length( acall)+1]] <- as.vector( index) # should be vec anyway; this strips dim
-  oldClass( x) <- NULL
-  if( lpf) { # condense all trailing dimensions
-    dim( x) <- c( where$prefixdims, prod( dim( x)[-(1:lpf)]))
-  } # if not lpf, vector subscripting works fine for arrays
-  res <- eval( acall)
-  # dimnames( res) <- index@dimnames
-res
-}
 
-
-"[.selfrecording_array" <-
-function( x, ...) {
-  where <- x@where
-  whoami <- x@whoami
-  if( is.null( odimx <- dim( x))) {
-    odimx <- length( x)
-  }
-  si <- x <- unclass( x)
-  si[] <- seq_along( si)
-  mc <- match.call()
-  si@where <- NULL
-  mc[[1]] <- `[`
-  mc[[2]] <- si
-
-  res <- NextMethod('[')
-
-  index <- unname( c( eval.parent( mc)))
-  index@dim <- dim( res)
-  if( !length( where$subs[[ whoami]])) { # record original dim(x), used by make_playback
-    index@orig_full_dim <- odimx
-  }
-
-  # index@dimnames <- dimnames( res)
-  where$subs[[ whoami]] <- c( where$subs[[ whoami]], list( index))
-res
-}
-
-
-"[<-.playback" <-
-function( x, ..., value) {
-  where <- x@where
-  who <- x@whoami
-  which <- where$counter[[ who]]
-  where$counter[[ who]] <- which+1
-  index <- as.vector( where$subs[[ who]][[ which]])
-  acall <- call( '[<-', quote( x))
-  lpf <- length( where$prefixdims)
-  for( ipref in 1 %upto% lpf) {
-    acall[[ length( acall)+1]] <- alist(y=)$y # missing
-  }
-  acall[[ length( acall)+1]] <- index
-  acall[[ length( acall)+1]] <- value
-  oldClass( x) <- NULL
-  if( lpf) { # condense all trailing dimensions
-    odimx <- dim( x)
-    dim( x) <- c( where$prefixdims, prod( dim( x)[-(1:lpf)]))
-  } # if not lpf, vector subscripting works fine for arrays
-
-  x[] <- eval( acall)
-  if( lpf) {
-    dim( x) <- odimx
-  }
-  oldClass( x) <- 'playback'
-x
-}
-
-
-#' @importFrom mvbutils %is.a%
-#' @importFrom atease @ @<-
-"==.snpgeno" <- function(e1, e2) {
-  if(e1 %is.a% 'snpgeno'){
-    if(is.character(e2)){
-      e2 <- as.raw(match( e2, e1@diplos, 0))
-    }
-    return(unclass(e1)==e2)
-  }else{
-    if(is.character(e1)) {
-      e1 <- as.raw(match(e1, e1@diplos, 0))
-    }
-  }
-  return( unclass(e2)==e1)
-}
 
 
 #' @importFrom mvbutils %without.name% ?
@@ -176,15 +82,6 @@ return( l)
 
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
-
-#' @importFrom atease @ @<-
-"as.character.snpgeno" <- function( x, ...) {
-  y <- matrix( '', nrow( x), ncol( x))
-  y[] <- x@diplos[ as.integer( x)]
-  dimnames( y) <- list( rownames( x@info), x@locinfo$Locus)
-return( y)
-}
-
 
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils FOR
@@ -2739,77 +2636,6 @@ return( geno)
 return( phat)
 }
 
-#' @export
-#' @importFrom atease @ @<-
-#' @importFrom mvbutils %without.name%
-"make_playback" <-
-function( fhard, template, record_arg_name='record') {
-  # template should come from calling 'fhard' with recording ON but with "normal" args
-
-  original_fhard_env <- environment( fhard)
-  recordo <- template@where
-
-  # Check for prefixdims
-  recorded_formals <- names( formals( fhard)) %that.are.in% names( recordo$subs)
-  one_recorded_arg <- recorded_formals[1]
-
-  # These need to exist when first called in playback-mode, so that <<- below will overwrite them
-  recordo$prefixdims <- integer()
-  recordo$counter <- NA # will get set
-
-  e <- new.env( parent=original_fhard_env)
-  environment( define) <- recordo # where counter & subs & prefixdim etc live
-  e$define <- define
-  e$`[.playback` <- `[.playback`
-  e$`[<-.playback` <- `[<-.playback`
-  recordo$ee <- e #
-
-  vf <- fhard
-  environment( vf) <- recordo
-  formals( vf) <- formals( vf) %without.name% record_arg_name
-  body( vf) <- substitute({
-      new_dim <- dim( get( one_recorded_arg))
-      old_dim <- subs[[ one_recorded_arg]][[1]]@orig_full_dim
-      prefixdims <<- head( new_dim, -length( old_dim))
-      if( !my.all.equal( tail( new_dim, length( old_dim)), old_dim)) {
-    stop( sprintf( "Basic dimensions of '%s' have changed--- no can do!", one_recorded_arg))
-      }
-      # Could/should check whether ALL recorded formals have the same prefixdims, but it does mean force()ing the args
-      # ... which might not be so bad...
-
-      counter <<- 1+0*lengths( subs) # named counters
-
-      # Arrange for args to be found, being paranoid to avoid name-clashes with things in ee
-      argenv <- new.env( parent=ee)
-      thisenv <- environment()
-      for( iarg in names( formals( sys.function()))) {
-        getme <- as.name( iarg)
-        eval( substitute( delayedAssign( iarg, getme, eval.env=thisenv, assign.env=argenv), list( getme=getme)))
-      }
-
-      res <- eval( exprs, argenv)
-      if( res %is.a% 'playback') { # almost always..?
-        res <- as.vector( res) # bareass nekkid
-
-        if( length( prefixdims) || (length( last_dim) > 1)) {
-          dim( res) <- c( prefixdims, last_dim)
-        } # else scalar is OK
-
-        rldn <- last_dimnames
-        if( length( rldn)) {
-          if( length( prefixdims) || (length( rldn) > 1)) {
-            dimnames( res) <- c( rep( list( NULL), length( prefixdims)), rldn)
-          } else {
-            names( res) <- rldn[[1]]
-          }
-        }
-      }
-    return( res)
-    })
-
-return( vf)
-}
-
 
 "make_tot2" <-
 function( cA, cB, cC, geno) {
@@ -3200,36 +3026,6 @@ return( lociar)
 return( count_rao)
 }
 
-
-#' @importFrom atease @ @<-
-#' @importFrom mvbutils %is.not.an%
-"playback" <- function(P, snerr, recordo, prefixdims=numeric()){
-  if( recordo %is.not.an% 'environment') {
-    recordo <- recordo@where
-  }
-  recordo$prefixdims <- prefixdims
-  recordo$counter <- 1+0*lengths( recordo$subs) # named
-  environment( define) <- recordo # stuff it needs
-  # eval.parent( recordo$exprs)
-  res <- eval( recordo$exprs)
-  if( res %is.a% 'playback') { # almost always..?
-    res <- as.vector( res) # bareass nekkid
-
-    if( length( prefixdims) || (length( recordo$last_dim) > 1)) {
-      dim( res) <- c( prefixdims, recordo$last_dim)
-    } # else scalar is OK
-
-    rldn <- recordo$last_dimnames
-    if( length( rldn)) {
-      if( length( prefixdims) || (length( rldn) > 1)) {
-        dimnames( res) <- c( rep( list( NULL), length( prefixdims)), rldn)
-      } else {
-        names( res) <- rldn[[1]]
-      }
-    }
-  }
-return( res)
-}
 
 
 #' @importFrom atease @ @<-
@@ -4182,21 +3978,6 @@ return( xfunc)
   inv_CDF <- function( p) inv_CDF_bod( p) # sensibler arg name, and no deriv arg
   CDF <- splinefun( x, cdf, method='hyman')
 returnList( CDF, inv_CDF)
-}
-
-#' @export
-"set_recording" <-
-function( vars, record=TRUE) {
-  if( record) {
-    selfy <- new.env( parent=environment( recordar))
-    selfy$subs <- structure( vector( 'list', length=length( vars)), names=vars)
-    selfy$exprs <- quote( {})
-    environment( recordar) <- selfy
-  } else {
-    recordar <- function( expr, expand_dim)  eval.parent( substitute( expr)) # nothing will be recorded!
-  }
-  assign( '?', recordar, parent.frame())
-return( invisible( recordar))
 }
 
 #' @importFrom mvbutils cq mlocal
