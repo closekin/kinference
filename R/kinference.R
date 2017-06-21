@@ -10,8 +10,9 @@ return( l)
 }
 
 
-#' @importFrom mvbutils cq %without.name%
-#' @importFrom handy2 sqr
+
+#' @importFrom mvbutils cq %without.name% %&%
+#' @importFrom gbasics sqr
 #' @importFrom atease @ @<-
 "check_FPosity" <- function( snpg, nsim=0){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
@@ -135,31 +136,31 @@ stop()
       temp_snpg <- temp_snpg[, subset1]
     }
 
-    result <- HSP_cond_paircomps_lots(
-      vec_LOD= LOD,
-      geno1= temp_snpg,
-      geno2= temp_snpg,
-      e_CLOD= e_CLOD,
-      e2_CLOD= e2_CLOD,
-      e_CLOD_HSP= e_CLOD_HSP,
-      e_typical_PLOD= mean_theory,
-      v_typical_PLOD= var_theory,
-      symmo= TRUE,
-      eta= eta,
-      min_keep_PLOD= keep_thresh,
-      bins= bins)
-  } else { # different subsets
-stop( "Fix the non-symm code, bozo...")
-    result <- HSP_cond_paircomps_lots( this+will+fail,
-        pair_geno= temp_LOD@mg,
-        LOD= t( temp_LOD),
-        geno1= temp_snpg[ , subset1],
-        geno2= temp_snpg[ , subset2],
-        symmo= FALSE,
-        eta= eta,
-        min_keep_PLOD= keep_thresh,
-        bins= bins
-      )
+#    result <- HSP_cond_paircomps_lots(
+#      vec_LOD= LOD,
+#      geno1= temp_snpg,
+#      geno2= temp_snpg,
+#      e_CLOD= e_CLOD,
+#      e2_CLOD= e2_CLOD,
+#      e_CLOD_HSP= e_CLOD_HSP,
+#      e_typical_PLOD= mean_theory,
+#      v_typical_PLOD= var_theory,
+#      symmo= TRUE,
+#      eta= eta,
+#      min_keep_PLOD= keep_thresh,
+#      bins= bins)
+#  } else { # different subsets
+#stop( "Fix the non-symm code, bozo...")
+#    result <- HSP_cond_paircomps_lots( this+will+fail,
+#        pair_geno= temp_LOD@mg,
+#        LOD= t( temp_LOD),
+#        geno1= temp_snpg[ , subset1],
+#        geno2= temp_snpg[ , subset2],
+#        symmo= FALSE,
+#        eta= eta,
+#        min_keep_PLOD= keep_thresh,
+#        bins= bins
+#      )
   }
 
   result$bigs <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
@@ -437,8 +438,7 @@ return( x)
 
 
 #' @importFrom atease @ @<-
-#' @importFrom handy2 sqr
-#' @importFrom gbasics make_genopairer
+#' @importFrom gbasics make_genopairer sqr
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
@@ -501,8 +501,7 @@ return( retval)
 
 #' @importFrom mvbutils cq %except% %not.in%
 #' @importFrom atease @ @<-
-#' @importFrom handy2 sqr
-#' @importFrom gbasics make_genopairer
+#' @importFrom gbasics make_genopairer sqr
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
 # n_pts_SPA_renorm should really be as big as R can handle without running out memory
@@ -607,8 +606,7 @@ return( geno6)
 
 
 
-#' @importFrom handy2 integ
-#' @importFrom gbasics ridder
+#' @importFrom gbasics ridder integ
 #' @importFrom stats splinefun
 "renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
                          tol=formals( ridder)$tol
@@ -735,7 +733,7 @@ stopifnot( keeping %in% cq( hi, lo))
 
 
 #' @importFrom atease @ @<-
-#' @importFrom handy2 rsample
+#' @importFrom gbasics rsample
 #' @importFrom stats var
 #' @importFrom mvbutils scatn
 "simtest_Kstuff" <- function( ck, n, nq=20) {

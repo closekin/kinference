@@ -1,6 +1,6 @@
 # see find_POPs for documentation
 #' @export
-#' @importFrom handy2 sqr
+#' @importFrom gbasics sqr
 #' @importFrom atease @
 #' @importFrom vecless := compile_vecless
 #' @importFrom stats runif

@@ -2,7 +2,7 @@
 # - unfinished
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils cq %without.name% returnList
-#' @importFrom handy2 sqr
+#' @importFrom gbasics sqr
 "find_HSPs_cond" <- function(snpg, subset1=1 %upto% nrow(snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,

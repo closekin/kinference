@@ -1,6 +1,6 @@
 # see find_POPs for documentation
 #' @export
-#' @importFrom handy2 sqr
+#' @importFrom gbasics sqr
 
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%

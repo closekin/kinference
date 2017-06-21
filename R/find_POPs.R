@@ -123,7 +123,7 @@
 #' ### End don't run
 #' @export
 #' @importFrom atease @ @<-
-#' @importFrom handy2 sqr
+#' @importFrom gbasics sqr
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 "find_POPs" <- function(snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
                         pOC_max, one_in_X_eta, rough_n_pairs_to_keep= NA,

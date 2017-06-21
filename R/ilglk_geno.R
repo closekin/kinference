@@ -12,7 +12,7 @@
 #' @importFrom atease @
 #' @importFrom gbasics snpgeno
 #' @importFrom mvbutils cq extract.named
-#' @importFrom handy2 sqr
+#' @importFrom gbasics sqr
 #' @importFrom vecless compile_vecless
 "ilglk_geno" <- function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE) {
   define_genotypes()
