@@ -25,6 +25,7 @@
 #' #attr(,"groups")$`6`
 #' #[1] 904 905 857
 #' @importFrom mvbutils do.on %except% FOR
+#' @export
 "drop_dups_pairwise_equiv" <- function( ij, want_groups=FALSE) {
   ij <- as.matrix( ij) # in case it was a data.frame
   uij <- unique( c( ij))

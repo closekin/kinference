@@ -257,8 +257,8 @@ return( gt4)
 
 
 #' @importFrom atease @ @<-
-"hsp_power" <-
-function( lociar,
+#' @importFrom vecless make_playback
+"hsp_power" <- function( lociar,
     want_LOD_table, # T/F
     k # 0.5 for HSPs
 ){
@@ -315,8 +315,10 @@ function( lociar,
 return( lociar)
 }
 
-"inv_CDF_SPA2" <-
-function( p, K, dK, ddK, tol=formals( ridder)$tol) {
+#' @importFrom stats pnorm dnorm qnorm
+#' @importFrom gbasics logit inv.logit
+"inv_CDF_SPA2" <- function( p, K, dK, ddK, tol=formals( ridder)$tol) {
+
 ######## Invert L-R SPA approx to CDF on "s-scale"
 ######## Avoids "double iteration" of nonlinearity
 ######## Should work for vector p (the target) but only if your K etc do
@@ -436,6 +438,7 @@ return( x)
 
 #' @importFrom atease @ @<-
 #' @importFrom handy2 sqr
+#' @importFrom gbasics make_genopairer
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
@@ -499,6 +502,7 @@ return( retval)
 #' @importFrom mvbutils cq %except% %not.in%
 #' @importFrom atease @ @<-
 #' @importFrom handy2 sqr
+#' @importFrom gbasics make_genopairer
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
 # n_pts_SPA_renorm should really be as big as R can handle without running out memory
@@ -605,6 +609,7 @@ return( geno6)
 
 #' @importFrom handy2 integ
 #' @importFrom gbasics ridder
+#' @importFrom stats splinefun
 "renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
                          tol=formals( ridder)$tol
   # , ... ; should really allow extra args to K & co, and build them in...
@@ -690,7 +695,7 @@ return( xfunc)
 returnList( CDF, inv_CDF)
 }
 
-#' @importFrom mvbutils cq mlocal
+#' @importFrom mvbutils cq mlocal %is.a%
 "set_thresholds" <-
 function( keeping, nlocal=sys.parent()) mlocal({
 stopifnot( keeping %in% cq( hi, lo))
@@ -732,6 +737,7 @@ stopifnot( keeping %in% cq( hi, lo))
 #' @importFrom atease @ @<-
 #' @importFrom handy2 rsample
 #' @importFrom stats var
+#' @importFrom mvbutils scatn
 "simtest_Kstuff" <- function( ck, n, nq=20) {
   # ck needs locinfo$LOD
   extract.named( ck@Kenv) # 4ways pretending to be 6ways

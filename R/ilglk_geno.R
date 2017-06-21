@@ -10,6 +10,7 @@
 #' @return Vector of lglk for each individual. I haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
 #'
 #' @importFrom atease @
+#' @importFrom gbasics snpgeno
 #' @importFrom mvbutils cq extract.named
 #' @importFrom handy2 sqr
 #' @importFrom vecless compile_vecless

@@ -40,7 +40,7 @@
 #'
 #' @return \code{set_recording}: returns a function which is a tuned version of \code{recordar}, ready for your specific tasks. See \bold{Examples}. \code{recordar}: result of the expression. \code{make_playback}: a function, the quasi-auto-vectorized version of your
 #' @importFrom atease @
-#' @importFrom mvbutils %is.not.a%
+#' @importFrom mvbutils %is.not.a% %is.a%
 "recordar" <- function( assig, expand_dim=FALSE) {
   assig <- substitute( assig)
   envo <- environment( sys.function())
