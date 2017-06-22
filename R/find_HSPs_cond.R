@@ -1,5 +1,6 @@
 ## TODO
 # - unfinished
+# - should this exist?
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils cq %without.name% returnList
 #' @importFrom gbasics sqr

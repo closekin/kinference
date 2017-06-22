@@ -14,6 +14,7 @@
 #' @importFrom mvbutils cq extract.named
 #' @importFrom gbasics sqr
 #' @importFrom vecless compile_vecless
+#' @export
 "ilglk_geno" <- function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE) {
   define_genotypes()
   extract.named( snpg@locinfo[ cq( pbonzer)])

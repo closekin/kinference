@@ -1,0 +1,32 @@
+X delete
+- no export
+* export
+? maybe export
+
+
+
+- add_pairprob_error
+- calc_g6probs_IBD0_scalar
+- calc_g6probs_IBD1_scalar
+* drop_dups_pairwise_equiv
+* find_HSPs
+?exist? find_HSPs_cond
+X find_POPs
+* find_POPs_v2
+* find_duplicates
+* ilglk_geno
+- add_list_defaults
+? check_FPosity
+- define
+? define_genotypes
+* get_chain
+? hsp_power
+* inv_CDF_SPA2
+* pick_FSPs_from_HSPs
+? predict_hsp_util
+* prepare_PLOD_SPA
+? renorm_SPA
+? renorm_SPA_cumul
+- set_thresholds
+-?exist? simtest_Kstuff
+X recordar

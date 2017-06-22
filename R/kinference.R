@@ -12,9 +12,11 @@ return( l)
 
 ## TODO
 # - CDF calls commented out
+# - to export?
 #' @importFrom mvbutils cq %without.name% %&%
 #' @importFrom gbasics sqr
 #' @importFrom atease @ @<-
+# @export
 "check_FPosity" <- function( snpg, nsim=0){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
@@ -207,6 +209,7 @@ eval.parent( obj)
 
 
 #' @importFrom mvbutils cq extract.named named mlocal
+# @export
 "define_genotypes" <- function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
@@ -226,6 +229,7 @@ eval.parent( obj)
 
 
 #' @importFrom mvbutils %is.not.a% %where%
+#' @export
 "get_chain" <- function( thing, seed) {
   if( thing %is.not.a% 'data.frame') {
     thing <- thing$bigs
@@ -245,21 +249,9 @@ eval.parent( obj)
 }
 
 
-"gtab6to4" <-
-function( gt6) {
-######### Condense 6way-genotype counts to 4way (AAO instead of AA, AO)
-  define_genotypes()
-  gt4 <- matrix( 0, nrow( gt6), 4, dimnames=list( dimnames( gt6)[[1]], genotypes4_ambig))
-  gt4[,AB] <- gt6[,AB]
-  gt4[,OO] <- gt6[,OO]
-  gt4[,AAO] <- gt6[,AA] + gt6[,AO]
-  gt4[,BBO] <- gt6[,BB] + gt6[,BO]
-return( gt4)
-}
-
-
 #' @importFrom atease @ @<-
 #' @importFrom vecless make_playback
+# @export
 "hsp_power" <- function( lociar,
     want_LOD_table, # T/F
     k # 0.5 for HSPs
@@ -319,6 +311,7 @@ return( lociar)
 
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
+#' @export
 "inv_CDF_SPA2" <- function( p, K, dK, ddK, tol=formals( ridder)$tol) {
 
 ######## Invert L-R SPA approx to CDF on "s-scale"
@@ -402,6 +395,7 @@ return( x)
 
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils do.on
+#' @export
 "pick_FSPs_from_HSPs" <- function( snpg, HSPs) {
   # For pairs already picked as HSPs, ie PLOD(HSP,UP) > eta: they might be FSPs. H
   # How would a FSP / HSP comparison look?
@@ -615,6 +609,7 @@ return( geno6)
 
 #' @importFrom gbasics ridder integ
 #' @importFrom stats splinefun
+# @export
 "renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
                          tol=formals( ridder)$tol
   # , ... ; should really allow extra args to K & co, and build them in...
@@ -676,6 +671,7 @@ return( xfunc)
 }
 
 #' @importFrom mvbutils returnList
+# @export
 "renorm_SPA_cumul" <- function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
   x <- 0
   SPA_s_dxds <- function( s) {
@@ -738,7 +734,8 @@ stopifnot( keeping %in% cq( hi, lo))
   }
 })
 
-
+## TODO
+# - should this exist?
 #' @importFrom atease @ @<-
 #' @importFrom gbasics rsample
 #' @importFrom stats var
