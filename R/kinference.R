@@ -503,6 +503,7 @@ return( retval)
 #' @importFrom mvbutils cq %except% %not.in%
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
+#' @export
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
 # n_pts_SPA_renorm should really be as big as R can handle without running out memory
@@ -550,7 +551,12 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 
   make_K <- function( PUP, LOD) { # ... while the sun skines
 
+      # this to be sorted with replacing 'vecless' with 'kinference'
+      # BUUTT is isn't :(
+      # vecless **should** work just exorting := BUT doesn't seem to
       e <- new.env( parent=asNamespace( 'vecless'))
+      e$sqr <- gbasics::sqr
+      e$renorm_SPA_cumul <- renorm_SPA_cumul
       e$PUP <- PUP
       e$LOD <- e$LODOK <- LOD
       e$LODOK[ is.na( LOD)] <- 0 # leaving NAs in would mess up the calcs
