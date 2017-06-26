@@ -53,6 +53,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
       # BUUTT is isn't :(
       # vecless **should** work just exorting := BUT doesn't seem to
       e <- new.env( parent=asNamespace( 'vecless'))
+      # add sqr to the environment so that vecless can see it...
       e$sqr <- gbasics::sqr
       e$renorm_SPA_cumul <- renorm_SPA_cumul
       e$PUP <- PUP
