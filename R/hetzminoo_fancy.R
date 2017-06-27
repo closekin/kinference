@@ -1,4 +1,6 @@
 #' @export
+# This test looks at whether the allele frequencies in a given fish seem right, or if there are discrepancies due to (i) degraded DNA or (ii) sample contamination.
+#' @param snpg object of type \code{\link{snpgeno}}
 "hetzminoo_fancy" <-
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################
@@ -36,13 +38,20 @@ stopifnot( all( ww>0))
   four_pab_poo <- 4*pAB*pOO
   compaboo <- 1 - pAB - pOO
 
+  # now setup the functions for the SPA
+  # use the above as shortcuts
+
   K <- function( tt) {
+      # here a *1 inside exp omitted
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
+      # here a *-1 inside exp omitted
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
+      # compaboo computed above, P(not AB & not OO)*exp(0)
       KK[ j]:= SUM_ %[l]% log( compaboo[l] + etwab[ l, j] + etwoo[ l, j])
     return( c( KK)) # without the c(), you get a scalar xtensor, and trouble...
     }
 
+  # derivative of K
   dK <- function( tt) {
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
@@ -51,6 +60,7 @@ stopifnot( all( ww>0))
     return( c( dKK))
     }
 
+  # 2nd derivative of K
   ddK <- function( tt) {
       etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
       etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
