@@ -1,3 +1,4 @@
+#' Heterozygotes minus "OO" checking
 #' @export
 # This test looks at whether the allele frequencies in a given fish seem right, or if there are discrepancies due to (i) degraded DNA or (ii) sample contamination.
 #' @param snpg object of type \code{\link{snpgeno}}
