@@ -1,10 +1,11 @@
-# see find_POPs for documentation
+#' @rdname find_POPs_v2
 #' @export
 #' @importFrom gbasics sqr
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%
-"find_duplicates" <- function(snpg, subset1=1 %upto% nrow( snpg),
-                              subset2=subset1, max_diff_genos){
+"find_duplicates" <-
+function(snpg, subset1=1 %upto% nrow( snpg),
+         subset2=subset1, max_diff_genos){
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))

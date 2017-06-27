@@ -1,6 +1,5 @@
-# see find_POPs for documentation
+#' @rdname find_POPs_v2
 #' @export
-
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
