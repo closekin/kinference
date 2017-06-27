@@ -24,7 +24,7 @@
 #'
 #' The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO (non-existent for loci without nulls, of course). The count of such cases is now also included in the output for "interesting" pairs in \code{find_POPs_v2}; see \bold{Value}.
 #'
-#' @section Duplicates: Again uses 4way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.) You have to set the retention threshold manually, via \code{max_ndiff}--- there's no \code{one_in_X...}-type param. If there were no genotyping errors, then the threshold could just be 0.5 since there shouldn't be any mismatches in true duplicates. But that certainly doesn't work, so you'll have to play around.
+#' @section Duplicates: Again uses 4way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.) You have to set the retention threshold manually, via \code{max_diff_genos} (there's no \code{one_in_X...}-type param. If there were no genotyping errors, then the threshold could just be 0.5 since there shouldn't be any mismatches in true duplicates. But that certainly doesn't work, so you'll have to play around). Need to use \code{\link{drop_dups_pairwise_equiv}} to get the indices to remove sensibly, see \bold{Examples}.
 #'
 #' @section Speed:
 #' These are written in C (Rcpp) for speed, but for big datasets they might still be quite slow. In the first instance, I certainly wouldn't try them on 20,000 fish at once; I'd try with say 1000 then if that's OK 5000 etc. Bear in mind that they can always be run on different subsets of the data, and the results patched back together (results will not change by doing that). If you can run Xtuple jobs in parallel, that could help a lot.

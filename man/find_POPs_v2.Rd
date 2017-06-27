@@ -88,7 +88,7 @@ The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO (non-
 }
 
 \section{Duplicates}{
- Again uses 4way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.) You have to set the retention threshold manually, via \code{max_ndiff}--- there's no \code{one_in_X...}-type param. If there were no genotyping errors, then the threshold could just be 0.5 since there shouldn't be any mismatches in true duplicates. But that certainly doesn't work, so you'll have to play around.
+ Again uses 4way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.) You have to set the retention threshold manually, via \code{max_diff_genos} (there's no \code{one_in_X...}-type param. If there were no genotyping errors, then the threshold could just be 0.5 since there shouldn't be any mismatches in true duplicates. But that certainly doesn't work, so you'll have to play around). Need to use \code{\link{drop_dups_pairwise_equiv}} to get the indices to remove sensibly, see \bold{Examples}.
 }
 
 \section{Speed}{
