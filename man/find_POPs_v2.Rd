@@ -23,7 +23,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
 
-\item{subset1, }{subset2 \emph{numeric} vector of which samples to use (not logical, not negative). Defaults to all of them. Iff the two subsets are identical, only half the comparisons are done (ie not i with j then j with i). Some sanity checks are done. See also first para in \bold{Value}.}
+\item{subset1, subset2}{\emph{numeric} vector of which samples to use (not logical, not negative). Defaults to all of them. Iff the two subsets are identical, only half the comparisons are done (ie not i with j then j with i). Some sanity checks are done. See also first para in \bold{Value}.}
 
 \item{one_in_X_eta}{expected number of false-positive UPs you can tolerate. Setting this to say \code{1e6} means you'd expect 1 per million comparisons. Used to set the threshold \code{eta}, which is returned automatically.}
 
@@ -48,21 +48,21 @@ A list, whose most important element is a \code{data.frame} called \code{bigs} w
 
 For duplicates, \code{bigs} does not record \emph{all} pairwise duplicates, unless the subsets are different--- otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
 %#
-\item{  # $bigs without "ndiff" column}{}
-\item{    i j}{}
-\item{    3 1}{}
-\item{    4 3}{}
-\item{    6 4}{}
+\item{# $bigs without "ndiff" column}{}
+\item{  i j}{}
+\item{  3 1}{}
+\item{  4 3}{}
+\item{  6 4}{}
 but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} --- see \bold{Examples}.
 
 For POPs and HSPs, the following are also returned in the list. The main point is that the "boring" below-threshold ones get put into bins, not kept individually. The names sometimes change depending on which statistic is being used.
 
-\item{ eta}{false-positive cutoff to be applied to the statistic in \code{bigs} (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
-\item{ keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of stat-values in \code{bigs}.}
-\item{ mean_sub_<stat>, var_sub_<stat>}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
-\item{ mean_theory, var_theory}{of the statistic, to compare to previous.}
-\item{ n_<stat>_in_bin}{number of pairs whose stat fell within the range of each bin}
-\item{ bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
+\item{eta}{false-positive cutoff to be applied to the statistic in \code{bigs} (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
+\item{keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of stat-values in \code{bigs}.}
+\item{mean_sub_<stat>, var_sub_<stat>}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
+\item{mean_theory, var_theory}{of the statistic, to compare to previous.}
+\item{n_<stat>_in_bin}{number of pairs whose stat fell within the range of each bin}
+\item{bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \description{
 These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: e.g., first subset for the adults, second for the juveniles.
