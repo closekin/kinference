@@ -23,7 +23,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
 
-\item{subset1, subset2}{\emph{numeric} vector of which samples to use (not logical, not negative). Defaults to all of them. Iff the two subsets are identical, only half the comparisons are done (ie not i with j then j with i). Some sanity checks are done. See also first para in \bold{Value}.}
+\item{subset1, subset2}{numeric vectors of which samples to use (not logical, not negative). Defaults to all of them. Iff the two subsets are identical, only half the comparisons are done (i.e., not i with j then j with i). Some sanity checks are done.}
 
 \item{one_in_X_eta}{expected number of false-positive UPs you can tolerate. Setting this to say \code{1e6} means you'd expect 1 per million comparisons. Used to set the threshold \code{eta}, which is returned automatically.}
 
@@ -33,7 +33,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{nq}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
 
-\item{alpha}{(\code{find_POPs_v2}) Loci receive a weight which is propto (diff in prob of psex between UP and POP) / (variance of indicator of psex). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives--- which is probably the Right Thing To Do. 0.999 could be completely fine... but hopefully \code{alpha} won't affect the result much anyway.}
+\item{alpha}{(\code{find_POPs_v2}) Loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.999 could be completely fine... (but hopefully \code{alpha} won't affect the result much anyway.)}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}
 
@@ -65,7 +65,7 @@ For POPs and HSPs, the following are also returned in the list. The main point i
 \item{bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \description{
-These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: e.g., first subset for the adults, second for the juveniles.
+These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}) and find various relations between the samples. Relationships include duplicates (DUPs/dupes; \code{find_duplicates}), parent-offspring pairs (POPs; \code{find_POPs_vs}) and half-sibling pairs (HSPs; \code{find_HSPs}). Unrelated pairs are referred to as UPs. One can specify the same or different subsets of the \code{snpgeno} for comparison: e.g., first subset for the adults, second for the juveniles.
 }
 \section{Kinformation}{
 
@@ -80,15 +80,6 @@ The idea is that kin-finding is based on a statistic and a threshold \code{eta},
 The process is controlled by three numbers: \code{nq} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
 
 But, sometimes it doesn't. In that case, the predicted values of \code{eta} and \code{keep_thresh} may be way off the mark, and lead to retaining faaar too few or too many pairs. If so, then look at the histogram of retained statistics from an initial run, and try setting \code{eta} and/or \code{keep_thresh} manually, rather than futzing around with the indirect parameters until you get what you were after.
-
-There is a risk that you'll set too generous a \code{keep_thresh}, and thereby attempt to retain 100000000000000000 pairs. What I should maybe do, is add a trap so that as soon as more than \code{trap} pairs are found, the procedure gives up and returns a warning. Then you could change \code{keep_thresh} and try again.
-}
-
-\section{POPs}{
-
-POP-finding is based on 4-way genotypes (OO, AAO, BBO, AB) to avoid complications from genotyping-error-rates, and uses pseudo-exclusions rather than likelihood-ratios; the latter is very sensitive to false-negative-exclusions arising from typing-error, or even from mutation with so many SNPs. You can get round that by including estimates of typing-error-rate, but that's not necessarily easy to estimate in advance insofar as it applies per-locus to POPs. Instead, the 4-way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO, which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but \emph{could} mean AO/BO (not an exclusion). \code{find_POPs} merely counts these, for loci where \code{Pr[O]+Pr[C]<pOC_max} in order to avoid excess noise from AO/BO cases. \code{find_POPs_v2} is probably better; it uses all loci (by default) but weights them semi-optimally so that pseudo-exclusions from loci with high "false pseudo-exclusion prob" (ie high \code{Pr[AO/BO|UP]}) count much less than ones from loci with very low null rates, for which AAO/BBO almost certainly means AA/BB. The abbreviation "wpsex" is for "weighted pseudo-exclusion".
-
-The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO (non-existent for loci without nulls, of course). The count of such cases is now also included in the output for "interesting" pairs in \code{find_POPs_v2}; see \bold{Value}.
 }
 
 \section{Duplicates}{
@@ -97,7 +88,18 @@ You have to set the retention threshold manually, via \code{max_diff_genos} (see
 
 To avoid running \code{find_duplicates} on large numbers of fish at once, one can split the dataset; see \bold{Examples}. You first need to run on each subset separately (avoiding a quadratic number of comparisons) and reduce it to non-duplicates (again, see \code{\link{drop_dups_pairwise_equiv}}), then check the pair of reducded subsets (this will compare everything in the first to everything in second, as the subsets are different). Note that when the subsets are different, comparisons are made only \emph{between} subsets, not \emph{within} each subset.
 
-Uses 4-way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.)
+Uses 4-way genotyping only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.)
+}
+
+\section{Parent-offspring pairs}{
+
+4-way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO, which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but \emph{could} mean AO/BO (not an exclusion).
+
+\code{find_POPs_v2} uses all loci (by default) but weights them semi-optimally so that pseudo-exclusions from loci with high "false pseudo-exclusion probability" (i.e., high \code{Pr[AO/BO|UP]}) count much less than ones from loci with very low null rates, for which AAO/BBO almost certainly means AA/BB. We call this "Weighted PSeudo-EXclusion" ("WPSEX").
+
+The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO (non-existent for loci without nulls, of course). The count of such cases is included in the output for "interesting" pairs in \code{find_POPs_v2}; see \bold{Value}.
+
+POP-finding is based on 4-way genotypes (OO, AAO, BBO, AB) to avoid complications from genotyping-error-rates, and uses pseudo-exclusions rather than likelihood-ratios; the latter is very sensitive to false-negative-exclusions arising from typing-error, or even from mutation with so many SNPs. You can get round that by including estimates of typing-error-rate, but that's not necessarily easy to estimate in advance insofar as it applies per-locus to POPs.
 }
 
 \section{Speed}{
