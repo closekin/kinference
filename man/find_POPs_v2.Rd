@@ -33,26 +33,30 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{nq}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
 
-\item{alpha}{(find_POPs_v2) Loci receive a weight which is propto (diff in prob of psex between UP and POP) / (variance of indicator of psex). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives--- which is probably the Right Thing To Do. 0.999 could be completely fine... but hopefully \code{alpha} won't affect the result much anyway.}
+\item{alpha}{(\code{find_POPs_v2}) Loci receive a weight which is propto (diff in prob of psex between UP and POP) / (variance of indicator of psex). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives--- which is probably the Right Thing To Do. 0.999 could be completely fine... but hopefully \code{alpha} won't affect the result much anyway.}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}
 
-\item{max_diff_genos}{(find_duplicates) max number of discrepant 4way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change. You can (and here should) always post hoc filter the results in \code{$big} according to what you see there. Try it...}
+\item{max_diff_genos}{(\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.}
 
 \item{pOC_max}{(find_POPs) what's the highest null probability to tolerate? Making this bigger will increase the pool of loci, but also increase the number of "false exclusions" among true POPs. I think certainly 0.1 should be fine, higher is probably fine too; the per-locus prob of a false-exclu is at most 2 \bold{ (2 } 0.5 * pOC_max)^2 (worst case, when MALF=0.5) so with 0.1 you'd expect about 2\% of loci to yield false-exclus for a POP. So if \code{pOC_max=0.1} yields 400 loci (a guess) then only about 8 expected false-ex loci per POP (more likely about 4 given MALFs), and >>99\% of true POPs having under 15. So as long as the upper tail with 400 loci for UPs dies out well below 385, which it surely will and which you will find out when you run it, then you are OK.}
 }
 \value{
-A list, whose most important thing is a \code{data.frame} called \code{bigs} with 3 columns: statistic (PLOD or number-of-excluding loci or \code{similar} which is number of mismatching genotypes--- though "bigs" is misleading in the duplicates case, since mismatches need to be \bold{small} to qualify), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
+A list, whose most important element is a \code{data.frame} called \code{bigs} with 3 columns: statistic (PLOD or number-of-excluding loci or \code{similar} which is number of mismatching genotypes--- though "bigs" is misleading in the duplicates case, since mismatches need to be \bold{small} to qualify), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
+
 \code{find_POPs_v2} adds \code{bigs$nABOO}, showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation.
-For duplicates, \code{bigs} does not record \emph{all} pairwise duplicates, unless the subsets are different--- otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. EG if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
+
+For duplicates, \code{bigs} does not record \emph{all} pairwise duplicates, unless the subsets are different--- otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
 %#
-\item{  # bigs \%without.name\% ndiff}{}
+\item{  # $bigs without "ndiff" column}{}
 \item{    i j}{}
 \item{    3 1}{}
 \item{    4 3}{}
 \item{    6 4}{}
-but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} to sort it out--- see \bold{Examples}. Dup-checking \emph{split} datasets (to avoid trying to do 20000 fish at once) is entirely do-able, but fiddly; see \bold{Examples}. You first need to do each splittand separately (which will avoid the quadratic-horror) and reduce it to non-dups, then check the pair of reduced splittands (which will compare everything in first to everything in second, because the subsets are different). When the subsets are different, comparisons are made only \emph{between} subsets, not \emph{within} each subset.
+but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} to sort it out--- see \bold{Examples}.
+
 For POPs and HSPs, the following are also returned in the list. The main point is that the "boring" below-threshold ones get put into bins, not kept individually. The names sometimes change depending on which statistic is being used.
+
 \item{ eta}{false-positive cutoff to be applied to the statistic in \code{bigs} (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
 \item{ keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of stat-values in \code{bigs}.}
 \item{ mean_sub_<stat>, var_sub_<stat>}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
@@ -61,7 +65,7 @@ For POPs and HSPs, the following are also returned in the list. The main point i
 \item{ bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \description{
-These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: eg first subset for the adults, second for the juves.
+These take a \code{snpgeno} dataset that has been processed as far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA}). You can specify the same or different subsets of the \code{snpgeno} for comparison: e.g., first subset for the adults, second for the juveniles.
 }
 \section{Kinformation}{
 
@@ -82,20 +86,23 @@ There is a risk that you'll set too generous a \code{keep_thresh}, and thereby a
 
 \section{POPs}{
 
-POP-finding is based on 4way genotypes (OO, AAO, BBO, AB) to avoid complications from genotyping-error-rates, and uses pseudo-exclusions rather than likelihood-ratios; the latter is very sensitive to false-negative-exclusions arising from typing-error, or even from mutation with so many SNPs. You can get round that by including estimates of typing-error-rate, but that's not necessarily easy to estimate in advance insofar as it applies per-locus to POPs. Instead, the 4way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO, which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but \emph{could} mean AO/BO (not an exclusion). \code{find_POPs} merely counts these, for loci where \code{Pr[O]+Pr[C]<pOC_max} in order to avoid excess noise from AO/BO cases. \code{find_POPs_v2} is probably better; it uses all loci (by default) but weights them semi-optimally so that pseudo-exclusions from loci with high "false pseudo-exclusion prob" (ie high \code{Pr[AO/BO|UP]}) count much less than ones from loci with very low null rates, for which AAO/BBO almost certainly means AA/BB. The abbreviation "wpsex" is for "weighted pseudo-exclusion".
+POP-finding is based on 4-way genotypes (OO, AAO, BBO, AB) to avoid complications from genotyping-error-rates, and uses pseudo-exclusions rather than likelihood-ratios; the latter is very sensitive to false-negative-exclusions arising from typing-error, or even from mutation with so many SNPs. You can get round that by including estimates of typing-error-rate, but that's not necessarily easy to estimate in advance insofar as it applies per-locus to POPs. Instead, the 4-way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO, which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but \emph{could} mean AO/BO (not an exclusion). \code{find_POPs} merely counts these, for loci where \code{Pr[O]+Pr[C]<pOC_max} in order to avoid excess noise from AO/BO cases. \code{find_POPs_v2} is probably better; it uses all loci (by default) but weights them semi-optimally so that pseudo-exclusions from loci with high "false pseudo-exclusion prob" (ie high \code{Pr[AO/BO|UP]}) count much less than ones from loci with very low null rates, for which AAO/BBO almost certainly means AA/BB. The abbreviation "wpsex" is for "weighted pseudo-exclusion".
 
 The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO (non-existent for loci without nulls, of course). The count of such cases is now also included in the output for "interesting" pairs in \code{find_POPs_v2}; see \bold{Value}.
 }
 
 \section{Duplicates}{
- Again uses 4way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.) You have to set the retention threshold manually, via \code{max_diff_genos} (there's no \code{one_in_X...}-type param. If there were no genotyping errors, then the threshold could just be 0.5 since there shouldn't be any mismatches in true duplicates. But that certainly doesn't work, so you'll have to play around). Need to use \code{\link{drop_dups_pairwise_equiv}} to get the indices to remove sensibly, see \bold{Examples}.
+
+You have to set the retention threshold manually, via \code{max_diff_genos} (see arguments). Post-processing step needed to to get the indices to remove -- use \code{\link{drop_dups_pairwise_equiv}}, see \bold{Examples}.
+
+To avoid running \code{find_duplicates} on large numbers of fish at once, one can split the dataset; see \bold{Examples}. You first need to run on each subset separately (avoiding a quadratic number of comparisons) and reduce it to non-duplicates (again, see \code{\link{drop_dups_pairwise_equiv}}), then check the pair of reducded subsets (this will compare everything in the first to everything in second, as the subsets are different). Note that when the subsets are different, comparisons are made only \emph{between} subsets, not \emph{within} each subset.
+
+Uses 4-way genos only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.)
 }
 
 \section{Speed}{
 
-These are written in C (Rcpp) for speed, but for big datasets they might still be quite slow. In the first instance, I certainly wouldn't try them on 20,000 fish at once; I'd try with say 1000 then if that's OK 5000 etc. Bear in mind that they can always be run on different subsets of the data, and the results patched back together (results will not change by doing that). If you can run Xtuple jobs in parallel, that could help a lot.
-
-Trying to speed them up in C \emph{might} work, but would take too long at the moment. Or it might not. It entails nasty things like blocking the loops to be cache-friendly...
+These are written in C (\code{Rcpp}) for speed, but for big datasets they might still be quite slow. In the first instance, I certainly wouldn't try them on 20,000 fish at once; I'd try with say 1000 then if that's OK 5000 etc. Bear in mind that they can always be run on different subsets of the data, and the results patched back together (results will not change by doing that). If you can run jobs in parallel, that could help a lot.
 }
 
 \examples{
