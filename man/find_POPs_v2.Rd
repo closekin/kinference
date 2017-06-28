@@ -53,7 +53,7 @@ For duplicates, \code{bigs} does not record \emph{all} pairwise duplicates, unle
 \item{    3 1}{}
 \item{    4 3}{}
 \item{    6 4}{}
-but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} to sort it out--- see \bold{Examples}.
+but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} --- see \bold{Examples}.
 
 For POPs and HSPs, the following are also returned in the list. The main point is that the "boring" below-threshold ones get put into bins, not kept individually. The names sometimes change depending on which statistic is being used.
 
