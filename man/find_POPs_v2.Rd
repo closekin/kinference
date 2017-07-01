@@ -29,7 +29,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{rough_n_pairs_to_keep}{For checking, you can set this to trap many more high-scoring pairs than you expect there to "really" be, say a few thousand (NB the number of pairs retained won't exactly equal this). You can subsequently look at the "lucky losers" with high but sub-'eta' stats, and then filter them out yourself by applying a cutoff of \code{eta}. If you leave \code{rough_n_pairs_to_keep} at its default of NA, the trap will be set at \code{eta}, so \code{bigs} will contain exactly the pairs you want. Values above \code{eta} will always be kept, even if you specify something silly for \code{rough_n_pairs_to_keep}.}
 
-\item{eta, }{keep_thresh see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
+\item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
 
 \item{nq}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
 
@@ -38,8 +38,6 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}
 
 \item{max_diff_genos}{(\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.}
-
-\item{pOC_max}{(find_POPs) what's the highest null probability to tolerate? Making this bigger will increase the pool of loci, but also increase the number of "false exclusions" among true POPs. I think certainly 0.1 should be fine, higher is probably fine too; the per-locus prob of a false-exclu is at most 2 \bold{ (2 } 0.5 * pOC_max)^2 (worst case, when MALF=0.5) so with 0.1 you'd expect about 2\% of loci to yield false-exclus for a POP. So if \code{pOC_max=0.1} yields 400 loci (a guess) then only about 8 expected false-ex loci per POP (more likely about 4 given MALFs), and >>99\% of true POPs having under 15. So as long as the upper tail with 400 loci for UPs dies out well below 385, which it surely will and which you will find out when you run it, then you are OK.}
 }
 \value{
 A list, whose most important element is a \code{data.frame} called \code{bigs} with 3 columns: statistic (PLOD or number-of-excluding loci or \code{similar} which is number of mismatching genotypes--- though "bigs" is misleading in the duplicates case, since mismatches need to be \bold{small} to qualify), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
@@ -86,7 +84,7 @@ But, sometimes it doesn't. In that case, the predicted values of \code{eta} and 
 
 You have to set the retention threshold manually, via \code{max_diff_genos} (see arguments). Post-processing step needed to to get the indices to remove -- use \code{\link{drop_dups_pairwise_equiv}}, see \bold{Examples}.
 
-To avoid running \code{find_duplicates} on large numbers of fish at once, one can split the dataset; see \bold{Examples}. You first need to run on each subset separately (avoiding a quadratic number of comparisons) and reduce it to non-duplicates (again, see \code{\link{drop_dups_pairwise_equiv}}), then check the pair of reducded subsets (this will compare everything in the first to everything in second, as the subsets are different). Note that when the subsets are different, comparisons are made only \emph{between} subsets, not \emph{within} each subset.
+To avoid running \code{find_duplicates} on large numbers of fish at once, one can split the dataset; see \bold{Examples}. You first need to run on each subset separately (avoiding a quadratic number of comparisons) and reduce it to non-duplicates (again, see \code{\link{drop_dups_pairwise_equiv}}), then check the pair of reduced subsets (this will compare everything in the first to everything in second, as the subsets are different). Note that when the subsets are different, comparisons are made only \emph{between} subsets, not \emph{within} each subset.
 
 Uses 4-way genotyping only, since these should be largely error-free. (Looks like the exceptions are from samples with dodgy DNA.)
 }
