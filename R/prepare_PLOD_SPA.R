@@ -4,8 +4,10 @@
 #' @export
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
-# n_pts_SPA_renorm should really be as big as R can handle without running out memory
-# ... but 201 should be OK I guess. If 201 and 301 give almost-identical results then all well!
+
+# n_pts_SPA_renorm should really be as big as R can handle without running
+# out of memory but 201 should be OK I guess. If 201 and 301 give
+# almost-identical results then all well!
 
 stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 
