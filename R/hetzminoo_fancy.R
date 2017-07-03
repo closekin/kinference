@@ -1,7 +1,7 @@
 #' Heterozygotes minus "OO" checking
 #' @export
 # This test looks at whether the allele frequencies in a given fish seem right, or if there are discrepancies due to (i) degraded DNA or (ii) sample contamination.
-#' @param snpg object of type \code{\link{snpgeno}}
+#' @param snpg object of type \code{\link[gbasics]{snpgeno}}
 "hetzminoo_fancy" <-
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################

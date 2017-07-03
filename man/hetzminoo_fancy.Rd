@@ -8,7 +8,7 @@ hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
   multhresh = 1)
 }
 \arguments{
-\item{snpg}{object of type \code{\link{snpgeno}}}
+\item{snpg}{object of type \code{\link[gbasics]{snpgeno}}}
 }
 \description{
 Heterozygotes minus "OO" checking
