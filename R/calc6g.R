@@ -95,7 +95,8 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
   snerr <- drop( snerr) # for scalar version
 
   snerr <- snerr            ? 0
-  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C), dimnames=list( genotypes_C, genotypes_C))         ? 1
+  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
+                    dimnames=list( genotypes_C, genotypes_C))         ? 1
 
 
   g_1 <- substring( genotypes_C, 1, 1)
@@ -107,9 +108,10 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
   pr2[ is_het] <- 2 * pr2[ is_het]       ? 0
 
   pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
-      dimnames=rep( list( genotypes_C), 2))        ? 1
+                    dimnames=rep( list( genotypes_C), 2))        ? 1
 
-  extract.named( expand.grid( gp1=genotypes_C, gp2=genotypes_C, stringsAsFactors=FALSE))
+  extract.named( expand.grid( gp1=genotypes_C, gp2=genotypes_C,
+                             stringsAsFactors=FALSE))
   pp_true[ cbind( gp1, gp2)] <- pr2[ gp1] * pr2[ gp2]                       ? 0
 
   # NB that for this UP case, XX/XO errors shouldn't change the overall probs because the cutoffs are chosen to do exactly that!
@@ -135,7 +137,8 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
 
   snerr <- drop( snerr) # for scalar version
   snerr <- snerr        ? 0
-  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C), dimnames=list( genotypes_C, genotypes_C))          ? 1
+  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
+                    dimnames=list( genotypes_C, genotypes_C))          ? 1
 
   # Note: AB/AB can share either A or B... so have to accumulate
 
