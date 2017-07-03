@@ -75,7 +75,7 @@ function( nlocal=sys.parent()) mlocal({
 })
 
 
-#' @export
+# @export
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
 "calc_g6probs_IBD0_scalar" <-
@@ -119,7 +119,7 @@ return( pp6_err)
 }
 
 
-#' @export
+# @export
 #' @importFrom vecless set_recording
 "calc_g6probs_IBD1_scalar" <-
 function( P, snerr, record=FALSE) {
