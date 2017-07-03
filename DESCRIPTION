@@ -1,8 +1,8 @@
 Package: kinference
-Title: What the package does
+Title: Kin-finding for close-kin mark-recapture
 Version: 0.0.1
-Author: Mark V Bravington
-Description: More about what it does
+Author: Mark V Bravington, David L Miller
+Description: Kin-finding functions for close-kin mark-recapture.
 Maintainer: David L Miller <dave@ninepointeightone.net>
 License: GPL
 Imports: Rcpp (>= 0.12.11),
