@@ -1,13 +1,17 @@
 #' Check individual genotypes for aggregate typicality
 #'
-#' Compute lglk of entire 4way genotype of each individual, ie sum log Pr[ g(i,l)]; and compare the distro of lglks across individuals with its predicted shape given ALFs. Significant mismatch is bad. Can also detect outliers. Up to you what criterion to use for that. NB running \code{locator(2)} lets you click the histogram to figure out where you'd like to cut.
+#' Compute log-likelihood of entire 4-way genotype of each individual, i.e., sum log Pr[ g(i,l)]; and compare the distro of log-likelihoods across individuals with its predicted shape given allele frequencies. Significant mismatch is bad. Can also detect outliers. Up to you what criterion to use for that.
+#'
+#' You can use \code{locator(1)} to click the histogram to figure out where to adjust the \code{xlim}/\code{ylim} values to change the range of the data to inspect more closely.
 #'
 #' Currently, the SPA calcs are a wee bit slow because of heavy use of \code{vecless} which in version 1.0 is sluggish. The lglks themselves are computed in C and are blisteringly fast.
 #'
-#' @param snpg a \code{snpgeno} (6way genotype)
+#' Haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
+#'
+#' @param snpg a \code{\link[gbasics]{snpgeno}} (6-way genotype)
 #' @param indiv_lglk_hist_pars list like in \code{dump_badhetz_fish}, for controlling histogram
 #'
-#' @return Vector of lglk for each individual. I haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
+#' @return Vector of log-likelihood for each individual. Produces a histogram of log-likelihood values.
 #'
 #' @importFrom atease @
 #' @importFrom gbasics snpgeno
@@ -26,8 +30,8 @@
   n_samps <- nrow( snpg)
   n_loci <- ncol( snpg)
   snpg4 <- snpgeno( n_samps, n_loci, genotypes4_ambig,
-      info=snpg@info[,cq( Our_plate, Our_sample)],
-      locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
+                   info=snpg@info[,cq( Our_plate, Our_sample)],
+                   locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
   snpg4[ snpg==OO] <- OO
   snpg4[ snpg==AB] <- AB
   snpg4[ snpg==AA] <- AAO
@@ -59,7 +63,6 @@
       dKK[ j] := SUM_ %[l]% (num[ j, l] / denom[ j, l])
     return( c( dKK))
     }
-
 
   ddK <- function( tt) {
       ttp1 <- tt+1
