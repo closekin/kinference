@@ -228,25 +228,6 @@ eval.parent( obj)
 
 
 
-#' @importFrom mvbutils %is.not.a% %where%
-#' @export
-"get_chain" <- function( thing, seed) {
-  if( thing %is.not.a% 'data.frame') {
-    thing <- thing$bigs
-  }
-  extract.named( thing)
-
-  oset <- integer()
-  set <- seed
-  while( length( set) != length( oset)) {
-    newj <- j[ i %in% set]
-    newi <- i[ j %in% set]
-    oset <- set
-    set <- unique( c( set, newi, newj))
-  }
-
-  thing %where% (i %in% set | j %in% set)
-}
 
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
@@ -332,44 +313,6 @@ return( x)
 }
 
 
-#' @importFrom atease @ @<-
-#' @importFrom mvbutils do.on
-#' @export
-"pick_FSPs_from_HSPs" <- function( snpg, HSPs) {
-  # For pairs already picked as HSPs, ie PLOD(HSP,UP) > eta: they might be FSPs. H
-  # How would a FSP / HSP comparison look?
-  # Don't need full pairwise screening for FSPs (do post hoc on a few hundred HSPs), hence all in R.
-
-  # HSPs should be M*2 matrix of rows in snpg that are HSPs or FSPs
-
-  # Transform to 4way genotypes
-  # based on code in find_duplicates
-  # careful, since "factor level" of AB and OO is different in 4way vs 6way
-  sibg <- just_sibg <- snpg[ c( HSPs),]
-
-  sibg@diplos <- genotypes4_ambig
-  sibg[ just_sibg==AO] <- AAO
-  sibg[ just_sibg==AA] <- AAO
-  sibg[ just_sibg==BO] <- BBO
-  sibg[ just_sibg==BB] <- BBO
-  sibg[ just_sibg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
-  sibg[ just_sibg==AB] <- AB
-
-
-  extract.named( snpg@locinfo[ cq( PUP4, LOD4)])
-  PHSP4 <- exp( LOD4) / PUP4 # Pr[gg|HSP] <- 0.5 * PUP4 + 0.5 * Pr[gg|kappa=1]
-  P_k1 <- 2*PHSP4 - PUP4
-  P_k1[ P_k1 < 0] <- 0 # rounding error
-
-  samo <- do.on( strsplit( colnames( LOD4), '/'), .[1]==.[2])
-  PFSP4 <- ...
-  # Number of ID locis should be
-
-  nsibs <- nrow( HSP)
-
-  n_loci_id <- sibg[ 1:nsib,] == sibg[ nsib + 1:nsib,]
-  }
-
 
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
@@ -411,13 +354,16 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   }
 
   # EPLOD is sum( LOD * Pup) but we want to keep it by locus for now
+  # expected value of the PLOD for HSP (mean of distn)
   E.HSP[l] := LOD[l,i,j] %[i,j]% Phsp[l,i,j]
+  # expected value of the PLOD for UP (mean of distn)
   E.UP[l] := LOD[l,i,j] %[i,j]% Pup[l,i,j]
   E2.UP[l] := (LOD*LOD)[l,i,j] %[i,j]% Pup[l,i,j]
   V.UP <- E2.UP - sqr( E.UP)
   Ediff <- E.HSP - E.UP
 
-  # Standardized difference ie locus power: not so useful post hoc, but possibly interesting for 6 vs 4 comps
+  # Standardized difference ie locus power: not so useful post hoc,
+  #  but possibly interesting for 6 vs 4 comps
   sdiff <- (E.HSP - E.UP) / sqrt( V.UP)
 
 #  Ediff <- unclass( Ediff)
