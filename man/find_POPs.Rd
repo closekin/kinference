@@ -32,6 +32,8 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{nq}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
 
+\item{bins}{binning for PLODs (we throw away ones outside the range and bin them according to this within)}
+
 \item{alpha}{(\code{find_POPs}) Loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.999 could be completely fine... (but hopefully \code{alpha} won't affect the result much anyway.)}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}

@@ -47,6 +47,7 @@
 #' @param nq number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.
 #' @param max_diff_genos (\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.
 #' @param quick whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...
+#' @param bins binning for PLODs (we throw away ones outside the range and bin them according to this within)
 #'
 #' @return A list, whose most important element is a \code{data.frame} called \code{bigs} with 3 columns: statistic (PLOD or number-of-excluding loci or \code{similar} which is number of mismatching genotypes--- though "bigs" is misleading in the duplicates case, since mismatches need to be \bold{small} to qualify), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
 #'
