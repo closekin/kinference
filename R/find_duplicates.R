@@ -1,4 +1,4 @@
-#' @rdname find_POPs_v2
+#' @rdname find_POPs
 #' @export
 #' @importFrom gbasics sqr
 #' @importFrom atease @
