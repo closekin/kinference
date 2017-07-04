@@ -8,6 +8,14 @@ hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
   multhresh = 1)
 }
 \arguments{
+\item{snpg}{a \code{\link[gbasics]{snpgeno}} object}
+
+\item{target}{which weighting should be used. \code{"rich"} detects contaminated data (there are too many heterozygotes) and \code{"poor"} detectes DNA degredation (there are too few heterozygotes).}
+
+\item{hist_pars}{parameters to pass to \code{\link{hist}}}
+
+\item{multthresh}{???}
+
 \item{snpg}{object of type \code{\link[gbasics]{snpgeno}}}
 }
 \description{

@@ -1,4 +1,9 @@
 #' Heterozygotes minus "OO" checking
+#'
+#' @param snpg a \code{\link[gbasics]{snpgeno}} object
+#' @param target which weighting should be used. \code{"rich"} detects contaminated data (there are too many heterozygotes) and \code{"poor"} detectes DNA degredation (there are too few heterozygotes).
+#' @param hist_pars parameters to pass to \code{\link{hist}}
+#' @param multthresh ???
 #' @export
 # This test looks at whether the allele frequencies in a given fish seem right, or if there are discrepancies due to (i) degraded DNA or (ii) sample contamination.
 #' @param snpg object of type \code{\link[gbasics]{snpgeno}}
