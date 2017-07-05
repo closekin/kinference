@@ -48,6 +48,7 @@
     LOD4[ l, {ig}, gj] := XXi[ l, gj]
   }
 
+  # recover the column/row/etc names
   dimnames(PUP4) <- dimnames(LOD4) <- list(NULL, rownames(mg), rownames(mg))
 
   ## calculate the P[g1, g2 | k shared alleles]
@@ -71,28 +72,73 @@
 
   p12fsp <- p12hsp <- matrix(NA, nloci, nsib)
 
-  evalq(for(i in 1:nsib){
+
+  # split sibg into g1 and g2 for the two parts of the pairs
+  g1 <- sibg[1:nsib, ]
+  g2 <- sibg[(nsib+1):(2*nsib), ]
+
+  # for loop version of the code
+  g1 <- as.character(g1)
+  g2 <- as.character(g2)
+  for(i in 1:nsib){
     for(l in 1:nloci){
       # P[g_1l g_2l | FSP]
-      p12fsp[l, i] <- kappa_fsp[1]*P_k0[l, as.character(sibg[i, l]),
-                                           as.character(sibg[i + nsib, l])] +
-                      kappa_fsp[2]*P_k1[l, as.character(sibg[i, l]),
-                                          as.character(sibg[i + nsib, l])] +
-                      kappa_fsp[3]*P_k2[l, as.character(sibg[i, l]),
-                                          as.character(sibg[i + nsib, l])]
+      p12fsp[l, i] <- kappa_fsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_fsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_fsp[3] * P_k2[l, g1[i, l], g2[i, l]]
       # P[g_1l g_2l | HSP]
-      p12hsp[l, i] <- kappa_hsp[1]*P_k0[l, as.character(sibg[i, l]),
-                                           as.character(sibg[i + nsib, l])] +
-                     kappa_hsp[2]*P_k1[l, as.character(sibg[i, l]),
-                                          as.character(sibg[i + nsib, l])] +
-                     kappa_hsp[3]*P_k2[l, as.character(sibg[i, l]),
-                                          as.character(sibg[i + nsib, l])]
+      p12hsp[l, i] <- kappa_hsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_hsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_hsp[3] * P_k2[l, g1[i, l], g2[i, l]]
     }
-  })
-
+  }
   OD_FH <- p12fsp/p12hsp
   LOD_FH <- log(OD_FH)
-  PLOD <- colSums(LOD_FH)
+  PLOD_FH <- colSums(LOD_FH)
 
-  return(PLOD)
+
+  # some vecless hieroglyphs
+  #P_k <- array(0, c(3, dim(P_k0)))
+  #P_k[ 1, l, gi, gj] := P_k0[ l, gi, gj]
+  #P_k[ 2, l, gi, gj] := P_k1[ l, gi, gj]
+  #P_k[ 3, l, gi, gj] := P_k2[ l, gi, gj]
+
+  #Pr_FSP[ l, gi, gj] := kappa_fsp[ k] %[k]% P_k[ k, l, gi, gj]
+  #Pr_HSP[ l, gi, gj] := kappa_hsp[ k] %[k]% P_k[ k, l, gi, gj]
+
+  #LOD_FH <- log( Pr_FSP / Pr_HSP)
+
+  ## Would like but can't have yet:
+  ## PLOD_FH[ ipair] := SUM_ %[l]% LOD_FH[ l, g1[ ipair, l], g2[ ipair, l] ]
+
+  ## Instead do the lookup as an ugly dot product...
+  ## jseq kseq these must cover the 2nd and 3rd index-range of thingo
+  #jseq <- 1:4
+  #kseq <- 1:4
+  #ig1 <- g1
+  #storage.mode( ig1) <- 'integer' # otherwise attributes get lost
+  ##ig1[] <- match( g1@diplos, rownames( mg))
+
+  #ig2 <- g2
+  #storage.mode( ig2) <- 'integer'
+  ##ig2[] <- match( g2@diplos, rownames( mg))
+
+  #PLOD_FH[i]:= SUM_ %[l]% (LOD_FH[ l,j,k] %[j,k]% (jseq[j]==ig1[i,l] &
+  #                                                 kseq[k]==ig2[i,l]))
+
+  ## unnecessary
+  # EPLOD_FH_F_by_locus[ l] := Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj]
+  # EPLOD_FH_F[] := SUM_ %[l]% (Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj])
+
+  #EPLOD_FH_F <- sum( Pr_FSP * LOD_FH)
+  #EPLOD_FH_H <- sum( Pr_HSP * LOD_FH)
+
+
+  # format a return object
+  ret <- list()
+  ret$bigs <- data.frame(PLOD_FH = PLOD_FH,
+                         i       = HSPs[,1],
+                         j       = HSPs[,2])
+
+  return(ret)
 }
