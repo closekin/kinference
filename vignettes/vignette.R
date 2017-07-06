@@ -84,8 +84,6 @@ pp <- find_FSPs_from_HSPs(dave_juves, HSPs)
 
 # calculate the "upper variance" not including the FSPs
 # variance sum((PLOD - EPLOD_HSP)^2)
-
-
 # HTP/HCP
 # UP -- find_HSPs set one_in..
 # HCP/HTP -- 
