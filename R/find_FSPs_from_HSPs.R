@@ -80,7 +80,7 @@
   # for loop version of the code
   g1 <- as.character(g1)
   g2 <- as.character(g2)
-  for(i in 1:nsib){
+  evalq(for(i in 1:nsib){
     for(l in 1:nloci){
       # P[g_1l g_2l | FSP]
       p12fsp[l, i] <- kappa_fsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
@@ -91,13 +91,19 @@
                       kappa_hsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
                       kappa_hsp[3] * P_k2[l, g1[i, l], g2[i, l]]
     }
-  }
+  })
   OD_FH <- p12fsp/p12hsp
   LOD_FH <- log(OD_FH)
   PLOD_FH <- colSums(LOD_FH)
 
+  # expectation
+  # log(P[g_1l g_2l | FSP] / P[g_1l g_2l | HSP]) * P[g_1l g_2l | FSP]
+  p12fspa <- kappa_fsp[1] * P_k0 +  kappa_fsp[2] * P_k1 + kappa_fsp[3] * P_k2
+  p12hspa <- kappa_hsp[1] * P_k0 + kappa_hsp[2] * P_k1 + kappa_hsp[3] * P_k2
+  EPLOD_FH_F <- sum(log(p12fspa/p12hspa) * p12fspa)
+  EPLOD_FH_H <- sum(log(p12fspa/p12hspa) * p12hspa)
 
-  # some vecless hieroglyphs
+  ## some vecless hieroglyphs
   #P_k <- array(0, c(3, dim(P_k0)))
   #P_k[ 1, l, gi, gj] := P_k0[ l, gi, gj]
   #P_k[ 2, l, gi, gj] := P_k1[ l, gi, gj]
@@ -127,8 +133,8 @@
   #                                                 kseq[k]==ig2[i,l]))
 
   ## unnecessary
-  # EPLOD_FH_F_by_locus[ l] := Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj]
-  # EPLOD_FH_F[] := SUM_ %[l]% (Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj])
+  ## EPLOD_FH_F_by_locus[ l] := Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj]
+  ## EPLOD_FH_F[] := SUM_ %[l]% (Pr_FSP[ l, gi, gj] %[gi,gj]% LOD_FH[ l, gi, gj])
 
   #EPLOD_FH_F <- sum( Pr_FSP * LOD_FH)
   #EPLOD_FH_H <- sum( Pr_HSP * LOD_FH)
@@ -139,6 +145,9 @@
   ret$bigs <- data.frame(PLOD_FH = PLOD_FH,
                          i       = HSPs[,1],
                          j       = HSPs[,2])
+  ret$EPLOD_FH_F <- EPLOD_FH_F
+  ret$EPLOD_FH_H <- EPLOD_FH_H
+
 
   return(ret)
 }
