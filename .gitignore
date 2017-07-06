@@ -2,3 +2,5 @@ src/*.o
 src/*.so
 src/*.dll
 .Rproj.user
+vignettes/dave-practice.rda
+vignettes/fsps_for_dave.rda
