@@ -19,8 +19,4 @@ Compute log-likelihood of entire 4-way genotype of each individual, i.e., sum lo
 }
 \details{
 You can use \code{locator(1)} to click the histogram to figure out where to adjust the \code{xlim}/\code{ylim} values to change the range of the data to inspect more closely.
-
-Currently, the SPA calcs are a wee bit slow because of heavy use of \code{vecless} which in version 1.0 is sluggish. The lglks themselves are computed in C and are blisteringly fast.
-
-Haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
 }

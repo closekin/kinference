@@ -4,9 +4,9 @@
 #'
 #' You can use \code{locator(1)} to click the histogram to figure out where to adjust the \code{xlim}/\code{ylim} values to change the range of the data to inspect more closely.
 #'
-#' Currently, the SPA calcs are a wee bit slow because of heavy use of \code{vecless} which in version 1.0 is sluggish. The lglks themselves are computed in C and are blisteringly fast.
+# Currently, the SPA calcs are a wee bit slow because of heavy use of \code{vecless} which in version 1.0 is sluggish. The lglks themselves are computed in C and are blisteringly fast.
 #'
-#' Haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
+# Haven't added any formal uh-oh criteria yet; that could be done via the SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is probably fine...
 #'
 #' @param snpg a \code{\link[gbasics]{snpgeno}} (6-way genotype)
 #' @param indiv_lglk_hist_pars list like in \code{dump_badhetz_fish}, for controlling histogram
@@ -112,13 +112,22 @@
   dens_SPA <- renorm_SPA( K, dK, ddK, 'func')
 
   indiv_lglk_hist_pars <- add_list_defaults( indiv_lglk_hist_pars,
-      main='Geno lglk by FISH', #sprintf( 'Geno lglk by FISH: multhresh=%5.2f', method, multhresh_indiv_lglk_fish),
-      xlim= range( ilglk),
-      xlab='', nclass=50)
+      main   = 'Geno lglk by FISH', #sprintf( 'Geno lglk by FISH: multhresh=%5.2f', method, multhresh_indiv_lglk_fish),
+      xlim   = range( ilglk),
+      col    = "grey",
+      border = NA,
+      xlab   = '',
+      nclass = 50)
   lv <- do.call( 'hist', c( list( x=ilglk), indiv_lglk_hist_pars))
-  with( lv, # then plot predicted density. Slowish with vecless 1.0
-    lines( mids, diff( breaks) * dens_SPA( mids) * n_samps, col='green')
-  )
+
+
+  # some dens_SPA can fail -- do lapply and then weed out baddies
+  mids_SPA <- lapply(lv$mids, function(x) try(dens_SPA( x), silent=TRUE))
+  good_ind <- unlist(lapply(mids_SPA, class) != "try-error")
+  mids_SPA <- unlist(mids_SPA[good_ind])
+  # plot predicted density. Slowish with vecless 1.0
+  lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
+        col='blue')
 
 return( ilglk)
 }
