@@ -17,7 +17,9 @@ dave <- rbind( dave, more_for_dave)
 
 # note on adding in extra data and the subset arguments
 
-# need a ilglk_geno bit here?
+# what are we **doing** here? Removing totally unlikely fish?
+# with other data sets need to fiddle with the xlims?
+ill <- ilglk_geno(dave)
 
 # need a hetzminoo_fancy thing here? Need to setup prepare_PLOD_SPA too?
 
