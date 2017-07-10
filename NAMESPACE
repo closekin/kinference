@@ -3,6 +3,7 @@
 export(add_pairprob_error)
 export(drop_dups_pairwise_equiv)
 export(find_FSPs_from_HSPs)
+export(find_FSPs_from_POPs)
 export(find_HSPs)
 export(find_POPs)
 export(find_duplicates)
