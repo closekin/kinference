@@ -10,11 +10,11 @@
 \usage{
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep, eta = NULL, keep_thresh = NULL,
-  nq = 50, bins = NULL)
+  nbins = 50, bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
-  keep_thresh = NULL, nq, quick = TRUE, WPSEX_UP_POP_balance = 0.99)
+  keep_thresh = NULL, nbins, quick = TRUE, WPSEX_UP_POP_balance = 0.99)
 
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   max_diff_genos)
@@ -30,7 +30,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
 
-\item{nq}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
+\item{nbins}{number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.}
 
 \item{bins}{binning for PLODs (we throw away ones outside the range and bin them according to this within)}
 
@@ -76,7 +76,7 @@ The idea is that kin-finding is based on a statistic and a threshold \code{eta},
 \item cases where the stat is "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a \code{data.frame}. See \bold{Value} for details
 }
 
-The process is controlled by three numbers: \code{nq} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
+The process is controlled by three numbers: \code{nbins} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
 
 But, sometimes it doesn't. In that case, the predicted values of \code{eta} and \code{keep_thresh} may be way off the mark, and lead to retaining faaar too few or too many pairs. If so, then look at the histogram of retained statistics from an initial run, and try setting \code{eta} and/or \code{keep_thresh} manually, rather than futzing around with the indirect parameters until you get what you were after.
 }

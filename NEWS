@@ -1,9 +1,12 @@
 # NEWS for kinference
 
+# 0.0.3
+
+- find_POPs, find_HSPs, find_HSPs_cond: nq=... -> nbins=...
 
 # 0.0.2
 
-- find_POPs alpha argument changed to WPSEX_UP_POP_balance
+- find_POPs: alpha argument changed to WPSEX_UP_POP_balance
 
 
 

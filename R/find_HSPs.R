@@ -9,7 +9,7 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     rough_n_pairs_to_keep,
     eta= NULL,
     keep_thresh= NULL,
-    nq= 50,
+    nbins= 50,
     bins= NULL) {
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
@@ -52,7 +52,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   temp_snpg <- t( temp_snpg)
 
   if( is.null( bins)) {
-    qq <- (2:nq-1)/nq
+    qq <- (2:nbins-1)/nbins
     bins <- snpg@Kenv$inv_CDF( qq)
   }
   binprobs <- snpg@Kenv$CDF( bins)

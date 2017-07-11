@@ -42,7 +42,7 @@ nodupes <- find_duplicates(dave_nodupes, max_diff_genos=100)
 # look at $Our_sample
 
 # find POPs
-pops <- find_POPs(dave_nodupes, one_in_X_eta=1e3, nq=50,
+pops <- find_POPs(dave_nodupes, one_in_X_eta=1e3, nbins=50,
                      rough_n_pairs_to_keep=5000)
 #hist(pops$bigs$wpsex)
 

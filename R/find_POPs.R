@@ -14,7 +14,7 @@
 #' \item cases where the stat is "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a \code{data.frame}. See \bold{Value} for details
 #' }
 #'
-#' The process is controlled by three numbers: \code{nq} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
+#' The process is controlled by three numbers: \code{nbins} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})--- assuming that observed does match expected.
 #'
 #' But, sometimes it doesn't. In that case, the predicted values of \code{eta} and \code{keep_thresh} may be way off the mark, and lead to retaining faaar too few or too many pairs. If so, then look at the histogram of retained statistics from an initial run, and try setting \code{eta} and/or \code{keep_thresh} manually, rather than futzing around with the indirect parameters until you get what you were after.
 #'
@@ -44,7 +44,7 @@
 #' @param one_in_X_eta expected number of false-positive UPs you can tolerate. Setting this to say \code{1e6} means you'd expect 1 per million comparisons. Used to set the threshold \code{eta}, which is returned automatically.
 #' @param rough_n_pairs_to_keep For checking, you can set this to trap many more high-scoring pairs than you expect there to "really" be, say a few thousand (NB the number of pairs retained won't exactly equal this). You can subsequently look at the "lucky losers" with high but sub-'eta' stats, and then filter them out yourself by applying a cutoff of \code{eta}. If you leave \code{rough_n_pairs_to_keep} at its default of NA, the trap will be set at \code{eta}, so \code{bigs} will contain exactly the pairs you want. Values above \code{eta} will always be kept, even if you specify something silly for \code{rough_n_pairs_to_keep}.
 #' @param eta,keep_thresh see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.
-#' @param nq number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.
+#' @param nbins number of bins to group the stats from the sub-'eta' pairs into. The bins will be set at quantiles of the expected distribution for UPs.
 #' @param max_diff_genos (\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.
 #' @param quick whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...
 #' @param bins binning for PLODs (we throw away ones outside the range and bin them according to this within)
@@ -125,7 +125,7 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
     keep_thresh= NULL, # merge, C code return cutoff
-    nq, # nbins, check they ARE bins
+    nbins,
     quick=TRUE,
     WPSEX_UP_POP_balance=0.99) {
 ###################
@@ -228,7 +228,7 @@ stopifnot( all( ww>0))
 
   # Prepare for diagnostics of #excl
   # prolly not needed but HSP C code already does it
-  qq <- (2:nq-1)/nq
+  qq <- (2:nbins-1)/nbins
   pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
 
   # Trying special-cases here to minimize copying
