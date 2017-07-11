@@ -9,6 +9,8 @@
 "get_chain" <-
 function( thing, seed) {
 
+# if length(unique(seed)) == length(seed) ???
+
   # if we didn't give the function a $bigs already
   # this needs to check other things are there?
   if( thing %is.not.a% 'data.frame') {
