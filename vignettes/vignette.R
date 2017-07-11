@@ -26,6 +26,7 @@ ill <- ilglk_geno(dave)
 # get duplicates
 # from manual max_diff_genos "Try increasing this from say 10 upwards"
 # nice little story here where if you set to 40 you get a spurious result
+# x axis is "number of loci different" -- say something about QC
 dupes <- find_duplicates(dave, max_diff_genos=100)
 #hist(dupes$bigs$ndiff)
 
@@ -78,7 +79,6 @@ dd <- find_HSPs(dave_juves, bins = seq(-120, 120, by = 5),
 # HSP pairs in a matrix 2 cols
 HSPs <- as.matrix(dd$bigs[, 2:3])
 
-
 pp <- find_FSPs_from_HSPs(dave_juves, HSPs)
 
 # remove FSPs from HSPs
@@ -91,6 +91,7 @@ pp <- find_FSPs_from_HSPs(dave_juves, HSPs)
 
 # false negative rate
 
+# get_chain stuff here?
 
 # example table of numbers of HSPs per year
 # number of comparisons
