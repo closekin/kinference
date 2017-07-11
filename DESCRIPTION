@@ -1,6 +1,6 @@
 Package: kinference
 Title: Kin-finding for close-kin mark-recapture
-Version: 0.0.1
+Version: 0.0.2
 Author: Mark V Bravington, David L Miller
 Description: Kin-finding functions for close-kin mark-recapture.
 Maintainer: David L Miller <dave@ninepointeightone.net>
