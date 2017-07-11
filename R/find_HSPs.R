@@ -86,15 +86,17 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       )
   }
 
-  result$bigs <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
+  result <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
   result <- result %without.name% cq( big_PLOD, big_i, big_j)
-  result$mean_theory <- snpg@Kenv$dK( 0)
-  result$var_theory <- snpg@Kenv$ddK( 0)
-  result$bins <- bins
-  result$binprobs <- binprobs
-  result$eta <- eta
-  result$keep_thresh <- keep_thresh
-  result$call <- sys.call()
+
+  # assign extra info as attributes
+  result@mean_theory <- snpg@Kenv$dK( 0)
+  result@var_theory <- snpg@Kenv$ddK( 0)
+  result@bins <- bins
+  result@binprobs <- binprobs
+  result@eta <- eta
+  result@keep_thresh <- keep_thresh
+  result@call <- sys.call()
 
 return( result)
 }

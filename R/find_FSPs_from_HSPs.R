@@ -142,12 +142,13 @@
 
   # format a return object
   ret <- list()
-  ret$bigs <- data.frame(PLOD_FH = PLOD_FH,
-                         i       = HSPs[,1],
-                         j       = HSPs[,2])
-  ret$EPLOD_FH_F <- EPLOD_FH_F
-  ret$EPLOD_FH_H <- EPLOD_FH_H
+  ret <- data.frame(PLOD_FH = PLOD_FH,
+                    i       = HSPs[,1],
+                    j       = HSPs[,2])
+  ret@EPLOD_FH_F <- EPLOD_FH_F
+  ret@EPLOD_FH_H <- EPLOD_FH_H
 
+  ret@call <- sys.call()
 
   return(ret)
 }

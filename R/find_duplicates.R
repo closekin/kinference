@@ -61,10 +61,10 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       )
   }
 
-
-  result$bigs <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
-  result <- result %without.name% cq( big_similar, big_i, big_j)
-  result$call <- sys.call()
+  # just return the data.frame with 3 columns, everything else goes in
+  # teh attributes
+  result <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
+  result@call <- sys.call()
 
 return( result)
 }

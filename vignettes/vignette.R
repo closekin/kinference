@@ -32,9 +32,10 @@ dupes <- find_duplicates(dave, max_diff_genos=100)
 
 # get the indices to drop
 ## CHECK THIS function
-droppies <- drop_dups_pairwise_equiv(dupes$bigs[,2:3])
+droppies <- drop_dups_pairwise_equiv(dupes[,2:3])
 
 dave_nodupes <- dave[-droppies,]
+# no duplicates any more
 nodupes <- find_duplicates(dave_nodupes, max_diff_genos=100)
 
 # want to look at "non-technical duplicates" here too?
@@ -61,23 +62,23 @@ dd <- find_HSPs(dave_juves, bins = seq(-120, 120, by = 5),
                 keep_thresh = -5, eta = 10)
 
 # usually bump up number of classes
-#hist(dd$bigs$PLOD, nc=30)
+#hist(dd$PLOD, nc=30)
 #abline(dd$mean thing)
 # could remove i and j s for POP and FSP pairs
 
 # histogram
-#plot(dd$bins, dd$n_PLODs_in_bin)
+#plot(dd@bins, dd@n_PLODs_in_bin)
 # log-histogram
-#plot(dd$bins, log(dd$n_PLODs_in_bin), type="b")
+#plot(dd@bins, log(dd@n_PLODs_in_bin), type="b")
 # HTPs around 0 in this?
 
 # for get chain
-#table(dd$bigs[dd$bigs$PLOD >0 & dd$bigs$PLOD <30,][,c("i","j")])
+#table(dd[dd$PLOD >0 & dd$PLOD <30,][,c("i","j")])
 
 # getting FSPs
 
 # HSP pairs in a matrix 2 cols
-HSPs <- as.matrix(dd$bigs[, 2:3])
+HSPs <- as.matrix(dd[, 2:3])
 
 pp <- find_FSPs_from_HSPs(dave_juves, HSPs)
 

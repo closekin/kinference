@@ -26,7 +26,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{one_in_X_eta}{expected number of false-positive UPs you can tolerate. Setting this to say \code{1e6} means you'd expect 1 per million comparisons. Used to set the threshold \code{eta}, which is returned automatically.}
 
-\item{rough_n_pairs_to_keep}{For checking, you can set this to trap many more high-scoring pairs than you expect there to "really" be, say a few thousand (NB the number of pairs retained won't exactly equal this). You can subsequently look at the "lucky losers" with high but sub-'eta' stats, and then filter them out yourself by applying a cutoff of \code{eta}. If you leave \code{rough_n_pairs_to_keep} at its default of NA, the trap will be set at \code{eta}, so \code{bigs} will contain exactly the pairs you want. Values above \code{eta} will always be kept, even if you specify something silly for \code{rough_n_pairs_to_keep}.}
+\item{rough_n_pairs_to_keep}{For checking, you can set this to trap many more high-scoring pairs than you expect there to "really" be, say a few thousand (NB the number of pairs retained won't exactly equal this). You can subsequently look at the "lucky losers" with high but sub-'eta' stats, and then filter them out yourself by applying a cutoff of \code{eta}. If you leave \code{rough_n_pairs_to_keep} at its default of NA, the trap will be set at \code{eta}, so the result will contain exactly the pairs you want. Values above \code{eta} will always be kept, even if you specify something silly for \code{rough_n_pairs_to_keep}.}
 
 \item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
 
@@ -41,26 +41,26 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 \item{max_diff_genos}{(\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.}
 }
 \value{
-A list, whose most important element is a \code{data.frame} called \code{bigs} with 3 columns: statistic (PLOD or number-of-excluding loci or \code{similar} which is number of mismatching genotypes--- though "bigs" is misleading in the duplicates case, since mismatches need to be \bold{small} to qualify), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
+a \code{data.frame} with 3 columns: statistic (\code{PLOD} or \code{wpsex} or \code{ndiff} number of mismatching genotypes), \code{i} (index in \code{subset1} of the first pair-member), \code{j} (index in \code{subset2} of the second). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}. Note that, iff you have set \code{rough_n_pairs_to_keep}, these will include pairs below the FP cutoff (which is returned as \code{eta}).
 
-\code{find_POPs} adds \code{bigs$nABOO}, showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation.
+\code{find_POPs} adds a column named \code{nABOO}, showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation.
 
-For duplicates, \code{bigs} does not record \emph{all} pairwise duplicates, unless the subsets are different--- otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
+For duplicates, not \emph{all} pairwise duplicates are recorded, unless the subsets are different--- otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
 %#
-\item{# $bigs without "ndiff" column}{}
+\item{# without "ndiff" column}{}
 \item{  i j}{}
 \item{  3 1}{}
 \item{  4 3}{}
 \item{  6 4}{}
 but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} --- see \bold{Examples}.
 
-For POPs and HSPs, the following are also returned in the list. The main point is that the "boring" below-threshold ones get put into bins, not kept individually. The names sometimes change depending on which statistic is being used.
+For POPs and HSPs, the following are also returned as attributes (that can be accessed by \code{@} if \code{atease} is loaded). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.
 
-\item{eta}{false-positive cutoff to be applied to the statistic in \code{bigs} (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
-\item{keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of stat-values in \code{bigs}.}
+\item{eta}{false-positive cutoff to be applied to the statistic in question (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
+\item{keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of statistic values.}
 \item{mean_sub_<stat>, var_sub_<stat>}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
 \item{mean_theory, var_theory}{of the statistic, to compare to previous.}
-\item{n_<stat>_in_bin}{number of pairs whose stat fell within the range of each bin}
+\item{n_<stat>_in_bin}{number of pairs whose statstic fell within the range of each bin}
 \item{bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \description{
@@ -107,37 +107,37 @@ These are written in C (\code{Rcpp}) for speed, but for big datasets they might 
 }
 
 \examples{
-### Don't run
+\dontrun{
 ## duplicate checking. ckmini2 has 6 fish where 1,3,4,6 are all identical (zero differing loci).
 ## there's only 7 crappy loci and I faked the data for this anyway, so strict identical is needed
 ## All-in-one
 #test <- find_duplicates( ckmini2, max=0) # strict identity
-#test$bigs
+#test
 ##  ndiff i j
 ##1     0 3 1
 ##2     0 4 3
 ##3     0 6 4
 ## To remove them--- subtlety of keeping ONE from each group
-#droppies <- drop_dups_pairwise_equiv( test$bigs[,2:3])
+#droppies <- drop_dups_pairwise_equiv( test[,2:3])
 #droppies # 1, 4, 6
 #ckmini2_nodups <- ckmini2[ -droppies, ]
 ## Two-stage
 #first_half <- 1:3
 #second_half <- (1:nrow( ckmini2)) \\\%except\\\% first_half
 #test1 <- find_duplicates( ckmini2, subset1=first_half, subset2=first_half, max=0)
-#test1$bigs
+#test1
 ##  ndiff i j
 ##1     0 3 1
-#droppies1 <- first_half[ drop_dups_pairwise_equiv( test1$bigs[,2:3])] # NB must do lookup in subset
+#droppies1 <- first_half[ drop_dups_pairwise_equiv( test1[,2:3])] # NB must do lookup in subset
 #test2 <- find_duplicates( ckmini2, subset1=second_half, subset2=second_half, max=0)
-#droppies2 <- second_half[ drop_dups_pairwise_equiv( test2$bigs[,2:3])] # 4
+#droppies2 <- second_half[ drop_dups_pairwise_equiv( test2[,2:3])] # 4
 ## Now check 2nd half vs 1st
 #test2_1 <- find_duplicates( ckmini2,
 #    subset1=first_half \\\%except\\\% droppies1,
 #    subset2=second_half \\\%except\\\% droppies2,
 #    max=0)
 ## Simpler since no internal checks. Just remove 2nd-halfers that match something in the 1st-half
-#droppies2_1 <- (second_half \\\%except\\\% droppies2)[ test2_1$bigs[,'j']) # 6
+#droppies2_1 <- (second_half \\\%except\\\% droppies2)[ test2_1[,'j']) # 6
 #droppies <- c( droppies1, droppies2, droppies2_1)
 #ckmini2_nodups2 <- ckmini2[ -droppies,]
 ## HSPs: comparing everything with itself (not sensible for real data, should take out adults first)
@@ -146,5 +146,5 @@ These are written in C (\code{Rcpp}) for speed, but for big datasets they might 
 ## POPs: Ad-Ju comps; again 1 FP
 #test <- find_POPs( ckdata, subset1=adults, subset2=juves,
 #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
-### End don't run
+}
 }
