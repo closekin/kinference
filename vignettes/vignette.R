@@ -41,8 +41,7 @@ nodupes <- find_duplicates(dave_nodupes, max_diff_genos=100)
 # look at $Our_sample
 
 # find POPs
-# redocument alpha
-pops <- find_POPs(dave_nodupes, alpha=0.95, one_in_X_eta=1e3, nq=50,
+pops <- find_POPs(dave_nodupes, one_in_X_eta=1e3, nq=50,
                      rough_n_pairs_to_keep=5000)
 #hist(pops$bigs$wpsex)
 
@@ -61,14 +60,14 @@ dd <- find_HSPs(dave_juves, bins = seq(-120, 120, by = 5),
                 keep_thresh = -5, eta = 10)
 
 # usually bump up number of classes
-#hist(dd$bigs$PLOD)
+#hist(dd$bigs$PLOD, nc=30)
 #abline(dd$mean thing)
 # could remove i and j s for POP and FSP pairs
 
 # histogram
-#plot(dd$bins, dd$n_PLOS_in_bins)
+#plot(dd$bins, dd$n_PLODs_in_bin)
 # log-histogram
-#plot(dd$bins, log(dd$n_PLOS_in_bins), type="b")
+#plot(dd$bins, log(dd$n_PLODs_in_bin), type="b")
 # HTPs around 0 in this?
 
 # for get chain

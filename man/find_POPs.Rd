@@ -12,9 +12,9 @@ find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep, eta = NULL, keep_thresh = NULL,
   nq = 50, bins = NULL)
 
-find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1, alpha,
-  one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
-  keep_thresh = NULL, nq, quick = TRUE)
+find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
+  WPSEX_UP_POP_balance = 0.99, one_in_X_eta, rough_n_pairs_to_keep = NA,
+  eta = NULL, keep_thresh = NULL, nq, quick = TRUE)
 
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   max_diff_genos)
@@ -34,7 +34,7 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{bins}{binning for PLODs (we throw away ones outside the range and bin them according to this within)}
 
-\item{alpha}{(\code{find_POPs}) Loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.999 could be completely fine... (but hopefully \code{alpha} won't affect the result much anyway.)}
+\item{WPSEX_UP_POP_balance}{(\code{find_POPs}) loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.99 could be completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect the result much anyway.)}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}
 
@@ -144,7 +144,7 @@ These are written in C (\code{Rcpp}) for speed, but for big datasets they might 
 ## set threshold for 1 FP
 #test <- find_HSPs( ckdata, one_in_X_eta=sqr( nrow( ckdata))/2 )
 ## POPs: Ad-Ju comps; again 1 FP
-#test <- find_POPs( ckdata, subset1=adults, subset2=juves, alpha=0.99,
+#test <- find_POPs( ckdata, subset1=adults, subset2=juves,
 #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
 ### End don't run
 }

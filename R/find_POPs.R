@@ -40,7 +40,7 @@
 #'
 #' @param snpg a \code{snpgeno} object
 #' @param subset1,subset2 numeric vectors of which samples to use (not logical, not negative). Defaults to all of them. Iff the two subsets are identical, only half the comparisons are done (i.e., not i with j then j with i). Some sanity checks are done.
-#' @param alpha (\code{find_POPs}) Loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{alpha} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.999 could be completely fine... (but hopefully \code{alpha} won't affect the result much anyway.)
+#' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.99 could be completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect the result much anyway.)
 #' @param one_in_X_eta expected number of false-positive UPs you can tolerate. Setting this to say \code{1e6} means you'd expect 1 per million comparisons. Used to set the threshold \code{eta}, which is returned automatically.
 #' @param rough_n_pairs_to_keep For checking, you can set this to trap many more high-scoring pairs than you expect there to "really" be, say a few thousand (NB the number of pairs retained won't exactly equal this). You can subsequently look at the "lucky losers" with high but sub-'eta' stats, and then filter them out yourself by applying a cutoff of \code{eta}. If you leave \code{rough_n_pairs_to_keep} at its default of NA, the trap will be set at \code{eta}, so \code{bigs} will contain exactly the pairs you want. Values above \code{eta} will always be kept, even if you specify something silly for \code{rough_n_pairs_to_keep}.
 #' @param eta,keep_thresh see \bold{Description}. Can specify either or both. These override \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.
@@ -109,7 +109,7 @@
 #' ## set threshold for 1 FP
 #' #test <- find_HSPs( ckdata, one_in_X_eta=sqr( nrow( ckdata))/2 )
 #' ## POPs: Ad-Ju comps; again 1 FP
-#' #test <- find_POPs( ckdata, subset1=adults, subset2=juves, alpha=0.99,
+#' #test <- find_POPs( ckdata, subset1=adults, subset2=juves,
 #' #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
 #' ### End don't run
 #' @export
@@ -120,12 +120,13 @@
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    alpha,
-    one_in_X_eta,
-    rough_n_pairs_to_keep= NA,
-    eta= NULL,
-    keep_thresh= NULL,
-    nq,
+    WPSEX_UP_POP_balance=0.99,
+    one_in_X_eta, # die
+    rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
+    eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
+               # or calc from E/V of UPs
+    keep_thresh= NULL, # merge, C code return cutoff
+    nq, # nbins, check they ARE bins
     quick=TRUE) {
 ###################
   # Sanity...
@@ -156,13 +157,13 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
     )
 
   # Want to keep the POP and UP means as far apart as possible on the scale of SDs...
-  # ... but, which SD? Make it alpha * SD[UP] + (1-alpha) * SD[POP]
+  # but, which SD? Make it WPSEX_UP_POP_balance * SD[UP] + (1-WPSEX_UP_POP_balance) * SD[POP]
 
   # Optimal wt would depend on p0 and to some extent on pA
   # wt should be 1 if p0==0 and 0 if p0==1
   delta <- pex[,'UP'] - pex[,'POP'] # mathematically I think this *can't* be -ve
   SD <- sqrt( pex * (1-pex))
-  SD_combo <- alpha * SD[,'UP'] + (1-alpha) * SD[,'POP'] # %*% c( alpha, 1-alpha)
+  SD_combo <- WPSEX_UP_POP_balance * SD[,'UP'] + (1-WPSEX_UP_POP_balance) * SD[,'POP'] # %*% c( WPSEX_UP_POP_balance, 1-WPSEX_UP_POP_balance)
   V_combo <- sqr( SD_combo)
   ww <- delta / V_combo # considerable algebra appears to show this is optimal
   ww <- c( ww / sum( ww) ) # else get 1-col matrix
