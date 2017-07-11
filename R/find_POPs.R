@@ -120,14 +120,14 @@
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    WPSEX_UP_POP_balance=0.99,
     one_in_X_eta, # die
     rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
     keep_thresh= NULL, # merge, C code return cutoff
     nq, # nbins, check they ARE bins
-    quick=TRUE) {
+    quick=TRUE,
+    WPSEX_UP_POP_balance=0.99) {
 ###################
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))

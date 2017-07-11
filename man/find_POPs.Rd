@@ -13,8 +13,8 @@ find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   nq = 50, bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  WPSEX_UP_POP_balance = 0.99, one_in_X_eta, rough_n_pairs_to_keep = NA,
-  eta = NULL, keep_thresh = NULL, nq, quick = TRUE)
+  one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
+  keep_thresh = NULL, nq, quick = TRUE, WPSEX_UP_POP_balance = 0.99)
 
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   max_diff_genos)
@@ -34,9 +34,9 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 \item{bins}{binning for PLODs (we throw away ones outside the range and bin them according to this within)}
 
-\item{WPSEX_UP_POP_balance}{(\code{find_POPs}) loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.99 could be completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect the result much anyway.)}
-
 \item{quick}{whether to "compile" the functions for SPA, which use the magic \code{:=} operator. It speeds up the SPA bit but almost all the time is spent on actual POP-finding...}
+
+\item{WPSEX_UP_POP_balance}{(\code{find_POPs}) loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.99 could be completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect the result much anyway.)}
 
 \item{max_diff_genos}{(\code{find_duplicates}) max number of discrepant 4-way genotypes to tolerate in "identical" fish. Try increasing this from say 10 upwards, and hopefully nothing much will change (though at some point things will change a lot, as you get into the non-duplicate bit of the distribution). See \bold{Duplicates} for how to remove duplicates from the data.}
 }
