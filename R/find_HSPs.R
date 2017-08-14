@@ -22,12 +22,12 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
-  # Here I'm using L-R tail approx SPA for CDF
-  # ... although Kenv$inv_CDF is likely more accurate for "moderate" tails but I don't quite trust it in the extremes
-  # ... actually they are pretty similar
-  # ... Possibly, Kenv$inv_CDF should check if arg exceeds the range it was fitted to, and if so call
-  # ... inv_CDF_SPA2() instead
-  # ... but the range used in fitting is very goddamn wide (say +/- 10 SD) !
+  # Here I'm using L-R tail approx SPA for CDF although Kenv$inv_CDF is likely
+  #  more accurate for "moderate" tails but I don't quite trust it in the
+  #  extremes actually they are pretty similar
+  # Possibly, Kenv$inv_CDF should check if arg exceeds the range it was fitted
+  #  to, and if so call inv_CDF_SPA2() instead but the range used in fitting is
+  #  very goddamn wide (say +/- 10 SD) !
 
   define_genotypes()
 

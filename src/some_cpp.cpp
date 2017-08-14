@@ -199,10 +199,12 @@ BEGIN_RCPP
 
   for( i = 0; i < n_samps1; i++){
     // Could maybe speed this up a bit...
-    // but next doesn't seem to work. Need something that gives a pointer to first-row-of-column-X
+    // but next doesn't seem to work. Need something that gives a pointer to
+    // first-row-of-column-X
     // NumericMatrix::Column geno1_i = geno1(_,i); // google "make your own apply Rcpp"
     // .... pair_geno( geno1_i[ iloc], geno2_j[ iloc]
-    // Bigger speedup would come from "blocking" as per mat-mult to reduce cache misses
+    // Bigger speedup would come from "blocking" as per mat-mult to reduce
+    // cache misses
 
     // IntegerMatrix::Column geno1_i = geno1(_,i);
     j_max = symmo ? i : n_samps2;
