@@ -28,7 +28,7 @@ ill <- ilglk_geno(dave)
 # nice little story here where if you set to 40 you get a spurious result
 # x axis is "number of loci different" -- say something about QC
 dupes <- find_duplicates(dave, max_diff_genos=100)
-#hist(dupes$bigs$ndiff)
+#hist(dupes$ndiff)
 
 # get the indices to drop
 ## CHECK THIS function
