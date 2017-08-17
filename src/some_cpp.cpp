@@ -250,15 +250,6 @@ BEGIN_RCPP
         n_sub_PLOD += 1;
       };
 
-// VVV now do something smart with containers vvvvvv
-      //if( this_PLOD > min_keep_PLOD) { // rare; predictable branch
-      //  big_PLOD. push_back( this_PLOD);
-      //  big_i. push_back( i+1); // Effing 0-base...
-      //  big_j. push_back( j+1); // Effing 0-base...
-      //  n_kept += 1;
-      //};
-
-
       if( this_PLOD > min_keep_PLOD) { // rare; predictable branch
         // build our new friend to insert
         PLODder new_PLOD_on_the_block = PLODder(this_PLOD, i, j);
@@ -276,8 +267,6 @@ BEGIN_RCPP
           }
         }
       };
-// ^^^ stop doing something smart with containers? ^^^^^
-
 
       // how did that effect this bit vvvvv
       for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
@@ -309,7 +298,7 @@ BEGIN_RCPP
 
 
   // make a list object using wrap() for the stdvectors
-return( Rcpp::List::create( 
+return( Rcpp::List::create(
       Rcpp::Named("big_PLOD")=wrap( big_PLOD),
       Rcpp::Named("big_i")=wrap( big_i),
       Rcpp::Named("big_j")=wrap( big_j),
