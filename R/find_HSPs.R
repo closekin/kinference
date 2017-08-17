@@ -6,7 +6,7 @@
 "find_HSPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
-    rough_n_pairs_to_keep,
+    keep_n,
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -71,6 +71,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         symmo= TRUE,
         eta= eta,
         min_keep_PLOD= keep_thresh,
+        keep_n = keep_n,
         bins= bins
       )
   } else { # different subsets
@@ -82,6 +83,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         symmo= FALSE,
         eta= eta,
         min_keep_PLOD= keep_thresh,
+        keep_n = keep_n,
         bins= bins
       )
   }

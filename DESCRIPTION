@@ -13,5 +13,5 @@ Imports: Rcpp (>= 0.12.11),
   vecless,
   debug,
   abind
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, BH
 RoxygenNote: 6.0.1

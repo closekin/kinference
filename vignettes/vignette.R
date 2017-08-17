@@ -59,7 +59,7 @@ dave_juves <- dave_nodupes[is_juve, ]
 
 # bins found using predict_hsp_util???
 dd <- find_HSPs(dave_juves, bins = seq(-120, 120, by = 5),
-                keep_thresh = -5, eta = 10)
+                keep_thresh = -5, eta = 10, keep_n=1000)
 
 # usually bump up number of classes
 #hist(dd$PLOD, nc=30)

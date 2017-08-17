@@ -1,6 +1,11 @@
-#include <RcppArmadillo.h> 
-using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(BH)]]
+#include <RcppArmadillo.h>
+#include <boost/tuple/tuple.hpp>
+#include <queue>
+using namespace Rcpp;
+using namespace std;
+
 
 // Assertions: ought to control this via NDEBUG or similar def
 #define STRINGIZE(x) STRINGIZE2(x)
@@ -73,7 +78,7 @@ SEXP paircomps(
     n_samps1 = geno1.ncol();
     ASSERTO( geno2.nrow() == n_loci);
     n_samps2 = geno2.ncol();
-    
+
     if( symmo) {
       ASSERTO( n_samps1 == n_samps2);
       npc = (n_samps1 * (n_samps1-1)) / 2;
@@ -125,6 +130,7 @@ SEXP HSP_paircomps_lots(
   bool symmo,
   double eta,
   double min_keep_PLOD,
+  int keep_n, // number of PLODs to return
   NumericVector bins
   ) {
 BEGIN_RCPP
@@ -184,9 +190,24 @@ BEGIN_RCPP
   // NumericVector big_PLOD( guess_n_keep);
   // IntegerVector big_i( guess_n_keep);
   // IntegerVector big_j( guess_n_keep);
+  //
+  // Now get rid of these and use containers
   std::vector<double> big_PLOD;
   std::vector<int>  big_i;
   std::vector<int> big_j;
+  // Define a new type, which is the PLOD and i and j
+  typedef boost::tuple<double, int, int> PLODder;
+  // need to define a way in which we sort a priority_queue of tuples...
+  // https://stackoverflow.com/questions/5712172/how-can-i-store-3-integer-in-priority-queue
+  class my_greater  {
+  public:
+    bool operator() (const PLODder& arg1, const PLODder& arg2) const{
+      return arg1.get<0>() > arg2.get<0>();
+      return false;
+    }
+  };
+  std::priority_queue< PLODder, std::vector<PLODder>, my_greater> PLODing_along;
+
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -210,6 +231,7 @@ BEGIN_RCPP
     j_max = symmo ? i : n_samps2;
     for( j = 0; j < j_max; j++) {
       // IntegerMatrix::Column geno2_j = geno2(_,j);
+      // calculate the PLOD
       this_PLOD = 0;
       for( iloc = 0; iloc < n_loci; iloc++ ) {
         g1g2 = pair_geno( geno1( iloc, i)-1, geno2( iloc, j)-1); // Effing 0-base...
@@ -217,7 +239,10 @@ BEGIN_RCPP
         ASSERTO( (g1g2 >= 1) && (g1g2 <= n_genopairs));
         this_LOD = LOD( g1g2-1, iloc); // Effing 0-base...
         this_PLOD += this_LOD;
-      };
+      }; // done calculating PLOD
+
+
+      // now, what to do with it?!
 
       if( this_PLOD < eta) { // common; predictable branch
         mean_sub_PLOD += this_PLOD;
@@ -225,13 +250,36 @@ BEGIN_RCPP
         n_sub_PLOD += 1;
       };
 
-      if( this_PLOD > min_keep_PLOD) { // rare; predictable branch
-        big_PLOD. push_back( this_PLOD);
-        big_i. push_back( i+1); // Effing 0-base...
-        big_j. push_back( j+1); // Effing 0-base...
-        n_kept += 1;
-      };
+// VVV now do something smart with containers vvvvvv
+      //if( this_PLOD > min_keep_PLOD) { // rare; predictable branch
+      //  big_PLOD. push_back( this_PLOD);
+      //  big_i. push_back( i+1); // Effing 0-base...
+      //  big_j. push_back( j+1); // Effing 0-base...
+      //  n_kept += 1;
+      //};
 
+
+      if( this_PLOD > min_keep_PLOD) { // rare; predictable branch
+        // build our new friend to insert
+        PLODder new_PLOD_on_the_block = PLODder(this_PLOD, i, j);
+
+        // if we didn't fill up yet, then just push away
+        if( PLODing_along.size() < keep_n){
+          PLODing_along.push(new_PLOD_on_the_block);
+        }else{
+          // uh oh we filled-up! check to see if we really need to add
+          // this one (is it better than what's in there?), then exile
+          // the last element to the garbage and induct our new best friend
+          if( PLODing_along.top().get<0>() < this_PLOD){
+            PLODing_along.pop();
+            PLODing_along.push(new_PLOD_on_the_block);
+          }
+        }
+      };
+// ^^^ stop doing something smart with containers? ^^^^^
+
+
+      // how did that effect this bit vvvvv
       for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
         n_PLODs_below( ibin) += (int) ( this_PLOD < bins( ibin));
       };
@@ -245,6 +293,20 @@ BEGIN_RCPP
   for( ibin = n_bins; ibin > 0; ibin--){
     n_PLODs_below[ ibin] -= n_PLODs_below[ ibin-1];
   };
+
+  // build big_i, big_j, big_PLOD
+  big_i.reserve(PLODing_along.size());
+  big_j.reserve(PLODing_along.size());
+  big_PLOD.reserve(PLODing_along.size());
+
+  // unwrap that nice structure I guess :'(
+  while (!PLODing_along.empty()) {
+    big_PLOD.push_back(PLODing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
+    big_i.push_back(PLODing_along.top().get<1>() + 1);
+    big_j.push_back(PLODing_along.top().get<2>() + 1);
+    PLODing_along.pop();
+  }
+
 
   // make a list object using wrap() for the stdvectors
 return( Rcpp::List::create( 
