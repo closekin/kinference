@@ -9,16 +9,16 @@ HSP_paircomps_lots <- function(pair_geno, LOD, geno1, geno2, symmo, eta, min_kee
     .Call('_kinference_HSP_paircomps_lots', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, bins)
 }
 
-POP_paircomps_lots <- function(geno1, geno2, symmo, eta, max_keep_Nexclu, bins, AAO, BBO) {
-    .Call('_kinference_POP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, eta, max_keep_Nexclu, bins, AAO, BBO)
+POP_paircomps_lots <- function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
+    .Call('_kinference_POP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO)
 }
 
-POP_wt_paircomps_lots <- function(geno1, geno2, w, symmo, eta, max_keep_wpsex, bins, AAO, BBO) {
-    .Call('_kinference_POP_wt_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, w, symmo, eta, max_keep_wpsex, bins, AAO, BBO)
+POP_wt_paircomps_lots <- function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, bins, AAO, BBO) {
+    .Call('_kinference_POP_wt_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, bins, AAO, BBO)
 }
 
-DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_genos) {
-    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos)
+DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_genos, keep_n) {
+    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos, keep_n)
 }
 
 indiv_lglk_geno <- function(lpgeno, geno) {

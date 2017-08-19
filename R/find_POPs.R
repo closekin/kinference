@@ -125,6 +125,7 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
     keep_thresh= NULL, # merge, C code return cutoff
+    keep_n=1000,
     nbins,
     quick=TRUE,
     WPSEX_UP_POP_balance=0.99) {
@@ -243,6 +244,7 @@ stopifnot( all( ww>0))
         symmo= TRUE,
         eta= eta,
         max_keep_wpsex= keep_thresh,
+        keep_n = keep_n,
         bins= pciles,
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos)
@@ -255,6 +257,7 @@ stopifnot( all( ww>0))
         symmo= FALSE,
         eta= eta,
         max_keep_wpsex= keep_thresh,
+        keep_n = keep_n,
         bins= pciles,
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos)

@@ -320,6 +320,7 @@ SEXP POP_paircomps_lots(
   bool symmo,
   double eta,
   int max_keep_Nexclu,
+  int keep_n, // number of pairs to return
   NumericVector bins,
   int AAO,
   int BBO
@@ -371,9 +372,24 @@ BEGIN_RCPP
   IntegerVector n_Nexclu_below( n_bins);
 
   // Need to grow the kept-values, so std::vector is apparently better
+  //std::vector<double> big_Nexclu;
+  //std::vector<int>  big_i;
+  //std::vector<int> big_j;
+  // Now get rid of these and use containers
   std::vector<double> big_Nexclu;
   std::vector<int>  big_i;
   std::vector<int> big_j;
+  // Define a new type, which is the Nexclu and i and j
+  typedef boost::tuple<double, int, int> Nexcluder;
+  // define what "greater" means
+  class my_greater  {
+  public:
+    bool operator() (const Nexcluder& arg1, const Nexcluder& arg2) const{
+      return arg1.get<0>() > arg2.get<0>();
+      return false;
+    }
+  };
+  std::priority_queue< Nexcluder, std::vector<Nexcluder>, my_greater> Nexcluing_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -390,7 +406,7 @@ BEGIN_RCPP
 
     // For speed, only check exlcus over loci where g1 == AAO (then just check if g2 == BBO there) and conversely
     // Set up info for i; only done once
-   
+
     n_AAOs1_i = 0;
     n_BBOs1_i = 0;
     for( iloc = 0; iloc < n_loci; iloc++) {
@@ -423,11 +439,29 @@ BEGIN_RCPP
       };
 
       if( this_Nexclu <= max_keep_Nexclu) { // rare; predictable branch
-        big_Nexclu. push_back( this_Nexclu);
-        big_i. push_back( i+1); // Effing 0-base...
-        big_j. push_back( j+1); // Effing 0-base...
+        //big_Nexclu. push_back( this_Nexclu);
+        //big_i. push_back( i+1); // Effing 0-base...
+        //big_j. push_back( j+1); // Effing 0-base...
+
+        Nexcluder new_Nexclu_on_the_block = Nexcluder(this_Nexclu, i, j);
+
+        // if we didn't fill up yet, then just push away
+        if( Nexcluing_along.size() < keep_n){
+          Nexcluing_along.push(new_Nexclu_on_the_block);
+        }else{
+          // uh oh we filled-up! check to see if we really need to add
+          // this one (is it better than what's in there?), then exile
+          // the last element to the garbage and induct our new best friend
+          if( Nexcluing_along.top().get<0>() < this_Nexclu){
+            Nexcluing_along.pop();
+            Nexcluing_along.push(new_Nexclu_on_the_block);
+          }
+        }
+
+        // as before
         n_kept += 1;
       };
+
 
       for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
         n_Nexclu_below( ibin) += (int) ( this_Nexclu < bins( ibin));
@@ -442,6 +476,22 @@ BEGIN_RCPP
   for( ibin = n_bins; ibin > 0; ibin--){
     n_Nexclu_below[ ibin] -= n_Nexclu_below[ ibin-1];
   };
+
+
+  // build big_i, big_j, big_Nexclu
+  big_i.reserve(Nexcluing_along.size());
+  big_j.reserve(Nexcluing_along.size());
+  big_Nexclu.reserve(Nexcluing_along.size());
+
+  // unwrap that nice structure I guess :'(
+  while (!Nexcluing_along.empty()) {
+    big_Nexclu.push_back(Nexcluing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
+    big_i.push_back(Nexcluing_along.top().get<1>() + 1);
+    big_j.push_back(Nexcluing_along.top().get<2>() + 1);
+    Nexcluing_along.pop();
+  }
+
+
 
   // make a list object using wrap() for the stdvectors
 return( Rcpp::List::create( 
@@ -464,6 +514,7 @@ SEXP POP_wt_paircomps_lots(
   bool symmo,
   double eta,
   double max_keep_wpsex,
+  int keep_n, // number of pairs to return
   NumericVector bins,
   int AAO,
   int BBO
@@ -516,9 +567,24 @@ SEXP POP_wt_paircomps_lots(
   IntegerVector n_wpsex_below( n_bins);
 
   // Need to grow the kept-values, so std::vector is apparently better
-  std::vector<double> big_wpsex;
+  //std::vector<double> big_wpsex;
+  //std::vector<int>  big_i;
+  //std::vector<int> big_j;
+  // Now get rid of these and use containers
+  std::vector<double> big_WPSEX;
   std::vector<int>  big_i;
   std::vector<int> big_j;
+  // Define a new type, which is the WPSEX and i and j
+  typedef boost::tuple<double, int, int> WPSEXder;
+  // define what "greater" means
+  class my_greater  {
+  public:
+    bool operator() (const WPSEXder& arg1, const WPSEXder& arg2) const{
+      return arg1.get<0>() > arg2.get<0>();
+      return false;
+    }
+  };
+  std::priority_queue< WPSEXder, std::vector<WPSEXder>, my_greater> WPSEXing_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -569,9 +635,25 @@ SEXP POP_wt_paircomps_lots(
       };
 
       if( this_wpsex <= max_keep_wpsex) { // rare; predictable branch
-        big_wpsex. push_back( this_wpsex);
-        big_i. push_back( i+1); // Effing 0-base...
-        big_j. push_back( j+1); // Effing 0-base...
+        //big_wpsex. push_back( this_wpsex);
+        //big_i. push_back( i+1); // Effing 0-base...
+        //big_j. push_back( j+1); // Effing 0-base...
+        WPSEXder new_WPSEX_on_the_block = WPSEXder(this_wpsex, i, j);
+
+        // if we didn't fill up yet, then just push away
+        if( WPSEXing_along.size() < keep_n){
+          WPSEXing_along.push(new_WPSEX_on_the_block);
+        }else{
+          // uh oh we filled-up! check to see if we really need to add
+          // this one (is it better than what's in there?), then exile
+          // the last element to the garbage and induct our new best friend
+          if( WPSEXing_along.top().get<0>() < this_wpsex){
+            WPSEXing_along.pop();
+            WPSEXing_along.push(new_WPSEX_on_the_block);
+          }
+        }
+
+        // as before
         n_kept += 1;
       };
 
@@ -589,9 +671,22 @@ SEXP POP_wt_paircomps_lots(
     n_wpsex_below[ ibin] -= n_wpsex_below[ ibin-1];
   };
 
+  // build big_i, big_j, big_Nexclu
+  big_i.reserve(WPSEXing_along.size());
+  big_j.reserve(WPSEXing_along.size());
+  big_WPSEX.reserve(WPSEXing_along.size());
+
+  // unwrap that nice structure I guess :'(
+  while (!WPSEXing_along.empty()) {
+    big_WPSEX.push_back(WPSEXing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
+    big_i.push_back(WPSEXing_along.top().get<1>() + 1);
+    big_j.push_back(WPSEXing_along.top().get<2>() + 1);
+    WPSEXing_along.pop();
+  }
+
   // make a list object using wrap() for the stdvectors
   return( Rcpp::List::create( 
-    Rcpp::Named("big_wpsex")=wrap( big_wpsex),
+    Rcpp::Named("big_wpsex")=wrap( big_WPSEX),
     Rcpp::Named("big_i")=wrap( big_i),
     Rcpp::Named("big_j")=wrap( big_j),
     Rcpp::Named( "n_wpsex_in_bin")=n_wpsex_below,
@@ -608,7 +703,8 @@ SEXP DUP_paircomps_lots(
   RawMatrix geno1, // n_loci, n_samps1,
   RawMatrix geno2, // n_loci, n_samps1,
   bool symmo, // should only be true if geno1==geno2
-  double max_diff_genos // max tolerated discrepant 4way genos to be a "true duplicate"
+  double max_diff_genos, // max tolerated discrepant 4way genos to be a "true duplicate"
+  int keep_n // number of pairs to return
 ) {
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
@@ -636,9 +732,24 @@ SEXP DUP_paircomps_lots(
 
 
   // Need to grow the kept-values, so std::vector is apparently better
+  //std::vector<double> big_similar;
+  //std::vector<int>  big_i;
+  //std::vector<int> big_j;
+  // Now get rid of these and use containers
   std::vector<double> big_similar;
   std::vector<int>  big_i;
   std::vector<int> big_j;
+  // Define a new type, which is the similarity and i and j
+  typedef boost::tuple<double, int, int> similarder;
+  // define what "greater" means
+  class my_greater  {
+  public:
+    bool operator() (const similarder& arg1, const similarder& arg2) const{
+      return arg1.get<0>() > arg2.get<0>();
+      return false;
+    }
+  };
+  std::priority_queue< similarder, std::vector<similarder>, my_greater> similaring_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -670,14 +781,44 @@ SEXP DUP_paircomps_lots(
       continue;
         } else {
           known_dup[ j] = 1;
-          big_similar. push_back( this_ndiff);
-          big_i. push_back( i+1); // Effing 0-base...
-          big_j. push_back( j+1); // Effing 0-base...
+          //big_similar. push_back( this_ndiff);
+          //big_i. push_back( i+1); // Effing 0-base...
+          //big_j. push_back( j+1); // Effing 0-base...
+          similarder new_similar_on_the_block = similarder(this_ndiff, i, j);
+
+          // if we didn't fill up yet, then just push away
+          if( similaring_along.size() < keep_n){
+            similaring_along.push(new_similar_on_the_block);
+          }else{
+            // uh oh we filled-up! check to see if we really need to add
+            // this one (is it better than what's in there?), then exile
+            // the last element to the garbage and induct our new best friend
+            if( similaring_along.top().get<0>() < this_ndiff){
+              similaring_along.pop();
+              similaring_along.push(new_similar_on_the_block);
+            }
+          }
+
+          // as before
           n_kept += 1;
         };
       }; // if j not already known to be a dup
     }; // for j
   }; // for i
+
+  // build big_i, big_j, big_Nexclu
+  big_i.reserve(similaring_along.size());
+  big_j.reserve(similaring_along.size());
+  big_similar.reserve(similaring_along.size());
+
+  // unwrap that nice structure I guess :'(
+  while (!similaring_along.empty()) {
+    big_similar.push_back(similaring_along.top().get<0>()); // "effing 0-base" is what I should write here :P
+    big_i.push_back(similaring_along.top().get<1>() + 1);
+    big_j.push_back(similaring_along.top().get<2>() + 1);
+    similaring_along.pop();
+  }
+
 
   // make a list object using wrap() for the stdvectors
   return( Rcpp::List::create( 
@@ -703,7 +844,7 @@ SEXP indiv_lglk_geno(
   int n_samps;
   int n_loci;
   int i;
-  int iloc; 
+  int iloc;
   int this_g;
   double this_lglk;
 

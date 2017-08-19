@@ -5,7 +5,7 @@
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
-         subset2=subset1, max_diff_genos){
+         subset2=subset1, max_diff_genos, keep_n=1000){
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
@@ -50,14 +50,16 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno1= temp_snpg,
         geno2= temp_snpg,
         symmo= TRUE,
-        max_diff_genos = max_diff_genos
+        max_diff_genos = max_diff_genos,
+        keep_n = keep_n
       )
   } else { # different subsets
     result <- DUP_paircomps_lots(
         geno1= temp_snpg[ , subset1],
         geno2= temp_snpg[ , subset2],
         symmo= FALSE,
-        max_diff_genos = max_diff_genos
+        max_diff_genos = max_diff_genos,
+        keep_n = keep_n
       )
   }
 

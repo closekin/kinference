@@ -43,8 +43,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // POP_paircomps_lots
-SEXP POP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double eta, int max_keep_Nexclu, NumericVector bins, int AAO, int BBO);
-RcppExport SEXP _kinference_POP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_NexcluSEXP, SEXP binsSEXP, SEXP AAOSEXP, SEXP BBOSEXP) {
+SEXP POP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double eta, int max_keep_Nexclu, int keep_n, NumericVector bins, int AAO, int BBO);
+RcppExport SEXP _kinference_POP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_NexcluSEXP, SEXP keep_nSEXP, SEXP binsSEXP, SEXP AAOSEXP, SEXP BBOSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,16 +53,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type symmo(symmoSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< int >::type max_keep_Nexclu(max_keep_NexcluSEXP);
+    Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type bins(binsSEXP);
     Rcpp::traits::input_parameter< int >::type AAO(AAOSEXP);
     Rcpp::traits::input_parameter< int >::type BBO(BBOSEXP);
-    rcpp_result_gen = Rcpp::wrap(POP_paircomps_lots(geno1, geno2, symmo, eta, max_keep_Nexclu, bins, AAO, BBO));
+    rcpp_result_gen = Rcpp::wrap(POP_paircomps_lots(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO));
     return rcpp_result_gen;
 END_RCPP
 }
 // POP_wt_paircomps_lots
-SEXP POP_wt_paircomps_lots(RawMatrix geno1, RawMatrix geno2, NumericVector w, bool symmo, double eta, double max_keep_wpsex, NumericVector bins, int AAO, int BBO);
-RcppExport SEXP _kinference_POP_wt_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP wSEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_wpsexSEXP, SEXP binsSEXP, SEXP AAOSEXP, SEXP BBOSEXP) {
+SEXP POP_wt_paircomps_lots(RawMatrix geno1, RawMatrix geno2, NumericVector w, bool symmo, double eta, double max_keep_wpsex, int keep_n, NumericVector bins, int AAO, int BBO);
+RcppExport SEXP _kinference_POP_wt_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP wSEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_wpsexSEXP, SEXP keep_nSEXP, SEXP binsSEXP, SEXP AAOSEXP, SEXP BBOSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,16 +73,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type symmo(symmoSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< double >::type max_keep_wpsex(max_keep_wpsexSEXP);
+    Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type bins(binsSEXP);
     Rcpp::traits::input_parameter< int >::type AAO(AAOSEXP);
     Rcpp::traits::input_parameter< int >::type BBO(BBOSEXP);
-    rcpp_result_gen = Rcpp::wrap(POP_wt_paircomps_lots(geno1, geno2, w, symmo, eta, max_keep_wpsex, bins, AAO, BBO));
+    rcpp_result_gen = Rcpp::wrap(POP_wt_paircomps_lots(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, bins, AAO, BBO));
     return rcpp_result_gen;
 END_RCPP
 }
 // DUP_paircomps_lots
-SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_genos);
-RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_genosSEXP) {
+SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_genos, int keep_n);
+RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_genosSEXP, SEXP keep_nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,7 +91,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< RawMatrix >::type geno2(geno2SEXP);
     Rcpp::traits::input_parameter< bool >::type symmo(symmoSEXP);
     Rcpp::traits::input_parameter< double >::type max_diff_genos(max_diff_genosSEXP);
-    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_genos));
+    Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
+    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_genos, keep_n));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -123,9 +126,9 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_kinference_paircomps", (DL_FUNC) &_kinference_paircomps, 7},
     {"_kinference_HSP_paircomps_lots", (DL_FUNC) &_kinference_HSP_paircomps_lots, 9},
-    {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 8},
-    {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 9},
-    {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 4},
+    {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 9},
+    {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 10},
+    {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 5},
     {"_kinference_indiv_lglk_geno", (DL_FUNC) &_kinference_indiv_lglk_geno, 2},
     {"_kinference_K_indiv", (DL_FUNC) &_kinference_K_indiv, 4},
     {NULL, NULL, 0}
