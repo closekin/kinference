@@ -381,15 +381,15 @@ BEGIN_RCPP
   std::vector<int> big_j;
   // Define a new type, which is the Nexclu and i and j
   typedef boost::tuple<double, int, int> Nexcluder;
-  // define what "greater" means
-  class my_greater  {
+  // define what "better" means
+  class my_less  {
   public:
     bool operator() (const Nexcluder& arg1, const Nexcluder& arg2) const{
-      return arg1.get<0>() > arg2.get<0>();
+      return arg1.get<0>() <= arg2.get<0>();
       return false;
     }
   };
-  std::priority_queue< Nexcluder, std::vector<Nexcluder>, my_greater> Nexcluing_along;
+  std::priority_queue< Nexcluder, std::vector<Nexcluder>, my_less> Nexcluing_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -452,7 +452,7 @@ BEGIN_RCPP
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( Nexcluing_along.top().get<0>() < this_Nexclu){
+          if( Nexcluing_along.top().get<0>() > this_Nexclu){
             Nexcluing_along.pop();
             Nexcluing_along.push(new_Nexclu_on_the_block);
           }
@@ -494,7 +494,7 @@ BEGIN_RCPP
 
 
   // make a list object using wrap() for the stdvectors
-return( Rcpp::List::create( 
+return( Rcpp::List::create(
       Rcpp::Named("big_Nexclu")=wrap( big_Nexclu),
       Rcpp::Named("big_i")=wrap( big_i),
       Rcpp::Named("big_j")=wrap( big_j),
@@ -576,15 +576,15 @@ SEXP POP_wt_paircomps_lots(
   std::vector<int> big_j;
   // Define a new type, which is the WPSEX and i and j
   typedef boost::tuple<double, int, int> WPSEXder;
-  // define what "greater" means
-  class my_greater  {
+  // define what "better" means
+  class my_less  {
   public:
     bool operator() (const WPSEXder& arg1, const WPSEXder& arg2) const{
-      return arg1.get<0>() > arg2.get<0>();
+      return arg1.get<0>() <= arg2.get<0>();
       return false;
     }
   };
-  std::priority_queue< WPSEXder, std::vector<WPSEXder>, my_greater> WPSEXing_along;
+  std::priority_queue< WPSEXder, std::vector<WPSEXder>, my_less> WPSEXing_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -647,7 +647,7 @@ SEXP POP_wt_paircomps_lots(
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( WPSEXing_along.top().get<0>() < this_wpsex){
+          if( WPSEXing_along.top().get<0>() > this_wpsex){
             WPSEXing_along.pop();
             WPSEXing_along.push(new_WPSEX_on_the_block);
           }
@@ -741,15 +741,15 @@ SEXP DUP_paircomps_lots(
   std::vector<int> big_j;
   // Define a new type, which is the similarity and i and j
   typedef boost::tuple<double, int, int> similarder;
-  // define what "greater" means
-  class my_greater  {
+  // define what "better" means
+  class my_less  {
   public:
     bool operator() (const similarder& arg1, const similarder& arg2) const{
-      return arg1.get<0>() > arg2.get<0>();
+      return arg1.get<0>() <= arg2.get<0>();
       return false;
     }
   };
-  std::priority_queue< similarder, std::vector<similarder>, my_greater> similaring_along;
+  std::priority_queue< similarder, std::vector<similarder>, my_less> similaring_along;
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -793,7 +793,7 @@ SEXP DUP_paircomps_lots(
             // uh oh we filled-up! check to see if we really need to add
             // this one (is it better than what's in there?), then exile
             // the last element to the garbage and induct our new best friend
-            if( similaring_along.top().get<0>() < this_ndiff){
+            if( similaring_along.top().get<0>() > this_ndiff){
               similaring_along.pop();
               similaring_along.push(new_similar_on_the_block);
             }
