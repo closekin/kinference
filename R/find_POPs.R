@@ -264,6 +264,12 @@ stopifnot( all( ww>0))
       )
   }
 
+  # warning if we're running up against storage constraints
+  if(length(result$big_wpsex) == keep_n){
+    warning("Number of returned POPs equals keep_n, increase keep_n to ensure you got them all")
+  }
+
+
   # construct the result
   result <- with( result, data.frame( wpsex=big_wpsex, i=big_i, j=big_j))
 

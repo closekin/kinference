@@ -88,6 +88,11 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       )
   }
 
+  # warning if we're running up against storage constraints
+  if(length(result$big_PLOD) == keep_n){
+    warning("Number of returned HSPs equals keep_n, increase keep_n to ensure you got them all")
+  }
+
   result <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
   result <- result %without.name% cq( big_PLOD, big_i, big_j)
 

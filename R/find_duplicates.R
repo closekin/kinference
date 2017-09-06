@@ -64,7 +64,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   }
 
   # just return the data.frame with 3 columns, everything else goes in
-  # teh attributes
+  # the attributes
   result <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
   result@call <- sys.call()
 
