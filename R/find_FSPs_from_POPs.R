@@ -59,9 +59,13 @@ function( snpg, candiPOPs, SDwt_POP=0.5) { # shouldn't have default--- hardwire 
   Pr_same_FSP[ l]:= Pr_nsame_FSP[ k] %[k]% Pr_same_given_k[ l, k]
   Pr_same_POP[ l]:= Pr_same_given_k[ l, {off+1}]
 
-  SD_FSP <- sqrt( Pr_same_FSP * (1-Pr_same_FSP))
+  # see https://github.com/closekin/kinference/issues/31
+  # "calculate the var if truly FSP anyway, because of linkage: degree of
+  # coinheritance (0/1/2) is correlated across loci. So, just use POP SD only."
+  #SD_FSP <- sqrt( Pr_same_FSP * (1-Pr_same_FSP))
   SD_POP <- sqrt( Pr_same_POP * (1-Pr_same_POP))
-  SD_denom <- SDwt_POP * SD_POP + (1-SDwt_POP) * SD_FSP
+  #SD_denom <- SDwt_POP * SD_POP + (1-SDwt_POP) * SD_FSP
+  SD_denom <- SD_POP
   wt <- (Pr_same_FSP - Pr_same_POP) / sqr( SD_denom)
 
 #  ig1 <- g1
