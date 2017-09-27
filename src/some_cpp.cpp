@@ -942,7 +942,7 @@ BEGIN_RCPP
 
         e_CLOD[ i] += plg * this_LOD;
         e2_CLOD[ i] += plg * this_LOD * this_LOD;
-        
+
         pdot= 0; // vectorized
         xpdot= 0;
         xxpdot= 0;

@@ -51,9 +51,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 
   make_K <- function( PUP, LOD) { # ... while the sun skines
 
-      # this to be sorted with replacing 'vecless' with 'kinference'
-      # BUUTT is isn't :(
-      # vecless **should** work just exorting := BUT doesn't seem to
+      # vecless **should** work just exporting := BUT doesn't seem to
       e <- new.env( parent=asNamespace( 'vecless'))
       # add sqr to the environment so that vecless can see it...
       e$sqr <- gbasics::sqr
