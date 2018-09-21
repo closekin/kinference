@@ -1,17 +1,9 @@
 Package: kinference
-Title: Kin-finding for close-kin mark-recapture
-Version: 0.0.2
+Title: Kin-finding pairwisely for close-kin mark-recapture
 Author: Mark V Bravington, David L Miller
-Description: Kin-finding functions for close-kin mark-recapture.
+Description: Kin-finding functions for close-kin mark-recapture
 Maintainer: David L Miller <dave@ninepointeightone.net>
 License: GPL
-Imports: Rcpp (>= 0.12.11),
-  atease,
-  mvbutils,
-  gbasics,
-  openxlsx,
-  vecless,
-  debug,
-  abind
-LinkingTo: Rcpp, RcppArmadillo, BH
-RoxygenNote: 6.0.1
+Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless, debug, abind
+LinkingTo: Rcpp, RcppArmadillo
+Version: 0.0.74
