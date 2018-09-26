@@ -12,7 +12,14 @@ function( libname, pkgname) {
   source( oa, local=TRUE)
 } ## .onLoad transferred in from MVB2
 
+#' add_pairprob_error(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param nlocal a param
 #' @export
+
 "add_pairprob_error" <-
 function( nlocal=sys.parent()) mlocal({
 ## Needs pp_true and snerr
@@ -87,10 +94,18 @@ function( nlocal=sys.parent()) mlocal({
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
 
-
-# @export
+#' calc_g6probs_IBD0_scalar(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param P a param
+#' @param snerr a param
+#' @param record TRUE or FALSE
+#' @export
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
+
 "calc_g6probs_IBD0_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -134,8 +149,17 @@ return( pp6_err)
 }
 
 
-# @export
+#' calc_g6probs_IBD1_scalar(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param P a param
+#' @param snerr a param
+#' @param record TRUE or FALSE
+#' @export
 #' @importFrom vecless set_recording
+
 "calc_g6probs_IBD1_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -194,6 +218,39 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
 return( pp6_err)
 }
 
+#' Find chains in HSPs; summarize sib-groups
+#'
+#' Find chains of relatives of fish `seed`.
+#'
+#' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
+#' \code{chain_pairwise} organizes them into chains within which each sample
+#' can be linked to another by a succession of direct pairwise links. The
+#' general idea is that real HSPs will be in clusters of 2 or 3; a spurious
+#' sample with a "lucky" genotype that wants to be everybody's mate will appear
+#' in a big but incomplete chain of mostly false-positives, where the direct
+#' pairwise links between the other chain-members are weak. You'd only run
+#' \code{chain_pairwise} for pairs with a PLOD (or whatever statistic is being
+#' used) within a particular suspect range, so each chain may have
+#' false-negatives (i.e. missing direct links), but the general idea should be
+#' clear.
+#' 
+#' \code{get_chain} finds the chain for one specific sample.
+#' 
+#' @aliases get_chain chain_pairwise
+#' @param thing output from \code{find_HSPs} or \code{find_POPs} etc, or some
+#'              subset thereof
+#' @param seed one sample ID, interpreted as a row-number in \code{thing}. To
+#'             do:also allow names, via \code{info} attr.
+#' @importFrom mvbutils %is.not.a% %where%
+#' @return \code{chain_pairwise} returns a list of matrices, each for one
+#' chain; the rows and columns of each matrix are the samples in that chain. A
+#' "+" in the matrix indicates that those two samples have a direct pairwise
+#' link (i.e., they appear together in one row of \code{thing}); a "." means
+#' not. The rows and columns of each matrix are sorted so that the linkiest
+#' samples are on the bottom and right. \code{get_chain} returns the row-subset
+#' of \code{thing} that is chained to \code{seed}.
+#' @keywords misc
+#' @export
 
 "chain_pairwise" <-
 function( thing) {
@@ -427,6 +484,17 @@ return( result)
 }
 
 
+#' crapometer(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param snpg a param
+#' @param focusees a param
+#' @param boring a param, default 1 %upto% nrow(snpg), where %upto% is like :, except only
+#'               counts upwards, so will not annoyingly generate c(1,0) if nrow(snpg) == 0.
+#' @export
+
 "crapometer1" <-
 function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
 ## Bivariate combo of hetzminoo_fancy and ilglk_geno; perhaps this will be better for
@@ -453,6 +521,15 @@ function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
 returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 } ## Crapometer imported from MVB2 24/9/18
 
+
+#' define(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param expr a param
+#' @param expand_dim a param. Default FALSE.
+#' @export
 
 "define" <-
 function( expr, expand_dim=FALSE) {
@@ -575,6 +652,15 @@ return( drops)
 }
 
 
+#' est_ALF_6way(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param snpg a param
+#' @param control a param. Defaults to an empty list
+#' @export
+
 "est_ALF_6way" <-
 function( snpg, control=list()) {
 #### "Straight" estimation of ALFs given 6way genotypes and precalced snerr
@@ -644,6 +730,7 @@ return( snpg)
 #' @importFrom gbasics sqr
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%
+
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
          subset2=subset1, max_diff_genos, keep_n=1000){
@@ -732,6 +819,22 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 return( result)
 }
 
+
+#' find_dups_with_missing(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here. From the name,
+#' it seems like this function might do a similar thing to find_duplicates(), but with
+#' special handling for missing data. The structure of the code is certainly similar.
+#'
+#' @param snpg a param
+#' @param subset1 a param, default 1 %upto% nrow(snpg), where %upto% generates an integer
+#'                sequence by counting upwards, and hence will not generate c(1,0) if
+#'                nrow(snpg) == 0.
+#' @param subset2 a param. Defaults to subset1.
+#' @param max_diff_ppn a param
+#' @param limit a param. Default 10000.
+#' @export
 
 "find_dups_with_missing" <-
 function( snpg,
@@ -822,6 +925,9 @@ return( result)
 } ## find_dups_with_missing ported in during merge 24/9/18
 
 
+
+#' @rdname find_FSPs_from_POPs
+#' @export
 "find_FSPs_from_candiHSPs" <-  ## note name change to avoid conflict with DLM's version!
 function( snpg, candiHSPs) {
   # For pairs already picked as HSPs, ie PLOD(HSP,UP) > eta: they might be FSPs
@@ -958,7 +1064,7 @@ function( snpg, candiHSPs) {
 
 
 
-
+#' @rdname find_FSPs_from_POPs
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils do.on
 #' @export
@@ -1294,8 +1400,13 @@ return( ret)
 }
 
 
+#' find_FSPs_from_POPs_depreciated(): old find FSPs from POPs tool
+#'
+#' this version is depreciated, as the MVB2 version seems to be more recent.
+#'
+#' @rdname find_FSPs_from_POPs
+#' @export
 
-## this version is depreciated, as the MVB2 version seems to be more recent.
 "find_FSPs_from_POPs_depreciated" <-
 function( snpg, candiPOPs, SDwt_POP=0.5) { # shouldn't have default--- hardwire or leave!
 
@@ -1481,6 +1592,12 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 return( result)
 }
 
+
+#' @rdname find_POPs
+#' @export
+#' @importFrom atease @	
+#' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
+#' @export
 "find_HSPs" <-  ## from MVB2.
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
@@ -1586,6 +1703,23 @@ return( result)
 ## TODO
 # - unfinished
 # - should this exist?
+#' find_HSPs_cond(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here. The markup around
+#' this function suggests that maybe it shouldn't exist, so you probably shouldn't use
+#' it.
+#'
+#' @param snpg a param
+#' @param subset1 a param
+#' @param subset2 a param
+#' @param one_in_X_eta a param
+#' @param rough_n_pairs_to_keep a param
+#' @param eta a param. Default NULL.
+#' @param keep_thresh a param. Default NULL.
+#' @param nbins a param
+#' @param bins a param. Default NULL.
+#' @export
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils cq %without.name% returnList
 #' @importFrom gbasics sqr
@@ -1822,8 +1956,12 @@ return( result)
 #' that). If you can run jobs in parallel, that could help a lot.
 #'
 #' @param snpg a \code{snpgeno} object
-#' @param subset1,subset2 numeric vectors of which samples to use (not logical,
-#'                not negative). Defaults to all of them. Iff the two subsets
+#' @param subset1 numeric vector of which samples to use (not logical,
+#'                not negative). Defaults to all of them. Iff subset1 and subset2
+#'                are identical, only half the comparisons are done (i.e., not
+#'                _i_ with _j_ then _j_ with _i_). Some sanity checks are done.
+#' @param subset2 numeric vector of which samples to use (not logical,
+#'                not negative). Defaults to all of them. Iff subset1 and subset2
 #'                are identical, only half the comparisons are done (i.e., not
 #'                _i_ with _j_ then _j_ with _i_). Some sanity checks are done.
 #' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which
@@ -2152,7 +2290,13 @@ stopifnot( all( ww>0))
 return( result)
 }
 
-
+#' find_POPs_MVB(): find_POPs, taken from MVB's 'kinference'.
+#'
+#' I really need to find out whether DLM's find_POPs() or MVB's find_POPs() is more desirable,
+#' and depreciate one or try to merge them in a sensible way.
+#'
+#' @rdname find_POPs 
+#' @export
 
 "find_POPs_MVB" <-   ## check the histories of this version and DLM's one.
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
@@ -2513,6 +2657,12 @@ return( c( whmo))
 }
 
 
+#' hetzminoo_fancy_depreciated(): an old version of hetzminoo
+#'
+#' Is probably on its way out.
+#' @rdname hetzminoo_fancy
+#' @export
+
 "hetzminoo_fancy_depreciated" <-  ## depreciated DLM version. MVB version has extra protections
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################
@@ -2699,6 +2849,12 @@ return( c( whmo))
 return( lociar)
 }
 
+#' hsp_power_depreciated(): an old version of hsp_power.
+#'
+#' Probably on its way out.
+#' @rdname hsp_power
+#' @export
+
 "hsp_power_depreciated" <- function( lociar, ## depreciated version from DLM kinference, 25/9/18
     want_LOD_table, # T/F
     k # 0.5 for HSPs
@@ -2773,6 +2929,8 @@ return( lociar)
 #' @param snpg a \code{\link[gbasics]{snpgeno}} (6-way genotype)
 #' @param indiv_lglk_hist_pars list like in \code{dump_badhetz_fish}, for
 #'                             controlling histogram
+#' @param quick Controls whether K, dK, and ddK are sent through compile_vecless().
+#'              Defaults to TRUE.
 #' @return Vector of log-likelihood for each individual. Produces a histogram
 #'         of log-likelihood values.
 #' @importFrom atease @
@@ -2900,49 +3058,8 @@ return( lociar)
 return( ilglk)
 }
 
-#' Check individual genotypes for aggregate typicality
-#'
-#' \code{ilglk_geno} Computes log-likelihood of entire 4-way genotype of
-#' each individual, i.e., sum log Pr[ g(i,l)]; and compare the distro of
-#' log-likelihoods across individuals with its predicted shape given allele
-#' frequencies. Significant mismatch is bad. Can also detect outliers. Up
-#' to you what criterion to use for that.
-#'
-#' #' \code{lglk_loci} compares, for each locus, the average (across individuals)
-#' observed lglk with the theoretical mean and variance. The idea is to help
-#' figure out when some loci are going wrongish (e.g. you can get decent fits
-#' from a subset of loci). Of course, \code{check6and4} pvals should be the
-#' main guide here; \code{lglk_loci} can show an overall deviation, as well as
-#' any remaining locus-specific misbehaviour (but shouldn't be much
-#' locus-specific stuff thx2 \code{check6and4}). Overall
-#' too-good-to-be-true-ism (as seen for \code{Glyphis garricki}) \emph{might}
-#' come when ALF is estimated from very small datasets.
-#'
-#' You can use \code{locator(1)} to click the histogram to figure out
-#' where to adjust the \code{xlim}/\code{ylim} values to change the range
-#' of the data to inspect more closely.
-#'
-#' Currently, the SPA calcs are a wee bit slow because of heavy use of
-#' \code{vecless} which in version 1.0 is sluggish. The lglks themselves
-#' are computed in C and are blisteringly fast.
-#'
-#' Haven't added any formal uh-oh criteria yet; that could be done via the
-#' SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is
-#' probably fine...
-#'
-#' @aliases ilglk_geno lglk_loci
-#' @param snpg a \code{\link[gbasics]{snpgeno}} (6-way genotype)
-#' @param indiv_lglk_hist_pars list like in \code{dump_badhetz_fish}, for
-#'                             controlling histogram
-#' @return Vector of log-likelihood for each individual. Produces a histogram
-#'         of log-likelihood values.
-#' @importFrom atease @
-#' @importFrom gbasics snpgeno
-#' @importFrom mvbutils cq extract.named
-#' @importFrom gbasics sqr
-#' @import vecless
-#' @keywords misc
-#' @examples
+#' lglk_loci(): Check individual genotypes for aggregate typicality
+#' @rdname ilglk_geno
 #' ll <- lglk_loci( somedata)
 #' hist( ll$sdiff, nc=30, col='grey')
 #' # abline( v=0, col='green')
@@ -3082,7 +3199,20 @@ function( libname, pkgname) {
   onload_autowrap( pkgname, libname)
 }  ## ported from MVB_kinference 25/9/18
 
-## new here: map6to4
+
+#' map6to4(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' From the name, it seems like this is the reverse operation of map4todummy6() -
+#' it allows you to convert 6-way genotypes (ABO, BBO, etc.) to 4-way genotypes
+#' (AA, BB, AB, BA), for use in functions that require one or the other.
+#'
+#' @param g6p0 a param
+#' @param g6p1 a param
+#' @export
+
 map6to4 <- function(g6p0, g6p1){
 
   define_genotypes()
@@ -3111,8 +3241,20 @@ map6to4 <- function(g6p0, g6p1){
 
 }
 
+
+#' predict_HSP_util(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param pIBD0 a param
+#' @param pIBD1 a param
+#' @param want_LOD_table a param. Defaults to FALSE
+#' @param k a param. Defaults to 0.5
+#' @export
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
+
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
@@ -3176,10 +3318,19 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
 return( retval)
 }
 
+
+#' prepare_PLOD_SPA(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param snpg a param
+#' @param control a param. Defaults to an empty list
+#' @export
 #' @importFrom mvbutils cq %except% %not.in%
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
-#' @export
+
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
 # To be run after hsp_power( ..., want_LOD_table=TRUE)
 
@@ -3290,8 +3441,16 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 return( geno6)
 }
 
-
+#' set_thresholds(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param keeping a param
+#' @param nlocal a param. Defaults to sys.parent().
+#' @export
 #' @importFrom mvbutils cq mlocal %is.a%
+
 "set_thresholds" <-
 function( keeping, nlocal=sys.parent()) mlocal({
 stopifnot( keeping %in% cq( hi, lo))
@@ -3331,6 +3490,14 @@ stopifnot( keeping %in% cq( hi, lo))
 
 # Calculate some log-odds
 
+#' calculate_IBD(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param lociar a param
+#' @export
+
 calculate_IBD <- function(lociar){
 
   define_genotypes()
@@ -3353,10 +3520,22 @@ calculate_IBD <- function(lociar){
 
 ## TODO
 # - should this exist?
+
+#' simtest_Kstuff(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here. Or maybe not: the
+#' local markup suggests that maybe this function should not exist.
+#'
+#' @param ck a param
+#' @param n a param
+#' @param nq a param. Defaults to 20.
+#' @export
 #' @importFrom atease @ @<-
 #' @importFrom gbasics rsample
 #' @importFrom stats var
 #' @importFrom mvbutils scatn
+
 "simtest_Kstuff" <- function( ck, n, nq=20) {
   # ck needs locinfo$LOD
   extract.named( ck@Kenv) # 4ways pretending to be 6ways
@@ -3400,7 +3579,8 @@ return( invisible( PLOD))
 
 #' sqr(): multiply an input by itself.
 #'
-#' Does what it says on the tin.
+#' Does what it says on the tin. Might also be imported from MVButils,
+#' depending on the caller.
 #'
 #' @param x an argument for which multiplication is possible.
 #' @export
@@ -3608,10 +3788,19 @@ function( linfo, emp.V.HSP=V.noX( C.equiv, 2),
 return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n.meio)))
 }
 
-# first two lines here are for Rcpp to work
+## first two lines here are for Rcpp to work
+#' add_list_defaults(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param l a param
+#' @param ... other params, passed to something.
+#' @export
 #' @useDynLib kinference
 #' @importFrom Rcpp evalCpp
 #' @importFrom mvbutils %without.name% ?
+
 "add_list_defaults" <- function( l, ...) {
 ###### Add defaults to list 'l' if not already in 'l'
   defaults <- list(...)
@@ -3619,7 +3808,14 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n
 return( l)
 }
 
-
+#' define(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param expr a param
+#' @param expand_dim a param. Defaults to FALSE
+#' @export
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils %is.a%
 "define" <- function( expr, expand_dim=FALSE) {
@@ -3647,9 +3843,15 @@ return( l)
 eval.parent( obj)
 }
 
-
+#' define_genotypes(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param nlocal a param. Defaults to sys.parent()
+#' @export
 #' @importFrom mvbutils cq extract.named named mlocal
-# @export
+
 "define_genotypes" <- function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
@@ -3668,7 +3870,16 @@ eval.parent( obj)
 
 
 
-
+#' inv_CDF_SPA2(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param p a param
+#' @param K a param
+#' @param dK a param. ?The first derivative of K?
+#' @param ddK a param. ?The second derivative of K?
+#' @param tol a param. Defaults to formals( ridder)$tol
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
 #' @export
@@ -3755,7 +3966,16 @@ return( x)
 
 
 
-
+#' renorm_SPA(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param K a param
+#' @param dK a param. ?The first derivative of K?
+#' @param ddK a param. ?The second derivative of K?
+#' @param return_what a param. Defaults to c( 'func', 'mulfuncby')
+#' @param tol a param. Defaults to formals( ridder)$tol
 #' @importFrom gbasics ridder integ
 #' @importFrom stats splinefun
 # @export
@@ -3819,8 +4039,19 @@ return( itotto)
 return( xfunc)
 }
 
+#' renorm_SPA_cumul(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param K a param
+#' @param dK a param ?The first derivative of K?
+#' @param ddK a param. ?The second derivative of K?
+#' @param sd_half_range a param. Defaults to 10
+#' @param n_pts a param. Defaults to 2001. ?Because space odyssey?
+#' @export
 #' @importFrom mvbutils returnList
-# @export
+
 "renorm_SPA_cumul" <- function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
   x <- 0
   SPA_s_dxds <- function( s) {
@@ -3845,6 +4076,14 @@ return( xfunc)
 returnList( CDF, inv_CDF)
 }
 
+#' calculate_LOD_HSP(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param lociar a param
+#' @param k a param. Defaults to 0.5
+#' @export
 
 calculate_LOD_HSP <- function(lociar, k=0.5){
 
