@@ -4,6 +4,12 @@ Author: Mark V Bravington, David L Miller
 Description: Kin-finding functions for close-kin mark-recapture
 Maintainer: David L Miller <dave@ninepointeightone.net>
 License: GPL
-Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless, debug, abind
+Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless, debug, abind, BH
 LinkingTo: Rcpp, RcppArmadillo
 Version: 0.0.74
+RoxygenNote: 6.1.0.9000
+SystemRequirements: C++11
+
+
+
+

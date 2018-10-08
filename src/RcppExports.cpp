@@ -96,6 +96,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// DUP_paircomps_incomplete_lots
+SEXP DUP_paircomps_incomplete_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_ppn, int limit);
+RcppExport SEXP _kinference_DUP_paircomps_incomplete_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_ppnSEXP, SEXP limitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RawMatrix >::type geno1(geno1SEXP);
+    Rcpp::traits::input_parameter< RawMatrix >::type geno2(geno2SEXP);
+    Rcpp::traits::input_parameter< bool >::type symmo(symmoSEXP);
+    Rcpp::traits::input_parameter< double >::type max_diff_ppn(max_diff_ppnSEXP);
+    Rcpp::traits::input_parameter< int >::type limit(limitSEXP);
+    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_incomplete_lots(geno1, geno2, symmo, max_diff_ppn, limit));
+    return rcpp_result_gen;
+END_RCPP
+}
 // indiv_lglk_geno
 SEXP indiv_lglk_geno(NumericMatrix lpgeno, RawMatrix geno);
 RcppExport SEXP _kinference_indiv_lglk_geno(SEXP lpgenoSEXP, SEXP genoSEXP) {
@@ -129,6 +144,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 9},
     {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 10},
     {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 5},
+    {"_kinference_DUP_paircomps_incomplete_lots", (DL_FUNC) &_kinference_DUP_paircomps_incomplete_lots, 5},
     {"_kinference_indiv_lglk_geno", (DL_FUNC) &_kinference_indiv_lglk_geno, 2},
     {"_kinference_K_indiv", (DL_FUNC) &_kinference_K_indiv, 4},
     {NULL, NULL, 0}

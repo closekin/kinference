@@ -1,22 +1,49 @@
 # This is package kinference 
 
-".onLoad" <-
+#".onLoad" <-
+#function( libname, pkgname) {
+#  oa <- base::system.file( sprintf( '/R/load_%s_dll.R', pkgname),
+#      package=pkgname, lib.loc=libname)
+#  if( !nzchar( oa)) {
+#    oa <- base::system.file( sprintf( '/R/load_%s_dll.r', pkgname),
+#        package=pkgname, lib.loc=libname)
+#  }
+#
+#  base::source( oa, local=TRUE)
+##}
+
+#' kinference
+#'
+#' Kin-finding pairwisely for close-kin mark-recapture
+#'
+#' @docType package
+#' @author Mark V Bravington, David L Miller
+#' @import Rcpp atease mvbutils gbasics vecless debug abind BH
+#' @importFrom Rcpp sourceCpp evalCpp
+#' @useDynLib kinference
+#' @name kinference
+NULL
+
+
+
+"old.onLoad" <-
 function( libname, pkgname) {
-  oa <- system.file( sprintf( 'R/load_%s_dll.R', pkgname),
-      package=pkgname, lib.loc=libname)
-  if( !nzchar( oa)) {
-    oa <- system.file( sprintf( 'R/load_%s_dll.r', pkgname),
-        package=pkgname, lib.loc=libname)
+  cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
+  if( !exists( 'onload_autowrap', asNamespace( pkgname), inherits=FALSE, mode='function')) {
+    # then source() the R script and create it here...
+    my_dll <- getOption( sprintf( '%s_debug_C', FALSE))
+    oa <- system.file( 'R/onload_autowrap.R', package=pkgname, lib.loc=libname)
+    eval( substitute( source( oa, local=TRUE), list( oa=oa)), asNamespace( pkgname))
   }
 
-  source( oa, local=TRUE)
-} ## .onLoad transferred in from MVB2
+  onload_autowrap( pkgname, libname)
+}  ## ported from MVB_kinference 25/9/18
+
 
 #' add_pairprob_error(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
 #' parse it. We should probably add some proper documentation here.
-#'
 #' @param nlocal a param
 #' @export
 
@@ -491,11 +518,12 @@ return( result)
 #'
 #' @param snpg a param
 #' @param focusees a param
-#' @param boring a param, default 1 %upto% nrow(snpg), where %upto% is like :, except only
-#'               counts upwards, so will not annoyingly generate c(1,0) if nrow(snpg) == 0.
+#' @param boring a param, default \code{1 %upto% nrow(snpg)}, where \code{%upto%} is like :,
+#'               except only counts upwards, so will not annoyingly generate \code{c(1,0)} if
+#'               \code{nrow(snpg) == 0}.
 #' @export
 
-"crapometer1" <-
+"crapometer" <-
 function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
 ## Bivariate combo of hetzminoo_fancy and ilglk_geno; perhaps this will be better for
 # finding suspect samples. But seemingly not much (for school shark), so I haven't exported itfi.
@@ -528,11 +556,11 @@ returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 #' parse it. We should probably add some proper documentation here.
 #'
 #' @param expr a param
-#' @param expand_dim a param. Default FALSE.
+#' @param expand_dim a param. Defaults to FALSE
 #' @export
-
-"define" <-
-function( expr, expand_dim=FALSE) {
+#' @importFrom atease @ @<-
+#' @importFrom mvbutils %is.a%
+"define" <- function( expr, expand_dim=FALSE) {
   expr <- substitute( expr)
   stopifnot( ((expr %is.a% '<-') || ((expr %is.a% 'call') && (expr[[1]]==as.name( '<<-')) ) ) && (expr[[2]] %is.a% 'name'))
   obj <- expr[[2]] # name/symbol
@@ -555,8 +583,7 @@ function( expr, expand_dim=FALSE) {
     obj@whoami <- name
   }))
 eval.parent( obj)
-} ## define imported from MVB2 24/9/18
-
+}
 
 #' drop_dups_pairwise_equiv(): Equivalence class sifter
 #'
@@ -1233,10 +1260,12 @@ function( snpg, candiHSPs) {
 #' everything else, via find_POPs(). Then the job is to pick
 #' between those possibilities. The workflow is supposed to be:
 #' 
-#' 1) POPs/FSPs first with find_POPs()
-#' 2) pick between them with find_FSPs_from_POPs() (update: this doesn't
+#' \itemize{
+#' \item nail POPs/FSPs first with find_POPs()
+#' \item pick between them with find_FSPs_from_POPs() (update: this doesn't
 #' work very well...)
-#' 3) look for HSPs and filter out already-known POPs and FSPs
+#' \item look for HSPs and filter out already-known POPs and FSPs
+#' }
 #' 
 #' Hence the other function, find_FSPs_from_HSPs(), is theoretically
 #' unnecessary in that you have already run find_POPs() and
@@ -1402,7 +1431,8 @@ return( ret)
 
 #' find_FSPs_from_POPs_depreciated(): old find FSPs from POPs tool
 #'
-#' this version is depreciated, as the MVB2 version seems to be more recent.
+#' find_FSPs_from_POPs_depreciated is, as the name suggests, depreciated. It is from
+#' DLM's 'kinference', and the MVB2 version (find_FSPs_from_POPs) seems more recent.
 #'
 #' @rdname find_FSPs_from_POPs
 #' @export
@@ -2292,7 +2322,8 @@ return( result)
 
 #' find_POPs_MVB(): find_POPs, taken from MVB's 'kinference'.
 #'
-#' I really need to find out whether DLM's find_POPs() or MVB's find_POPs() is more desirable,
+#' Note that find_POPs_MVB() is taken from MVB's version of 'kinference', and
+#' find_POPs() is from DLM's 'kinference. I should work out which is more desirable,
 #' and depreciate one or try to merge them in a sensible way.
 #'
 #' @rdname find_POPs 
@@ -3186,20 +3217,6 @@ return( sg)
 }  ## ported from MVB_kinference 25/9/18
 
 
-"old.onLoad" <-
-function( libname, pkgname) {
-  cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
-  if( !exists( 'onload_autowrap', asNamespace( pkgname), inherits=FALSE, mode='function')) {
-    # then source() the R script and create it here...
-    my_dll <- getOption( sprintf( '%s_debug_C', FALSE))
-    oa <- system.file( 'R/onload_autowrap.R', package=pkgname, lib.loc=libname)
-    eval( substitute( source( oa, local=TRUE), list( oa=oa)), asNamespace( pkgname))
-  }
-
-  onload_autowrap( pkgname, libname)
-}  ## ported from MVB_kinference 25/9/18
-
-
 #' map6to4(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3808,40 +3825,6 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n
 return( l)
 }
 
-#' define(): Bare documentation
-#'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
-#'
-#' @param expr a param
-#' @param expand_dim a param. Defaults to FALSE
-#' @export
-#' @importFrom atease @ @<-
-#' @importFrom mvbutils %is.a%
-"define" <- function( expr, expand_dim=FALSE) {
-  expr <- substitute( expr)
-  stopifnot( ((expr %is.a% '<-') || ((expr %is.a% 'call') && (expr[[1]]==as.name( '<<-')) ) ) && (expr[[2]] %is.a% 'name'))
-  obj <- expr[[2]] # name/symbol
-  name <- as.character( obj)
-
-  eval.parent( expr)
-  if( expand_dim && length( prefixdims)) { # known from environment
-    prefixdims <- prefixdims # since these live in the parent, and substitute() won't find them
-    dimorlen <- function( x) { if( is.null( d <- dim( x))) d <- length( x); d}
-    eval.parent( substitute(
-        obj <- structure( rep( obj, prod( prefixdims)), dim=c( prefixdims, dimorlen( obj)))
-      ))
-  }
-
-  e <- environment( sys.function())
-  eval.parent( substitute( {
-    dimnames( obj) <- NULL # they just slow things down
-    oldClass( obj) <- 'playback'
-    obj@where <- e
-    obj@whoami <- name
-  }))
-eval.parent( obj)
-}
 
 #' define_genotypes(): Bare documentation
 #'
@@ -3963,9 +3946,6 @@ return( 0*x + mean_x)
 return( x)
 }
 
-
-
-
 #' renorm_SPA(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3976,7 +3956,8 @@ return( x)
 #' @param ddK a param. ?The second derivative of K?
 #' @param return_what a param. Defaults to c( 'func', 'mulfuncby')
 #' @param tol a param. Defaults to formals( ridder)$tol
-#' @importFrom gbasics ridder integ
+#' @importFrom gbasics ridder
+#' @importFrom mvbutils integ
 #' @importFrom stats splinefun
 # @export
 "renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
