@@ -6,6 +6,8 @@
 \title{Check individual genotypes for aggregate typicality}
 \usage{
 ilglk_geno(snpg, indiv_lglk_hist_pars = list(), quick = TRUE)
+
+lglk_loci(snpg)
 }
 \arguments{
 \item{snpg}{a \code{\link[gbasics]{snpgeno}} (6-way genotype)}
@@ -51,6 +53,9 @@ SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is
 probably fine...
 }
 \examples{
+ll <- lglk_loci( somedata)
+hist( ll$sdiff, nc=30, col='grey')
+# abline( v=0, col='green')
 ll <- lglk_loci( somedata)
 hist( ll$sdiff, nc=30, col='grey')
 # abline( v=0, col='green')

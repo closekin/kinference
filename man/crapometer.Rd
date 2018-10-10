@@ -10,6 +10,8 @@ crapometer(snpg, focusees, boring = 1 \%upto\% nrow(snpg))
 \item{snpg}{a param}
 
 \item{focusees}{a param}
+
+\item{boring}{a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils for \code{ \%upto\% }.}
 }
 \description{
 This function has only the bare minimum of documentation necessary for roxygen to

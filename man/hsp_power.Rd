@@ -3,12 +3,12 @@
 \name{hsp_power}
 \alias{hsp_power}
 \alias{prepare_PLOD_SPA}
-\alias{hsp_power_depreciated}
+\alias{hsp_power_deprecated}
 \title{hsp_power(): Preparation for kin-finding}
 \usage{
 hsp_power(lociar, want_LOD_table = TRUE, k)
 
-hsp_power_depreciated(lociar, want_LOD_table, k)
+hsp_power_deprecated(lociar, want_LOD_table, k)
 }
 \arguments{
 \item{lociar}{\code{snpgeno} objects with the necessary ingredients}

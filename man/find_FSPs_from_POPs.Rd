@@ -4,7 +4,7 @@
 \alias{find_FSPs_from_candiHSPs}
 \alias{find_FSPs_from_HSPs}
 \alias{find_FSPs_from_POPs}
-\alias{find_FSPs_from_POPs_depreciated}
+\alias{find_FSPs_from_POPs_deprecated}
 \title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
 \usage{
 find_FSPs_from_candiHSPs(snpg, candiHSPs)
@@ -13,7 +13,7 @@ find_FSPs_from_HSPs(snpg, HSPs)
 
 find_FSPs_from_POPs(snpg, candiPOPs)
 
-find_FSPs_from_POPs_depreciated(snpg, candiPOPs, SDwt_POP = 0.5)
+find_FSPs_from_POPs_deprecated(snpg, candiPOPs, SDwt_POP = 0.5)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}

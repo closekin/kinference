@@ -2,31 +2,31 @@
 % Please edit documentation in R/kinference.R
 \name{find_duplicates}
 \alias{find_duplicates}
-\alias{find_HSPs_depreciated}
 \alias{find_HSPs}
+\alias{find_HSPs_deprecated}
 \alias{find_POPs}
-\alias{find_POPs_MVB}
+\alias{find_POPs_deprecated}
 \title{Kin-finders for loads-of-SNPs datasets}
 \usage{
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, max_diff_genos, keep_n = 1000)
 
-find_HSPs_depreciated(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, keep_n = 1000, eta = NULL,
-  keep_thresh = NULL, nbins = 50, bins = NULL)
-
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  one_in_X_eta, rough_n_pairs_to_keep, eta = NULL, keep_thresh = NULL,
+  one_in_X_eta, keep_n = 1000, eta = NULL, keep_thresh = NULL,
   nbins = 50, bins = NULL)
+
+find_HSPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
+  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep, eta = NULL,
+  keep_thresh = NULL, nbins = 50, bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
   keep_thresh = NULL, keep_n = 1000, nbins, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
 
-find_POPs_MVB(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
-  keep_thresh = NULL, nbins, quick = TRUE,
+find_POPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
+  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep = NA,
+  eta = NULL, keep_thresh = NULL, nbins, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
 }
 \arguments{
@@ -163,9 +163,8 @@ UPs. One can specify the same or different subsets of the
 \code{snpgeno} for comparison: e.g., first subset for the adults,
 second for the juveniles.
 
-Note that find_POPs_MVB() is taken from MVB's version of 'kinference', and
-find_POPs() is from DLM's 'kinference. I should work out which is more desirable,
-and depreciate one or try to merge them in a sensible way.
+This version of find_POPs is taken from MVB's version of 'kinference'. It calls an older version
+of POP_wt_paircomps_lots().
 }
 \section{Kinformation}{
 

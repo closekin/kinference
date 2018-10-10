@@ -518,9 +518,7 @@ return( result)
 #'
 #' @param snpg a param
 #' @param focusees a param
-#' @param boring a param, default \code{1 %upto% nrow(snpg)}, where \code{%upto%} is like :,
-#'               except only counts upwards, so will not annoyingly generate \code{c(1,0)} if
-#'               \code{nrow(snpg) == 0}.
+#' @param boring a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils for \code{ \%upto\% }.
 #' @export
 
 "crapometer" <-
@@ -802,41 +800,41 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
     }
 
     # Newer versions don't bother defining pure-R wrappers for .Call-ees
-    result <- DUP_paircomps_lots(
-        temp_snpg,
-        temp_snpg,
-        TRUE,
-        max_diff_genos)
+#    result <- DUP_paircomps_lots(
+#        temp_snpg,
+#        temp_snpg,
+#        TRUE,
+###        max_diff_genos)  ## uncomment result<- to this close, for MVB version
 #        geno1= temp_snpg,
 #        geno2= temp_snpg,
 #        symmo= TRUE,
 #        max_diff_genos = max_diff_genos
 #      ) ## MVB2 version of 'result', 24/9/18
 
-##    result <- DUP_paircomps_lots(
-##        geno1= temp_snpg,
-##        geno2= temp_snpg,
-##        symmo= TRUE,
-##        max_diff_genos = max_diff_genos,
-##        keep_n = keep_n
-##      ) ## version edited out in merge, 24/9/18
+    result <- DUP_paircomps_lots(
+        geno1= temp_snpg,
+        geno2= temp_snpg,
+        symmo= TRUE,
+        max_diff_genos = max_diff_genos,
+        keep_n = keep_n
+      ) ## DLM version, 24/9/18
+#  } else { # different subsets
+#    result <- DUP_paircomps_lots(
+#        temp_snpg[ , subset1],
+#        temp_snpg[ , subset2],
+#        FALSE,
+#        max_diff_genos)
+#  }  ## MVB2 version of 'else result', 24/9/18
+
   } else { # different subsets
     result <- DUP_paircomps_lots(
-        temp_snpg[ , subset1],
-        temp_snpg[ , subset2],
-        FALSE,
-        max_diff_genos)
-  }  ## MVB2 version of 'else result', 24/9/18
-
-##  } else { # different subsets
-##    result <- DUP_paircomps_lots(
-##        geno1= temp_snpg[ , subset1],
-##        geno2= temp_snpg[ , subset2],
-##        symmo= FALSE,
-##        max_diff_genos = max_diff_genos,
-##        keep_n = keep_n
-##      )
-##  }  ## version edited out in merge, 24/9/18
+        geno1= temp_snpg[ , subset1],
+        geno2= temp_snpg[ , subset2],
+        symmo= FALSE,
+        max_diff_genos = max_diff_genos,
+        keep_n = keep_n
+      )
+  }  ## DLM version, 24/9/18
 
   # just return the data.frame with 3 columns, everything else goes in
   # the attributes
@@ -1429,7 +1427,7 @@ return( ret)
 }
 
 
-#' find_FSPs_from_POPs_depreciated(): old find FSPs from POPs tool
+#' find_FSPs_from_POPs_deprecated(): old find FSPs from POPs tool
 #'
 #' find_FSPs_from_POPs_depreciated is, as the name suggests, depreciated. It is from
 #' DLM's 'kinference', and the MVB2 version (find_FSPs_from_POPs) seems more recent.
@@ -1437,7 +1435,7 @@ return( ret)
 #' @rdname find_FSPs_from_POPs
 #' @export
 
-"find_FSPs_from_POPs_depreciated" <-
+"find_FSPs_from_POPs_deprecated" <-
 function( snpg, candiPOPs, SDwt_POP=0.5) { # shouldn't have default--- hardwire or leave!
 
   # Don't need full pairwise screening for FSPs (do post hoc on a few hundred
@@ -1517,7 +1515,7 @@ return( wtsame)
 #' @importFrom atease @	
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
-"find_HSPs_depreciated" <-  ## depreciated because doesn't run with Paige's code
+"find_HSPs" <-  
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
     keep_n=1000,
@@ -1628,7 +1626,7 @@ return( result)
 #' @importFrom atease @	
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
-"find_HSPs" <-  ## from MVB2.
+"find_HSPs_deprecated" <-  ## from MVB2.
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,
@@ -2320,16 +2318,15 @@ stopifnot( all( ww>0))
 return( result)
 }
 
-#' find_POPs_MVB(): find_POPs, taken from MVB's 'kinference'.
+#' find_POPs_deprecated(): find_POPs, taken from MVB's 'kinference'.
 #'
-#' Note that find_POPs_MVB() is taken from MVB's version of 'kinference', and
-#' find_POPs() is from DLM's 'kinference. I should work out which is more desirable,
-#' and depreciate one or try to merge them in a sensible way.
+#' This version of find_POPs is taken from MVB's version of 'kinference'. It calls an older version
+#' of POP_wt_paircomps_lots().
 #'
 #' @rdname find_POPs 
 #' @export
 
-"find_POPs_MVB" <-   ## check the histories of this version and DLM's one.
+"find_POPs_deprecated" <-   ## DLM's preferred, because it calls updated POP_wt_paircomps_lots().
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta, # die
     rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
@@ -2517,7 +2514,7 @@ stop( "find_POPs needs 4way or 6way ABO-genotypes")
   result@E_UP <- ww %**% pex$UP # should equal mean_theory!
 
 return( result)
-}  ## this is currently a 'depreciated' (renamed) alternative copy.
+}  ## this is currently a 'deprecated' (renamed) alternative copy.
 
 
 
@@ -2667,7 +2664,10 @@ stopifnot( all( ww>0))
   dK <- compile_vecless( dK(0))
   ddK <- compile_vecless( ddK(0))
 
-  dens_SPA <- renorm_SPA( K, dK, ddK, 'func', already_vectorized=TRUE)
+  dens_SPA <- renorm_SPA( K, dK, ddK, 'func'
+                         ##, already_vectorized=TRUE ## SB: not used in
+                         ## renorm_SPA as it exists (DLM version). May want to revisit.
+                         )
 
   # optional graphics and/or user-specified outputs
   switch( mode( hist_pars),
@@ -2688,13 +2688,13 @@ return( c( whmo))
 }
 
 
-#' hetzminoo_fancy_depreciated(): an old version of hetzminoo
+#' hetzminoo_fancy_deprecated(): an old version of hetzminoo
 #'
 #' Is probably on its way out.
 #' @rdname hetzminoo_fancy
 #' @export
 
-"hetzminoo_fancy_depreciated" <-  ## depreciated DLM version. MVB version has extra protections
+"hetzminoo_fancy_deprecated" <-  ## depreciated DLM version. MVB version has extra protections
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################
   define_genotypes()
@@ -2880,13 +2880,13 @@ return( c( whmo))
 return( lociar)
 }
 
-#' hsp_power_depreciated(): an old version of hsp_power.
+#' hsp_power_deprecated(): an old version of hsp_power.
 #'
 #' Probably on its way out.
 #' @rdname hsp_power
 #' @export
 
-"hsp_power_depreciated" <- function( lociar, ## depreciated version from DLM kinference, 25/9/18
+"hsp_power_deprecated" <- function( lociar, ## depreciated version from DLM kinference, 25/9/18
     want_LOD_table, # T/F
     k # 0.5 for HSPs
 ){
@@ -3091,6 +3091,7 @@ return( ilglk)
 
 #' lglk_loci(): Check individual genotypes for aggregate typicality
 #' @rdname ilglk_geno
+#' @examples
 #' ll <- lglk_loci( somedata)
 #' hist( ll$sdiff, nc=30, col='grey')
 #' # abline( v=0, col='green')
@@ -3946,10 +3947,9 @@ return( 0*x + mean_x)
 return( x)
 }
 
-#' renorm_SPA(): Bare documentation
+#' renorm_SPA_deprecated(): Bare documentation
 #'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' This version of renorm_SPA has been deprecated, in favour of the version in gbasics.
 #'
 #' @param K a param
 #' @param dK a param. ?The first derivative of K?
@@ -3960,7 +3960,7 @@ return( x)
 #' @importFrom mvbutils integ
 #' @importFrom stats splinefun
 # @export
-"renorm_SPA" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
+"renorm_SPA_deprecated" <- function(K, dK, ddK, return_what=c( 'func', 'mulfuncby'),
                          tol=formals( ridder)$tol
   # , ... ; should really allow extra args to K & co, and build them in...
 ){
@@ -4020,20 +4020,19 @@ return( itotto)
 return( xfunc)
 }
 
-#' renorm_SPA_cumul(): Bare documentation
+#' renorm_SPA_cumul_deprecated(): Bare documentation
 #'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' This version of renorm_SPA_cumul has been deprecated, in favour of the version in gbasics.
 #'
-#' @param K a param
-#' @param dK a param ?The first derivative of K?
-#' @param ddK a param. ?The second derivative of K?
+#' @param K a param.
+#' @param dK a param.
+#' @param ddK a param.
 #' @param sd_half_range a param. Defaults to 10
 #' @param n_pts a param. Defaults to 2001. ?Because space odyssey?
 #' @export
 #' @importFrom mvbutils returnList
 
-"renorm_SPA_cumul" <- function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
+"renorm_SPA_cumul_deprecated" <- function( K, dK, ddK, sd_half_range=10, n_pts=2001) {
   x <- 0
   SPA_s_dxds <- function( s) {
     x <<- dK( s)

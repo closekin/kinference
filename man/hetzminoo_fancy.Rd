@@ -2,13 +2,13 @@
 % Please edit documentation in R/kinference.R
 \name{hetzminoo_fancy}
 \alias{hetzminoo_fancy}
-\alias{hetzminoo_fancy_depreciated}
+\alias{hetzminoo_fancy_deprecated}
 \title{Heterozygotes minus "OO" checking}
 \usage{
 hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
   multhresh = 1)
 
-hetzminoo_fancy_depreciated(snpg, target = c("rich", "poor"),
+hetzminoo_fancy_deprecated(snpg, target = c("rich", "poor"),
   hist_pars = list(), multhresh = 1)
 }
 \arguments{
