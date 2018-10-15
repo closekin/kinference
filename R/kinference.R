@@ -2323,8 +2323,8 @@ return( result)
 
 #' find_POPs_deprecated(): find_POPs, taken from MVB's 'kinference'.
 #'
-#' This version of find_POPs is taken from MVB's version of 'kinference'. It calls an older version
-#' of POP_wt_paircomps_lots().
+#' find_POPs_deprecated(), and other functions ending with _deprecated, were deprecated during the
+#' merge of MVB's and DLM's versions of kinference. There is a non-deprecated version of each.
 #'
 #' @rdname find_POPs 
 #' @export
