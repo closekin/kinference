@@ -1515,14 +1515,16 @@ return( wtsame)
 #' @importFrom atease @	
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
-"find_HSPs" <-  
+
+"find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
     keep_n=1000,
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
-    bins= NULL) {
+    bins= NULL
+    ) {
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
@@ -1626,6 +1628,7 @@ return( result)
 #' @importFrom atease @	
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
+
 "find_HSPs_deprecated" <-  ## from MVB2.
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
@@ -3481,7 +3484,7 @@ stopifnot( keeping %in% cq( hi, lo))
     }
     if( is.null( keep_thresh)) {
       probinverts <- c( probinverts,
-          rough_n_pairs_to_keep / (length( subset1) * length( subset2) / (1+symmo)))
+          keep_n / (length( subset1) * length( subset2) / (1+symmo)))
     }
 
     if( keeping == 'hi') {
@@ -3861,8 +3864,8 @@ return( l)
 #'
 #' @param p a param
 #' @param K a param
-#' @param dK a param. ?The first derivative of K?
-#' @param ddK a param. ?The second derivative of K?
+#' @param dK a param.
+#' @param ddK a param.
 #' @param tol a param. Defaults to formals( ridder)$tol
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
@@ -3952,8 +3955,8 @@ return( x)
 #' This version of renorm_SPA has been deprecated, in favour of the version in gbasics.
 #'
 #' @param K a param
-#' @param dK a param. ?The first derivative of K?
-#' @param ddK a param. ?The second derivative of K?
+#' @param dK a param.
+#' @param ddK a param.
 #' @param return_what a param. Defaults to c( 'func', 'mulfuncby')
 #' @param tol a param. Defaults to formals( ridder)$tol
 #' @importFrom gbasics ridder

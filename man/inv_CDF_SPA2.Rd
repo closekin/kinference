@@ -11,9 +11,9 @@ inv_CDF_SPA2(p, K, dK, ddK, tol = formals(ridder)$tol)
 
 \item{K}{a param}
 
-\item{dK}{a param. ?The first derivative of K?}
+\item{dK}{a param.}
 
-\item{ddK}{a param. ?The second derivative of K?}
+\item{ddK}{a param.}
 
 \item{tol}{a param. Defaults to formals( ridder)$tol}
 }

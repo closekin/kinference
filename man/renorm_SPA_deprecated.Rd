@@ -10,9 +10,9 @@ renorm_SPA_deprecated(K, dK, ddK, return_what = c("func", "mulfuncby"),
 \arguments{
 \item{K}{a param}
 
-\item{dK}{a param. ?The first derivative of K?}
+\item{dK}{a param.}
 
-\item{ddK}{a param. ?The second derivative of K?}
+\item{ddK}{a param.}
 
 \item{return_what}{a param. Defaults to c( 'func', 'mulfuncby')}
 
