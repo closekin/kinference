@@ -1,8 +1,8 @@
 Package: kinference
 Title: Kin-finding pairwisely for close-kin mark-recapture
-Author: Mark V Bravington, David L Miller
+Author: Mark V Bravington, David L Miller, Shane M Baylis
 Description: Kin-finding functions for close-kin mark-recapture
-Maintainer: David L Miller <dave@ninepointeightone.net>
+Maintainer: Shane M Baylis <shane.m.baylis@gmail.com>
 License: GPL
 Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless, debug, abind, BH
 LinkingTo: Rcpp, RcppArmadillo

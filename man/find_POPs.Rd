@@ -163,8 +163,8 @@ UPs. One can specify the same or different subsets of the
 \code{snpgeno} for comparison: e.g., first subset for the adults,
 second for the juveniles.
 
-This version of find_POPs is taken from MVB's version of 'kinference'. It calls an older version
-of POP_wt_paircomps_lots().
+find_POPs_deprecated(), and other functions ending with _deprecated, were deprecated during the
+merge of MVB's and DLM's versions of kinference. There is a non-deprecated version of each.
 }
 \section{Kinformation}{
 
