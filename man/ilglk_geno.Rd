@@ -53,11 +53,8 @@ SPA, as in \code{dump_badhetz_fish}. But, reading off from the graph is
 probably fine...
 }
 \examples{
-ll <- lglk_loci( somedata)
-hist( ll$sdiff, nc=30, col='grey')
-# abline( v=0, col='green')
-ll <- lglk_loci( somedata)
-hist( ll$sdiff, nc=30, col='grey')
+# ll <- lglk_loci( snpg)
+# hist( ll$sdiff, nc=30, col='grey')
 # abline( v=0, col='green')
 }
 \keyword{misc}

@@ -21,7 +21,7 @@ few heterozygotes).}
 
 \item{hist_pars}{parameters to pass to \code{\link{hist}}}
 
-\item{multthresh}{???}
+\item{multhresh}{A param.}
 }
 \description{
 This test looks at whether the allele frequencies in a given fish seem

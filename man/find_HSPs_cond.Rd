@@ -5,8 +5,9 @@
 \title{find_HSPs_cond(): Bare documentation}
 \usage{
 find_HSPs_cond(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep, eta = NULL,
-  keep_thresh = NULL, nbins = 50, bins = NULL)
+  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep,
+  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins = 50,
+  bins = NULL)
 }
 \arguments{
 \item{snpg}{a param}
@@ -18,6 +19,8 @@ find_HSPs_cond(snpg, subset1 = 1 \%upto\% nrow(snpg),
 \item{one_in_X_eta}{a param}
 
 \item{rough_n_pairs_to_keep}{a param}
+
+\item{keep_n}{the maximum number of pairs to keep. Used in set_thresholds.}
 
 \item{eta}{a param. Default NULL.}
 

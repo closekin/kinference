@@ -28,10 +28,10 @@ The document "d:/docs/genetics/Dart/sbt-baits-v3/too-many-plods.lyx"
 has more info in section 4.1 on "rat CLODs".
 }
 \examples{
-# Rough chance of yielding a PLOD>5, say
-cloddo <- check_FPosity( mydata)
-Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
-hist( Pr_Fpos_5, nc=50)
-# highlight some known suspects
-abline( v=Pr_Fpos_5[ suspects], col='red')
+## Rough chance of yielding a PLOD>5, say
+# cloddo <- check_FPosity( snpg = snpg)
+# Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
+# hist( Pr_Fpos_5, nc=50)
+## highlight some known suspects
+# abline( v=Pr_Fpos_5[ suspects], col='red')
 }

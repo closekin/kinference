@@ -9,6 +9,8 @@
 hsp_power(lociar, want_LOD_table = TRUE, k)
 
 hsp_power_deprecated(lociar, want_LOD_table, k)
+
+prepare_PLOD_SPA(geno6, n_pts_SPA_renorm = 201)
 }
 \arguments{
 \item{lociar}{\code{snpgeno} objects with the necessary ingredients}

@@ -13,5 +13,8 @@ set_thresholds(keeping, nlocal = sys.parent())
 }
 \description{
 This function has only the bare minimum of documentation necessary for roxygen to
-parse it. We should probably add some proper documentation here.
+parse it. We should probably add some proper documentation here. This
+function causes a NOTE from R CMD check, pertaining to the undefined global variable
+'keep_n'. set_thresholds() operates in mvbutils::mlocal({}) space, and every caller
+function has 'keep_n' correctly defined.
 }

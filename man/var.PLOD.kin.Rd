@@ -28,6 +28,8 @@ corresponds to 4 meioses, \code{"HTP"} to 3, and
 since it should reproduce the original empirical
 variance!}
 
+\item{debug}{Logical flag. Defaults to FALSE.}
+
 \item{C.equiv}{for artificial test, with \code{emp.V.HSP} set to the
 no-crossover variance from \code{C.equiv} chromos
 (need not be integer). Ignored if \code{emp.V.HSP} is

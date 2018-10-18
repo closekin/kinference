@@ -16,8 +16,9 @@ find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   nbins = 50, bins = NULL)
 
 find_HSPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep, eta = NULL,
-  keep_thresh = NULL, nbins = 50, bins = NULL)
+  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep,
+  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins = 50,
+  bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
@@ -26,8 +27,8 @@ find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
 
 find_POPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep = NA,
-  eta = NULL, keep_thresh = NULL, nbins, quick = TRUE,
-  WPSEX_UP_POP_balance = 0.99)
+  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins,
+  quick = TRUE, WPSEX_UP_POP_balance = 0.99)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
@@ -49,6 +50,9 @@ change (though at some point things will change a lot, as
 you get into the non-duplicate bit of the distribution).
 See \bold{Duplicates} for how to remove duplicates from
 the data.}
+
+\item{keep_n}{Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
+a warning if the number of identified pairs equals keep_n.}
 
 \item{one_in_X_eta}{expected number of false-positive UPs you can tolerate.
 Setting this to say \code{1e6} means you'd expect 1 per million

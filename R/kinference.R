@@ -340,14 +340,16 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 #' @importFrom gbasics sqr
 #' @importFrom atease @ @<-
 #' @examples
-#' # Rough chance of yielding a PLOD>5, say
-#' cloddo <- check_FPosity( mydata)
-#' Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
-#' hist( Pr_Fpos_5, nc=50)
-#' # highlight some known suspects
-#' abline( v=Pr_Fpos_5[ suspects], col='red')
-# @export
-"check_FPosity" <- function( snpg, nsim=0){
+#' ## Rough chance of yielding a PLOD>5, say
+#' # cloddo <- check_FPosity( snpg = snpg)
+#' # Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
+#' # hist( Pr_Fpos_5, nc=50)
+#' ## highlight some known suspects
+#' # abline( v=Pr_Fpos_5[ suspects], col='red')
+#' @export
+
+"check_FPosity" <-
+    function( snpg, nsim=0){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
@@ -1291,12 +1293,13 @@ function( snpg, candiHSPs) {
 #' "supposed" to have those in the mix by the time you run
 #' find_FSPs_from_HSPs(), but maybe I should fix that at some point.
 #' 
-#' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs
+#' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs find_FSPs_from_candiHSPs
 #' @param snpg a \code{snpgeno} object
 #' @param candiPOPs candidate kin-pairs--- normally, a dataframe
 #'                  with rows being pairs and columns _i_ and _j_ (and possibly
 #'                  others) e.g. from find_POPs() or find_HSPs(). Can also be a
 #'                  2-column matrix (each row again one pair).
+#' @param HSPs ?Candidate kin-pairs, as in candiPOPs and candiHSPs. Used in find_FSPs_from_HSPs.
 #' @param candiHSPs candidate kin-pairs--- normally, a dataframe
 #'                  with rows being pairs and columns _i_ and _j_ (and possibly
 #'                  others) e.g. from find_POPs() or find_HSPs(). Can also be a
@@ -1307,25 +1310,25 @@ function( snpg, candiHSPs) {
 #'                 shouldn't matter. I hope.
 #' @keywords misc
 #' @examples
-#' pops_or_fsps <- find_POPs( mysnpg, ...)
-#' # do histograms etc to find likely ones
-#' discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042))
-#' hist( discro, nc=30, col='grey')
-#' abline( v=discro@E_POP, col='red')
-#' text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
-#' abline( v=discro@E_FSP, col='lightblue')
-#' text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#' abline( v=discro@E_HSP, col='pink', lty='dashed')
-#' text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
+#' # pops_or_fsps <- find_POPs( mysnpg, ...)
+#' ## do histograms etc to find likely ones
+#' # discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042))
+#' # hist( discro, nc=30, col='grey')
+#' # abline( v=discro@E_POP, col='red')
+#' # text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
+#' # abline( v=discro@E_FSP, col='lightblue')
+#' # text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+#' # abline( v=discro@E_HSP, col='pink', lty='dashed')
+#' # text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
 #' ###
-#' h_or_f <- find_HSPs( mysnpg, ...)
-#' # do histograms etc to find likely sib pairs
-#' discro2 <- find_FSPs_from_HSPs(  mysngp, h_or_f %where% (PLOD > 55))
-#' hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
-#' abline( v=discro2@E_HSP, col='orange')
-#' text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
-#' abline( v=discro2@E_FSP, col='lightblue')
-#' text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+#' # h_or_f <- find_HSPs( mysnpg, ...)
+#' ## do histograms etc to find likely sib pairs
+#' # discro2 <- find_FSPs_from_HSPs(  mysngp, h_or_f %where% (PLOD > 55))
+#' # hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
+#' # abline( v=discro2@E_HSP, col='orange')
+#' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
+#' # abline( v=discro2@E_FSP, col='lightblue')
+#' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
 #' @export
 
 "find_FSPs_from_POPs" <-
@@ -1633,6 +1636,7 @@ return( result)
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,
+    keep_n = 1000, ## to maintain compatibility with updated set_thresholds, SB 18/10/2018
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -1746,6 +1750,7 @@ return( result)
 #' @param subset2 a param
 #' @param one_in_X_eta a param
 #' @param rough_n_pairs_to_keep a param
+#' @param keep_n the maximum number of pairs to keep. Used in set_thresholds.
 #' @param eta a param. Default NULL.
 #' @param keep_thresh a param. Default NULL.
 #' @param nbins a param
@@ -1757,6 +1762,7 @@ return( result)
 "find_HSPs_cond" <- function(snpg, subset1=1 %upto% nrow(snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,
+    keep_n = 1000,
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -2023,6 +2029,8 @@ return( result)
 #'                              specify something silly for \code{rough_n_pairs_to_keep}.
 #' @param eta,keep_thresh see \bold{Description}. Can specify either or both. These override
 #'            \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.
+#' @param keep_n Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
+#'               a warning if the number of identified pairs equals keep_n.
 #' @param nbins number of bins to group the stats from the sub-'eta' pairs into. The
 #'              bins will be set at quantiles of the expected distribution for UPs.
 #' @param max_diff_genos (\code{find_duplicates}) max number of discrepant 4-way
@@ -2333,6 +2341,7 @@ return( result)
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta, # die
     rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
+    keep_n = 1000, ## used by set_thresholds
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
     keep_thresh= NULL, # merge, C code return cutoff
@@ -2521,38 +2530,7 @@ return( result)
 
 
 
-#' get_chain(): Find chains in HSPs; summarize sib-groups
-#'
-#' Find chains of relatives of fish `seed`.
-#'
-#' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
-#' \code{chain_pairwise} organizes them into chains within which each sample
-#' can be linked to another by a succession of direct pairwise links. The
-#' general idea is that real HSPs will be in clusters of 2 or 3; a spurious
-#' sample with a "lucky" genotype that wants to be everybody's mate will appear
-#' in a big but incomplete chain of mostly false-positives, where the direct
-#' pairwise links between the other chain-members are weak. You'd only run
-#' \code{chain_pairwise} for pairs with a PLOD (or whatever statistic is being
-#' used) within a particular suspect range, so each chain may have
-#' false-negatives (i.e. missing direct links), but the general idea should be
-#' clear.
-#' 
-#' \code{get_chain} finds the chain for one specific sample.
-#' 
-#' @aliases get_chain chain_pairwise
-#' @param thing output from \code{find_HSPs} or \code{find_POPs} etc, or some
-#'              subset thereof
-#' @param seed one sample ID, interpreted as a row-number in \code{thing}. To
-#'             do:also allow names, via \code{info} attr.
-#' @importFrom mvbutils %is.not.a% %where%
-#' @return \code{chain_pairwise} returns a list of matrices, each for one
-#' chain; the rows and columns of each matrix are the samples in that chain. A
-#' "+" in the matrix indicates that those two samples have a direct pairwise
-#' link (i.e., they appear together in one row of \code{thing}); a "." means
-#' not. The rows and columns of each matrix are sorted so that the linkiest
-#' samples are on the bottom and right. \code{get_chain} returns the row-subset
-#' of \code{thing} that is chained to \code{seed}.
-#' @keywords misc
+#' @rdname chain_pairwise
 #' @export
 
 "get_chain" <-
@@ -2586,7 +2564,7 @@ function( thing, seed) {
 #'               \code{"poor"} detectes DNA degredation (there are too
 #'               few heterozygotes).
 #' @param hist_pars parameters to pass to \code{\link{hist}}
-#' @param multthresh ???
+#' @param multhresh A param.
 #' @keywords misc
 #' @export
 
@@ -2974,8 +2952,8 @@ return( lociar)
 #' @import vecless
 #' @keywords misc
 #' @examples
-#' ll <- lglk_loci( somedata)
-#' hist( ll$sdiff, nc=30, col='grey')
+#' # ll <- lglk_loci( snpg)
+#' # hist( ll$sdiff, nc=30, col='grey')
 #' # abline( v=0, col='green')
 #' @export
 
@@ -3094,10 +3072,6 @@ return( ilglk)
 
 #' lglk_loci(): Check individual genotypes for aggregate typicality
 #' @rdname ilglk_geno
-#' @examples
-#' ll <- lglk_loci( somedata)
-#' hist( ll$sdiff, nc=30, col='grey')
-#' # abline( v=0, col='green')
 #' @export
 
 "lglk_loci" <-
@@ -3340,13 +3314,7 @@ return( retval)
 }
 
 
-#' prepare_PLOD_SPA(): Bare documentation
-#'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
-#'
-#' @param snpg a param
-#' @param control a param. Defaults to an empty list
+#' @rdname hsp_power
 #' @export
 #' @importFrom mvbutils cq %except% %not.in%
 #' @importFrom atease @ @<-
@@ -3465,7 +3433,10 @@ return( geno6)
 #' set_thresholds(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it. We should probably add some proper documentation here. This
+#' function causes a NOTE from R CMD check, pertaining to the undefined global variable
+#' 'keep_n'. set_thresholds() operates in mvbutils::mlocal({}) space, and every caller
+#' function has 'keep_n' correctly defined.
 #'
 #' @param keeping a param
 #' @param nlocal a param. Defaults to sys.parent().
@@ -3681,6 +3652,7 @@ function( x) x*x  ## ported from MVB, 25/9/18
 #'                 \code{"HSP"} to 2; the latter is only for debugging,
 #'                 since it should reproduce the original empirical
 #'                 variance!
+#' @param debug Logical flag. Defaults to FALSE.
 #' @param C.equiv for artificial test, with \code{emp.V.HSP} set to the
 #'                no-crossover variance from \code{C.equiv} chromos
 #'                (need not be integer). Ignored if \code{emp.V.HSP} is
@@ -3843,8 +3815,8 @@ return( l)
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
 
-  genotypes <- cq( OO, AO, BO, AB, AA, BB, AAO, BBO, AC, BC, CO, CC, CCO)
-  genotypes_ambig <- cq( OO, AB, AC, BC, AAO, BBO, CCO)
+  genotypes <- cq( OO, AO, BO, AB, AA, BB, AAO, BBO, AC, BC, CO, CC, "CCO")
+  genotypes_ambig <- cq( OO, AB, AC, BC, AAO, BBO, "CCO") ## sans quotes, CCO is treated as global
   genotypes4_ambig <- cq( OO, AB, AAO, BBO)
   genotypes6 <- cq( AA, AB, AO, BB, BO, OO)
   genotypes_C <- cq( AA, AB, AC, AO, BB, BC, BO, CC, CO, OO)

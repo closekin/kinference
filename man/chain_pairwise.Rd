@@ -6,6 +6,8 @@
 \title{Find chains in HSPs; summarize sib-groups}
 \usage{
 chain_pairwise(thing)
+
+get_chain(thing, seed)
 }
 \arguments{
 \item{thing}{output from \code{find_HSPs} or \code{find_POPs} etc, or some

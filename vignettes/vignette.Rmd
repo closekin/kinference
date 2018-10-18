@@ -1,0 +1,343 @@
+---
+title: "A framework for a kinference vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{"A framework for a kinference vignette"}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Kinference vignette
+
+## First, the walkthrough of 'kinference' provided to SB by Paige
+
+```{r}
+library( kinference) ## don't overwrite it with the one from the Rmvb repo!`
+```
+
+Install/update packages from Mark's repository
+
+`# install.packages(repos='https://markbravington.github.io/Rmvb-repo')`
+
+`# update.packages(repos='https://markbravington.github.io/Rmvb-repo')`
+
+```{r}
+    library( mvbutils)
+    library( atease)
+    library( xtable)
+    library( mixtools)
+    library( Oarray)
+    library( Oarray.support)
+    library( vecless)
+    library( tools)  # need or else get error "could not find function "md5sum""
+    library( gbasics)  #has sqr, logit and inv.logit, ridder
+    library( genocalldart)
+    ## library(handy2) ## not requred under the current build of kinference
+```
+
+## To see what functions are in a package:
+
+`ls("package:kinference")`
+
+Load object "geno2017" that contains the genotype calls for all of the samples processed
+by DArT prior to 2018
+
+```{r}
+load('~/Data/kinference/geno2017.rda')
+geno_opt <- "2017"
+```
+
+Note that geno2017 was created by several calls to "load_whopper". The R code is as follows:
+
+```{r}
+#g1<- load_whopper('Report-DTu17-2599_part1.csv', which_rows = c(
+#         well = 1,
+#         dartjob = 2,
+#         ourplate = 3,
+#         fishname = 4,
+#         fishtot = 5),
+#     gobj=g0[0,],
+#     cutoff_npoly=0.5, dropped_fish_file='DTu17-2599_part1_dropped_fish.txt',max_fish=2500)
+#g2<- load_whopper('Report-DTu17-2599_part2.csv', which_rows = c(
+#         well = 1,
+#         dartjob = 2,
+#         ourplate = 3,
+#         fishname = 4,
+#         fishtot = 5),
+#     gobj=g1,
+#     cutoff_npoly=0.5, dropped_fish_file='DTu17-2599_part2_dropped_fish.txt',max_fish=2500)
+#g3 <- load_whopper('Report-DTu17-2711.csv', which_rows = c(
+#         well = 1,
+#         dartjob = 2,
+#         ourplate = 3,
+#         fishname = 4,
+#         fishtot = 5),
+#     gobj=g2,
+#     cutoff_npoly=0.5, dropped_fish_file='DTu17-2711_dropped_fish.txt',max_fish=2500)
+#geno2017<- g3
+```
+
+Each call:
+ - reads in the data from a DArT count csv file (as specified)
+ - determines how many polyploid loci each fish has, and gets rid those with too many(set by an
+   argument to the load_whopper function)
+ - determines the genotypes based on the counts for every fish/loci to the 6-way level (e.g. AA/BB/AB/AO/BO/OO);
+  it does so based on criteria/thresholds that were determined previously for each of the loci, and which
+are stored in the attributes of an object called "g0"
+ - the first call to load_whopper needs passed the object "g0", then each consecutive call gets passed the
+object created from the previous call and appends the new genotype data to it.
+
+
+## Run fish QC checks
+
+Save all figures in a pdf:
+
+`pdf('fish_QC_plots.pdf')`
+
+(i) Run original hetz check (that automatically dumps fish)
+
+```{r}
+multhresh <- 0.001
+
+geno_okhetz <- dump_badhetz_fish(geno2017, multhresh_badhetz_fish = nrow(geno2017)*multhresh,badhetz_hist_pars=list(nclass=150,xlim=c(0,600)), 'hetzminoo') 
+dim(geno_okhetz)
+```
+
+(ii) Get rid of duplicates (Mark does this first, but if you don't get rid of the really bad hetz fish, then it's not as clear/clean which fish are duplicates):
+
+```{r}
+dups <- find_duplicates(geno_okhetz,max_diff_genos=150)
+rev(sort(dups$ndiff))[1:20]
+droppies <- drop_dups_pairwise_equiv(cbind(dups$i,dups$j))
+# Mark doesn't get rid of the 3 remaining controls, but I think we probably should
+controls <- unique(c(grep('CR',geno_okhetz@info$Our_sample,ignore.case=T),grep('control',geno_okhetz@info$Our_sample,ignore.case=T)))
+controls[controls%not.in%droppies]
+droppies <- unique(c(droppies,controls))
+geno_nodups <- geno_okhetz[ -droppies, ]
+dim(geno_nodups)
+```
+
+
+(iii) Run the expected likelihood test and get rid of
+
+```{r}
+ilglk <- ilglk_geno(geno_nodups)
+ilglk_lb <- (-1550)  ## SB: arbitrary lower bound here?
+abline(v=ilglk_lb,col=6,lwd=2)
+geno_nodups_goodfish <- geno_nodups[ilglk>ilglk_lb,]
+dim(geno_nodups_goodfish)
+```
+
+(iv) Run the "fancier" hetzminoo check (no automatic dumping)
+
+```{r}
+hetz.rich<- hetzminoo_fancy(geno_nodups_goodfish, 'rich')
+hetz.poor<- hetzminoo_fancy(geno_nodups_goodfish, 'poor',hist_pars=list(nclass=100))
+poor_lb <- 0.196
+abline(v=poor_lb,col=6,lwd=2)
+geno_nodups_gooder <- geno_nodups_goodfish[hetz.poor>poor_lb,]
+# Note that "gooder" was Mark's choice of terminology!
+dim(geno_nodups_gooder)
+```
+
+`dev.off()`
+
+
+Check that the loci are still looking okay for these fish
+
+```{r, eval = FALSE}
+pdf(paste('check6and4.pdf'))
+check6and4(geno_nodups_gooder,c(1e-4,1e-3))  ## not shown
+dev.off()
+```
+
+
+## FIND POPS
+
+for finding POPs, the "good fish" version is sufficient ... don't need to go use the "gooder" version which does more drastic culling of fish based on hetzmino_fancy (perhaps required for finding HSPs)
+
+```{r, eval = FALSE}
+adults<- grep('SbIN',geno_nodups_goodfish@info$Our_sample,ignore.case=T)
+juvs <- grep('SbPL',geno_nodups_goodfish@info$Our_sample,ignore.case=T)
+
+pops <- find_POPs(geno_nodups_goodfish, subset1=adults, subset2=juvs, one_in_X_eta=1e6,
+                  keep_n=1000,
+                  nbins=50) ## find_POPs has a non-zero runtime, so is not evaluated in the vignette
+## save(pops,file=paste('pops2018_',geno_opt,'.rda',sep=''))
+
+pdf(paste('pops_histo_',geno_opt,'.pdf',sep=''))
+hist(pops$wpsex,nc=40)
+abline(v=0.045,col=2,lwd=2) 
+dev.off()
+```
+
+
+### How many look like POPs?
+
+```{r, eval = FALSE}
+sum(pops$wpsex<0.045)
+```
+
+
+## FIND HSPS
+
+For finding HSPs,
+(a) start with the "good fish" version is sufficient, then
+(b) compare with the "gooder" version which does more drastic culling of fish based on hetzmino_fancy
+
+```{r}
+fish_opt <- "good"
+#fish_opt <- "gooder"
+if(fish_opt=="good") geno_for_hsps<- geno_nodups_goodfish
+if(fish_opt=="gooder") geno_for_hsps<- geno_nodups_gooder
+```
+
+reduce the dataset to only juveniles
+
+```{r, eval = FALSE}
+is.juv <- grepl('SbPL',geno_for_hsps@info$Our_sample,ignore.case=T)
+geno_juves<- geno_for_hsps[is.juv,]
+dim(geno_juves)
+
+fname=paste('hsps2018_',geno_opt,'_',fish_opt,'.rda',sep='')
+if(file.exists(fname)) load(fname) ## if already generated, don't repeat next slow step.
+if(!file.exists(fname)) {
+  # run find_HSPs (need to run prepare_PLOD_SPA first, or else get error that Kenv is missing)
+  geno_juves <- prepare_PLOD_SPA(geno_juves)
+    hsps <- find_HSPs(geno_juves, one_in_X_eta=1e6, keep_n= 1000,
+                      bins=seq(-150,250,5)) ## find_HSPs is also not run in vignette owing to runtime
+##    hsps_dep <- find_HSPs_deprecated(geno_juves, one_in_X_eta=1e6, rough_n_pairs_to_keep= 200,
+##                                  bins=seq(-150,250,5))
+
+##  save(hsps,file=fname)
+}
+
+hist(hsps$PLOD[hsps$PLOD > 0], nc = 40)
+```
+
+
+
+## The original contents of 'vignette':
+
+    library(gbasics)
+    #library(kinference)
+    library(devtools)
+    load_all("~/current/kinference")
+
+required to inspect @ elements
+
+`library(atease)`
+
+
+need to impress on people here that putting the RIGHT data.frame in the right function is essential or BAD THINGS will happen, also keeping track of what stage a given data.frame is at
+
+    `load("dave-practice.rda")`
+
+    `load("fsps_for_dave.rda")`
+
+    `dave <- rbind( dave, more_for_dave)`
+
+## note on adding in extra data and the subset arguments
+
+what are we **doing** here? Removing totally unlikely fish?
+with other data sets need to fiddle with the xlims?
+
+`ill <- ilglk_geno(dave)`
+
+## need a hetzminoo_fancy thing here? Need to setup prepare_PLOD_SPA too?
+
+get duplicates
+from manual max_diff_genos "Try increasing this from say 10 upwards"
+nice little story here where if you set to 40 you get a spurious result
+x axis is "number of loci different" -- say something about QC
+
+`dupes <- find_duplicates(dave, max_diff_genos=100)`
+
+`hist(dupes$ndiff)`
+
+get the indices to drop
+CHECK THIS function
+
+`droppies <- drop_dups_pairwise_equiv(dupes[,2:3])`
+
+`dave_nodupes <- dave[-droppies,]`
+
+no duplicates any more
+
+`nodupes <- find_duplicates(dave_nodupes, max_diff_genos=100)`
+
+want to look at "non-technical duplicates" here too?
+
+`drop_dups_pairwise_equiv(..., want_groups=TRUE)`
+
+look at `$Our_sample`
+
+## find POPs
+
+`pops <- find_POPs(dave_nodupes, one_in_X_eta=1e3, nbins=50, keep_n = 50000)`
+
+`hist(pops$bigs$wpsex)`
+
+## something about nABOO here?
+
+`#all_pops <- 0.051`
+
+## find HSPs
+
+`dave_nodupes <- prepare_PLOD_SPA(dave_nodupes)`
+
+`is_juve <- toupper(substring(dave_nodupes@info$Our_sample, 3, 4))=="PL"`
+
+`dave_juves <- dave_nodupes[is_juve, ]`
+
+## bins found using predict_hsp_util???
+
+`dd <- find_HSPs(dave_juves, bins = seq(-120, 120, by = 5), keep_thresh = -5, eta = 10, keep_n=1000)`
+
+usually bump up number of classes
+
+    hist(dd$PLOD, nc=30)
+    #abline(dd$mean thing)
+
+could remove i and j s for POP and FSP pairs
+
+## histogram
+
+`plot(dd@bins, dd@n_PLODs_in_bin)`
+
+## log-histogram
+
+`plot(dd@bins, log(dd@n_PLODs_in_bin), type="b")`
+
+HTPs around 0 in this?
+
+for get chain
+
+`table(dd[dd$PLOD >0 & dd$PLOD <30,][,c("i","j")])`
+
+## getting FSPs
+
+HSP pairs in a matrix 2 cols
+
+`HSPs <- as.matrix(dd[, 2:3])`
+
+`pp <- find_FSPs_from_HSPs(dave_juves, HSPs)`
+
+## remove FSPs from HSPs
+
+calculate the "upper variance" not including the FSPs
+
+`variance sum((PLOD - EPLOD_HSP)^2)`
+
+HTP/HCP
+UP -- find_HSPs set one_in..
+HCP/HTP -- 
+
+## false negative rate
+
+## get_chain stuff here?
+
+## example table of numbers of HSPs per year
+## number of comparisons
+
+
