@@ -9,5 +9,5 @@
 Kin-finding pairwisely for close-kin mark-recapture
 }
 \author{
-Mark V Bravington, David L Miller
+Mark V Bravington, David L Miller, Shane M Baylis
 }

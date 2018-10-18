@@ -1,10 +1,10 @@
 ---
-title: "A framework for a kinference vignette"
+title: "kinference-vignette"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{"A framework for a kinference vignette"}
+  %\VignetteIndexEntry{kinference-vignette}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\usepackage[utf8]{inputenc}
 ---
 
 # Kinference vignette

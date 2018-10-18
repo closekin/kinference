@@ -17,7 +17,7 @@
 #' Kin-finding pairwisely for close-kin mark-recapture
 #'
 #' @docType package
-#' @author Mark V Bravington, David L Miller
+#' @author Mark V Bravington, David L Miller, Shane M Baylis
 #' @import Rcpp atease mvbutils gbasics vecless debug abind BH
 #' @importFrom Rcpp sourceCpp evalCpp
 #' @useDynLib kinference
