@@ -43,7 +43,8 @@ Load object "geno2017" that contains the genotype calls for all of the samples p
 by DArT prior to 2018
 
 ```{r}
-load('~/Data/kinference/geno2017.rda')
+# load('~/R/localPackages/kinference/data/geno2017.rda')
+load('~/Data/kinference/geno2017.rda') ## IP is tricky for these data!
 geno_opt <- "2017"
 ```
 

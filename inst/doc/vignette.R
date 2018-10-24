@@ -15,7 +15,8 @@ library( kinference) ## don't overwrite it with the one from the Rmvb repo!`
     ## library(handy2) ## not requred under the current build of kinference
 
 ## ------------------------------------------------------------------------
-load('~/Data/kinference/geno2017.rda')
+# load('~/R/localPackages/kinference/data/geno2017.rda')
+load('~/Data/kinference/geno2017.rda') ## IP is tricky for these data!
 geno_opt <- "2017"
 
 ## ------------------------------------------------------------------------
