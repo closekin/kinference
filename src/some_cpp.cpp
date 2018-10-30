@@ -2,7 +2,7 @@
 // [[Rcpp::depends(BH)]]
 
 #include <RcppArmadillo.h>
-#include <boost/tuple/tuple.hpp>
+// #include <boost/tuple/tuple.hpp>
 #include <queue>
 
 using namespace Rcpp;
@@ -195,13 +195,13 @@ BEGIN_RCPP
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the PLOD and i and j
-  typedef boost::tuple<double, int, int> PLODder;
+  typedef std::tuple<double, int, int> PLODder;
   // need to define a way in which we sort a priority_queue of tuples...
   // https://stackoverflow.com/questions/5712172/how-can-i-store-3-integer-in-priority-queue
   class my_greater  {
   public:
     bool operator() (const PLODder& arg1, const PLODder& arg2) const{
-      return arg1.get<0>() > arg2.get<0>();
+      return get<0>(arg1) > get<0>(arg2);
       return false;
     }
   };
@@ -260,7 +260,7 @@ BEGIN_RCPP
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( PLODing_along.top().get<0>() < this_PLOD){
+          if( get<0>(PLODing_along.top()) < this_PLOD){
             PLODing_along.pop();
             PLODing_along.push(new_PLOD_on_the_block);
           }
@@ -289,9 +289,9 @@ BEGIN_RCPP
 
   // unwrap that nice structure I guess :'(
   while (!PLODing_along.empty()) {
-    big_PLOD.push_back(PLODing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(PLODing_along.top().get<1>() + 1);
-    big_j.push_back(PLODing_along.top().get<2>() + 1);
+    big_PLOD.push_back(get<0>(PLODing_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(PLODing_along.top()) + 1);
+    big_j.push_back(get<2>(PLODing_along.top()) + 1);
     PLODing_along.pop();
   }
 
@@ -379,12 +379,12 @@ BEGIN_RCPP
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the Nexclu and i and j
-  typedef boost::tuple<double, int, int> Nexcluder;
+  typedef std::tuple<double, int, int> Nexcluder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const Nexcluder& arg1, const Nexcluder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -451,7 +451,7 @@ BEGIN_RCPP
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( Nexcluing_along.top().get<0>() > this_Nexclu){
+          if( get<0>(Nexcluing_along.top()) > this_Nexclu){
             Nexcluing_along.pop();
             Nexcluing_along.push(new_Nexclu_on_the_block);
           }
@@ -484,9 +484,9 @@ BEGIN_RCPP
 
   // unwrap that nice structure I guess :'(
   while (!Nexcluing_along.empty()) {
-    big_Nexclu.push_back(Nexcluing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(Nexcluing_along.top().get<1>() + 1);
-    big_j.push_back(Nexcluing_along.top().get<2>() + 1);
+    big_Nexclu.push_back(get<0>(Nexcluing_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(Nexcluing_along.top()) + 1);
+    big_j.push_back(get<2>(Nexcluing_along.top()) + 1);
     Nexcluing_along.pop();
   }
 
@@ -574,12 +574,12 @@ SEXP POP_wt_paircomps_lots(
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the WPSEX and i and j
-  typedef boost::tuple<double, int, int> WPSEXder;
+  typedef std::tuple<double, int, int> WPSEXder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const WPSEXder& arg1, const WPSEXder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -646,7 +646,7 @@ SEXP POP_wt_paircomps_lots(
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( WPSEXing_along.top().get<0>() > this_wpsex){
+          if( get<0>(WPSEXing_along.top()) > this_wpsex){
             WPSEXing_along.pop();
             WPSEXing_along.push(new_WPSEX_on_the_block);
           }
@@ -677,9 +677,9 @@ SEXP POP_wt_paircomps_lots(
 
   // unwrap that nice structure I guess :'(
   while (!WPSEXing_along.empty()) {
-    big_WPSEX.push_back(WPSEXing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(WPSEXing_along.top().get<1>() + 1);
-    big_j.push_back(WPSEXing_along.top().get<2>() + 1);
+    big_WPSEX.push_back(get<0>(WPSEXing_along.top())); // I should write "effing 0-base" here :P
+    big_i.push_back(get<1>(WPSEXing_along.top()) + 1);
+    big_j.push_back(get<2>(WPSEXing_along.top()) + 1);
     WPSEXing_along.pop();
   }
 
@@ -740,12 +740,12 @@ SEXP DUP_paircomps_lots(
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the similarity and i and j
-  typedef boost::tuple<double, int, int> similarder;
+  typedef std::tuple<double, int, int> similarder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const similarder& arg1, const similarder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -793,7 +793,7 @@ SEXP DUP_paircomps_lots(
             // uh oh we filled-up! check to see if we really need to add
             // this one (is it better than what's in there?), then exile
             // the last element to the garbage and induct our new best friend
-            if( similaring_along.top().get<0>() > this_ndiff){
+            if( get<0>(similaring_along.top()) > this_ndiff){
               similaring_along.pop();
               similaring_along.push(new_similar_on_the_block);
             }
@@ -813,9 +813,9 @@ SEXP DUP_paircomps_lots(
 
   // unwrap that nice structure I guess :'(
   while (!similaring_along.empty()) {
-    big_similar.push_back(similaring_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(similaring_along.top().get<1>() + 1);
-    big_j.push_back(similaring_along.top().get<2>() + 1);
+    big_similar.push_back(get<0>(similaring_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(similaring_along.top()) + 1);
+    big_j.push_back(get<2>(similaring_along.top()) + 1);
     similaring_along.pop();
   }
 
