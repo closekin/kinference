@@ -18,16 +18,10 @@ Package 'kinference' is presented as source code, and includes c++ (via Rcpp) th
     * vecless
     * gbasics
     * genocalldart
-* In your OS:
-  * [Boost c++ libraries](https://www.boost.org/users/download/)
 
-**GNU/Linux users**: you can install Boost using `sudo apt-get install libboost-dev-all`. If you install via apt-get, you *probably* will not have to update any 'path' variables.
+If installing from source, Windows users will need to download and install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
-**Windows users**: note the path to the root of the Boost - it will be a folder with a name similar to 'boost_1_68_0'. You *will* need to update a 'path' variable.
-
-Additionally, Windows users will need to download and install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
-
-## Installation process: GNU/Linux
+## Installation from source: GNU/Linux
 
 In R, run the following:
 
@@ -40,18 +34,31 @@ package will compile and install
     
     library(kinference)
 
-you quickly check installation by:
+you can check installation by:
 
     ?crapometer  ## should bring up an HTML help menu.
 
-## Installation process: Windows
+## Installation from Rmvb-repo: GNU/Linux or Windows
+
+In R, run:
+
+    install.packages(repos='https://markbravington.github.io/Rmvb-repo')
+
+You should see a pop-up window with a list of packages. Double-click 'kinference'.
+
+    library(kinference)
+
+you can check installation by:
+
+    ?crapometer  ## should bring up an HTML help menu.
+
+## Installation from source: Windows
 
 In R, run the following:
 
     library(devtools)
     setwd( "path/to/kinference" ) # e.g., "C:/Users/myID/R/local/kinference/"
                                   # make sure you have write permission for 'kinference'.
-    Sys.setenv("PKG_CXXFLAGS"="-I/path/to/boost/root/") # e.g., "-I/C:/boost_1_68_0/"
     install()
 
 package will compile and install
@@ -62,7 +69,6 @@ you can check installation by:
 
     ?crapometer  ## should bring up an HTML help menu.
 
-
 ## Notes, in case you have bugs.
 
 Bug 1: Errors like: "files in does not match files out".
@@ -71,13 +77,12 @@ Bug 1: Errors like: "files in does not match files out".
 
 Bug 2: Errors like: "file type not recognized: some_cpp.o" or "... RccpExports.o".
 
- - There is some compiled code where there shouldn't be, and your compiler is not happy about it. If you encounter this bug, just delete the following two files from kinference/src/, and run install() again:
+ - This bug is only known to occur under Windows. There is some compiled code where there shouldn't be, and your compiler is not happy about it. If you encounter this bug, just delete the following two files from kinference/src/, and run install() again:
 
   -- RcppExports.o
   -- some_cpp.o
 
-Bug 3: Errors that include: fatal error: boost/tuple/tuple.hpp: no such file or directory.
+Bug 3: Anything implying that c++11 isn't available.
 
- - the path to the boost root is not correctly specified.
-
+ - 'kinference' inclues compiled c++ code, and that code includes some features that are only available in c++11 and later specifications. Some compilers cannot handle c++11, and it is possible that your compiler is one of those. You can either make sure you are using a compiler capable of c++11, or (if you are a Windows user) install a pre-compiled binary from the Rmvb-repo.
 

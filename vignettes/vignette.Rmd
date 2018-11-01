@@ -45,6 +45,7 @@ by DArT prior to 2018
 ```{r}
 # load('~/R/localPackages/kinference/data/geno2017.rda')
 load('~/Data/kinference/geno2017.rda') ## IP is tricky for these data!
+# load("C:/Users/bay043/Data/geno2017.rda") ## Use this source on the Windows VM!
 geno_opt <- "2017"
 ```
 
