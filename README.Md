@@ -38,11 +38,11 @@ you can check installation by:
 
     ?crapometer  ## should bring up an HTML help menu.
 
-## Installation from Rmvb-repo: GNU/Linux or Windows
+## Installation from mark's_semi-secret_repo: GNU/Linux or Windows
 
 In R, run:
 
-    install.packages(repos='https://markbravington.github.io/Rmvb-repo')
+    install.packages(repos='https://markbravington.github.io/mark's_semi-secret_repo')
 
 You should see a pop-up window with a list of packages. Double-click 'kinference'.
 
@@ -84,5 +84,5 @@ Bug 2: Errors like: "file type not recognized: some_cpp.o" or "... RccpExports.o
 
 Bug 3: Anything implying that c++11 isn't available.
 
- - 'kinference' inclues compiled c++ code, and that code includes some features that are only available in c++11 and later specifications. Some compilers cannot handle c++11, and it is possible that your compiler is one of those. You can either make sure you are using a compiler capable of c++11, or (if you are a Windows user) install a pre-compiled binary from the Rmvb-repo.
+ - 'kinference' inclues compiled c++ code, and that code includes some features that are only available in c++11 and later specifications. Some compilers cannot handle c++11, and it is possible that your compiler is one of those. You can either make sure you are using a compiler capable of c++11, or (if you are a Windows user) install a pre-compiled binary from Mark's semi-secret repo.
 
