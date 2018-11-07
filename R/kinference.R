@@ -3802,14 +3802,44 @@ return( l)
 }
 
 
-#' define_genotypes(): Bare documentation
+#' define_genotypes(): Documentation (warning?) ported from gbasics
 #'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' You probably don't want to run this... it's documented only so it
+#' can be exported for other packages to use. It lets you refer to a
+#' genotype "AB" as just AB etc. It creates them *in the caller*, so
+#' a lot of routines run it internally as a first step so that their
+#' subsequent code is simpler- and that is the intended use. If you
+#' run it from the R prompt, the things will be created in
+#' ‘.GlobalEnv’.
 #'
-#' @param nlocal a param. Defaults to sys.parent()
+#' The full set of possible genotypes are created as objects; e.g.
+#' there will be an object ‘AB’ which is really a string "AB", but
+#' with a ‘noquote’ attribute so that you just see it without the
+#' quotes.
+#'
+#' It also creates some allowed groupings of genotypes (e.g. if there
+#' is no C allele at a locus; whether or not distinguishing single
+#' nulls, etc).
+#'
+#' This particular version sets up 3-allele-plus-null cases (A,B,C,O)
+#' and various combinations.
+#'
+#' Since you are not really meant to call this, I'm not going to
+#' improve the documentation.
+#'
+#' @param nlocal frame number, or environment, to create things in -
+#'               see 'mlocal'. Leave this alone unless you _really_
+#'               know what you're doing. Defaults to sys.parent()
+#' @return None, but various objects are created; see the code.
 #' @export
 #' @importFrom mvbutils cq extract.named named mlocal
+#' @seealso 'mlocal' in package 'mvbutils'.
+#' @examples
+#' ## Not run:
+#'
+#' define_genotypes()
+#' A # thar she
+#' ## End(Not run)
 
 "define_genotypes" <- function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
