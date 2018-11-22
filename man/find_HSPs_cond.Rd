@@ -33,6 +33,6 @@ find_HSPs_cond(snpg, subset1 = 1 \%upto\% nrow(snpg),
 \description{
 This function has only the bare minimum of documentation necessary for roxygen to
 parse it. We should probably add some proper documentation here. The markup around
-this function suggests that maybe it shouldn't exist, so you probably shouldn't use
-it.
+this function suggests that it is unfinished and maybe it shouldn't exist, so you
+probably shouldn't use it.
 }

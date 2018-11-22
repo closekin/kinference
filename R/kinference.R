@@ -356,17 +356,19 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
-  define_genotypes()
+  kinference::define_genotypes()
   for( iwhat in cq( LOD, PUP, PUPLOD, PUPLOD2)) {
     assign( 'O' %&% iwhat, snpg@Kenv[[ iwhat]])
   }
   mg <- OLOD@mg
 
-  use6 <- snpg@locinfo$use6
-  use4 <- !use6
+  useN <- snpg@locinfo$useN
+## use4 <- !use6
   temp_snpg <- snpg
   recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg[ , use4] <- recode4to6temp( snpg[, use4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  recode3to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x[ x=='OO'] <- BB; x}
+  temp_snpg[ , useN == 4] <- recode4to6temp( snpg[, useN == 4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  temp_snpg[ , useN == 3] <- recode3to6temp( snpg[, useN == 3]) # and similar, for 3-way
 
   # For 4way loci, temporarily treat XO as XX...
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
@@ -411,8 +413,6 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   my_v_CLOD[ l, i]:= my_e2_CLOD[ l, i] - sqr( my_e_CLOD[ l, i])
   my_rat_CLOD[ i]:= (SUM_ %[l]% my_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% my_v_CLOD[ l, i])
 
-return( data.frame( ECLOD=colSums( my_e_CLOD), VCLOD=colSums( my_v_CLOD)))
-
   if( nsim) {
     gsim <- matrix( 0L, nsim, n_loci)
     for( il in seq_len( n_loci)) {
@@ -425,6 +425,8 @@ return( data.frame( ECLOD=colSums( my_e_CLOD), VCLOD=colSums( my_v_CLOD)))
     sim_rat_CLOD[ i]:= (SUM_ %[l]% sim_e_CLOD[ l, i] ) / sqrt( SUM_ %[l]% sim_v_CLOD[ l, i])
   }
 
+return( data.frame( ECLOD=colSums( my_e_CLOD), VCLOD=colSums( my_v_CLOD)))
+  ## everything after the return() is ignored - does useN actually have any impact on this fun?
 
   # Vectorized individual KGFs, for each sample (columns) and numerous t-values (row)
   K <- function( tt) {
@@ -449,8 +451,6 @@ return( data.frame( ECLOD=colSums( my_e_CLOD), VCLOD=colSums( my_v_CLOD)))
     SLL[ it, l] := PUPLOD2[ l, g12] %[g12]% ETT[ it, l, g12]
     rowSums( (SLL/S-gbasics::sqr( SL/S)))
   }
-
-
 
 stop()
 
@@ -541,8 +541,7 @@ function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
   iv <- solve( vdull)
   # dist <- sstat %*% (iv %*% t( sstat)) god knows what the bloody syntax is supposed to bloody be
   dist[ f]:= sstat[ f, s] %[s]% iv[ s, s1] %[s1]% sstat[ f, s1]
-  
-  
+    
   hist( dist[ boring], nc=50)
   abline( v=dist[ focusees], col='red')
 
@@ -1514,14 +1513,13 @@ return( wtsame)
 
 
 #' @rdname find_POPs
-#' @export
 #' @importFrom atease @	
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
 
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta,
+    one_in_X_eta, 
     keep_n=1000,
     eta= NULL,
     keep_thresh= NULL,
@@ -1557,11 +1555,17 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
   # ... use the LOD that's in Kenv, where SPA is calculated
 
-  extract.named( snpg@locinfo[ cq( use6, LOD6, LOD4)])
-  use4 <- !use6
+  extract.named( snpg@locinfo[ cq( useN, LOD6, LOD4)])
+##  use4 <- !use6
   temp_snpg <- snpg
   recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg[ , use4] <- recode4to6temp( snpg[, use4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  recode3to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x[ x=='OO'] <- BB; x}
+##   recode3to6temp <- function( x) { x[ x=='AAO'] <- AA; x[ x=='BBOO'] <- BB; x}
+    ##  temp_snpg[ , useN] <- recode4to6temp( snpg[, useN]) # (AA,AO) -> AA; (BB,BO) -> BB
+    ##  temporarily commented out to cause 3-way genotyping
+
+  temp_snpg[ , useN == 4] <- recode4to6temp( snpg[, useN == 4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  temp_snpg[ , useN == 3] <- recode3to6temp( snpg[, useN == 3]) # (AA,AO) -> AA; (BB,BO) -> BB
   temp_LOD <- snpg@Kenv$LOD # already done in prepare_PLOD_SPA
 
   # Remove extranea
@@ -1670,11 +1674,13 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
   # ... use the LOD that's in Kenv, where SPA is calculated
 
-  extract.named( snpg@locinfo[ cq( use6, LOD6, LOD4)])
-  use4 <- !use6
+  extract.named( snpg@locinfo[ cq( useN, LOD6, LOD4)])
+#  use4 <- !use6
   temp_snpg <- snpg
   recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg[ , use4] <- recode4to6temp( snpg[, use4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  recode3to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x[ x=='OO'] <- BB; x}
+  temp_snpg[ , useN == 4] <- recode4to6temp( snpg[, useN ==4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  temp_snpg[ , useN == 3] <- recode3to6temp( snpg[, useN ==3]) # (AA,AO) -> AA; (BB,BO) -> BB
   temp_LOD <- snpg@Kenv$LOD # already done in prepare_PLOD_SPA
 
   # Remove extranea
@@ -1738,12 +1744,13 @@ return( result)
 ## TODO
 # - unfinished
 # - should this exist?
+
 #' find_HSPs_cond(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
 #' parse it. We should probably add some proper documentation here. The markup around
-#' this function suggests that maybe it shouldn't exist, so you probably shouldn't use
-#' it.
+#' this function suggests that it is unfinished and maybe it shouldn't exist, so you
+#' probably shouldn't use it.
 #'
 #' @param snpg a param
 #' @param subset1 a param
@@ -1759,6 +1766,7 @@ return( result)
 #' @importFrom atease @ @<-
 #' @importFrom mvbutils cq %without.name% returnList
 #' @importFrom gbasics sqr
+
 "find_HSPs_cond" <- function(snpg, subset1=1 %upto% nrow(snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,
@@ -1808,11 +1816,13 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   returnList( e_CLOD, e2_CLOD, e_CLOD_HSP)
   }
 
-  extract.named( snpg@locinfo[ cq( use6, LOD6, LOD4)])
-  use4 <- !use6
+  extract.named( snpg@locinfo[ cq( useN, LOD6, LOD4)])
+  ## use4 <- !use6
   temp_snpg <- snpg
   recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  temp_snpg[ , use4] <- recode4to6temp( snpg[, use4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  recode3to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x[ x=='OO'] <- BB; x}    
+  temp_snpg[ , useN == 4] <- recode4to6temp( snpg[, useN == 4]) # (AA,AO) -> AA; (BB,BO) -> BB
+  temp_snpg[ , useN == 3] <- recode3to6temp( snpg[, useN == 3]) # (AA,AO) -> AA; (BB,BO) -> BB
   temp_LOD <- LOD # from Kenv; already done in prepare_PLOD_SPA
 
   # Remove extranea
@@ -2180,7 +2190,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   # Doesn't bother with OO-AB
 
   define_genotypes()
-  extract.named( snpg@locinfo[ cq( use6, PUP4, pbonzer)])
+  extract.named( snpg@locinfo[ cq( useN, PUP4, pbonzer)])
   p0 <- pbonzer[,'O'] + pbonzer[,'C']
   pA <- pbonzer[,'A']
   pB <- pbonzer[,'B']
@@ -2572,7 +2582,7 @@ function( thing, seed) {
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
 ###################
   define_genotypes()
-  extract.named( snpg@locinfo[ cq( use6, PUP4, pbonzer)])
+  extract.named( snpg@locinfo[ cq(  PUP4, pbonzer)]) ## used to also call use6; not used
   p0 <- pbonzer[,'O'] + pbonzer[,'C']
   pA <- pbonzer[,'A']
   pB <- pbonzer[,'B']
@@ -2592,7 +2602,7 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
   
   ww <- edash / v
   ww <- c( ww / sum( ww) ) # else get 1-col matrix
-stopifnot( all( ww>0))
+  stopifnot( all( ww>0))
 
   use_loci <- which( ww > 0) # all of them, for now
   temp_snpg <- snpg[ , use_loci]
@@ -2826,36 +2836,196 @@ return( c( whmo))
 
   # For the 4-ways, must condense g6p's
 
-  map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
-  # AB & OO are OK; AAO should receive both AA and AO; etc
-  mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to4[ yup] <- 1
-  mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to4[ yup] <- 1
+  if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
+    map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
+    # AB & OO are OK; AAO should receive both AA and AO; etc
+    mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to4[ yup] <- 1
+    mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to4[ yup] <- 1
 
-  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
-  # ... but vecless can't presently handle multi-stages
+    # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+    # ... but vecless can't presently handle multi-stages
 
-  A[l,i,k] := g6p0[l,i,j] %[j]% map6to4[j,k]
-  g4p0[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+    A[l,i,k] := g6p0[l,i,j] %[j]% map6to4[j,k]
+    g4p0[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
 
-  A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
-  g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+    A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
+    g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
 
-  s4 <- predict_hsp_util( g4p0, g4p1, want_LOD_table, k=k)
- 
-  if( want_LOD_table) {
-    li$LOD6 <- s6@LOD # matrix
-    li$PUP6 <- s6@PUP
-    li$LOD4 <- s4@LOD
-    li$PUP4 <- s4@PUP
-    s6@LOD <- s6@LOD <- s4@LOD <- s4@PUP <- NULL
+    s4 <- predict_hsp_util( g4p0, g4p1, want_LOD_table, k=k)
+
+    ### bring in an s3 as well:
+    map6to3 <- matrix( 0, 6, 3, dimnames=list( genotypes6, genotypes3_ambig))
+    # AB & OO are OK; AAO should receive both AA and AO; etc
+    mm <- match( genotypes6, substring( genotypes3_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to3[ yup] <- 1
+    mm <- match( genotypes6, substring( genotypes3_ambig, 2, 3), 0) # ... and the "AO" bit
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to3[ yup] <- 1
+    mm <- match( genotypes6, substring( genotypes3_ambig, 3, 4), 0) # ... and the "OO" bit
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to3[ yup] <- 1
+
+    # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+    # ... but vecless can't presently handle multi-stages
+
+    A[l,i,k] := g6p0[l,i,j] %[j]% map6to3[j,k]
+    g3p0[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+    A[l,i,k] := g6p1[l,i,j] %[j]% map6to3[j,k]
+    g3p1[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+    s3 <- predict_hsp_util( g3p0, g3p1, want_LOD_table, k=k)
+    
+    if( want_LOD_table) {
+      li$LOD6 <- s6@LOD # matrix
+      li$PUP6 <- s6@PUP
+      li$LOD4 <- s4@LOD
+      li$PUP4 <- s4@PUP
+      li$LOD3 <- s3@LOD
+      li$PUP3 <- s3@PUP
+      s6@LOD <- s6@LOD <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+    }
+
+    # li <- cbind( li, s6, s4)
+    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
+    li[ names( s4)] <- s4 # instead of cbind--- this overwrites
+    li[ names( s3)] <- s3 # instead of cbind--- this overwrites
+
+    ## li[ !li$use6, names( s4)] <- s4[ !li$use6,] ## original, subbed in the 4-ways
+    ## li[ !li$use6, names( s3)] <- s3[ !li$use6,]  ## modified, subs in the 3-ways
+    li[ li$useN == 4, names( s4)] <- s4[ li$useN == 4,] ## subs in 4-ways where useN == 4
+    li[ li$useN == 3, names( s3)] <- s3[ li$useN == 3,] ## subs in 3-ways where useN == 3
+
+  } else { # ... sneaky override, for non-ABCO systems
+    # shouldn't really be called "...6" obvs
+    s6$use6 <- TRUE
+    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
   }
 
-  li <- cbind( li, s6, s4)
-  li[ !li$use6, names( s4)] <- s4[ !li$use6,]
+  lociar@locinfo <- li
+return( lociar)
+}
+
+
+#' hsp_power2(): Kin-finding power for microhaplotyped loci
+#'
+#' This is a short-term fudge for checking HSP-finding power of a bunch of loci that
+#' (i) can have as many haplotypes as you like, but (ii) have no errors or nulls.
+#'
+#' At some point in future, \code{kinference} might be changed so that it can handle
+#' >2 alleles gracefully. But not yet. So for now this version does some ghastly
+#' "live-hacking" of existing code for \code{\link{hsp_power}} to implement no-errors
+#' no-nulls multi-allelic case. It will be hard to follow, so use \code{mtrace} if
+#' you really want to see what's going on. The guts of the code is in
+#' \code{\link{hsp_power}} and \code{predict_hsp_util}.
+#' 
+#' @aliases hsp_power2
+#' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles). Locus names
+#'               are set from the rownames, or "L1", "L2" etc if there are no rownames.
+#'               Allele names will be set to "A", "B", "C", etc, regardless of colnames;
+#'               you do not have a choice there. Will be renormalized so rows sum to unity.
+#'               NB \code{lociar} can also be a \code{snpgeno} object, as expected for
+#'               \code{hsp_power}. If so, then the allele freqs are assumed to live in
+#'               \code{lociar$locinfo$pbonzer}, and \bold{no} nulls or genotyping errors
+#'               are allowed for; hence, for a DartCap "ABCO"-style dataset, \code{hsp_power}
+#'               and \code{hsp_power2} will give \emph{different} answers.
+#' @param want_LOD_table can't think why you'd set this to FALSE
+#' @param k target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.
+#' @return If \code{lociar} is an allele-frequency matrix, then you get a dataframe
+#'         with one row per locus and columns "Ediff", "V.UP", and "sdiff". "Ediff" is
+#'         "E[LOD|HSP] - E[LOD|UP]"; "V.UP" is "V[LOD|UP]"; "sdiff" is \code{sqrt(V.UP)/Ediff},
+#'         useful for ranking locus power. See \bold{Examples} for use.
+#' @seealso hsp_power
+#' @importFrom atease @ @<-
+#' @importFrom vecless make_playback
+#' @keywords misc
+#' @examples
+#' # ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+#' # POW <- hsp_power2( ALF)
+#' # look at the contents of each...
+#' # Now do it for lots of loci
+#' # lots <- 500
+#' # ALF <- matrix( runif( lots*5), lots, 5)
+#' # POW <- hsp_power2( ALF)
+#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+#' # V <- sum( POW$V.UP)  # V[PLOD|UP]
+#' # E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+#' # E / sqrt( V) # 10.5 SDs--- good ! Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+#' # ... more stringent than "typical"
+#' # bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+#' # smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+#' # ... so that's probably OK...
+#' # this is a test.
+#' @export
+
+hsp_power2 <- function( lociar,
+    want_LOD_table=TRUE, # T/F
+    k # 0.5 for HSPs
+){
+############
+  define_genotypes()
+  li <- lociar@locinfo
+  li1 <- li[1,]
+
+  temp0 <- with( li1, calc_g6probs_IBD0_scalar( pbonzer, snerr, record=TRUE))
+  cg6p0 <- make_playback( calc_g6probs_IBD0_scalar, temp0)
+
+  temp1 <- with( li1, calc_g6probs_IBD1_scalar( pbonzer, snerr, record=TRUE))
+  cg6p1 <- make_playback( calc_g6probs_IBD1_scalar, temp1)
+
+  g6p0 <- with( li, cg6p0( pbonzer, snerr))
+  g6p1 <- with( li, cg6p1( pbonzer, snerr))
+
+  s6 <- predict_hsp_util( g6p0, g6p1, want_LOD_table, k=k)
+
+  # For the 4-ways, must condense g6p's
+
+  if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
+    map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
+    # AB & OO are OK; AAO should receive both AA and AO; etc
+    mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to4[ yup] <- 1
+    mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
+    yup <- cbind( which(mm>0), mm[ mm>0])
+    map6to4[ yup] <- 1
+
+    # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+    # ... but vecless can't presently handle multi-stages
+
+    A[l,i,k] := g6p0[l,i,j] %[j]% map6to4[j,k]
+    g4p0[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+    A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
+    g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+    s4 <- predict_hsp_util( g4p0, g4p1, want_LOD_table, k=k)
+
+    if( want_LOD_table) {
+      li$LOD6 <- s6@LOD # matrix
+      li$PUP6 <- s6@PUP
+      li$LOD4 <- s4@LOD
+      li$PUP4 <- s4@PUP
+      s6@LOD <- s6@LOD <- s4@LOD <- s4@PUP <- NULL
+    }
+
+    # li <- cbind( li, s6, s4)
+    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
+    li[ names( s4)] <- s4 # instead of cbind--- this overwrites
+
+    li[ !li$use6, names( s4)] <- s4[ !li$use6,]
+  } else { # ... sneaky override, for non-ABCO systems
+    # shouldn't really be called "...6" obvs
+    s6$use6 <- TRUE
+    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
+  }
 
   lociar@locinfo <- li
 return( lociar)
@@ -3184,7 +3354,7 @@ stop( "Only meant for 'genotypes4_ambig' data")
 
   li <- sg$locinfo
   li$snerr <- matrix( 0.5, nrow=nrow( li), ncol=4, dimnames=list( NULL, cq( AA2AO, AO2AA, BB2BO,  BO2BB)))
-  li$use6 <- FALSE
+  li$useN <- 4
   sg$locinfo <- li
   sg$diplos <- genotypes6
 
@@ -3233,6 +3403,50 @@ map6to4 <- function(g6p0, g6p1){
   g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
 
   return(list(g4p0=g4p0, g4p1=g4p1))
+
+}
+
+#' map6to3(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' From the name, it seems like this is the reverse operation of map4todummy6() -
+#' it allows you to convert 6-way genotypes (ABO, BBO, etc.) to 3-way genotypes
+#' (AAO, AB, BBOO), for use in functions that require one or the other.
+#'
+#' @param g6p0 a param
+#' @param g6p1 a param
+#' @export
+
+map6to3 <- function(g6p0, g6p1){
+
+  define_genotypes()
+
+  # For the 4-ways, must condense g6p's
+
+  map6to3 <- matrix( 0, 6, 3, dimnames=list( genotypes6, genotypes3_ambig))
+  # AB & OO are OK; AAO should receive both AA and AO; etc
+  mm <- match( genotypes6, substring( genotypes3_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+  mm <- match( genotypes6, substring( genotypes3_ambig, 2, 3), 0) # ... and the "AO" bit
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+  mm <- match( genotypes6, substring( genotypes3_ambig, 3, 4), 0) # ... and the "OO" bit
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+
+  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+  # ... but vecless can't presently handle multi-stages
+
+  A[l,i,k] := g6p0[l,i,j] %[j]% map6to3[j,k]
+  g3p0[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+  A[l,i,k] := g6p1[l,i,j] %[j]% map6to3[j,k]
+  g3p1[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+  return(list(g3p0=g3p0, g3p1=g3p1))
 
 }
 
@@ -3321,20 +3535,20 @@ return( retval)
 #' @importFrom gbasics make_genopairer sqr
 
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
-# To be run after hsp_power( ..., want_LOD_table=TRUE)
-
+    ## To be run after hsp_power( ..., want_LOD_table=TRUE)
+    
 # n_pts_SPA_renorm should really be as big as R can handle without running
 # out of memory but 201 should be OK I guess. If 201 and 301 give
 # almost-identical results then all well!
 
-stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
+stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
 
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
   # Combine 4way and 6way stuff into overall LOD and PUP
-  extract.named( geno6@locinfo[ cq( use6, LOD6, LOD4, PUP6, PUP4)])
-  use4 <- !use6
+  extract.named( geno6@locinfo[ cq( useN, LOD6, LOD4, PUP6, PUP4, LOD3, PUP3)])
+##  use4 <- !use6
 
   # DO NOT change actual genos though; they will be changed on-the-fly prior to kin-finding
   # ... code WOULD be this:
@@ -3346,26 +3560,58 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
   PUP <- PUP6
   cn6 <- colnames( LOD6)
   cn4 <- colnames( LOD4)
+  cn3 <- colnames( LOD3)
 
-  # Change only the entries with "full homz" since "single nulls" won't be accessed
-  for( ichangio in grep( 'AA|BB', cn6) %except% grep( 'AO|BO', cn6)){
-    was1 <- substring( cn6[ ichangio], 1, 2)
-    was2 <- substring( cn6[ ichangio], 4, 5)
-    now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
-    now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
-    iget4 <- paste( now1, now2, sep='/')
-    if( iget4 %not.in% cn4) { # reverse the order
-      iget4 <- paste( now2, now1, sep='/')
-    }
-
-    LOD[ use4, ichangio] <- LOD4[ use4, iget4]
-    PUP[ use4, ichangio] <- PUP4[ use4, iget4]
-  }
+##    if( genotype_way == 4) { 
+        ## Change only the entries with "full homz" since "single nulls" won't be accessed
+        for( ichangio in grep( 'AA|BB', cn6) %except% grep( 'AO|BO', cn6)){
+            was1 <- substring( cn6[ ichangio], 1, 2)
+            was2 <- substring( cn6[ ichangio], 4, 5)
+            now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
+            now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
+            iget4 <- paste( now1, now2, sep='/')
+            if( iget4 %not.in% cn4) { # reverse the order
+                iget4 <- paste( now2, now1, sep='/')
+            }
+            LOD[ useN == 4, ichangio] <- LOD4[ useN == 4, iget4]
+            PUP[ useN == 4, ichangio] <- PUP4[ useN == 4, iget4]
+        }
+##    } else if( genotype_way == 3) {
+        for( ichangio in grep( 'AA|BB|OO', cn6) %except% grep( 'AO|BO', cn6)) {
+            was1 <- substring( cn6[ ichangio], 1, 2)
+            was2 <- substring( cn6[ ichangio], 4, 5)
+            if( was1 == 'OO' | was2 == 'OO') {  ## crop out the double-nulls; par-format them
+                if( was1 == 'OO') { now1 <- 'BBO'}
+                if( was2 == 'OO') { now2 <- 'BBO'}
+            } else { ## handle the AO | BO set
+                now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
+                now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
+            } ## add the trailing 'O' for OO | BO | BB, giving BBOO
+            if( now1 == 'BBO') { now1 <- 'BBOO' }
+            if( now2 == 'BBO') { now2 <- 'BBOO' }
+            iget3 <- paste( now1, now2, sep='/')
+            if( iget3 %not.in% cn3) { # reverse the order
+                iget3 <- paste( now2, now1, sep='/')
+            }
+            LOD[ useN == 3, ichangio] <- LOD3[ useN == 3, iget3]
+            PUP[ useN == 3, ichangio] <- PUP3[ useN == 3, iget3]
+        }
+##    }
+    
   # For safety's sake, LOD( XO,...) := NA; should never be accessed
-  hasO <- grep( '(A|B)O', cn6)
-  LOD[ use4, hasO] <- NA # security in case of wrong access later for real data
-  PUP[ use4, grep( '(A|B)O', cn6)] <- 0
-  LOD@mg <- make_genopairer( geno6@diplos)
+
+##    if(genotype_way == 4) {
+        hasO_4way <- grep( '(A|B)O', cn6)
+##    } else if(genotype_way == 3) {
+        hasO_3way <- grep( '.O', cn6)
+##    }
+        
+    LOD[ useN == 4, hasO_4way] <- NA # security in case of wrong access later for real data
+    PUP[ useN == 4, hasO_4way] <- 0  ## flip to use3 here!
+    LOD[ useN == 3, hasO_3way] <- NA # security in case of wrong access later for real data
+    PUP[ useN == 3, hasO_3way] <- 0  ## flip to use3 here!
+
+    LOD@mg <- make_genopairer( geno6@diplos)
 
   make_K <- function( PUP, LOD) { # ... while the sun skines
 
@@ -3429,6 +3675,7 @@ stopifnot( all( cq( LOD4, LOD6, use6) %in% names( geno6@locinfo)))
 
 return( geno6)
 }
+
 
 #' set_thresholds(): Bare documentation
 #'
@@ -3850,6 +4097,7 @@ return( l)
   genotypes4_ambig <- cq( OO, AB, AAO, BBO)
   genotypes6 <- cq( AA, AB, AO, BB, BO, OO)
   genotypes_C <- cq( AA, AB, AC, AO, BB, BC, BO, CC, CO, OO)
+  genotypes3_ambig <- cq( AB, AAO, BBOO)
 
   for( ig in genotypes) {
     # assign( ig, structure( as.raw( match( ig, genotypes)), class='ABOSNP'))
@@ -4127,6 +4375,7 @@ calculate_LOD_HSP <- function(lociar, k=0.5){
 return( retval)
 
 }
+
 
 
 # MVB's workaround for futile CRAN 'no visible blah' check:
