@@ -9,7 +9,7 @@
 \title{Kin-finders for loads-of-SNPs datasets}
 \usage{
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, max_diff_genos, keep_n = 1000)
+  subset2 = subset1, max_diff_genos, keep_n = 0.5 * nrow(snpg))
 
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, keep_n = 1000, eta = NULL, keep_thresh = NULL,

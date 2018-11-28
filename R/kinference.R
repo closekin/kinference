@@ -24,8 +24,6 @@
 #' @name kinference
 NULL
 
-
-
 "old.onLoad" <-
 function( libname, pkgname) {
   cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
@@ -759,7 +757,7 @@ return( snpg)
 
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
-         subset2=subset1, max_diff_genos, keep_n=1000){
+         subset2=subset1, max_diff_genos, keep_n=0.5*nrow(snpg)){
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
@@ -776,7 +774,6 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   temp_snpg[ snpg==BB] <- BBO
   temp_snpg[ snpg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
   temp_snpg[ snpg==AB] <- AB
-
 
   # Sort loci to get most informative/random ones first
   # use snpg1 for this, arbitrarily
@@ -981,7 +978,6 @@ function( snpg, candiHSPs) {
   sibg[ just_sibg==BB] <- BBO
   sibg[ just_sibg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
   sibg[ just_sibg==AB] <- AB
-
 
   extract.named( snpg@locinfo[ cq( PUP4, LOD4)])
 
@@ -1431,7 +1427,7 @@ return( ret)
 
 #' find_FSPs_from_POPs_deprecated(): old find FSPs from POPs tool
 #'
-#' find_FSPs_from_POPs_depreciated is, as the name suggests, depreciated. It is from
+#' find_FSPs_from_POPs_deprecated is, as the name suggests, deprecated. It is from
 #' DLM's 'kinference', and the MVB2 version (find_FSPs_from_POPs) seems more recent.
 #'
 #' @rdname find_FSPs_from_POPs
@@ -2903,7 +2899,7 @@ return( c( whmo))
 
   } else { # ... sneaky override, for non-ABCO systems
     # shouldn't really be called "...6" obvs
-    s6$use6 <- TRUE
+    s6$useN <- 6
     li[ names( s6)] <- s6 # instead of cbind--- this overwrites
   }
 
@@ -3562,54 +3558,50 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
   cn4 <- colnames( LOD4)
   cn3 <- colnames( LOD3)
 
-##    if( genotype_way == 4) { 
-        ## Change only the entries with "full homz" since "single nulls" won't be accessed
-        for( ichangio in grep( 'AA|BB', cn6) %except% grep( 'AO|BO', cn6)){
-            was1 <- substring( cn6[ ichangio], 1, 2)
-            was2 <- substring( cn6[ ichangio], 4, 5)
+    ## Change only the entries with "full homz" since "single nulls" won't be accessed
+    ## 6-to-4 equivalences
+    for( ichangio in grep( 'AA|BB', cn6) %except% grep( 'AO|BO', cn6)){
+        was1 <- substring( cn6[ ichangio], 1, 2)
+        was2 <- substring( cn6[ ichangio], 4, 5)
+        now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
+        now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
+        iget4 <- paste( now1, now2, sep='/')
+        if( iget4 %not.in% cn4) { # reverse the order
+            iget4 <- paste( now2, now1, sep='/')
+        }
+        LOD[ useN == 4, ichangio] <- LOD4[ useN == 4, iget4]
+        PUP[ useN == 4, ichangio] <- PUP4[ useN == 4, iget4]
+    }
+    ## 6-to-3 equivalences
+    for( ichangio in grep( 'AA|BB|OO', cn6) %except% grep( 'AO|BO', cn6)) {
+        was1 <- substring( cn6[ ichangio], 1, 2)
+        was2 <- substring( cn6[ ichangio], 4, 5)
+        if( was1 == 'OO' | was2 == 'OO') {  ## crop out the double-nulls; par-format them
+            if( was1 == 'OO') { now1 <- 'BBO'}
+            if( was2 == 'OO') { now2 <- 'BBO'}
+        } else { ## handle the AO | BO set
             now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
             now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
-            iget4 <- paste( now1, now2, sep='/')
-            if( iget4 %not.in% cn4) { # reverse the order
-                iget4 <- paste( now2, now1, sep='/')
-            }
-            LOD[ useN == 4, ichangio] <- LOD4[ useN == 4, iget4]
-            PUP[ useN == 4, ichangio] <- PUP4[ useN == 4, iget4]
+        } ## add the trailing 'O' for OO | BO | BB, giving BBOO
+        if( now1 == 'BBO') { now1 <- 'BBOO' }
+        if( now2 == 'BBO') { now2 <- 'BBOO' }
+        iget3 <- paste( now1, now2, sep='/')
+        if( iget3 %not.in% cn3) { # reverse the order
+            iget3 <- paste( now2, now1, sep='/')
         }
-##    } else if( genotype_way == 3) {
-        for( ichangio in grep( 'AA|BB|OO', cn6) %except% grep( 'AO|BO', cn6)) {
-            was1 <- substring( cn6[ ichangio], 1, 2)
-            was2 <- substring( cn6[ ichangio], 4, 5)
-            if( was1 == 'OO' | was2 == 'OO') {  ## crop out the double-nulls; par-format them
-                if( was1 == 'OO') { now1 <- 'BBO'}
-                if( was2 == 'OO') { now2 <- 'BBO'}
-            } else { ## handle the AO | BO set
-                now1 <- sub( '(A|B)\\1', '\\1\\1O', was1)
-                now2 <- sub( '(A|B)\\1', '\\1\\1O', was2)
-            } ## add the trailing 'O' for OO | BO | BB, giving BBOO
-            if( now1 == 'BBO') { now1 <- 'BBOO' }
-            if( now2 == 'BBO') { now2 <- 'BBOO' }
-            iget3 <- paste( now1, now2, sep='/')
-            if( iget3 %not.in% cn3) { # reverse the order
-                iget3 <- paste( now2, now1, sep='/')
-            }
-            LOD[ useN == 3, ichangio] <- LOD3[ useN == 3, iget3]
-            PUP[ useN == 3, ichangio] <- PUP3[ useN == 3, iget3]
-        }
-##    }
+        LOD[ useN == 3, ichangio] <- LOD3[ useN == 3, iget3]
+        PUP[ useN == 3, ichangio] <- PUP3[ useN == 3, iget3]
+    }
     
-  # For safety's sake, LOD( XO,...) := NA; should never be accessed
+    ## For safety's sake, LOD( XO,...) := NA; should never be accessed
 
-##    if(genotype_way == 4) {
-        hasO_4way <- grep( '(A|B)O', cn6)
-##    } else if(genotype_way == 3) {
-        hasO_3way <- grep( '.O', cn6)
-##    }
+    hasO_4way <- grep( '(A|B)O', cn6)
+    hasO_3way <- grep( '.O', cn6)
         
     LOD[ useN == 4, hasO_4way] <- NA # security in case of wrong access later for real data
-    PUP[ useN == 4, hasO_4way] <- 0  ## flip to use3 here!
+    PUP[ useN == 4, hasO_4way] <- 0  
     LOD[ useN == 3, hasO_3way] <- NA # security in case of wrong access later for real data
-    PUP[ useN == 3, hasO_3way] <- 0  ## flip to use3 here!
+    PUP[ useN == 3, hasO_3way] <- 0  
 
     LOD@mg <- make_genopairer( geno6@diplos)
 

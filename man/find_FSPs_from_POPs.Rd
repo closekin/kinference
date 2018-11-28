@@ -42,7 +42,7 @@ less than some threshold, they might be full sibling pairs (FSPs).
 This function checks potential POPs with very low WPSEX values for
 their potential to be FSPs.
 
-find_FSPs_from_POPs_depreciated is, as the name suggests, depreciated. It is from
+find_FSPs_from_POPs_deprecated is, as the name suggests, deprecated. It is from
 DLM's 'kinference', and the MVB2 version (find_FSPs_from_POPs) seems more recent.
 }
 \details{
