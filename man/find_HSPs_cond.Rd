@@ -5,8 +5,8 @@
 \title{find_HSPs_cond(): Bare documentation}
 \usage{
 find_HSPs_cond(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep,
-  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins = 50,
+  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep, keep_n = 0.5
+  * nrow(snpg), eta = NULL, keep_thresh = NULL, nbins = 50,
   bins = NULL)
 }
 \arguments{

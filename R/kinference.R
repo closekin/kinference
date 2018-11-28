@@ -1516,7 +1516,7 @@ return( wtsame)
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta, 
-    keep_n=1000,
+    keep_n=0.5*nrow(snpg),
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -1766,7 +1766,7 @@ return( result)
 "find_HSPs_cond" <- function(snpg, subset1=1 %upto% nrow(snpg), subset2=subset1,
     one_in_X_eta,
     rough_n_pairs_to_keep,
-    keep_n = 1000,
+    keep_n = 0.5*nrow(snpg),
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -2166,7 +2166,7 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
     keep_thresh= NULL, # merge, C code return cutoff
-    keep_n=1000,
+    keep_n=0.5*nrow(snpg),
     nbins,
     quick=TRUE,
     WPSEX_UP_POP_balance=0.99) {
