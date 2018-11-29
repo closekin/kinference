@@ -839,6 +839,11 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   result <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
   result@call <- sys.call()
 
+  # warning if we're running up against storage constraints
+  if(length(result$ndiff) == keep_n){
+    warning("Number of returned duplicates equals keep_n. There may be more than keep_n duplicates. Increase keep_n to make sure you have them all!")
+  }
+
 return( result)
 }
 

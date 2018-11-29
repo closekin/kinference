@@ -1,6 +1,6 @@
 ## Package 'kinference': installation instructions
 
-Package 'kinference' is presented as source code, and includes c++ (via Rcpp) that will require compilation before during install. The package makes use of the 'boost' c++ libraries and several R packages from the mvb ecosystem. 'kinference' install has been tested under Windows (Windows 10, 64-bit) and Linux (Ubuntu 16.04, 64-bit). Installation has not been tested for Mac. Before installing 'kinference', make sure you have installed:
+Package 'kinference' is presented as source code, and includes c++ (via Rcpp) that will require compilation before during install. The package requires the c++11 compilation standard, and makes use of several R packages from the mvb ecosystem. 'kinference' install has been tested under Windows (Windows 10, 64-bit) and Linux (Ubuntu 16.04, 64-bit). Installation has not been tested for Mac. Before installing 'kinference', make sure you have installed:
 
 * In R: 
   * from CRAN:
