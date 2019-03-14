@@ -12,8 +12,8 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, max_diff_genos, keep_n = 0.5 * nrow(snpg))
 
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  one_in_X_eta, keep_n = 0.5 * nrow(snpg), eta = NULL,
-  keep_thresh = NULL, nbins = 50, bins = NULL)
+  one_in_X_eta, keep_n = 1e+05, eta = NULL, keep_thresh = NULL,
+  nbins = 50, bins = NULL)
 
 find_HSPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep,

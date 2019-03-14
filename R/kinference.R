@@ -1521,7 +1521,7 @@ return( wtsame)
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     one_in_X_eta, 
-    keep_n=0.5*nrow(snpg),
+    keep_n=100000,
     eta= NULL,
     keep_thresh= NULL,
     nbins= 50,
@@ -1535,6 +1535,12 @@ stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
+  keep_thresh_set <- !is.null( keep_thresh)
+  if( !keep_thresh_set) {
+      keep_thresh <- -1e23 # no PLOD will get that far!!
+
+           }
+    
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
@@ -1585,7 +1591,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       temp_snpg <- temp_snpg[, subset1]
     }
 
-    result <- HSP_paircomps_lots(
+    xresult <- HSP_paircomps_lots(
         pair_geno= temp_LOD@mg,
         LOD= t( temp_LOD),
         geno1= temp_snpg,
@@ -1597,7 +1603,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         bins= bins
       )
   } else { # different subsets
-    result <- HSP_paircomps_lots(
+    xresult <- HSP_paircomps_lots(
         pair_geno= temp_LOD@mg,
         LOD= t( temp_LOD),
         geno1= temp_snpg[ , subset1],
@@ -1611,12 +1617,13 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   }
 
   # warning if we're running up against storage constraints
-  if(length(result$big_PLOD) == keep_n){
+if( keep_thresh_set && (length(result$big_PLOD) == keep_n)){
     warning("Number of returned HSPs equals keep_n, increase keep_n to ensure you got them all")
-  }
+}  ## This warning will probably need to be modified in find_POPs, find_duplicates, etc. as well.
 
-  result <- with( result, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
-  result <- result %without.name% cq( big_PLOD, big_i, big_j)
+  result <- with( xresult, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
+  attributes( result) <- c( attributes( result),
+      xresult %without.name% cq( big_PLOD, big_i, big_j))
 
   # assign extra info as attributes
   result@mean_theory <- snpg@Kenv$dK( 0)
@@ -2588,12 +2595,17 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
   pA <- pbonzer[,'A']
   pB <- pbonzer[,'B']
 
-  v <- 2*pA*pB + sqr( p0) - sqr( 2*pA*pB-sqr( p0))
+  v <- 2*pA*pB + sqr( p0) - sqr( 2*pA*pB-sqr( p0)) ## Pr(AB) + Pr(OO) - (Pr(AB) - Pr(OO))^2
   target <- match.arg( target)
   edash <- if( target=='rich') {
-      (2*pA*p0+sqr(pA)) * (1-sqr(1-pB)) + (2*pB*p0+sqr( pB))*(1-sqr(1-pB)) + sqr( p0) * (1-sqr( p0))
+               (2*pA*p0+sqr(pA)) *  ## Pr(AA|AO)
+                   (1-sqr(1-pB)) +  ## original; Pr(BB|AB|BO)
+                   (2*pB*p0+sqr( pB)) *  ## Pr(BO|BB)
+                   (1-sqr(1-pA)) +  ## modified; Pr(AA|AB|AO)
+                   sqr( p0) *      ## Pr(OO)
+                   (1-sqr( p0))    ## Pr(!OO)
     } else {
-      edash <- 2*(pA*pB + pA*p0 + pB*p0) # minus sign
+      edash <- 2*(pA*pB + pA*p0 + pB*p0) # Equals Pr(heterozygote) under 3-way HWE
     }
 
   # Numericals have led to single loci getting all the weight when edash and v are both tiny!
@@ -2894,11 +2906,7 @@ return( c( whmo))
 
     # li <- cbind( li, s6, s4)
     li[ names( s6)] <- s6 # instead of cbind--- this overwrites
-    li[ names( s4)] <- s4 # instead of cbind--- this overwrites
-    li[ names( s3)] <- s3 # instead of cbind--- this overwrites
 
-    ## li[ !li$use6, names( s4)] <- s4[ !li$use6,] ## original, subbed in the 4-ways
-    ## li[ !li$use6, names( s3)] <- s3[ !li$use6,]  ## modified, subs in the 3-ways
     li[ li$useN == 4, names( s4)] <- s4[ li$useN == 4,] ## subs in 4-ways where useN == 4
     li[ li$useN == 3, names( s3)] <- s3[ li$useN == 3,] ## subs in 3-ways where useN == 3
 
