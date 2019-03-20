@@ -1,0 +1,10 @@
+check_FPosity                             QC for kin-finding
+drop_dups_pairwise_equiv                  Equivalence class sifter
+find_FSPs_from_POPs                       Find full-sib pairs among parent-offspring pairs or among half-sib pairs
+get_chain                                 Summarize sib-groups
+hetzminoo_fancy                           Heterozygotes minus "OO" checking
+hsp_power                                 Preparation for kin-finding
+ilglk_geno                                Check individual genotypes for aggregate typicality, ditto loci
+Kin-finders                               DESCRIPTION
+map4todummy6                              Change SNP-genotype encoding
+var.PLOD.kin                              Predict variance of PLOD for HCPs and HTPs

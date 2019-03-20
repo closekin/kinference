@@ -21,6 +21,10 @@ DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_genos, keep_n) {
     .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos, keep_n)
 }
 
+DUP_paircomps_incomplete_lots <- function(geno1, geno2, symmo, max_diff_ppn, limit) {
+    .Call('_kinference_DUP_paircomps_incomplete_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_ppn, limit)
+}
+
 indiv_lglk_geno <- function(lpgeno, geno) {
     .Call('_kinference_indiv_lglk_geno', PACKAGE = 'kinference', lpgeno, geno)
 }

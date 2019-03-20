@@ -1,8 +1,10 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(BH)]]
+
 #include <RcppArmadillo.h>
-#include <boost/tuple/tuple.hpp>
+// #include <boost/tuple/tuple.hpp>
 #include <queue>
+
 using namespace Rcpp;
 using namespace std;
 
@@ -22,9 +24,6 @@ bool stoppity(
 }
 // Rcpp::stop...
 #define ASSERTO(EX) (void)((EX) || (stoppity( "Failed: " #EX " in " __FILE__ " line " LINE_STRING "!"), 0))
-
-
-
 
 
 // [[Rcpp::export]]
@@ -196,13 +195,13 @@ BEGIN_RCPP
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the PLOD and i and j
-  typedef boost::tuple<double, int, int> PLODder;
+  typedef std::tuple<double, int, int> PLODder;
   // need to define a way in which we sort a priority_queue of tuples...
   // https://stackoverflow.com/questions/5712172/how-can-i-store-3-integer-in-priority-queue
   class my_greater  {
   public:
     bool operator() (const PLODder& arg1, const PLODder& arg2) const{
-      return arg1.get<0>() > arg2.get<0>();
+      return get<0>(arg1) > get<0>(arg2);
       return false;
     }
   };
@@ -261,7 +260,7 @@ BEGIN_RCPP
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( PLODing_along.top().get<0>() < this_PLOD){
+          if( get<0>(PLODing_along.top()) < this_PLOD){
             PLODing_along.pop();
             PLODing_along.push(new_PLOD_on_the_block);
           }
@@ -290,9 +289,9 @@ BEGIN_RCPP
 
   // unwrap that nice structure I guess :'(
   while (!PLODing_along.empty()) {
-    big_PLOD.push_back(PLODing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(PLODing_along.top().get<1>() + 1);
-    big_j.push_back(PLODing_along.top().get<2>() + 1);
+    big_PLOD.push_back(get<0>(PLODing_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(PLODing_along.top()) + 1);
+    big_j.push_back(get<2>(PLODing_along.top()) + 1);
     PLODing_along.pop();
   }
 
@@ -380,12 +379,12 @@ BEGIN_RCPP
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the Nexclu and i and j
-  typedef boost::tuple<double, int, int> Nexcluder;
+  typedef std::tuple<double, int, int> Nexcluder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const Nexcluder& arg1, const Nexcluder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -452,7 +451,7 @@ BEGIN_RCPP
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( Nexcluing_along.top().get<0>() > this_Nexclu){
+          if( get<0>(Nexcluing_along.top()) > this_Nexclu){
             Nexcluing_along.pop();
             Nexcluing_along.push(new_Nexclu_on_the_block);
           }
@@ -485,9 +484,9 @@ BEGIN_RCPP
 
   // unwrap that nice structure I guess :'(
   while (!Nexcluing_along.empty()) {
-    big_Nexclu.push_back(Nexcluing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(Nexcluing_along.top().get<1>() + 1);
-    big_j.push_back(Nexcluing_along.top().get<2>() + 1);
+    big_Nexclu.push_back(get<0>(Nexcluing_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(Nexcluing_along.top()) + 1);
+    big_j.push_back(get<2>(Nexcluing_along.top()) + 1);
     Nexcluing_along.pop();
   }
 
@@ -575,12 +574,12 @@ SEXP POP_wt_paircomps_lots(
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the WPSEX and i and j
-  typedef boost::tuple<double, int, int> WPSEXder;
+  typedef std::tuple<double, int, int> WPSEXder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const WPSEXder& arg1, const WPSEXder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -647,7 +646,7 @@ SEXP POP_wt_paircomps_lots(
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
-          if( WPSEXing_along.top().get<0>() > this_wpsex){
+          if( get<0>(WPSEXing_along.top()) > this_wpsex){
             WPSEXing_along.pop();
             WPSEXing_along.push(new_WPSEX_on_the_block);
           }
@@ -678,9 +677,9 @@ SEXP POP_wt_paircomps_lots(
 
   // unwrap that nice structure I guess :'(
   while (!WPSEXing_along.empty()) {
-    big_WPSEX.push_back(WPSEXing_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(WPSEXing_along.top().get<1>() + 1);
-    big_j.push_back(WPSEXing_along.top().get<2>() + 1);
+    big_WPSEX.push_back(get<0>(WPSEXing_along.top())); // I should write "effing 0-base" here :P
+    big_i.push_back(get<1>(WPSEXing_along.top()) + 1);
+    big_j.push_back(get<2>(WPSEXing_along.top()) + 1);
     WPSEXing_along.pop();
   }
 
@@ -714,7 +713,8 @@ SEXP DUP_paircomps_lots(
 
   int n_samps1;
   int n_samps2;
-  int n_loci;  int n_kept;
+  int n_loci;
+  int n_kept;
   int i;
   int j;
   int j_max;
@@ -740,12 +740,12 @@ SEXP DUP_paircomps_lots(
   std::vector<int>  big_i;
   std::vector<int> big_j;
   // Define a new type, which is the similarity and i and j
-  typedef boost::tuple<double, int, int> similarder;
+  typedef std::tuple<double, int, int> similarder;
   // define what "better" means
   class my_less  {
   public:
     bool operator() (const similarder& arg1, const similarder& arg2) const{
-      return arg1.get<0>() <= arg2.get<0>();
+      return get<0>(arg1) <= get<0>(arg2);
       return false;
     }
   };
@@ -793,7 +793,7 @@ SEXP DUP_paircomps_lots(
             // uh oh we filled-up! check to see if we really need to add
             // this one (is it better than what's in there?), then exile
             // the last element to the garbage and induct our new best friend
-            if( similaring_along.top().get<0>() > this_ndiff){
+            if( get<0>(similaring_along.top()) > this_ndiff){
               similaring_along.pop();
               similaring_along.push(new_similar_on_the_block);
             }
@@ -813,9 +813,9 @@ SEXP DUP_paircomps_lots(
 
   // unwrap that nice structure I guess :'(
   while (!similaring_along.empty()) {
-    big_similar.push_back(similaring_along.top().get<0>()); // "effing 0-base" is what I should write here :P
-    big_i.push_back(similaring_along.top().get<1>() + 1);
-    big_j.push_back(similaring_along.top().get<2>() + 1);
+    big_similar.push_back(get<0>(similaring_along.top())); // "effing 0-base" is what I should write here :P
+    big_i.push_back(get<1>(similaring_along.top()) + 1);
+    big_j.push_back(get<2>(similaring_along.top()) + 1);
     similaring_along.pop();
   }
 
@@ -829,6 +829,110 @@ SEXP DUP_paircomps_lots(
 
   END_RCPP
 };
+
+// [[Rcpp::export]]
+SEXP DUP_paircomps_incomplete_lots(
+  RawMatrix geno1, // n_loci, n_samps1,
+  RawMatrix geno2, // n_loci, n_samps1,
+  bool symmo, // should only be true if geno1==geno2
+  double max_diff_ppn, // max allowed ppn discrepant 4way genos for  "true duplicate"
+  int limit // exit if ndups hits the limit
+) {
+  BEGIN_RCPP
+    // Avoid scoping woes by doing the include-file right here
+#if defined( MVBDEBUG)
+#include <r_int_defs_debug.h>
+#endif
+
+  int n_samps1;
+  int n_samps2;
+  int n_loci;
+  int n_kept;
+  int i;
+  int j;
+  int g1;
+  int g2;
+  int j_max;
+  int iloc;
+  int tot_ndiff;
+  int tot_ncomp;
+  int is_a_comp;
+  int nremloci;
+
+  n_loci = geno1.nrow();
+  n_samps1 = geno1.ncol();
+  ASSERTO( geno2.nrow() == n_loci);
+  n_samps2 = geno2.ncol();
+
+  if( symmo) {
+    ASSERTO( n_samps1 == n_samps2);
+  };
+
+
+  // Need to grow the kept-values, so std::vector is apparently better
+  std::vector<int> big_ndiff;
+  std::vector<int> big_ncomp;
+  std::vector<int>  big_i;
+  std::vector<int> big_j;
+
+  // check compilation; at one point couldn't find scope
+  // now can, but following line doesn't work; prolly doesn't matter
+
+  // All genos should have been recoded s.t. 0 means missing
+  n_kept = 0;
+
+  for( i = 0; i < n_samps1; i++){
+
+    j_max = symmo ? i : n_samps2;
+    for( j = 0; j < j_max; j++) {
+      tot_ncomp = 0;
+      tot_ndiff = 0;
+      nremloci = n_loci+1;
+
+      for( iloc = 0; iloc < n_loci; iloc++) {
+        // Faster version could "unroll" this a bit and only
+        // ... do the if-check every 10 loci or so
+        // ... and pre-compute a mini-vec of g1's
+
+        g1 = geno1( iloc, i);
+        g2 = geno2( iloc, j);
+        is_a_comp = (int)( g1 * g2 > 0);
+        tot_ncomp += is_a_comp;
+        tot_ndiff += is_a_comp * (int)( g1 != g2);
+
+        // Exit if deffo nondup (ie even if all remaining loci match)
+        nremloci--;
+        if( tot_ndiff > max_diff_ppn * (tot_ncomp + nremloci)) {
+      break;
+        };
+      };
+
+      if( tot_ndiff > max_diff_ppn * tot_ncomp ) {
+    continue;
+      } else {
+        big_ndiff. push_back( tot_ndiff);
+        big_ncomp. push_back( tot_ncomp);
+        big_i. push_back( i+1); // Effing 0-base...
+        big_j. push_back( j+1); // Effing 0-base...
+        n_kept += 1;
+        if( n_kept >= limit) {
+  return( wrap( i)); // how far thru we got. R will detect this isn't a list.
+        }; // if limit
+      }; // if dup found
+    }; // for j
+  }; // for i
+
+     // make a list object using wrap() for the stdvectors
+  return( Rcpp::List::create(
+    Rcpp::Named("big_ndiff")=wrap( big_ndiff),
+    Rcpp::Named("big_ncomp")=wrap( big_ncomp),
+    Rcpp::Named("big_i")=wrap( big_i),
+    Rcpp::Named("big_j")=wrap( big_j)
+  ));
+
+  END_RCPP
+};
+// migrated from MVB 'kinference.cpp', 4/10/18
 
 // [[Rcpp::export]]
 SEXP indiv_lglk_geno(
