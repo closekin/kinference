@@ -18,7 +18,7 @@
 #'
 #' @docType package
 #' @author Mark V Bravington, David L Miller, Shane M Baylis
-#' @import Rcpp atease mvbutils gbasics vecless debug abind BH
+#' @import Rcpp atease mvbutils gbasics vecless debug abind BH tensorA
 #' @importFrom Rcpp sourceCpp evalCpp
 #' @useDynLib kinference
 #' @name kinference
