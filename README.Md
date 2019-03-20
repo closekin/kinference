@@ -4,72 +4,74 @@ Package 'kinference' is presented as source code, and includes c++ (via Rcpp) th
 
 * In R: 
   * from CRAN:
-    * Oarray
-    * mixtools
-    * xtable
-    * tools
-    * devtools
     * Rcpp
+    * RcppArmadillo
+    * abind
+    * BH
+    * devtools
     * roxygen2
+    * tensorA
   * from the MVB ecosystem:
     * mvbutils [NOT the out-of-date version from CRAN]
     * atease
-    * Oarray.support
     * vecless
     * gbasics
     * genocalldart
+    * nicetime
 
 If installing from source, Windows users will need to download and install [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
 ## Installation from source: GNU/Linux
 
-In R, run the following:
+Download or clone this repository, then run the following in R: 
 
     library(devtools)
     setwd( "path/to/kinference" ) # e.g., "~/R/local/kinference/"
                                   # make sure you have write permission for 'kinference'.
     install()
     
-package will compile and install
-    
-    library(kinference)
-
-you can check installation by:
-
-    ?crapometer  ## should bring up an HTML help menu.
-
-## Installation from mark's_semi-secret_repo: GNU/Linux or Windows
-
-In R, run:
-
-    install.packages(repos='https://markbravington.github.io/mark's_semi-secret_repo')
-
-You should see a pop-up window with a list of packages. Double-click 'kinference'.
-
-    library(kinference)
-
-you can check installation by:
-
-    ?crapometer  ## should bring up an HTML help menu.
+package will compile and install.
 
 ## Installation from source: Windows
 
-In R, run the following:
+Download or clone this repository, then run the following in R: 
 
     library(devtools)
     setwd( "path/to/kinference" ) # e.g., "C:/Users/myID/R/local/kinference/"
                                   # make sure you have write permission for 'kinference'.
     install()
 
-package will compile and install
+package will compile and install.
 
-    library(kinference)
+## Installation from local repositories: GNU/Linux or Windows (binary options for Windows)
+ 
+The source code in this github repository is the development version of 'kinference'. A stable release
+exists, and is managed by MVB. Installation is simple, but you will have to ask MVB for access to his
+semi-secret repo.
 
-you can check installation by:
+There is also a development release hosted at CSIRO for internal use and testing, maintained by SMB. The CSIRO copy includes precompiled binaries for Windows users running R ver 3.3 - 3.5, and should be kept relatively up-to-date with the source version presented here. We intend to merge these two repositories in the short term.
 
-    ?crapometer  ## should bring up an HTML help menu.
+To install from MVB's stable release, run:
 
-## Notes, in case you have bugs.
+    install.packages(repos='https://ask/mark/about/his/repo/')
+
+You should see a pop-up window with a list of packages. Double-click 'kinference'.
+
+To install from the CSIRO copy development release, run:
+
+    install.packages(pkgs = "kinference", repos = 'file:///ask/shane/about/this/repo/')
+
+package will install, without requiring compilation for Windows users.
+
+## Checking the installation
+
+If you have correctly installed the development version of 'kinference', 
+
+    ?crapometer ## should bring up a help menu.
+
+It will not return a help menu for the stable release.
+
+## Notes and known bugs
 
 Bug 1: Errors like: "files in does not match files out".
 
