@@ -1,5 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 inst/find_POPs.Rd
+^README.Md
 vignettes/dave-practice.rda
 vignettes/fsps_for_dave.rda

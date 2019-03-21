@@ -42,8 +42,8 @@ improve the documentation.
 \examples{
 ## Not run:
 
-define_genotypes()
-A # thar she
+# define_genotypes()
+# A # thar she
 ## End(Not run)
 }
 \seealso{
