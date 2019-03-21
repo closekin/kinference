@@ -1,10 +1,35 @@
-check_FPosity                             QC for kin-finding
-drop_dups_pairwise_equiv                  Equivalence class sifter
-find_FSPs_from_POPs                       Find full-sib pairs among parent-offspring pairs or among half-sib pairs
-get_chain                                 Summarize sib-groups
-hetzminoo_fancy                           Heterozygotes minus "OO" checking
-hsp_power                                 Preparation for kin-finding
-ilglk_geno                                Check individual genotypes for aggregate typicality, ditto loci
-Kin-finders                               DESCRIPTION
-map4todummy6                              Change SNP-genotype encoding
-var.PLOD.kin                              Predict variance of PLOD for HCPs and HTPs
+add_list_defaults             add_list_defaults(): Bare documentation
+add_pairprob_error            add_pairprob_error(): Bare documentation
+calc_g6probs_IBD0_scalar      calc_g6probs_IBD0_scalar(): Bare documentation
+calc_g6probs_IBD1_scalar      calc_g6probs_IBD1_scalar(): Bare documentation
+calculate_IBD                 calculate_IBD(): Bare documentation
+calculate_LOD_HSP             calculate_LOD_HSP(): Bare documentation
+chain_pairwise                Find chains in HSPs; summarize sib-groups
+check_FPosity                 check_FPosity(): QC for kin-finding
+crapometer                    crapometer(): Bare documentation
+define                        define(): Bare documentation
+define_genotypes              define_genotypes(): Documentation (warning?) ported from
+                              gbasics
+drop_dups_pairwise_equiv      drop_dups_pairwise_equiv(): Equivalence class sifter
+est_ALF_6way                  est_ALF_6way(): Bare documentation
+find_duplicates               Kin-finders for loads-of-SNPs datasets
+find_dups_with_missing        find_dups_with_missing(): Bare documentation
+find_FSPs_from_candiHSPs      Find full-sib pairs among parent-offspring pairs or among
+                              half-sib pairs
+find_HSPs_cond                find_HSPs_cond(): Bare documentation
+hetzminoo_fancy               Heterozygotes minus "OO" checking
+hsp_power                     hsp_power(): Preparation for kin-finding
+hsp_power2                    hsp_power2(): Kin-finding power for microhaplotyped loci
+ilglk_geno                    Check individual genotypes for aggregate typicality
+inv_CDF_SPA2                  inv_CDF_SPA2(): Bare documentation
+kinference                    kinference
+map4todummy6                  map4todummy6(): Change SNP-genotype encoding
+map6to3                       map6to3(): Bare documentation
+map6to4                       map6to4(): Bare documentation
+predict_hsp_util              predict_HSP_util(): Bare documentation
+renorm_SPA_cumul_deprecated   renorm_SPA_cumul_deprecated(): Bare documentation
+renorm_SPA_deprecated         renorm_SPA_deprecated(): Bare documentation
+set_thresholds                set_thresholds(): Bare documentation
+simtest_Kstuff                simtest_Kstuff(): Bare documentation
+sqr                           sqr(): multiply an input by itself.
+var.PLOD.kin                  Predict variance of PLOD for HCPs and HTPs
