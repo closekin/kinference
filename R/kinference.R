@@ -3672,7 +3672,10 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
 
 
   Kenv <- make_K( PUP, LOD)
-  geno6@Kenv <- Kenv
+    geno6@Kenv <- Kenv
+
+    class(geno6) <- c("SPAgeno", "snpgeno")  ## new SPAgeno class to auto-update SPA
+                                             ## after subset operations.
 
   # PUP and LOD are in Kenv now, so don't duplicate them in locinfo
   # They are really the "workhorse" versions, and are a bit cheaty, so don't want
@@ -4382,8 +4385,158 @@ return( retval)
 }
 
 
+#' @export
+"[.SPAgeno" <-
+function( x, i, j, ..., drop=FALSE){
+  # x[i] means just some columns of info-- so i is cols of info
+  # x[i,j] means i is rows and j is loci; k=1:nals in that case
+  # x[i,j,k] means the works
+  # i defaults to using "Our_sample" column of x@info
+  # but you can change that by naming a column, eg
+  # x[ TargetID=c( 109679, 103258), 'L1049']
+  # Normally nals==2 but 'loc.ar' can also handle count-type data with
+  # > 2 alleles (but fixed number per locus; otherwise, see 'NGS_count_ar')
+  # which is a perversion really
 
- # MVB's workaround for futile CRAN 'no visible blah' check:
+  # Subscript checks taken from '[.data.frame'
+  # Other stuff, eg: print for specialprint; genotypes if x is really read-counts
+  other_atts <- attributes( x) %without.name% cq( dim, dimnames)
+
+  # ... requiring similar subsetting, which You can control by setting these attributes.
+  subset_like_loci <- names(other_atts) %that.are.in% c( other_atts$subset_like_loci, 'locinfo')
+  subset_like_samples <- names(other_atts) %that.are.in% c( other_atts$subset_like_samples, 'info')
+  subset_like_both <- names(other_atts) %that.are.in% other_atts$subset_like_both
+
+  oclass <- class( x)
+  x <- unclass( x)
+  
+  dots <- match.call( expand.dots=FALSE)$...
+  stopifnot( length( dots) < 2 )
+  if( length( dots)==1) { # Specific field used for "fish" lookup
+   stopifnot( missing( j)) # too many args
+   # j should be what R thinks is "i"
+   if( !missing( i) && is.character( i)) { 
+     j <- match( i, x@locinfo$Locus, NA)
+   } else if( !missing( i)) {
+     j <- i
+   }
+   
+   # i should be dots[[1]]
+   info_field <- names( dots)
+    if( !nzchar( info_field)) {
+     info_field <- 'Our_sample'
+   }
+   i <- match( dots[[1]], x@info[[ info_field]], NA)
+  } else { # Normally, match against the "Our_sample" field
+    if( !missing( i) && is.character( i)) {
+      i <- match( i, x@info$Our_sample, NA)
+    }
+
+    if( !missing( j) && is.character( j)) {
+      j <- match( j, x@locinfo$Locus, NA)
+    }
+  }
+  
+  x <- x[ i, j, drop=FALSE] # Amazingly, this works even if i / j are missing...
+  if( drop && min( dim( x))==1) {
+    dimx <- dim( x)
+    x <- other_atts$diplos[ as.integer( x)]
+    if( dimx[1]>1) {
+      names( x) <- rownames( other_atts@info)[i]
+    } else if( dimx[2]>1) {
+      names( x) <- other_atts$locinfo$Locus[ j]
+    } # if 1X1, don't know which you want...
+    x <- kinference::prepare_PLOD_SPA(x)
+return( x) 
+  }
+
+  # Anything else to be subsetted the same way
+
+  # This strange little function ensures that a 3D "like_loci" array will be subscripted thus:
+  # thing[ j, , , drop=drop] and a 2D "like_both" array as thing[ i, j, drop=drop] etc
+  # Conceivably more efficient just to construct the string and then
+  # eval(parse(...)) but that feels like surrender...
+  make_subset_call <- function( ld, ...) {
+    dots <- match.call( expand.dots=FALSE)$...
+    callo <- rep( list( formals( sys.function())$ld), ld+3)
+    callo[[1]] <- quote( `[`)
+    callo[[2]] <- quote( thing)
+    callo[[ length( callo)]] <- quote( drop)
+    names( callo) <- c( rep( '', length( callo)-1), 'drop')
+    callo[ 2 + seq_along( dots)] <- dots
+  as.call( callo)
+  }
+
+  # ... except it's not as "simple" as that. Classes with badly-written subset methods, such as 'noquote'...
+  # ... don't like recursive missing args (whereas eg 'data.frame' is fine)
+  # ... Hence 'if( missing..)'  below, to insert "physical missings"
+  # ... Sigh ...
+
+  if( !missing(j)) {
+    for( ioth in subset_like_loci) {
+      # "j" will be first subscript, so eg thing[ j,,drop=FALSE] for locinfo
+      thing <- other_atts[[ ioth]]
+      other_atts[[ ioth]] <- eval( make_subset_call( length( dim( thing)), j))
+    }
+  }
+
+  if( !missing( i)) {
+    for( ioth in subset_like_samples) {
+      # "i" will be first subscript
+      thing <- other_atts[[ ioth]]
+      other_atts[[ ioth]] <- eval( make_subset_call( length( dim( thing)), i))
+    }
+  }
+
+  if( !missing( i) || !missing( j)) {
+    for( ioth in subset_like_both) {
+      # "i,j" will be first two subscripts
+      thing <- other_atts[[ ioth]]
+      callo <- make_subset_call( length( dim( thing)), i, j)
+      if( missing( i)) {
+        callo[[3]] <- formals( sys.function())$i # a missing
+      }
+      if( missing( j)) {
+        callo[[4]] <- formals( sys.function())$j # a missing
+      }
+      other_atts[[ ioth]] <- eval( callo)
+    }
+  }
+
+    attributes( x) <- c( attributes( x), other_atts)
+    x <- kinference::prepare_PLOD_SPA( x)
+return( x) 
+}
+
+#' @export
+"[<-.SPAgeno" <-
+function( x, i, j, value) {
+# scatn( 'nargs,miss(i),miss(j): %i,%i,%i', nargs(), missing(i), missing( j))
+  x <- unclass( x)
+  if( is.character( value)) {
+    value <- as.raw( match( value, x@diplos))
+  }
+
+  if( nargs()==3) { # just i; logical/matrix subscript, can't be missing
+    x[ i] <- value
+  } else if( nargs()==2 || (missing( i) && missing( j))) {
+    x[] <- value
+  } else if( missing( i)) { # i & j used but could be
+    x[ , j] <- value
+  } else if( missing( j)) {
+    x[ i, ] <- value
+  } else {
+    x[ i, j] <- value
+  }
+    oldClass( x) <- 'SPAgeno'
+    x <- kinference::prepare_PLOD_SPA( x)
+return( x)  
+}
+
+
+
+
+# MVB's workaround for futile CRAN 'no visible blah' check:
 globalVariables( package="kinference",
                 names=c( ".Traceback"
                        ,"oa"

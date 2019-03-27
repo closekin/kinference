@@ -8,7 +8,7 @@ Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless, debug, abind, BH
 Suggests: knitr, rmarkdown, Oarray, Oarray.support, genocalldart, mixtools, xtable
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
-Version: 0.0.77
+Version: 0.0.78
 RoxygenNote: 6.1.0.9000
 SystemRequirements: C++11
 NeedsCompilation: YES
