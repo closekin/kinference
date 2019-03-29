@@ -220,6 +220,33 @@ if(!file.exists(fname)) {
 hist(hsps$PLOD[hsps$PLOD > 0], nc = 40)
 ```
 
+## Is HSP inference behaving? Check for mathematical impossibility
+
+In a set of candidate half-sibling pairs inferred from PLOD scores in `find_HSPs()`, we
+have occasionally seen individuals who appear to be half-siblings of large numbers of other
+animals, while none of those _other_ animals appear to be half-siblings of each other. This
+is, of course, logically impossible. `chain_pairwise()`, which looks for exactly this kind
+of impossible finding, can be used a 'laugh test' of data quality. `chain_pairwise()` sorts
+a animals into matrices which contain all half-siblings of all members of the matrix. In a 
+large, well-behaved, outbred population, nearly all half-sibling pairs will be unrelated to
+all other animals, so most matrices will be two-by-two, with a small number (approximately
+sqrt([number of two-by-two matrices]) of three-by-three matrices.
+
+```{r, eval = FALSE}
+candiHSPs <- hsps[hsps$PLOD > 10,]
+chain <- chain_pairwise(candiHSPs)
+chain
+head(chain) ## first few are two-by-two
+tail(chain) ## last few are three-by-three. Everything is well-behaved.
+## Half-sibling pairs are indicated by '+', and unrelated pairs by '.'
+```
+
+If you do see large matrices, where one animal is the apparent hallf-sibling of most or
+all other animals, but those animals are not half siblings of each other, there is probably
+an error in your data-preparation. In our case, we found plate-level sequencing artefacts 
+that, once accounted for, removed the impossible patterns from our candidate HSP set.
+
+
 
 
 ## The original contents of 'vignette':
