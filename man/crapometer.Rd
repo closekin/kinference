@@ -2,7 +2,7 @@
 % Please edit documentation in R/kinference.R
 \name{crapometer}
 \alias{crapometer}
-\title{crapometer(): Bare documentation}
+\title{crapometer(): splice hetzminoo_fancy and ilglk_geno for ?better crap-detection}
 \usage{
 crapometer(snpg, focusees, boring = 1 \%upto\% nrow(snpg))
 }
@@ -14,6 +14,7 @@ crapometer(snpg, focusees, boring = 1 \%upto\% nrow(snpg))
 \item{boring}{a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils for \code{ \%upto\% }.}
 }
 \description{
-This function has only the bare minimum of documentation necessary for roxygen to
-parse it. We should probably add some proper documentation here.
+crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be 
+better at identifying 'suspect' samples. It may or may not end up in the final
+kinference toolchain.
 }

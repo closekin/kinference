@@ -2,16 +2,18 @@
 % Please edit documentation in R/kinference.R
 \name{est_ALF_6way}
 \alias{est_ALF_6way}
-\title{est_ALF_6way(): Bare documentation}
+\title{est_ALF_6way(): estimation of ALFs given 6-way genotypes and snerr}
 \usage{
 est_ALF_6way(snpg, control = list())
 }
 \arguments{
-\item{snpg}{a param}
+\item{snpg}{a snpgeno object with 'snerr' included}
 
 \item{control}{a param. Defaults to an empty list}
 }
 \description{
-This function has only the bare minimum of documentation necessary for roxygen to
-parse it. We should probably add some proper documentation here.
+Performs 'straight' estimation of ALFs, given 6-way genotypes and snerr. Won't
+allow for changes in C-allele frequency from one population to the next. In
+principle, should just use genocalldart::choose_geno6_thresholds but fix the
+count-related thresholds and re-estimate ALFs.
 }
