@@ -13,4 +13,5 @@ RoxygenNote: 6.1.0.9000
 SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
+KeepSource: TRUE
 
