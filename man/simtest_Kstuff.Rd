@@ -2,19 +2,18 @@
 % Please edit documentation in R/kinference.R
 \name{simtest_Kstuff}
 \alias{simtest_Kstuff}
-\title{simtest_Kstuff(): Bare documentation}
+\title{simtest_Kstuff(): check for (big) mistakes in SPA calcs}
 \usage{
 simtest_Kstuff(ck, n, nq = 20)
 }
 \arguments{
-\item{ck}{a param}
+\item{ck}{a 'SPAgeno' object}
 
-\item{n}{a param}
+\item{n}{a param. ?The number of animals to simulate?}
 
-\item{nq}{a param. Defaults to 20.}
+\item{nq}{a param. Defaults to 20. ?The number of quantiles?}
 }
 \description{
 This function has only the bare minimum of documentation necessary for roxygen to
-parse it. We should probably add some proper documentation here. Or maybe not: the
-local markup suggests that maybe this function should not exist.
+parse it. We should probably add some proper documentation here.
 }

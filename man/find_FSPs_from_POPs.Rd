@@ -4,7 +4,6 @@
 \alias{find_FSPs_from_candiHSPs}
 \alias{find_FSPs_from_HSPs}
 \alias{find_FSPs_from_POPs}
-\alias{find_FSPs_from_POPs_deprecated}
 \title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
 \usage{
 find_FSPs_from_candiHSPs(snpg, candiHSPs)
@@ -12,8 +11,6 @@ find_FSPs_from_candiHSPs(snpg, candiHSPs)
 find_FSPs_from_HSPs(snpg, HSPs)
 
 find_FSPs_from_POPs(snpg, candiPOPs)
-
-find_FSPs_from_POPs_deprecated(snpg, candiPOPs, SDwt_POP = 0.5)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
@@ -41,9 +38,6 @@ i.e., those with a weighted pseudo-exclusion (WPSEX) statistic
 less than some threshold, they might be full sibling pairs (FSPs).
 This function checks potential POPs with very low WPSEX values for
 their potential to be FSPs.
-
-find_FSPs_from_POPs_deprecated is, as the name suggests, deprecated. It is from
-DLM's 'kinference', and the MVB2 version (find_FSPs_from_POPs) seems more recent.
 }
 \details{
 The general idea of find_FSPs_from_POPs() is that pairs which are

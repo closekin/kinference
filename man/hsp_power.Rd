@@ -3,12 +3,9 @@
 \name{hsp_power}
 \alias{hsp_power}
 \alias{prepare_PLOD_SPA}
-\alias{hsp_power_deprecated}
 \title{hsp_power(): Preparation for kin-finding}
 \usage{
 hsp_power(lociar, want_LOD_table = TRUE, k)
-
-hsp_power_deprecated(lociar, want_LOD_table, k)
 
 prepare_PLOD_SPA(geno6, n_pts_SPA_renorm = 201)
 }
@@ -35,8 +32,6 @@ genopair, and adds them to the "locinfo" attribute. It also calculates mean
 and variance of LOD, and those can be used to calculate "Ediff" and
 "SEdiff". It's needed before \code{\link{hetzminoo_fancy}} and
 \code{prepare_PLOD_SPA}.
-
-Probably on its way out.
 }
 \details{
 \code{prepare_PLOD_SPA} prepares a \code{snpgeno} for "exact" (SPA)

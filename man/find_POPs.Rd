@@ -3,9 +3,7 @@
 \name{find_duplicates}
 \alias{find_duplicates}
 \alias{find_HSPs}
-\alias{find_HSPs_deprecated}
 \alias{find_POPs}
-\alias{find_POPs_deprecated}
 \title{Kin-finders for loads-of-SNPs datasets}
 \usage{
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
@@ -15,20 +13,10 @@ find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, keep_n = 1e+05, eta = NULL, keep_thresh = NULL,
   nbins = 50, bins = NULL)
 
-find_HSPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep,
-  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins = 50,
-  bins = NULL)
-
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
   keep_thresh = NULL, keep_n = 0.5 * nrow(snpg), nbins, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
-
-find_POPs_deprecated(snpg, subset1 = 1 \%upto\% nrow(snpg),
-  subset2 = subset1, one_in_X_eta, rough_n_pairs_to_keep = NA,
-  keep_n = 1000, eta = NULL, keep_thresh = NULL, nbins,
-  quick = TRUE, WPSEX_UP_POP_balance = 0.99)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
@@ -166,9 +154,6 @@ pairs (HSPs; \code{find_HSPs}). Unrelated pairs are referred to as
 UPs. One can specify the same or different subsets of the
 \code{snpgeno} for comparison: e.g., first subset for the adults,
 second for the juveniles.
-
-find_POPs_deprecated(), and other functions ending with _deprecated, were deprecated during the
-merge of MVB's and DLM's versions of kinference. There is a non-deprecated version of each.
 }
 \section{Kinformation}{
 

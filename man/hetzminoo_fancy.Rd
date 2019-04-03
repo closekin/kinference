@@ -2,14 +2,10 @@
 % Please edit documentation in R/kinference.R
 \name{hetzminoo_fancy}
 \alias{hetzminoo_fancy}
-\alias{hetzminoo_fancy_deprecated}
 \title{Heterozygotes minus "OO" checking}
 \usage{
 hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
   multhresh = 1)
-
-hetzminoo_fancy_deprecated(snpg, target = c("rich", "poor"),
-  hist_pars = list(), multhresh = 1)
 }
 \arguments{
 \item{snpg}{a \code{\link[gbasics]{snpgeno}} object}
@@ -27,7 +23,5 @@ few heterozygotes).}
 This test looks at whether the allele frequencies in a given fish seem
 right, or if there are discrepancies due to (i) degraded DNA or (ii)
 sample contamination.
-
-Is probably on its way out.
 }
 \keyword{misc}

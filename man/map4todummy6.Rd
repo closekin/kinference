@@ -31,11 +31,4 @@ set to FALSE for all loci.
 \details{
 Warnings/errors should be issued if the inputs are wrong.
 }
-\examples{
-# Not compulsory to have an EXAMPLES -- you can put examples into other sections.
-# Here's how to make a "don't run" example:
-\dontrun{
-reformat.my.hard.drive()
-}
-}
 \keyword{misc}
