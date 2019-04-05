@@ -1513,6 +1513,7 @@ if( keep_thresh_set && (length(result$big_PLOD) == keep_n)){
   # assign extra info as attributes
   result@mean_theory <- snpg@Kenv$dK( 0)
   result@var_theory <- snpg@Kenv$ddK( 0)
+  result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ## 
   result@bins <- bins
   result@binprobs <- binprobs
   result@eta <- eta
@@ -2013,11 +2014,12 @@ function( thing, seed) {
 #'               few heterozygotes).
 #' @param hist_pars parameters to pass to \code{\link{hist}}
 #' @param multhresh A param.
+#' @param showPlot show the plot? Default TRUE
 #' @keywords misc
 #' @export
 
 "hetzminoo_fancy" <-
-function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
+function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1, showPlot = TRUE) {
 ###################
   define_genotypes()
   extract.named( snpg@locinfo[ cq(  PUP4, pbonzer)]) ## used to also call use6; not used
@@ -2110,8 +2112,10 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1) {
             main=sprintf( '%s: multhresh=%5.2f', target, multhresh),
             xlim= range( whmo), # so cutoff lines show
             xlab='', nclass=50)
-        lv <- do.call( 'hist', c( list( x=whmo), hist_pars))
-        with( lv, lines( mids, diff( breaks) * dens_SPA( mids) * sum( counts), col='green'))
+        if (showPlot) {
+            lv <- do.call( 'hist', c( list( x=whmo), hist_pars))
+            with( lv, lines( mids, diff( breaks) * dens_SPA( mids) * sum( counts), col='green'))
+        }
         # abline( v=ncuts, col='red')
       },
     expression = eval( badhetz_hist_pars),
@@ -2409,6 +2413,7 @@ return( lociar)
 #'                             controlling histogram
 #' @param quick Controls whether K, dK, and ddK are sent through compile_vecless().
 #'              Defaults to TRUE.
+#' @param showPlot show the histogram? Defaults to TRUE
 #' @return Vector of log-likelihood for each individual. Produces a histogram
 #'         of log-likelihood values.
 #' @importFrom atease @
@@ -2423,7 +2428,7 @@ return( lociar)
 #' # abline( v=0, col='green')
 #' @export
 
-"ilglk_geno" <- function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE) {
+"ilglk_geno" <- function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE, showPlot = TRUE) {
   define_genotypes()
   extract.named( snpg@locinfo[ cq( pbonzer)])
 
@@ -2522,16 +2527,17 @@ return( lociar)
       border = NA,
       xlab   = '',
       nclass = 50)
-  lv <- do.call( 'hist', c( list( x=ilglk), indiv_lglk_hist_pars))
+  if( showPlot) {
+      lv <- do.call( 'hist', c( list( x=ilglk), indiv_lglk_hist_pars))
 
-
-  # some dens_SPA can fail -- do lapply and then weed out baddies
-  mids_SPA <- lapply(lv$mids, function(x) try(dens_SPA( x), silent=TRUE))
-  good_ind <- unlist(lapply(mids_SPA, class) != "try-error")
-  mids_SPA <- unlist(mids_SPA[good_ind])
-  # plot predicted density. Slowish with vecless 1.0
-  lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
-        col='blue')
+      # some dens_SPA can fail -- do lapply and then weed out baddies
+      mids_SPA <- lapply(lv$mids, function(x) try(dens_SPA( x), silent=TRUE))
+      good_ind <- unlist(lapply(mids_SPA, class) != "try-error")
+      mids_SPA <- unlist(mids_SPA[good_ind])
+      # plot predicted density. Slowish with vecless 1.0
+      lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
+            col='blue')
+  }
 
 return( ilglk)
 }
@@ -3326,7 +3332,8 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n
 #' @importFrom Rcpp evalCpp
 #' @importFrom mvbutils %without.name% ?
 
-"add_list_defaults" <- function( l, ...) {
+"add_list_defaults" <-
+    function( l, ...) {
 ###### Add defaults to list 'l' if not already in 'l'
   defaults <- list(...)
   l <- c( l, defaults %without.name% names( l))
@@ -3373,7 +3380,8 @@ return( l)
 #' # A # thar she
 #' ## End(Not run)
 
-"define_genotypes" <- function( nlocal=sys.parent()) mlocal({
+"define_genotypes" <-
+    function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
 
@@ -3405,7 +3413,8 @@ return( l)
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
 #' @export
-"inv_CDF_SPA2" <- function( p, K, dK, ddK, tol=formals( ridder)$tol) {
+"inv_CDF_SPA2" <-
+    function( p, K, dK, ddK, tol=formals( ridder)$tol) {
 
 ######## Invert L-R SPA approx to CDF on "s-scale"
 ######## Avoids "double iteration" of nonlinearity
@@ -3495,7 +3504,8 @@ return( x)
 #' @param k a param. Defaults to 0.5
 #' @export
 
-calculate_LOD_HSP <- function(lociar, k=0.5){
+"calculate_LOD_HSP" <-
+    function(lociar, k=0.5) {
 
   LODs <- calculate_IBD(lociar)
 
@@ -3552,6 +3562,271 @@ calculate_LOD_HSP <- function(lociar, k=0.5){
 return( retval)
 
 }
+
+#' PLOD_loghisto(): PLOD distro log-frequency plot with UP and HSP expetations
+#'
+#' Plots a log-frequency histogram for the output of \code{find_HSPs()}, with
+#' the expected mean PLOD for unrelated pairs in red, the expected distribution
+#' of unrelated pairs in blue, and the expected mean PLOD for HSPs in green.
+#'
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param UP plot the mean PLOD for unrelated pairs? Default TRUE
+#' @param HSP plot the mean PLOD for HSPs? Default TRUE
+#' @param UPdist plot the expected density curve for unrelated pairs? Default TRUE
+#' @param ... additional pars, passed to \code{plot}
+#' @export
+
+"PLOD_loghisto" <-
+    function(hsps, UP = TRUE, HSP = TRUE, UPdist = TRUE, ...) {
+
+        plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
+             ylab="log(Frequency)")
+        if( UP) { abline(v = hsps@mean_theory, col = 2, lwd = 2) }
+        if( HSP) { abline(v = hsps@mean_HSP, col = 3, lwd = 2) }
+        if( UPdist) {
+            lines(hsps@bins,log(diff(c(0,hsps@binprobs))*sum(hsps@n_PLODs_in_bin[hsps@bins<0])),
+                  lwd=2,col=4)
+        }
+    }
+
+
+#' HSP_histo(): PLOD distro frequency plot for the HSP and/or HTP bump regions
+#'
+#' Plots an absolute-frequency histogram for the output of \code{find_HSPs()}, with
+#' the lower bound set by the user. Lower bounds should be set to exclude (as much
+#' as possible) the UP bump, as this will otherwise swamp the signal from the HSP
+#' bump. Users must manually set a lower bound for full-sibling PLODs ('fullsib_cut')
+#' on order to exclude full-siblings from the variance estimate for HSP PLODs.
+#'
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
+#' @param ub PLOD upper bound for plot extent. Defaults to maximum PLOD score plus a
+#'           little padding
+#' @param fullsib_cut PLOD score above which there are only full-sibs
+#' @param bin hist bin width. Default 5. lb, ub, and bin together define 'breaks',
+#'            so you can't pass 'breaks' via \code{...}
+#' @param HSPmean plot the mean PLOD for HSPs? Default TRUE
+#' @param HSPdist plot the distribution of PLOD for HSPs? Default TRUE
+#' @param ... additional pars, passed to \code{hist()}
+#' @export
+
+"HSP_histo" <-
+    function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
+             HSPmean = TRUE, HSPdist = TRUE, ...) {
+        
+        hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
+                       col=8,main="HSP PLOD",xlab="PLOD", ...)
+        if( HSPmean) {
+            E.hsp = hsps@mean_HSP
+            abline(v=E.hsp,lwd=2,col=2)
+        }
+        if( HSPdist) {
+            V.hsp=mean(sqr(hsps$PLOD[hsps$PLOD>E.hsp & hsps$PLOD < fullsib_cut]-E.hsp))
+            obs.num <- hist.plod$counts
+            exp.num <- 2*sum(hsps$PLOD>E.hsp & hsps$PLOD<fullsib_cut)*
+                (pnorm(hist.plod$breaks[-1],E.hsp,sqrt(V.hsp))-
+                 pnorm(hist.plod$breaks[-length(hist.plod$breaks)],E.hsp,sqrt(V.hsp)))
+            points(hist.plod$mids,exp.num,pch=16,col=4,type='b')
+        }
+    }
+
+
+#' HSP_oddness_oneway(): show the distributions of oddness metrics over an HSP histo
+#'
+#' Plots an absolute-frequency histogram for the output of \code{find_HSPs()}, with
+#' additional coloured regions showing individuals with odd-looking CLOD scores
+#' (see \code{check_FPosity()} ), ilglk stat (see \code{ilglk_geno()} ), or hetz
+#' stat (see \code{hetzminoo_fancy()} ). The user should choose a PLOD range for plotting
+#' that excludes the UP bump, as unrelated pairs can swamp the signal from HSPs and HTPs.
+#' \code{HSP_oddness_oneway()} shows cases where at least one member of the pair has an
+#' unusual score in the oddness metric, whereas \code{HSP_oddness_twoway()} shows cases
+#' where both members of the pair have an unusual score in the oddness metric.
+#'
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param snpg the 'snpgeno' or 'SPAgeno' object from which 'hsps' was built
+#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
+#' @param ub PLOD upper bound for plot extent. Defaults to the maximum PLOD score plus a
+#'           little padding
+#' @param bin hist bin width. Default 5. lb, ub, and bin together define 'breaks', so you
+#'            can't pass 'breaks' via \code{...}
+#' @param CLOD_prop the quantile of CLOD below which animals are highlighted. Default 0.001
+#' @param ilglk_prop the quantile of ilglk stat below which animals are highlighted. Default 0.001
+#' @param hetz_prop the quantile of hetz stat below which animals are highlighted. Default 0.001
+#' @param ... additional pars, passed to \code{hist()}
+#' @seealso PLOD_oddness_oneway
+#' @export
+
+"HSP_oddness_oneway" <-
+    function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
+             ...) {
+
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+
+        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
+                   main="HSP PLOD",xlab="PLOD", ...)
+        for(i in 1:3) {
+            if(i==1) {
+                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
+                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+                colour <- rgb(1,0,0,alpha = 0.5)
+            }
+            if(i==2) {
+                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
+                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+                colour = rgb(0,1,0, alpha = 0.5)
+            }
+            if(i==3) {
+                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
+                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+                colour = rgb(0,0,1, alpha = 0.5)
+            }
+            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
+                       border = colour, col = colour)
+        }
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='ONE member of the pair has:',
+               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
+    }
+
+
+#' @rdname HSP_oddness_oneway
+#' @export
+
+"HSP_oddness_twoway" <-
+    function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
+             ...) {
+        
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+
+        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
+                   main="HSP PLOD",xlab="PLOD", ...)
+        for(i in 1:3) {
+            if(i==1) {
+                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
+                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+                colour <- rgb(1,0,0,alpha = 0.5)
+            }
+            if(i==2) {
+                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
+                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+                colour = rgb(0,1,0, alpha = 0.5)
+            }
+            if(i==3) {
+                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
+                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+                colour = rgb(0,0,1, alpha = 0.5)
+            }
+            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
+                       border = colour, col = colour)
+        }
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='BOTH members of the pair have:',
+               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
+    }
+
+
+#' PLOD_oddness_oneway(): show densities of oddness metrics over the PLOD range
+#'
+#' Plots the percentage of all pairs in each bin with an 'unusually' low
+#' CLOD score, ilglk stat, or hetz stat, across the range of PLOD. \code{PLOD_oddness_oneway()}
+#' shows the percentage of cases where one member has a low score, and
+#' \code{PLOD_oddness_twoway()} shows the percentage of cases where both members of the pair
+#' have a low score.
+#' 
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param snpg the 'snpgeno' or 'SPAgeno' object from which 'hsps' was built
+#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
+#' @param ub PLOD upper bound for plot extent. Defaults to the maximum PLOD score plus a
+#'           little padding
+#' @param bin hist bin width. Default 5
+#' @param CLOD_prop the quantile of CLOD below which animals are highlighted. Default 0.001
+#' @param ilglk_prop the quantile of ilglk stat below which animals are highlighted. Default 0.001
+#' @param hetz_prop the quantile of hetz stat below which animals are highlighted. Default 0.001
+#' @param ... additional pars, passed to \code{plot()}. 'ylim' and 'breaks' are set internally,
+#'            so you cannot pass them via \code{...}.
+#' @seealso HSP_oddness_oneway
+#' @export
+
+"PLOD_oddness_oneway" <-
+    function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
+
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+
+        hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
+        
+        tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
+            clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+        histA <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfA], breaks=seq(lb,ub,bin), plot=F)
+        
+        tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
+            ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+        histB <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfB], breaks=seq(lb,ub,bin), plot=F)
+        
+        tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
+            hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+        histC <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfC], breaks=seq(lb,ub,bin), plot=F)
+
+        yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
+                             histC$counts/hist1$counts)))
+        plot(hist1$breaks[-1], histA$counts/hist1$counts, type='b', col=(2),
+             pch=(15), xlab="PLOD value", ylab="Percent of fish pairs",
+             ylim = c(0, yup), ...)
+        points(hist1$breaks[-1], histB$counts/hist1$counts, type='b',col=(3), pch=(16))
+        points(hist1$breaks[-1], histC$counts/hist1$counts, type='b',col=(4), pch=(17))
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='ONE member of the pair has:', pch=15:17,col=2:4)
+    }
+
+
+
+#' @rdname PLOD_oddness_oneway
+#' @export
+
+"PLOD_oddness_twoway" <-
+    function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
+
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+
+        hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
+        
+        tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
+            clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+        histA <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfA], breaks=seq(lb,ub,bin), plot=F)
+        
+        tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
+            ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+        histB <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfB], breaks=seq(lb,ub,bin), plot=F)
+        
+        tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
+            hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+        histC <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfC], breaks=seq(lb,ub,bin), plot=F)
+
+        yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
+                             histC$counts/hist1$counts)))
+        plot(hist1$breaks[-1], histA$counts/hist1$counts, type='b', col=(2),
+             pch=(15), xlab="PLOD value", ylab="Percent of fish pairs",
+             ylim = c(0, yup), ...)
+        points(hist1$breaks[-1], histB$counts/hist1$counts, type='b',col=(3), pch=(16))
+        points(hist1$breaks[-1], histC$counts/hist1$counts, type='b',col=(4), pch=(17))
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='BOTH members of the pair have:', pch=15:17,col=2:4)
+    }
 
 
 #' @export

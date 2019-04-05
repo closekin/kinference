@@ -2,6 +2,12 @@
 
 S3method("[",SPAgeno)
 S3method("[<-",SPAgeno)
+export(HSP_histo)
+export(HSP_oddness_oneway)
+export(HSP_oddness_twoway)
+export(PLOD_loghisto)
+export(PLOD_oddness_oneway)
+export(PLOD_oddness_twoway)
 export(add_list_defaults)
 export(add_pairprob_error)
 export(calc_g6probs_IBD0_scalar)

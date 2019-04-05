@@ -5,7 +5,8 @@
 \alias{lglk_loci}
 \title{Check individual genotypes for aggregate typicality}
 \usage{
-ilglk_geno(snpg, indiv_lglk_hist_pars = list(), quick = TRUE)
+ilglk_geno(snpg, indiv_lglk_hist_pars = list(), quick = TRUE,
+  showPlot = TRUE)
 
 lglk_loci(snpg)
 }
@@ -17,6 +18,8 @@ controlling histogram}
 
 \item{quick}{Controls whether K, dK, and ddK are sent through compile_vecless().
 Defaults to TRUE.}
+
+\item{showPlot}{show the histogram? Defaults to TRUE}
 }
 \value{
 Vector of log-likelihood for each individual. Produces a histogram

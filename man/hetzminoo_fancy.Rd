@@ -5,7 +5,7 @@
 \title{Heterozygotes minus "OO" checking}
 \usage{
 hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
-  multhresh = 1)
+  multhresh = 1, showPlot = TRUE)
 }
 \arguments{
 \item{snpg}{a \code{\link[gbasics]{snpgeno}} object}
@@ -18,6 +18,8 @@ few heterozygotes).}
 \item{hist_pars}{parameters to pass to \code{\link{hist}}}
 
 \item{multhresh}{A param.}
+
+\item{showPlot}{show the plot? Default TRUE}
 }
 \description{
 This test looks at whether the allele frequencies in a given fish seem
