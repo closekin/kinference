@@ -3563,6 +3563,7 @@ return( retval)
 
 }
 
+
 #' PLOD_loghisto(): PLOD distro log-frequency plot with UP and HSP expetations
 #'
 #' Plots a log-frequency histogram for the output of \code{find_HSPs()}, with
@@ -3663,8 +3664,8 @@ return( retval)
 
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
-        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
                    main="HSP PLOD",xlab="PLOD", ...)
@@ -3703,8 +3704,8 @@ return( retval)
         
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
-        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
                    main="HSP PLOD",xlab="PLOD", ...)
@@ -3761,22 +3762,22 @@ return( retval)
 
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
-        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
         
         tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
             clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
-        histA <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfA], breaks=seq(lb,ub,bin), plot=F)
+        histA <- hist(hsps$PLOD[hsps$PLOD>lb & tfA], breaks=seq(lb,ub,bin), plot=F)
         
         tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
             ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
-        histB <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfB], breaks=seq(lb,ub,bin), plot=F)
+        histB <- hist(hsps$PLOD[hsps$PLOD>lb & tfB], breaks=seq(lb,ub,bin), plot=F)
         
         tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
             hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
-        histC <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfC], breaks=seq(lb,ub,bin), plot=F)
+        histC <- hist(hsps$PLOD[hsps$PLOD>lb & tfC], breaks=seq(lb,ub,bin), plot=F)
 
         yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
                              histC$counts/hist1$counts)))
@@ -3800,22 +3801,22 @@ return( retval)
 
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
-        hetz.poor<- hetzminoo_fancy(geno_juves, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(geno_juves, showPlot = FALSE)
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
         
         tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
             clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
-        histA <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfA], breaks=seq(lb,ub,bin), plot=F)
+        histA <- hist(hsps$PLOD[hsps$PLOD>lb & tfA], breaks=seq(lb,ub,bin), plot=F)
         
         tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
             ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
-        histB <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfB], breaks=seq(lb,ub,bin), plot=F)
+        histB <- hist(hsps$PLOD[hsps$PLOD>lb & tfB], breaks=seq(lb,ub,bin), plot=F)
         
         tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
             hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
-        histC <- hist(hsps$PLOD[hsps$PLOD>hist.lb & tfC], breaks=seq(lb,ub,bin), plot=F)
+        histC <- hist(hsps$PLOD[hsps$PLOD>lb & tfC], breaks=seq(lb,ub,bin), plot=F)
 
         yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
                              histC$counts/hist1$counts)))
