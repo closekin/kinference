@@ -26,11 +26,6 @@ others) e.g. from find_POPs() or find_HSPs(). Can also be a
 with rows being pairs and columns _i_ and _j_ (and possibly
 others) e.g. from find_POPs() or find_HSPs(). Can also be a
 2-column matrix (each row again one pair).}
-
-\item{SDwt_POP}{should the weighting of loci be based more on POP variance
-(values towards 1) or on FSP variance (values towards 0)? In
-principle depends on your prior for the alternative. In practice,
-shouldn't matter. I hope.}
 }
 \description{
 For pairs already picked as likely parent-offspring pairs (POPs),

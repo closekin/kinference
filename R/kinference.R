@@ -1272,10 +1272,6 @@ function( snpg, candiHSPs) {
 #'                  with rows being pairs and columns _i_ and _j_ (and possibly
 #'                  others) e.g. from find_POPs() or find_HSPs(). Can also be a
 #'                  2-column matrix (each row again one pair).
-#' @param SDwt_POP should the weighting of loci be based more on POP variance
-#'                 (values towards 1) or on FSP variance (values towards 0)? In
-#'                 principle depends on your prior for the alternative. In practice,
-#'                 shouldn't matter. I hope.
 #' @keywords misc
 #' @examples
 #' # pops_or_fsps <- find_POPs( mysnpg, ...)
@@ -3663,7 +3659,7 @@ return( retval)
              ...) {
 
         cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
@@ -3703,7 +3699,7 @@ return( retval)
              ...) {
         
         cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
@@ -3761,7 +3757,7 @@ return( retval)
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
 
         cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
@@ -3800,7 +3796,7 @@ return( retval)
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
 
         cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower=FALSE))
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
@@ -3828,6 +3824,193 @@ return( retval)
         legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
                title='BOTH members of the pair have:', pch=15:17,col=2:4)
     }
+
+#' check6and4(): bare documentation
+#'
+#' Checks 6-way and 4-way genotype frequencies against HWE expectations, and generates
+#' plots of observed / expected frequencies. Recently moved into kinference from
+#' genocalldart.
+#' @param geno6 a genotype object with 4-way and 6-way genocalls
+#' @param thresh_pchisq_6and4 thresholds for 'bad' and 'really bad' p-values
+#' @param return_what a character vector, defaulting to c('just_pvals', 'all')
+#' @param extra_title a character string to be added to the bottom-right corner of all plots.
+#'                    Best if < 25 characters.
+#' @seealso geno_deambig_ABC
+#' @importFrom grDevices rgb
+#' @importFrom graphics legend
+#' @importFrom graphics plot
+#' @importFrom graphics points
+#' @importFrom stats na.omit
+#' @importFrom stats quantile
+#' @export
+
+"check6and4" <-
+function( geno6, 
+    thresh_pchisq_6and4, 
+    return_what=c( 'just_pvals', 'all'),
+    extra_title = "") {
+##########    
+  n_fish <- nrow( geno6)
+  n_loci <- ncol( geno6)
+  define_genotypes()
+  diplos <- geno6@diplos
+stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
+  
+  p6 <- with( geno6@locinfo, 
+      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'], 
+          snerr=snerr))[,genotypes6]
+  # At some point, will also need p6_IBD... later...
+
+  # Chi-sq check: requires gpred & gobs attr on geno6
+  g6pred <- p6 * n_fish
+  g6obs <- matrix( 0, n_loci, 6, dimnames=list( NULL, genotypes6))
+  
+  for( ig in genotypes6) {
+    g6obs[,ig] <- colSums( geno6==match( ig, diplos))
+  }
+
+  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', 
+      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+
+  g4obs <- gtab6to4( g6obs)
+  g4pred <- gtab6to4( g6pred)
+  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G', 
+      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+  
+  return_what <- match.arg( return_what)
+  if( return_what=='all') {
+    geno6@locinfo$pval6 <- pval6
+    geno6@locinfo$pval4 <- pval4
+return( geno6)
+  } else {
+return( returnList( pval6, pval4))
+  }
+}
+
+
+#' chisq_genofreq_check(): check genotype frequencies against HWE expectations
+#'
+#' Checks observed genotype frequencies against expected frequencies, presumably with expectation
+#' defined by HWE.
+#' @param lociar a snpgeno object
+#' @param gpred predicted allele frequencies
+#' @param gobs observed allele frequencies
+#' @param thresh_pchisq_loci a param. Presumably, a threshold p-val for flagging loci with
+#'                           suspicious-looking allele frequencies.
+#' @param test a character string, either "Pearson" or "G"
+#' @param trim TRUE or FALSE. TRUE will keep only above max thresh_pchisq_loci. Arguably better as
+#'             to be done post-hoc.
+#' @param seq_paxis numeric#'
+#' @param extra_title a character string to be added to the bottom-right corner of all plots.
+#'                    Best if < 25 characters.
+#' @importFrom stats pchisq
+#' @importFrom graphics mtext
+#' @importFrom graphics par
+#' @seealso kinference::check6and4
+#' @export
+
+"chisq_genofreq_check" <-
+function( lociar, 
+    gpred= lociar@gpred,
+    gobs= lociar@gobs,
+    thresh_pchisq_loci,  # NULL to not worry; 1 value a threshold; 2 vals to inspect "iffy" ones
+    test,  # 'Pearson' or 'G'
+    trim, # TRUE to keep only above max thresh_pchisq_loci. Arguably better done post hoc...
+    seq_paxis=0.025,
+    extra_title = "") {
+##########    
+# Either 6- or 4-geno version should work
+# 1 DoF in either case
+# Assumed null distro of chisq(1) is pretty approximate
+  n_loci <- nrow( gobs)
+
+  # After ML, should never happen that gobs>0 & gpred==0... but we'll check
+stopifnot( !any( gobs>0 & gpred==0))  
+
+  chistat <- if( test=='Pearson') 
+      rowSums( sqr( gobs - gpred) / gpred) 
+    else if( test=='G') # must handle 0log0 which is 0 but R doesn't know that (cf nlogp func in my Pascal armoury)
+      2 * rowSums( gobs * log( ifelse( gobs>0, gobs/gpred, 1)))
+    else 
+stop( 'test must be "Pearson" or "G"')
+      
+  DoF <- ncol( gpred)-3 # ... maybe ... !?
+  pval <- pchisq( chistat, df=DoF, lower.tail=FALSE) ### df = ???
+  lociar@locinfo$pval <- pval
+  liffies <- length( thresh_pchisq_loci)
+  keep_loci <- if( liffies) pval > max( thresh_pchisq_loci) else rep( TRUE, n_loci)
+  iffy_loci <- !keep_loci & (pval > min( thresh_pchisq_loci))
+  
+  # Plot histogram of pvals - should be approximately uniformly distributed if the loci are behaving as we would like
+  # [ should follow recordo paradigm as per geno_deambig ]
+  par( mfrow=c(1,1)) # just one plot on first page
+  hist(pval, 
+      main=sprintf( "%s GoF of %i-genotypes: pval from chisq( %i)", test, ncol( gpred), DoF), 
+      xlab="P-value: LOW == BAD", 
+      breaks=seq(0,1,seq_paxis),
+      xlim=c(0,1))
+  mtext(extra_title, side = 1, adj = 1, padj = 5) ## SB
+  abline( v=thresh_pchisq_loci, col='red')
+  
+  # Locussy fits
+  opar <- par(mfrow=c(2, ncol( gpred) %/% 2), 
+      mar=c( 3, 3, 0, 0)+0.1, oma=c( 2, 2, 3, 1))
+  # omi=c(0,0,.6,0),mai=c(.8,.8,.2,.2)) Paige uses absolute margins
+  on.exit( par( opar))
+  
+  gtypes <- colnames( gobs)
+  for( g in 1:ncol( gpred)) {
+    # all of 'em
+    plot(gpred[,g], gobs[,g], pch=16, cex=0.4, col='lightblue', # pch='.' is too small
+        xlab='', ylab='', main='', 
+        xlim=c( 0, max( c( gpred[,g], gobs[,g]))),  
+        ylim=c( 0, max( c( gpred[,g], gobs[,g]))))          
+    abline(0,1,col=8,lwd=2)
+    points( gpred[ keep_loci,g], gobs[ keep_loci,g], pch=16, cex=0.4, col='green') # overplot to make visible against the line
+    mtext( side=3, gtypes[ g], line=-1)
+    # bad ones with X
+    points( gpred[ !keep_loci, g], gobs[ !keep_loci, g], col='magenta', pch=16, cex=0.6)
+    if( any( iffy_loci)) {
+      points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', pch=4, cex=1)
+    }
+  }
+  mtext( 'Green = "good"', side=3, cex=1.5, outer=TRUE, line=1.5)
+  mtext( 'Expected', side=1, cex=1.5, outer=TRUE)
+  mtext( 'Observed', side=2, cex=1.5, outer=TRUE)
+  mtext(extra_title, side = 1, adj = 1, padj = 4) ## SB
+    
+  if( liffies) {
+    legend( 'bottomright', pch=c( 16, rep( 4, liffies)), col=c( 'magenta', if( liffies>1) 'orange', 'green'), pt.cex=c( 0.6, if( liffies>1) 1, 0.6),
+        legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 1]), if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[2]), '... < 1') )
+  }
+  
+  if( trim) { 
+    lociar <- lociar[ , keep_loci, ,drop=FALSE]
+  }
+return( lociar)
+}
+
+
+#' gtab6to4(): condense 6-way genotype counts to 4-way
+#'
+#' Condenses 6-way genotype counts to 4-way (e.g., gives 'AAO' instead of AA or AO)
+#' @param gt6 a genotype object scored as 6-way.
+#' @return a genotype object scored as 4-way.
+#' @seealso gtab4
+#' @export
+
+"gtab6to4" <-
+function( gt6) {
+######### Condense 6way-genotype counts to 4way (AAO instead of AA, AO)
+  define_genotypes()
+  gt4 <- matrix( 0, nrow( gt6), 4, dimnames=list( dimnames( gt6)[[1]], genotypes4_ambig))
+  gt4[,AB] <- gt6[,AB]
+  gt4[,OO] <- gt6[,OO]
+  gt4[,AAO] <- gt6[,AA] + gt6[,AO]
+  gt4[,BBO] <- gt6[,BB] + gt6[,BO] 
+return( gt4)
+}
+
 
 
 #' @export
@@ -4357,6 +4540,8 @@ globalVariables( package="kinference",
                        ,"keep_n"
                        ,"LOD3"
                        ,"PUP3"
+                       ,"mean_HSP"
+                       ,"n_PLODs_in_bin"
                         )
                 )
 
