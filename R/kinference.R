@@ -2233,7 +2233,26 @@ return( c( whmo))
       li$PUP4 <- s4@PUP
       li$LOD3 <- s3@LOD
       li$PUP3 <- s3@PUP
-      s6@LOD <- s6@LOD <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+      s6@LOD <- s6@PUP <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+
+      li$e0_6way <- s6$e0
+      li$v0_6way <- s6$v0
+      li$e1_6way <- s6$e1
+      li$v1_6way <- s6$v1
+
+      li$e0_4way <- s4$e0
+      li$v0_4way <- s4$v0
+      li$e1_4way <- s4$e1
+      li$v1_4way <- s4$v1
+
+      li$e0_3way <- s3$e0
+      li$v0_3way <- s3$v0
+      li$e1_3way <- s3$e1
+      li$v1_3way <- s3$v1
+
+      s6$e0 <- s6$v0 <- s6$e1 <- s6$v1 <- NULL
+      s4$e0 <- s4$v0 <- s4$e1 <- s4$v1 <- NULL
+      s3$e0 <- s3$v0 <- s3$e1 <- s3$v1 <- NULL
     }
 
     # li <- cbind( li, s6, s4)
@@ -2783,7 +2802,7 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
     gpPUP <- PUP_as_2D[ , wanted]
 
     # Off-diagnonals appear twice, and prob should be doubled...
-    omg <- mg
+    omg <- mg 
     omg[ wanted] <- 0
     double_wanted <- 1:ngp %in% omg
     # wrong for some reason:    double_wanted <- wanted %in% mg[ duplicated( c( mg))]
@@ -2800,8 +2819,18 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   E.UP[l] := LOD[l,i,j] %[i,j]% Pup[l,i,j]
   E2.UP[l] := (LOD*LOD)[l,i,j] %[i,j]% Pup[l,i,j]
   V.UP <- E2.UP - sqr( E.UP)
-  Ediff <- E.HSP - E.UP
+    Ediff <- E.HSP - E.UP
 
+    ## Code for mean and variance of LOD difference given coinheritance ---
+    ## results needed for var.PLOD.kin
+    P1 <- 2 * Phsp - Pup # of genopair, given exactly 1 coinherited allele
+    e1[ l]:= LOD[l,i,j] %[i,j]% P1[l,i,j]
+    e2.1[ l]:= (LOD*LOD)[l,i,j] %[i,j]% P1[l,i,j]
+    v1 <- e2.1 - sqr( e1)
+    e0 <- E.UP
+    v0 <- V.UP
+    matto <- cbind( e0, v0, e1, v1)
+    
   # Standardized difference ie locus power: not so useful post hoc,
   #  but possibly interesting for 6 vs 4 comps
   sdiff <- (E.HSP - E.UP) / sqrt( V.UP)
@@ -2809,9 +2838,8 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
 #  Ediff <- unclass( Ediff)
 #  V.UP <- unclass( V.UP)
 #  sdiff <- unclass( sdiff)
-#
 
-  retval <- data.frame( Ediff, V.UP, sdiff)
+  retval <- data.frame( Ediff, V.UP, sdiff, matto) ## matto comes in as 4 named columns, not as matto
   if( want_LOD_table) {
     retval@LOD <- gpLOD
     retval@PUP <- gpPUP
