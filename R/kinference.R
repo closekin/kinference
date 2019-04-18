@@ -3416,6 +3416,8 @@ return( l)
   genotypes_C <- cq( AA, AB, AC, AO, BB, BC, BO, CC, CO, OO)
   genotypes3_ambig <- cq( AB, AAO, "BBOO") ## sans quotes, BBOO is also treated as global
 
+  NA_geno <- as.raw(255)
+  
   for( ig in genotypes) {
     # assign( ig, structure( as.raw( match( ig, genotypes)), class='ABOSNP'))
     assign( ig, structure( ig, class='noquote')) # for nicer printing
