@@ -3446,20 +3446,29 @@ return( retval)
 #' @param hsps the output of a call to \code{find_HSPs()}
 #' @param UP plot the mean PLOD for unrelated pairs? Default TRUE
 #' @param HSP plot the mean PLOD for HSPs? Default TRUE
-#' @param UPdist plot the expected density curve for unrelated pairs? Default TRUE
+#' @param showUP plot the expected density curve for unrelated pairs using the SPA
+#'               approximation (default TRUE), Normal approximation (default FALSE),
+#'               both, or neither. SPA approximation will plot in blue (or colour 4),
+#'               Normal in magenta (or colour 6).
 #' @param ... additional pars, passed to \code{plot}
 #' @export
 
 "PLOD_loghisto" <-
-    function(hsps, UP = TRUE, HSP = TRUE, UPdist = TRUE, ...) {
+    function(hsps, UP = TRUE, HSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
 
         plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
              ylab="log(Frequency)")
         if( UP) { abline(v = hsps@mean_theory, col = 2, lwd = 2) }
         if( HSP) { abline(v = hsps@mean_HSP, col = 3, lwd = 2) }
-        if( UPdist) {
+        if( showUP["SPA"]) {
             lines(hsps@bins,log(diff(c(0,hsps@binprobs))*sum(hsps@n_PLODs_in_bin[hsps@bins<0])),
                   lwd=2,col=4)
+        }
+        if( showUP["Normal"]) {
+            lines(hspsa@bins,log(diff(c(0,pnorm(hspsa@bins, mean = hspsa@mean_theory,
+                                      sd = sqrt(hspsa@var_theory)) *
+                                      sum(hspsa@n_PLODs_in_bin[hspsa@bins<0])))),
+                  lwd = 2, col = 6) ## Normal approx
         }
     }
 

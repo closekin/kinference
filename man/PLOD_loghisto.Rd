@@ -4,7 +4,8 @@
 \alias{PLOD_loghisto}
 \title{PLOD_loghisto(): PLOD distro log-frequency plot with UP and HSP expetations}
 \usage{
-PLOD_loghisto(hsps, UP = TRUE, HSP = TRUE, UPdist = TRUE, ...)
+PLOD_loghisto(hsps, UP = TRUE, HSP = TRUE, showUP = c(SPA = TRUE,
+  Normal = FALSE), ...)
 }
 \arguments{
 \item{hsps}{the output of a call to \code{find_HSPs()}}
@@ -13,7 +14,10 @@ PLOD_loghisto(hsps, UP = TRUE, HSP = TRUE, UPdist = TRUE, ...)
 
 \item{HSP}{plot the mean PLOD for HSPs? Default TRUE}
 
-\item{UPdist}{plot the expected density curve for unrelated pairs? Default TRUE}
+\item{showUP}{plot the expected density curve for unrelated pairs using the SPA
+approximation (default TRUE), Normal approximation (default FALSE),
+both, or neither. SPA approximation will plot in blue (or colour 4),
+Normal in magenta (or colour 6).}
 
 \item{...}{additional pars, passed to \code{plot}}
 }
