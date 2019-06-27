@@ -33,3 +33,6 @@ as possible) the UP bump, as this will otherwise swamp the signal from the HSP
 bump. Users must manually set a lower bound for full-sibling PLODs ('fullsib_cut')
 on order to exclude full-siblings from the variance estimate for HSP PLODs.
 }
+\seealso{
+PLOD_loghisto
+}

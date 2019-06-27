@@ -2,9 +2,9 @@
 % Please edit documentation in R/kinference.R
 \name{predict_hsp_util}
 \alias{predict_hsp_util}
-\title{predict_HSP_util(): Bare documentation}
+\title{predict_hsp_util(): Bare documentation}
 \usage{
-predict_hsp_util(pIBD0, pIBD1, want_LOD_table = FALSE, k = 0.5)
+predict_hsp_util(pIBD0, pIBD1, pIBD2, want_LOD_table = FALSE, k = 0.5)
 }
 \arguments{
 \item{pIBD0}{a param}

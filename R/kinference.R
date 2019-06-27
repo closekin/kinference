@@ -243,6 +243,62 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
 return( pp6_err)
 }
 
+#' calc_g6probs_IBD2_scalar(): Bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for roxygen to
+#' parse it. We should probably add some proper documentation here.
+#'
+#' @param P a param
+#' @param snerr a param
+#' @param record TRUE or FALSE
+#' @export
+#' @importFrom vecless set_recording
+#' @importFrom mvbutils %&%
+
+"calc_g6probs_IBD2_scalar" <-
+function( P, snerr, record=FALSE) {
+## SCALAR-ONLY VERSION... this is hard enough!
+## Though can be called with 1-row matrix args, eg with( x@locinfo[1,],
+##    calc_g6probs_IBD2( pbonzer, snerr))
+
+  # snerr = P( misclassifying true XX as XO, and vice versa)
+
+  set_recording( cq( P, snerr, pp_true, pr2, pp_err, perr, pp6_err), record)
+  define_genotypes()           ? 0
+
+  P <- drop( P) # for scalar version
+  P <- P              ? 0
+stopifnot( my.all.equal( names( P), names( ABCO)))
+
+  snerr <- drop( snerr) # for scalar version
+
+  snerr <- snerr            ? 0
+  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
+                    dimnames=list( genotypes_C, genotypes_C))         ? 1
+
+
+  g_1 <- substring( genotypes_C, 1, 1)
+  g_2 <- substring( genotypes_C, 2, 2)
+  pr2 <-  nchar( named( genotypes_C))    ? 1 # named
+
+  is_het <- g_1 != g_2
+  pr2[] <- P[ g_1] * P[ g_2]             ? 0
+  pr2[ is_het] <- 2 * pr2[ is_het]       ? 0
+
+  pp_true <- matrix( 0, length( genotypes_C), length( genotypes_C),
+                    dimnames=rep( list( genotypes_C), 2))        ? 1
+
+  # UP case was:
+  # pp_true[ cbind( gp1, gp2)] <- pr2[ gp1] * pr2[ gp2]                       ? 0
+  pp_true[ cbind( genotypes_C, genotypes_C)] <- pr2[ genotypes_C]             ? 0
+
+  # NB that for this UP case, XX/XO errors shouldn't change the overall probs because the cutoffs are chosen to do exactly that!
+  add_pairprob_error()
+
+return( pp6_err)
+}
+
+
 #' Find chains in HSPs; summarize sib-groups
 #'
 #' Find chains of relatives of fish `seed`.
@@ -1356,7 +1412,13 @@ if( keep_thresh_set && (length(result$big_PLOD) == keep_n)){
   # assign extra info as attributes
   result@mean_theory <- snpg@Kenv$dK( 0)
   result@var_theory <- snpg@Kenv$ddK( 0)
-  result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ## 
+  result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ##
+  ## notation here is... inventive. mean_theory and var_theory are for UPs. All
+  ## means are actually theory
+  ##   result@mean_HSP <- sum(snpg@locinfo$E.HSP) ## this should be OK 
+  ##   result@mean_UP <- sum(snpg@locinfo$E.UP) ## this should be OK too 
+  result@mean_POP <- sum(snpg@locinfo$E.POP) 
+  result@mean_FSP <- sum(snpg@locinfo$E.FSP) 
   result@bins <- bins
   result@binprobs <- binprobs
   result@eta <- eta
@@ -2021,13 +2083,17 @@ return( c( whmo))
   temp1 <- with( li1, calc_g6probs_IBD1_scalar( pbonzer, snerr, record=TRUE))
   cg6p1 <- make_playback( calc_g6probs_IBD1_scalar, temp1)
 
+  temp2 <- with( li1, calc_g6probs_IBD2_scalar( pbonzer, snerr, record=TRUE))
+  cg6p2 <- make_playback( calc_g6probs_IBD2_scalar, temp2)
+
   g6p0 <- with( li, cg6p0( pbonzer, snerr))
   g6p1 <- with( li, cg6p1( pbonzer, snerr))
+  g6p2 <- with( li, cg6p2( pbonzer, snerr))
 
-  s6 <- predict_hsp_util( g6p0, g6p1, want_LOD_table, k=k)
+  s6 <- predict_hsp_util( g6p0, g6p1, g6p2, want_LOD_table, k=k)
 
   # For the 4-ways, must condense g6p's
-
+##thisisamark
   if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
     map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
     # AB & OO are OK; AAO should receive both AA and AO; etc
@@ -2047,7 +2113,10 @@ return( c( whmo))
     A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
     g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
 
-    s4 <- predict_hsp_util( g4p0, g4p1, want_LOD_table, k=k)
+    A[l,i,k] := g6p2[l,i,j] %[j]% map6to4[j,k]
+    g4p2[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+    s4 <- predict_hsp_util( g4p0, g4p1, g4p2, want_LOD_table, k=k)
 
     ### bring in an s3 as well:
     map6to3 <- matrix( 0, 6, 3, dimnames=list( genotypes6, genotypes3_ambig))
@@ -2071,7 +2140,10 @@ return( c( whmo))
     A[l,i,k] := g6p1[l,i,j] %[j]% map6to3[j,k]
     g3p1[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
 
-    s3 <- predict_hsp_util( g3p0, g3p1, want_LOD_table, k=k)
+    A[l,i,k] := g6p2[l,i,j] %[j]% map6to3[j,k]
+    g3p2[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+    
+    s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k)
     
     if( want_LOD_table) {
       li$LOD6 <- s6@LOD # matrix
@@ -2117,7 +2189,6 @@ return( c( whmo))
   lociar@locinfo <- li
 return( lociar)
 }
-
 
 #' hsp_power2(): Kin-finding power for microhaplotyped loci
 #'
@@ -2609,7 +2680,7 @@ map6to3 <- function(g6p0, g6p1){
 }
 
 
-#' predict_HSP_util(): Bare documentation
+#' predict_hsp_util(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
 #' parse it. We should probably add some proper documentation here.
@@ -2623,7 +2694,7 @@ map6to3 <- function(g6p0, g6p1){
 #' @importFrom gbasics make_genopairer sqr
 
 "predict_hsp_util" <-
-function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
+function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
   # ... which should be pretty rare
 
@@ -2631,6 +2702,8 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   nl <- nrow( pIBD1)
   Phsp <- pIBD1 * k + pIBD0 * (1-k)
   Pup <- pIBD0
+    Ppop <- pIBD1
+    Pfsp <- pIBD0*0.25 + pIBD1*0.5 + pIBD2*0.25
 
   LOD <- log( Phsp / Pup)
   LOD[ Pup==0] <- 0 # if Pup=0 then p*log(p) = 0; only happens when r=0
@@ -2666,7 +2739,10 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
   E.UP[l] := LOD[l,i,j] %[i,j]% Pup[l,i,j]
   E2.UP[l] := (LOD*LOD)[l,i,j] %[i,j]% Pup[l,i,j]
   V.UP <- E2.UP - sqr( E.UP)
-    Ediff <- E.HSP - E.UP
+  Ediff <- E.HSP - E.UP
+
+  E.POP[l] := LOD[l,i,j] %[i,j]% Ppop[l,i,j]
+  E.FSP[l] := LOD[l,i,j] %[i,j]% Pfsp[l,i,j]
 
     ## Code for mean and variance of LOD difference given coinheritance ---
     ## results needed for var.PLOD.kin
@@ -2686,7 +2762,10 @@ function( pIBD0, pIBD1, want_LOD_table=FALSE, k=0.5) {
 #  V.UP <- unclass( V.UP)
 #  sdiff <- unclass( sdiff)
 
-  retval <- data.frame( Ediff, V.UP, sdiff, matto) ## matto comes in as 4 named columns, not as matto
+    retval <- data.frame( Ediff, V.UP, sdiff, matto,
+                         E.POP, E.FSP, E.UP, E.HSP)
+    ## matto comes in as 4 named columns, not as matto.
+    ## E.UP is not 100% efficient, but bonus points for readability
   if( want_LOD_table) {
     retval@LOD <- gpLOD
     retval@PUP <- gpPUP
@@ -2915,11 +2994,17 @@ calculate_IBD <- function(lociar){
   temp1 <- with( li1, calc_g6probs_IBD1_scalar( pbonzer, snerr, record=TRUE))
   cg6p1 <- make_playback( calc_g6probs_IBD1_scalar, temp1)
 
+  temp2 <- with( li1, calc_g6probs_IBD2_scalar( pbonzer, snerr, record=TRUE))
+  cg6p2 <- make_playback( calc_g6probs_IBD2_scalar, temp2)
+
   pIBD0 <- with( li, cg6p0( pbonzer, snerr))
   pIBD1 <- with( li, cg6p1( pbonzer, snerr))
+  pIBD2 <- with( li, cg6p2( pbonzer, snerr))
 
   return(list(pIBD0 = pIBD0,
-              pIBD1 = pIBD1))
+              pIBD1 = pIBD1,
+              pIBD2 = pIBD2
+              ))
 }
 
 
@@ -3371,13 +3456,13 @@ return( x)
 #' calculate_LOD_HSP(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it. We should probably add some proper documentation here. 
 #'
 #' @param lociar a param
 #' @param k a param. Defaults to 0.5
 #' @export
 
-"calculate_LOD_HSP" <-
+"calculate_LOD_HSP" <- ## badly in need of fixing; duplicated or redundant and doesn't have the pIBD2 stuff
     function(lociar, k=0.5) {
 
   LODs <- calculate_IBD(lociar)
@@ -3440,36 +3525,61 @@ return( retval)
 #' PLOD_loghisto(): PLOD distro log-frequency plot with UP and HSP expetations
 #'
 #' Plots a log-frequency histogram for the output of \code{find_HSPs()}, with
-#' the expected mean PLOD for unrelated pairs in red, the expected distribution
-#' of unrelated pairs in blue, and the expected mean PLOD for HSPs in green.
+#' the expected mean PLOD for unrelated pairs, the expected distribution
+#' of unrelated pairs, and the expected mean PLOD for HSPs. Expectations are
+#' coloured according to the table below
+#'
+#' Colour scheme for all kin-finding markers:
+#' Shamelessly cropped from package 'viridis'; defined as a one-off palette to
+#' avoid adding dependencies. Apparently quite colourblind-friendly.
+#' 
+#' Kin class  Hex Colour  Number  Colour
+#' UP         #BF3984FF   5       Magenta (light)
+#' POP        #0D0887FF   1       Navy blue
+#' GGP        #48039FFF   2       Violet
+#' HSP        #FBA238FF   8       Orange
+#' FSP        #FCCE25FF   9       Yellow
+#' HCP        #7401A8FF   3       Purple
+#' FCP        #9D189DFF   4       Magenta (dark)
+#' HTP        #DA596AFF   6       Rose
+#' FTP        #EE7B51FF   7       Coral
 #'
 #' @param hsps the output of a call to \code{find_HSPs()}
 #' @param UP plot the mean PLOD for unrelated pairs? Default TRUE
 #' @param HSP plot the mean PLOD for HSPs? Default TRUE
+#' @param POP plot the mean PLOD for POPs? Default TRUE
+#' @param FSP plot the mean PLOD for FSPs? Default TRUE
 #' @param showUP plot the expected density curve for unrelated pairs using the SPA
 #'               approximation (default TRUE), Normal approximation (default FALSE),
-#'               both, or neither. SPA approximation will plot in blue (or colour 4),
-#'               Normal in magenta (or colour 6).
+#'               both, or neither. Either approximation will plot in colour 5, a light
+#'               magenta.
 #' @param ... additional pars, passed to \code{plot}
 #' @export
 
 "PLOD_loghisto" <-
-    function(hsps, UP = TRUE, HSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
+    function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
 
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+        
         plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
              ylab="log(Frequency)")
-        if( UP) { abline(v = hsps@mean_theory, col = 2, lwd = 2) }
-        if( HSP) { abline(v = hsps@mean_HSP, col = 3, lwd = 2) }
+        if( UP) { abline(v = hsps@mean_theory, col = 5, lwd = 2) }
+        if( HSP) { abline(v = hsps@mean_HSP, col = 8, lwd = 2) }
+        if( POP) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
+        if( FSP) { abline(v = hsps@mean_FSP, col = 9, lwd = 2) }
         if( showUP["SPA"]) {
             lines(hsps@bins,log(diff(c(0,hsps@binprobs))*sum(hsps@n_PLODs_in_bin[hsps@bins<0])),
-                  lwd=2,col=4)
+                  lwd=2,col=5)
         }
         if( showUP["Normal"]) {
             lines(hspsa@bins,log(diff(c(0,pnorm(hspsa@bins, mean = hspsa@mean_theory,
                                       sd = sqrt(hspsa@var_theory)) *
                                       sum(hspsa@n_PLODs_in_bin[hspsa@bins<0])))),
-                  lwd = 2, col = 6) ## Normal approx
+                  lwd = 2, col = 5) ## Normal approx
         }
+    legend("topright", legend = c("UP","POP","GGP","HSP","FSP","HCP","FCP","HTP","FTP"),
+           lwd = 2, lty = 1, col = c(5,1,2,8,9,3,4,6,7))
     }
 
 
@@ -3490,27 +3600,37 @@ return( retval)
 #'            so you can't pass 'breaks' via \code{...}
 #' @param HSPmean plot the mean PLOD for HSPs? Default TRUE
 #' @param HSPdist plot the distribution of PLOD for HSPs? Default TRUE
+#' @param POPmean plot the mean PLOD for POPs? Default TRUE
+#' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
 #' @param ... additional pars, passed to \code{hist()}
+#' @seealso PLOD_loghisto
 #' @export
 
 "HSP_histo" <-
     function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
-             HSPmean = TRUE, HSPdist = TRUE, ...) {
-        
+             HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, ...) {
+
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+ 
         hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
-                       col=8,main="HSP PLOD",xlab="PLOD", ...)
+                       col="lightgrey",main="HSP PLOD",xlab="PLOD", ...)
         if( HSPmean) {
             E.hsp = hsps@mean_HSP
-            abline(v=E.hsp,lwd=2,col=2)
+            abline(v=E.hsp,lwd=2,col=8)
         }
+        if( POPmean) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
+        if( FSPmean) { abline(v = hsps@mean_FSP, col = 9, lwd = 2) }
         if( HSPdist) {
             V.hsp=mean(sqr(hsps$PLOD[hsps$PLOD>E.hsp & hsps$PLOD < fullsib_cut]-E.hsp))
             obs.num <- hist.plod$counts
             exp.num <- 2*sum(hsps$PLOD>E.hsp & hsps$PLOD<fullsib_cut)*
                 (pnorm(hist.plod$breaks[-1],E.hsp,sqrt(V.hsp))-
                  pnorm(hist.plod$breaks[-length(hist.plod$breaks)],E.hsp,sqrt(V.hsp)))
-            points(hist.plod$mids,exp.num,pch=16,col=4,type='b')
+            points(hist.plod$mids,exp.num,pch=16,col=8,type='b')
         }
+        legend("topright", legend = c("UP","POP","GGP","HSP","FSP","HCP","FCP","HTP","FTP"),
+               lwd = 2, lty = 1, col = c(5,1,2,8,9,3,4,6,7))
     }
 
 
