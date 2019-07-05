@@ -5,7 +5,8 @@
 \title{HSP_histo(): PLOD distro frequency plot for the HSP and/or HTP bump regions}
 \usage{
 HSP_histo(hsps, lb, ub = max(hsps$PLOD) + 10, fullsib_cut, bin = 5,
-  HSPmean = TRUE, HSPdist = TRUE, ...)
+  HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE,
+  ...)
 }
 \arguments{
 \item{hsps}{the output of a call to \code{find_HSPs()}}
@@ -23,6 +24,10 @@ so you can't pass 'breaks' via \code{...}}
 \item{HSPmean}{plot the mean PLOD for HSPs? Default TRUE}
 
 \item{HSPdist}{plot the distribution of PLOD for HSPs? Default TRUE}
+
+\item{POPmean}{plot the mean PLOD for POPs? Default TRUE}
+
+\item{FSPmean}{plot the mean PLOD for FSPs? Default TRUE}
 
 \item{...}{additional pars, passed to \code{hist()}}
 }

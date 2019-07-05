@@ -38,13 +38,15 @@ and variance of LOD, and those can be used to calculate "Ediff" and
 calculations of the null distro of PLOD (ie for true UPs). to a
 \code{snpgeno}, ready for . It's needed before \code{\link{find_HSPs}}.
 
-The \code{use6} field of \code{lociar@locinfo} determines whether 6-way or
-4-way genotypes are assumed in calculating LOD tables.
+The \code{useN} field of \code{lociar@locinfo} determines whether 6-way,
+4-way, or 3-way genotypes are assumed in calculating LOD tables.
 
 \code{hsp_power} in particular needs a biiiig tidy-up. It's daft to store
 LODs for only one specific kin; it'd be better to always calculate P1share
 and P2share as well as P0share (which is PUP), and then compute
-whatever-is-needed later on-the-fly.
+whatever-is-needed later on-the-fly. Updated July 2019: have just added
+P2share to the mix, and added several 'whatever-is-neededs' to the output
+of prepare_PLOD_SPA.
 }
 \examples{
 ## Need some examples!

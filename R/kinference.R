@@ -2043,13 +2043,15 @@ return( c( whmo))
 #' calculations of the null distro of PLOD (ie for true UPs). to a
 #' \code{snpgeno}, ready for . It's needed before \code{\link{find_HSPs}}.
 #' 
-#' The \code{use6} field of \code{lociar@locinfo} determines whether 6-way or
-#' 4-way genotypes are assumed in calculating LOD tables.
+#' The \code{useN} field of \code{lociar@locinfo} determines whether 6-way,
+#' 4-way, or 3-way genotypes are assumed in calculating LOD tables.
 #' 
 #' \code{hsp_power} in particular needs a biiiig tidy-up. It's daft to store
 #' LODs for only one specific kin; it'd be better to always calculate P1share
 #' and P2share as well as P0share (which is PUP), and then compute
-#' whatever-is-needed later on-the-fly.
+#' whatever-is-needed later on-the-fly. Updated July 2019: have just added
+#' P2share to the mix, and added several 'whatever-is-neededs' to the output
+#' of prepare_PLOD_SPA.
 #' 
 #' @aliases hsp_power prepare_PLOD_SPA
 #' @param lociar \code{snpgeno} objects with the necessary ingredients
@@ -2454,7 +2456,7 @@ return( lociar)
   dens_SPA <- renorm_SPA( K, dK, ddK, 'func')
 
   indiv_lglk_hist_pars <- add_list_defaults( indiv_lglk_hist_pars,
-      main   = 'Geno lglk by FISH', #sprintf( 'Geno lglk by FISH: multhresh=%5.2f', method, multhresh_indiv_lglk_fish),
+      main   = 'Geno lglk by specimen', #sprintf( 'Geno lglk by specimen: multhresh=%5.2f', method, multhresh_indiv_lglk_fish),
       xlim   = range( ilglk),
       col    = "grey",
       border = NA,
@@ -3578,8 +3580,21 @@ return( retval)
                                       sum(hspsa@n_PLODs_in_bin[hspsa@bins<0])))),
                   lwd = 2, col = 5) ## Normal approx
         }
-    legend("topright", legend = c("UP","POP","GGP","HSP","FSP","HCP","FCP","HTP","FTP"),
-           lwd = 2, lty = 1, col = c(5,1,2,8,9,3,4,6,7))
+        legendBits <- data.frame(allNames = c("UP","POP","HSP","FSP"), allNumbers = c(5,1,8,9))
+        if(!UP) {
+            legendBits <- legendBits[legendBits$allNames != "UP",]
+        }
+        if(!POP) {
+            legendBits <- legendBits[legendBits$allNames != "POP",]
+        }
+        if(!HSP) {
+            legendBits <- legendBits[legendBits$allNames != "HSP",]
+        }
+        if(!FSP) {
+            legendBits <- legendBits[legendBits$allNames != "FSP",]
+        }
+        legend("topright", legend = legendBits$allNames,
+               lwd = 2, lty = 1, col = legendBits$allNumbers)        
     }
 
 
@@ -3629,8 +3644,19 @@ return( retval)
                  pnorm(hist.plod$breaks[-length(hist.plod$breaks)],E.hsp,sqrt(V.hsp)))
             points(hist.plod$mids,exp.num,pch=16,col=8,type='b')
         }
-        legend("topright", legend = c("UP","POP","GGP","HSP","FSP","HCP","FCP","HTP","FTP"),
-               lwd = 2, lty = 1, col = c(5,1,2,8,9,3,4,6,7))
+        legendBits <- data.frame(allNames = c("POP","HSP","FSP"), allNumbers = c(1,8,9))
+        if(!POPmean) {
+            legendBits <- legendBits[legendBits$allNames != "POP",]
+        }
+        if(!HSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "HSP",]
+        }
+        if(!FSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "FSP",]
+        }
+        
+        legend("topright", legend = legendBits$allNames,
+               lwd = 2, lty = 1, col = legendBits$allNumbers)
     }
 
 
@@ -3663,6 +3689,8 @@ return( retval)
     function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
              ...) {
+
+        palette("default")
 
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
@@ -3703,6 +3731,8 @@ return( retval)
     function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
              ...) {
+
+        palette("default")
         
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
@@ -3762,6 +3792,8 @@ return( retval)
     function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
 
+        palette("default")
+
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
@@ -3784,7 +3816,7 @@ return( retval)
         yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
                              histC$counts/hist1$counts)))
         plot(hist1$breaks[-1], histA$counts/hist1$counts, type='b', col=(2),
-             pch=(15), xlab="PLOD value", ylab="Percent of fish pairs",
+             pch=(15), xlab="PLOD value", ylab="Percent of specimen pairs",
              ylim = c(0, yup), ...)
         points(hist1$breaks[-1], histB$counts/hist1$counts, type='b',col=(3), pch=(16))
         points(hist1$breaks[-1], histC$counts/hist1$counts, type='b',col=(4), pch=(17))
@@ -3800,6 +3832,8 @@ return( retval)
 "PLOD_oddness_twoway" <-
     function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
+
+        palette("default")
 
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
@@ -3823,7 +3857,7 @@ return( retval)
         yup <- max(na.omit(c(histA$counts/hist1$counts, histB$counts/hist1$counts,
                              histC$counts/hist1$counts)))
         plot(hist1$breaks[-1], histA$counts/hist1$counts, type='b', col=(2),
-             pch=(15), xlab="PLOD value", ylab="Percent of fish pairs",
+             pch=(15), xlab="PLOD value", ylab="Percent of specimen pairs",
              ylim = c(0, yup), ...)
         points(hist1$breaks[-1], histB$counts/hist1$counts, type='b',col=(3), pch=(16))
         points(hist1$breaks[-1], histC$counts/hist1$counts, type='b',col=(4), pch=(17))
