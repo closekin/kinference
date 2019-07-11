@@ -864,8 +864,9 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   result@call <- sys.call()
 
   # warning if we're running up against storage constraints
-  if(length(result$ndiff) == keep_n){
-    warning("Number of returned duplicates equals keep_n. There may be more than keep_n duplicates. Increase keep_n to make sure you have them all!")
+    if(length(result$ndiff) == keep_n){
+        message("Returning the ", keep_n, " most similar pairs, increase keep_n if more are required")
+## warning("Number of returned duplicates equals keep_n. There may be more than keep_n duplicates. Increase keep_n to make sure you have them all!")
   }
 
 return( result)
@@ -1402,7 +1403,8 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 
   # warning if we're running up against storage constraints
 if( keep_thresh_set && (length(result$big_PLOD) == keep_n)){
-    warning("Number of returned HSPs equals keep_n, increase keep_n to ensure you got them all")
+##    warning("Number of returned HSPs equals keep_n, increase keep_n to ensure you got them all")
+    message("Returning the ", keep_n, " pairs with the highest PLOD scores, increase keep_n if more are required")
 }  ## This warning will probably need to be modified in find_POPs, find_duplicates, etc. as well.
 
   result <- with( xresult, data.frame( PLOD=big_PLOD, i=big_i, j=big_j))
@@ -1856,7 +1858,8 @@ stopifnot( all( ww>0))
 
   # warning if we're running up against storage constraints
   if(length(result$big_wpsex) == keep_n){
-    warning("Number of returned POPs equals keep_n, increase keep_n to ensure you got them all")
+## warning("Number of returned POPs equals keep_n, increase keep_n to ensure you got them all")
+      message("Returning the ", keep_n, " pairs with the most POP-like wpsex scores, increase keep_n if more are required")
   }
 
 
@@ -2095,7 +2098,6 @@ return( c( whmo))
   s6 <- predict_hsp_util( g6p0, g6p1, g6p2, want_LOD_table, k=k)
 
   # For the 4-ways, must condense g6p's
-##thisisamark
   if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
     map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
     # AB & OO are OK; AAO should receive both AA and AO; etc
@@ -3594,7 +3596,7 @@ return( retval)
             legendBits <- legendBits[legendBits$allNames != "FSP",]
         }
         legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers)        
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")        
     }
 
 
@@ -3656,7 +3658,7 @@ return( retval)
         }
         
         legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers)
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
     }
 
 
