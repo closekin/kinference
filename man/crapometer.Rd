@@ -14,7 +14,7 @@ crapometer(snpg, focusees, boring = 1 \%upto\% nrow(snpg))
 \item{boring}{a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils for \code{ \%upto\% }.}
 }
 \description{
-crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be 
+crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be
 better at identifying 'suspect' samples. It may or may not end up in the final
 kinference toolchain.
 }

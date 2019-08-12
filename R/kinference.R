@@ -1,4 +1,4 @@
-# This is package kinference 
+# This is package kinference
 
 #".onLoad" <-
 #function( libname, pkgname) {
@@ -314,9 +314,9 @@ return( pp6_err)
 #' used) within a particular suspect range, so each chain may have
 #' false-negatives (i.e. missing direct links), but the general idea should be
 #' clear.
-#' 
+#'
 #' \code{get_chain} finds the chain for one specific sample.
-#' 
+#'
 #' @aliases get_chain chain_pairwise
 #' @param thing output from \code{find_HSPs} or \code{find_POPs} etc, or some
 #'              subset thereof
@@ -336,10 +336,10 @@ return( pp6_err)
 "chain_pairwise" <-
 function( thing) {
   extract.named( thing[cq(i,j)])
-  
+
   ij <- sort( unique( c( i, j)))
   ijpairs <- sprintf( '%i.%i', c(i,j), c(j,i))
-  
+
   is_pair <- function( x, y) {
       test <- sprintf( '%i.%i', x, y) %in% ijpairs
       xtest <- test
@@ -347,7 +347,7 @@ function( thing) {
       xtest[ !test] <- '.'
     return( noquote( xtest))
     }
-  
+
   # Split into chains
   to.do <- ij
   chains <- pairmats <- list()
@@ -359,16 +359,16 @@ function( thing) {
 
     ij <- sort( unique( c( i, j)))
     ijpairs <- sprintf( '%i.%i', c(i,j), c(j,i))
-    
+
     to.do <- to.do %except% c( i, j)
     this_pairs <- outer( ij, ij, is_pair)
     dimnames( this_pairs) <- rep( list( as.character( ij)), 2)
     o <- order( rowSums( this_pairs=='+'))
     this_pairs <- this_pairs[ o, o]
-    
+
     pairmats <- c( pairmats, list( this_pairs))
   }
-  
+
   # Biggest chains last--- easiest to see!
 pairmats[ order( do.on( pairmats, nrow( .)))]
 }  ## chain_pairwise ported from MVB_kinference 24/11/18
@@ -384,7 +384,7 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 #' diagnostic, but is not fully explored yet.
 #' The document "d:/docs/genetics/Dart/sbt-baits-v3/too-many-plods.lyx"
 #' has more info in section 4.1 on "rat CLODs".
-#' 
+#'
 #' @param snpg a 'snpgeno' object.
 #' @param nsim currently inactive. A simulation option exists in the code
 #'             to check the null distro (not much use for far tails, of
@@ -569,7 +569,7 @@ return( result)
 
 #' crapometer(): splice hetzminoo_fancy and ilglk_geno for ?better crap-detection
 #'
-#' crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be 
+#' crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be
 #' better at identifying 'suspect' samples. It may or may not end up in the final
 #' kinference toolchain.
 #'
@@ -585,18 +585,18 @@ function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
 
   hmfr <- hetzminoo_fancy( snpg, 'rich', hist_pars=list( plot=FALSE)) # still plots...
   lglk <- kinference::ilglk_geno( snpg, indiv_lglk_hist_pars=list( plot=FALSE))
-  
+
   # Could use SPA to "Gaussianize"...
   stat <- cbind( hmfr, lglk)
   mdull <- colMeans( stat[ boring,]) # mean() doesnt' work column-wise, unlike var()...
   vdull <- var( stat[ boring, ])
   sstat[ f, s]:= stat[ f, s] - mdull[ s]
-  
+
   # should do this with cholesky but the doco is SO SHITE
   iv <- solve( vdull)
   # dist <- sstat %*% (iv %*% t( sstat)) god knows what the bloody syntax is supposed to bloody be
   dist[ f]:= sstat[ f, s] %[s]% iv[ s, s1] %[s1]% sstat[ f, s1]
-    
+
   hist( dist[ boring], nc=50)
   abline( v=dist[ focusees], col='red')
 
@@ -1127,27 +1127,27 @@ function( snpg, candiHSPs) {
 #' less than some threshold, they might be full sibling pairs (FSPs).
 #' This function checks potential POPs with very low WPSEX values for
 #' their potential to be FSPs.
-#' 
+#'
 #' The general idea of find_FSPs_from_POPs() is that pairs which are
 #' _either_ POPs _or_ FSPs should stand out very clearly from
 #' everything else, via find_POPs(). Then the job is to pick
 #' between those possibilities. The workflow is supposed to be:
-#' 
+#'
 #' \itemize{
 #' \item nail POPs/FSPs first with find_POPs()
 #' \item pick between them with find_FSPs_from_POPs() (update: this doesn't
 #' work very well...)
 #' \item look for HSPs and filter out already-known POPs and FSPs
 #' }
-#' 
+#'
 #' Hence the other function, find_FSPs_from_HSPs(), is theoretically
 #' unnecessary in that you have already run find_POPs() and
 #' find_FSPs_from_POPs() so you should know which of your "HSPs" are
 #' really something else. But, nevertheless it's handy to have.
-#' 
+#'
 #' Both functions return expected values under different possible kin-types
 #' (not variances, since these cannot be predicted for all kin-types).
-#' 
+#'
 #' The statistic for find_FSPs_from_POPs() is based on the weighted sum
 #' of the number of exactly-matching 4-way genotypes, with weights chosen to
 #' have high power for this particular discrimination. Weighting is optimized
@@ -1157,7 +1157,7 @@ function( snpg, candiHSPs) {
 #' on the assumption that you have enough loci to pick HSPs, so the
 #' more-related kin-types should be slam-dunks. *But* it doesn't seem
 #' powerful enough. More worked needed...
-#' 
+#'
 #' find_FSPs_from_HSPs() again uses 4-way genotypes only (to avoid having
 #' to worry about errors) but in a properly optimal PLOD designed for FSP/HSP
 #' discrimination--- its expectation is positive for FSPs and negative for
@@ -1165,7 +1165,7 @@ function( snpg, candiHSPs) {
 #' cannot be predicted). Haven't added means for POPs or UPs since you're not
 #' "supposed" to have those in the mix by the time you run
 #' find_FSPs_from_HSPs(), but maybe I should fix that at some point.
-#' 
+#'
 #' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs find_FSPs_from_candiHSPs
 #' @param snpg a \code{snpgeno} object
 #' @param candiPOPs candidate kin-pairs--- normally, a dataframe
@@ -1200,7 +1200,7 @@ function( snpg, candiHSPs) {
 #' @export
 
 "find_FSPs_from_POPs" <-
-function( snpg, candiPOPs) { 
+function( snpg, candiPOPs) {
 ## Don't need full pairwise screening for FSPs (do post hoc on a few hundred
 ## candidate POPs), hence all in R.
 
@@ -1250,7 +1250,7 @@ function( snpg, candiPOPs) {
   off <- 1 # until vecless has arbitrary-base arrays
   Pr_same_given_k <- array( 0, c( n_loci, 3))
 
-  # Exactly the same as version below, but this one seems less clear  
+  # Exactly the same as version below, but this one seems less clear
   # Pr_same_given_k[,{off+1}] <- pA * (1-2*pB*(pA+pO)) +
   #    pB * (1-2*pA*(pB+pO)) +
   #    pO * ( pA*pA + pB*pB + pO*pO)
@@ -1258,7 +1258,7 @@ function( snpg, candiPOPs) {
   Pr_same_given_k[,{off+1}] <- pA * (sqr(pB) + sqr(1-pB)) +
       pB * (sqr(pA) + sqr(1-pA)) +
       pO * ( pA*pA + pB*pB + pO*pO)
-      
+
   Pr_same_given_k[,{off+2}] <- 1
   Pr_same_given_k[ l, {off+0}] := pgeno[l,g] %[g]% pgeno[l,g]
 
@@ -1293,19 +1293,19 @@ function( snpg, candiPOPs) {
   ret@E_POP <- wt %*% Pr_same_POP
   ret@E_HSP <- wt %*% Pr_same_HSP
   ret@E_UP <- wt %*% Pr_same_given_k[,off]
-  
+
 return( ret)
 }
 
 
 #' @rdname find_POPs
-#' @importFrom atease @	
+#' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
 #' @export
 
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta, 
+    one_in_X_eta,
     keep_n=100000,
     eta= NULL,
     keep_thresh= NULL,
@@ -1325,7 +1325,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       keep_thresh <- -1e23 # no PLOD will get that far!!
 
            }
-    
+
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
@@ -1417,10 +1417,10 @@ if( keep_thresh_set && (length(result$big_PLOD) == keep_n)){
   result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ##
   ## notation here is... inventive. mean_theory and var_theory are for UPs. All
   ## means are actually theory
-  ##   result@mean_HSP <- sum(snpg@locinfo$E.HSP) ## this should be OK 
-  ##   result@mean_UP <- sum(snpg@locinfo$E.UP) ## this should be OK too 
-  result@mean_POP <- sum(snpg@locinfo$E.POP) 
-  result@mean_FSP <- sum(snpg@locinfo$E.FSP) 
+  ##   result@mean_HSP <- sum(snpg@locinfo$E.HSP) ## this should be OK
+  ##   result@mean_UP <- sum(snpg@locinfo$E.UP) ## this should be OK too
+  result@mean_POP <- sum(snpg@locinfo$E.POP)
+  result@mean_FSP <- sum(snpg@locinfo$E.FSP)
   result@bins <- bins
   result@binprobs <- binprobs
   result@eta <- eta
@@ -1914,7 +1914,7 @@ function( thing, seed) {
 #' This test looks at whether the allele frequencies in a given fish seem
 #' right, or if there are discrepancies due to (i) degraded DNA or (ii)
 #' sample contamination.
-#' 
+#'
 #' @param snpg a \code{\link[gbasics]{snpgeno}} object
 #' @param target which weighting should be used. \code{"rich"} detects
 #'               contaminated data (there are too many heterozygotes) and
@@ -1952,7 +1952,7 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1, showPl
   # So, shrink v a tiny bit...
   msqrt_v <- median( sqrt( v))
   v <- sqr( sqrt( v) * 0.99 + msqrt_v * 0.01)
-  
+
   ww <- edash / v
   ww <- c( ww / sum( ww) ) # else get 1-col matrix
   stopifnot( all( ww>0))
@@ -2041,21 +2041,21 @@ return( c( whmo))
 #' and variance of LOD, and those can be used to calculate "Ediff" and
 #' "SEdiff". It's needed before \code{\link{hetzminoo_fancy}} and
 #' \code{prepare_PLOD_SPA}.
-#' 
+#'
 #' \code{prepare_PLOD_SPA} prepares a \code{snpgeno} for "exact" (SPA)
 #' calculations of the null distro of PLOD (ie for true UPs). to a
 #' \code{snpgeno}, ready for . It's needed before \code{\link{find_HSPs}}.
-#' 
+#'
 #' The \code{useN} field of \code{lociar@locinfo} determines whether 6-way,
 #' 4-way, or 3-way genotypes are assumed in calculating LOD tables.
-#' 
+#'
 #' \code{hsp_power} in particular needs a biiiig tidy-up. It's daft to store
 #' LODs for only one specific kin; it'd be better to always calculate P1share
 #' and P2share as well as P0share (which is PUP), and then compute
 #' whatever-is-needed later on-the-fly. Updated July 2019: have just added
 #' P2share to the mix, and added several 'whatever-is-neededs' to the output
 #' of prepare_PLOD_SPA.
-#' 
+#'
 #' @aliases hsp_power prepare_PLOD_SPA
 #' @param lociar \code{snpgeno} objects with the necessary ingredients
 #' @param geno6 \code{snpgeno} objects with the necessary ingredients
@@ -2146,9 +2146,9 @@ return( c( whmo))
 
     A[l,i,k] := g6p2[l,i,j] %[j]% map6to3[j,k]
     g3p2[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
-    
+
     s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k)
-    
+
     if( want_LOD_table) {
       li$LOD6 <- s6@LOD # matrix
       li$PUP6 <- s6@PUP
@@ -2205,7 +2205,7 @@ return( lociar)
 #' no-nulls multi-allelic case. It will be hard to follow, so use \code{mtrace} if
 #' you really want to see what's going on. The guts of the code is in
 #' \code{\link{hsp_power}} and \code{predict_hsp_util}.
-#' 
+#'
 #' @aliases hsp_power2
 #' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles). Locus names
 #'               are set from the rownames, or "L1", "L2" etc if there are no rownames.
@@ -2537,15 +2537,15 @@ return( returnList( elg, sdelg, olg, sdiff=sqrt( n_f) * (olg-elg) / sdelg))
 
 
 #' map4todummy6(): Change SNP-genotype encoding
-#' 
+#'
 #' In case you have just a 4way-genotyped dataset but want to use
 #' \code{\link{find_HSPs}} etc which require 6way, this will do it... All
 #' \code{AAO} is mapped to \code{AA} and all \code{BBO} to \code{BB}. NA-values
 #' should be unaffected (not tested). The \code{.$locinfo$use6} field will be
 #' set to FALSE for all loci.
-#' 
+#'
 #' Warnings/errors should be issued if the inputs are wrong.
-#' 
+#'
 #' @param sg a \code{snpgeno} class object with \code{diplos} set to
 #'           \code{genotypes4_ambig} (or \code{genotypes6}, in which case it
 #'           will be returned unchanged).
@@ -2726,7 +2726,7 @@ function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
     gpPUP <- PUP_as_2D[ , wanted]
 
     # Off-diagnonals appear twice, and prob should be doubled...
-    omg <- mg 
+    omg <- mg
     omg[ wanted] <- 0
     double_wanted <- 1:ngp %in% omg
     # wrong for some reason:    double_wanted <- wanted %in% mg[ duplicated( c( mg))]
@@ -2757,7 +2757,7 @@ function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
     e0 <- E.UP
     v0 <- V.UP
     matto <- cbind( e0, v0, e1, v1)
-    
+
   # Standardized difference ie locus power: not so useful post hoc,
   #  but possibly interesting for 6 vs 4 comps
   sdiff <- (E.HSP - E.UP) / sqrt( V.UP)
@@ -2786,7 +2786,7 @@ return( retval)
 
 "prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
     ## To be run after hsp_power( ..., want_LOD_table=TRUE)
-    
+
 # n_pts_SPA_renorm should really be as big as R can handle without running
 # out of memory but 201 should be OK I guess. If 201 and 301 give
 # almost-identical results then all well!
@@ -2846,16 +2846,16 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
         LOD[ useN == 3, ichangio] <- LOD3[ useN == 3, iget3]
         PUP[ useN == 3, ichangio] <- PUP3[ useN == 3, iget3]
     }
-    
+
     ## For safety's sake, LOD( XO,...) := NA; should never be accessed
 
     hasO_4way <- grep( '(A|B)O', cn6)
     hasO_3way <- grep( '.O', cn6)
-        
+
     LOD[ useN == 4, hasO_4way] <- NA # security in case of wrong access later for real data
-    PUP[ useN == 4, hasO_4way] <- 0  
+    PUP[ useN == 4, hasO_4way] <- 0
     LOD[ useN == 3, hasO_3way] <- NA # security in case of wrong access later for real data
-    PUP[ useN == 3, hasO_3way] <- 0  
+    PUP[ useN == 3, hasO_3way] <- 0
 
     LOD@mg <- make_genopairer( geno6@diplos)
 
@@ -3353,7 +3353,7 @@ return( l)
   genotypes3_ambig <- cq( AB, AAO, "BBOO") ## sans quotes, BBOO is also treated as global
 
   NA_geno <- as.raw(255)
-  
+
   for( ig in genotypes) {
     # assign( ig, structure( as.raw( match( ig, genotypes)), class='ABOSNP'))
     assign( ig, structure( ig, class='noquote')) # for nicer printing
@@ -3460,7 +3460,7 @@ return( x)
 #' calculate_LOD_HSP(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here. 
+#' parse it. We should probably add some proper documentation here.
 #'
 #' @param lociar a param
 #' @param k a param. Defaults to 0.5
@@ -3536,7 +3536,7 @@ return( retval)
 #' Colour scheme for all kin-finding markers:
 #' Shamelessly cropped from package 'viridis'; defined as a one-off palette to
 #' avoid adding dependencies. Apparently quite colourblind-friendly.
-#' 
+#'
 #' Kin class  Hex Colour  Number  Colour
 #' UP         #BF3984FF   5       Magenta (light)
 #' POP        #0D0887FF   1       Navy blue
@@ -3565,7 +3565,7 @@ return( retval)
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
-        
+
         plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
              ylab="log(Frequency)")
         if( UP) { abline(v = hsps@mean_theory, col = 5, lwd = 2) }
@@ -3596,7 +3596,7 @@ return( retval)
             legendBits <- legendBits[legendBits$allNames != "FSP",]
         }
         legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")        
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
     }
 
 
@@ -3629,7 +3629,7 @@ return( retval)
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
- 
+
         hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
                        col="lightgrey",main="HSP PLOD",xlab="PLOD", ...)
         if( HSPmean) {
@@ -3656,7 +3656,7 @@ return( retval)
         if(!FSPmean) {
             legendBits <- legendBits[legendBits$allNames != "FSP",]
         }
-        
+
         legend("topright", legend = legendBits$allNames,
                lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
     }
@@ -3735,7 +3735,7 @@ return( retval)
              ...) {
 
         palette("default")
-        
+
         cloddo <- check_FPosity(snpg)
         clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
         hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
@@ -3775,7 +3775,7 @@ return( retval)
 #' shows the percentage of cases where one member has a low score, and
 #' \code{PLOD_oddness_twoway()} shows the percentage of cases where both members of the pair
 #' have a low score.
-#' 
+#'
 #' @param hsps the output of a call to \code{find_HSPs()}
 #' @param snpg the 'snpgeno' or 'SPAgeno' object from which 'hsps' was built
 #' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
@@ -3802,15 +3802,15 @@ return( retval)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
-        
+
         tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
             clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
         histA <- hist(hsps$PLOD[hsps$PLOD>lb & tfA], breaks=seq(lb,ub,bin), plot=F)
-        
+
         tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
             ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
         histB <- hist(hsps$PLOD[hsps$PLOD>lb & tfB], breaks=seq(lb,ub,bin), plot=F)
-        
+
         tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
             hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
         histC <- hist(hsps$PLOD[hsps$PLOD>lb & tfC], breaks=seq(lb,ub,bin), plot=F)
@@ -3843,15 +3843,15 @@ return( retval)
         ilglk<- ilglk_geno(snpg, showPlot = FALSE)
 
         hist1 <- hist( hsps$PLOD[hsps$PLOD>lb], breaks=seq( lb,ub,bin), plot=F)
-        
+
         tfA<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
             clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
         histA <- hist(hsps$PLOD[hsps$PLOD>lb & tfA], breaks=seq(lb,ub,bin), plot=F)
-        
+
         tfB<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
             ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
         histB <- hist(hsps$PLOD[hsps$PLOD>lb & tfB], breaks=seq(lb,ub,bin), plot=F)
-        
+
         tfC<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
             hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
         histC <- hist(hsps$PLOD[hsps$PLOD>lb & tfC], breaks=seq(lb,ub,bin), plot=F)
@@ -3887,38 +3887,38 @@ return( retval)
 #' @export
 
 "check6and4" <-
-function( geno6, 
-    thresh_pchisq_6and4, 
+function( geno6,
+    thresh_pchisq_6and4,
     return_what=c( 'just_pvals', 'all'),
     extra_title = "") {
-##########    
+##########
   n_fish <- nrow( geno6)
   n_loci <- ncol( geno6)
   define_genotypes()
   diplos <- geno6@diplos
 stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
-  
-  p6 <- with( geno6@locinfo, 
-      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'], 
+
+  p6 <- with( geno6@locinfo,
+      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'],
           snerr=snerr))[,genotypes6]
   # At some point, will also need p6_IBD... later...
 
   # Chi-sq check: requires gpred & gobs attr on geno6
   g6pred <- p6 * n_fish
   g6obs <- matrix( 0, n_loci, 6, dimnames=list( NULL, genotypes6))
-  
+
   for( ig in genotypes6) {
     g6obs[,ig] <- colSums( geno6==match( ig, diplos))
   }
 
-  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', 
+  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G',
       thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
 
   g4obs <- gtab6to4( g6obs)
   g4pred <- gtab6to4( g6pred)
-  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G', 
+  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G',
       thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
-  
+
   return_what <- match.arg( return_what)
   if( return_what=='all') {
     geno6@locinfo$pval6 <- pval6
@@ -3952,7 +3952,7 @@ return( returnList( pval6, pval4))
 #' @export
 
 "chisq_genofreq_check" <-
-function( lociar, 
+function( lociar,
     gpred= lociar@gpred,
     gobs= lociar@gobs,
     thresh_pchisq_loci,  # NULL to not worry; 1 value a threshold; 2 vals to inspect "iffy" ones
@@ -3960,53 +3960,53 @@ function( lociar,
     trim, # TRUE to keep only above max thresh_pchisq_loci. Arguably better done post hoc...
     seq_paxis=0.025,
     extra_title = "") {
-##########    
+##########
 # Either 6- or 4-geno version should work
 # 1 DoF in either case
 # Assumed null distro of chisq(1) is pretty approximate
   n_loci <- nrow( gobs)
 
   # After ML, should never happen that gobs>0 & gpred==0... but we'll check
-stopifnot( !any( gobs>0 & gpred==0))  
+stopifnot( !any( gobs>0 & gpred==0))
 
-  chistat <- if( test=='Pearson') 
-      rowSums( sqr( gobs - gpred) / gpred) 
+  chistat <- if( test=='Pearson')
+      rowSums( sqr( gobs - gpred) / gpred)
     else if( test=='G') # must handle 0log0 which is 0 but R doesn't know that (cf nlogp func in my Pascal armoury)
       2 * rowSums( gobs * log( ifelse( gobs>0, gobs/gpred, 1)))
-    else 
+    else
 stop( 'test must be "Pearson" or "G"')
-      
+
   DoF <- ncol( gpred)-3 # ... maybe ... !?
   pval <- pchisq( chistat, df=DoF, lower.tail=FALSE) ### df = ???
   lociar@locinfo$pval <- pval
   liffies <- length( thresh_pchisq_loci)
   keep_loci <- if( liffies) pval > max( thresh_pchisq_loci) else rep( TRUE, n_loci)
   iffy_loci <- !keep_loci & (pval > min( thresh_pchisq_loci))
-  
+
   # Plot histogram of pvals - should be approximately uniformly distributed if the loci are behaving as we would like
   # [ should follow recordo paradigm as per geno_deambig ]
   par( mfrow=c(1,1)) # just one plot on first page
-  hist(pval, 
-      main=sprintf( "%s GoF of %i-genotypes: pval from chisq( %i)", test, ncol( gpred), DoF), 
-      xlab="P-value: LOW == BAD", 
+  hist(pval,
+      main=sprintf( "%s GoF of %i-genotypes: pval from chisq( %i)", test, ncol( gpred), DoF),
+      xlab="P-value: LOW == BAD",
       breaks=seq(0,1,seq_paxis),
       xlim=c(0,1))
   mtext(extra_title, side = 1, adj = 1, padj = 5) ## SB
   abline( v=thresh_pchisq_loci, col='red')
-  
+
   # Locussy fits
-  opar <- par(mfrow=c(2, ncol( gpred) %/% 2), 
+  opar <- par(mfrow=c(2, ncol( gpred) %/% 2),
       mar=c( 3, 3, 0, 0)+0.1, oma=c( 2, 2, 3, 1))
   # omi=c(0,0,.6,0),mai=c(.8,.8,.2,.2)) Paige uses absolute margins
   on.exit( par( opar))
-  
+
   gtypes <- colnames( gobs)
   for( g in 1:ncol( gpred)) {
     # all of 'em
     plot(gpred[,g], gobs[,g], pch=16, cex=0.4, col='lightblue', # pch='.' is too small
-        xlab='', ylab='', main='', 
-        xlim=c( 0, max( c( gpred[,g], gobs[,g]))),  
-        ylim=c( 0, max( c( gpred[,g], gobs[,g]))))          
+        xlab='', ylab='', main='',
+        xlim=c( 0, max( c( gpred[,g], gobs[,g]))),
+        ylim=c( 0, max( c( gpred[,g], gobs[,g]))))
     abline(0,1,col=8,lwd=2)
     points( gpred[ keep_loci,g], gobs[ keep_loci,g], pch=16, cex=0.4, col='green') # overplot to make visible against the line
     mtext( side=3, gtypes[ g], line=-1)
@@ -4020,13 +4020,13 @@ stop( 'test must be "Pearson" or "G"')
   mtext( 'Expected', side=1, cex=1.5, outer=TRUE)
   mtext( 'Observed', side=2, cex=1.5, outer=TRUE)
   mtext(extra_title, side = 1, adj = 1, padj = 4) ## SB
-    
+
   if( liffies) {
     legend( 'bottomright', pch=c( 16, rep( 4, liffies)), col=c( 'magenta', if( liffies>1) 'orange', 'green'), pt.cex=c( 0.6, if( liffies>1) 1, 0.6),
         legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 1]), if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[2]), '... < 1') )
   }
-  
-  if( trim) { 
+
+  if( trim) {
     lociar <- lociar[ , keep_loci, ,drop=FALSE]
   }
 return( lociar)
@@ -4049,19 +4049,94 @@ function( gt6) {
   gt4[,AB] <- gt6[,AB]
   gt4[,OO] <- gt6[,OO]
   gt4[,AAO] <- gt6[,AA] + gt6[,AO]
-  gt4[,BBO] <- gt6[,BB] + gt6[,BO] 
+  gt4[,BBO] <- gt6[,BB] + gt6[,BO]
 return( gt4)
 }
 
+
+#' Convert 'snpgds' file to snpgeno
+#'
+#' snpgdsToSnpgeno takes a elements from a snpgds file and builds a snpgeno R object.
+#'
+#' @param genos an individual-by-locus matrix of genotypes in snpgds coding format
+#' @param Locus a vector of locus IDs, length equal to ncol(genos)
+#' @param Our_sample a vector of sample IDs, length equal to nrow(genos)
+#' @param info a data.frame of sample information, length equal to nrow(genos)
+#' @param Our_plate an optional vector of plate IDs, length equal to nrow(genos).
+#' @export
+#' @examples
+#' genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
+#' genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
+#' Locus <- read.gdsn(index.gdsn(genofile, "snp.id"))
+#' Our_sample <- read.gdsn(index.gdsn(genofile, "sample.id"))
+#' info <- read.gdsn(index.gdsn(genofile, "sample.annot"))
+#' genos <- genos[info$pop.group == "YRI", ]
+#' Our_sample <- Our_sample[info$pop.group == "YRI"]
+#' info <- info[info$pop.group == "YRI",]
+#' ## those subsets because there are 4 populations in the hapmap data - keep only one for kinf.
+#' newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
+
+snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info, Our_plate = NULL ) {
+
+    define_genotypes()
+    ## translate 0-based 'snpgds' coding to 1-based 'diplos' coding
+    genos <- genos+1
+    genos[is.na(genos)] <- 4 ## treat NA == 'OO'
+    their_diplos <- c("BBO", "AB", "AAO", "OO")
+    ## should / must use 4-way, which will
+    ## coerce these to c("BBO", "AB", "AAO" "OO")
+
+    mm <- match( their_diplos, genotypes_ambig)
+    xgenos <- mm[ genos] # their codes are now the integer vals for genotypes_ambig
+
+## build @locinfo
+    useN <- c(rep(4, length(Locus)))
+    ## build snerr
+    snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
+    snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
+    locinfo <- data.frame(Locus, useN)
+    locinfo$snerr <- snerr
+
+## build @info
+    if(is.null(Our_plate)) {
+        Our_plate <- c(rep(1, length(Our_sample)))
+    }
+    info <- cbind(Our_sample, Our_plate, info)
+
+##  Build the raw array (sample then locus)...
+    rawgenos <- as.raw(xgenos) # NB MVB mod
+    dim(rawgenos) <- c(length(Our_sample), length(Locus))
+
+## stitch it all together
+    rawgenos@locinfo <- locinfo
+    rawgenos@diplos <- genotypes_ambig
+    rawgenos@info <- info
+    class(rawgenos) <- "snpgeno"
+
+##### pbonzer... with luck
+    temp <- rawgenos
+    pbonzer <- est_ALF_ABCO( rawgenos, geno_amb = temp)@locinfo$pambig
+    temp@locinfo$pbonzer <- pbonzer
+    ## THEN convert all the genotypes to (spurious) 6way
+
+    temp@diplos <- genotypes6 ## this doesn't seem right. est_ALF_ABCO requires genotypes_ambig
+    temp[ rawgenos==AB] <- AB
+    temp[ rawgenos==AAO] <- AA # it's arbitary whether we said AA or AO, but gotta pick one
+    temp[ rawgenos==BBO] <- BB
+    temp[ rawgenos==OO] <- OO
+
+    ## close the snppgds file and return
+    return( temp)
+}
 
 
 #' @export
 "[.SPAgeno" <-
 function( x, i, j, ..., drop=FALSE){
-    x <- NextMethod( '[') 
+    x <- NextMethod( '[')
     x <- prepare_PLOD_SPA( x)
     ## should only call PREPARE_PLOD_SPA if loci have changed
-return( x) 
+return( x)
 }
 
 #' @export
@@ -4071,7 +4146,7 @@ function( x, i, j, value) {
     x <- NextMethod( '[<-')
     x <- prepare_PLOD_SPA( x)
     ## should only call PREPARE_PLOD_SPA if loci have changed
-return( x)  
+return( x)
 
 }
 
