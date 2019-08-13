@@ -4054,15 +4054,16 @@ return( gt4)
 }
 
 
-#' Convert 'snpgds' file to snpgeno
+#' Convert 'snpgds' file bits to snpgeno
 #'
-#' snpgdsToSnpgeno takes a elements from a snpgds file and builds a snpgeno R object.
+#' Takes bits of a snpgds and stitches them together into a snpgeno
 #'
 #' @param genos an individual-by-locus matrix of genotypes in snpgds coding format
 #' @param Locus a vector of locus IDs, length equal to ncol(genos)
 #' @param Our_sample a vector of sample IDs, length equal to nrow(genos)
 #' @param info a data.frame of sample information, length equal to nrow(genos)
-#' @param Our_plate an optional vector of plate IDs, length equal to nrow(genos).
+#' @param locinfo a data.frame of locus information, length equal to ncol(genos)
+#' @param Our_plate an optional vector of plate IDs, length equal to nrow(genos)
 #' @export
 #' @examples
 #' genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
@@ -4076,7 +4077,7 @@ return( gt4)
 #' ## those subsets because there are 4 populations in the hapmap data - keep only one for kinf.
 #' newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
 
-snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info, Our_plate = NULL ) {
+snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NULL, Our_plate = NULL ) {
 
     define_genotypes()
     ## translate 0-based 'snpgds' coding to 1-based 'diplos' coding
@@ -4094,14 +4095,22 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info, Our_plate = NULL ) {
     ## build snerr
     snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
     snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
-    locinfo <- data.frame(Locus, useN)
+    if(!is.null(locinfo)) {
+        locinfo <- data.frame(Locus, locinfo, useN)
+    } else {
+        locinfo <- data.frame(Locus, useN)
+    }
     locinfo$snerr <- snerr
 
 ## build @info
     if(is.null(Our_plate)) {
         Our_plate <- c(rep(1, length(Our_sample)))
     }
-    info <- cbind(Our_sample, Our_plate, info)
+    if(!is.null(info)) {
+        info <- cbind(Our_sample, Our_plate, info)
+    } else {
+        info <- cbind(Our_sample, Our_plate)
+    }
 
 ##  Build the raw array (sample then locus)...
     rawgenos <- as.raw(xgenos) # NB MVB mod
@@ -4129,6 +4138,284 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info, Our_plate = NULL ) {
     return( temp)
 }
 
+#' read a snpgds file into 'snpgeno' format
+#'
+#' This is a wrapper for 'snpgdsToSnpgeno', allowing one-line conversion from
+#' snpgds to snpgeno.
+#'
+#' locus-specific metadata and sample-specific metadata may each be supplied as either
+#' a single frame (using a non-NULL infoFrame and/or locinfoFrame), or as a vector of
+#' field names (using infoFields and/or locinfoFields). If all are NULL, no metadata
+#' other than the locus ID and sample ID are read in.
+#'
+#' @param filename a character string giving the snpgds file name, formatted as
+#'                 snpgdsExampleFileName().
+#' @param locusField a character string giving the name for locus IDs. Cannot be blank
+#' @param sampleField a character string giving the name for sample IDs. Cannot be blank
+#' @param infoFrame an optional character string giving the name for sample metadata frame
+#' @param infoFields an optional character vector giving the names for sample metadata variables
+#' @param locinfoFrame an optional character string giving the name for locus metadata frame
+#' @param locinfoFields an optional character vector giving the names for locus metadata variables
+#' @param plateField an optional character string giving the field name for sample-
+#'                   specific plate ID
+#' @export
+#' @examples
+#' library(SNPRelate)
+#' ## simplest possible case (no locus or sample metadata other than IDs;
+#' ## will add an all-one plate field):
+#' snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id")
+#'
+#' ## more likely: either sample or locus metadata is a single frame,
+#' ## and the other is a bunch of separate fields. In this case, sample
+#' ## metadata is a single frame and locus metadata is separate fields.
+#' snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id", infoFrame = "sample.annot", locinfoFields = c("snp.rs.id", "snp.position", "snp.chromosome", "snp.allele"))
+#'
+#' If your population of interest is a subset the samples, you should re-estimate allele
+#' frequencies ('pbonzer') for that subset:
+#' snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
+#' snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
+
+read.snpgds <- function(filename, locusField, sampleField,
+                        infoFrame = NULL, infoFields = NULL,
+                        locinfoFrame = NULL, locinfoFields = NULL,
+                        plateField = NULL) {
+
+    genofile <- snpgdsOpen(filename, allow.duplicate = TRUE)
+    genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
+    Locus <- read.gdsn(index.gdsn(genofile, locusField))
+    Our_sample <- read.gdsn(index.gdsn(genofile, sampleField))
+
+    if(!is.null(infoFields)) {
+        info <- data.frame(matrix(data = NA, nrow = length(Our_sample), ncol = length(infoFields)))
+        names(info) <- infoFields
+        for(i in infoFields) {
+            field <- read.gdsn(index.gdsn(genofile, i))
+            info[,i] <- field
+        }
+    } else if(!is.null(infoFrame)) {
+        info <- read.gdsn(index.gdsn(genofile, infoFrame))
+    } else {
+        info <- NULL
+    }
+
+    if(!is.null(plateField)) {
+        Our_plate <- read.gdsn(index.gdsn(genofile, plateField))
+    } else {
+        Our_plate <- NULL
+    }
+
+    if(!is.null(locinfoFields)) {
+        locinfo <- data.frame(matrix(data = NA, nrow = length(Locus), ncol = length(locinfoFields)))
+        names(locinfo) <- locinfoFields
+        for(i in locinfoFields) {
+            field <- read.gdsn(index.gdsn(genofile, i))
+            locinfo[,i] <- field
+        }
+    } else if(!is.null(locinfoFrame)) {
+        locinfo <- read.gdsn(index.gdsn(genofile, locinfoFrame))
+    } else {
+        locinfo <- NULL
+    }
+
+    snpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample,
+                               info = info, locinfo = locinfo, Our_plate)
+    snpgdsClose(genofile)
+    return(snpgeno)
+}
+
+
+#' est_ALF_ABCO(): bare documentation
+#'
+#' This function has only the bare minimum of documentation necessary for Roxygen to parse it. We
+#' should probably add some proper documentation here. Ported from 'genocalldart' April 2019,
+#' when 'genocalldart' was set to import 'kinference'.
+#' @param lociar a genotype object with the @geno_amb attribute.
+#' @seealso geno_dembig_ABC
+#' @export
+
+"est_ALF_ABCO" <-
+function( lociar, geno_amb = lociar@geno_amb) {
+########## Taken largely from "pipeline_for_SBT_baits.r"
+########## MVB: I'd like to clean this up
+########## Careful "parallel Newton-Raphson" could allow vectorization and whoosh-factor, but NFN I guess
+
+  define_genotypes() # AAO etc
+  ## geno_amb <- lociar@geno_amb
+  if( is.null( geno_amb)) {
+stop( "No 'geno_amb' attribute :(")
+  }
+    stopifnot( is.character( geno_amb) || my.all.equal( geno_amb@diplos, genotypes_ambig))
+
+    "inv.logit" <- function(x) plogis(x)
+
+  expected <- NULL
+  lglk <- function( params, nobs, return_expected=FALSE) {
+      has_C <- length( params)==3
+
+      # Reparamed for with-C case to logit scale, to avoid probs when pC~=0
+      pA <<- inv.logit( params[1])
+      pB <<- (1-pA) * inv.logit( params[2])
+      pC <<- if( has_C) (1-pA-pB) * inv.logit( params[ 3]) else 0
+      pO <<- max( 0, 1 - pA - pB - pC) # rounding error guard
+
+      phat <- make_pgeno( pA, pB, pC, which_genotypes=genotypes_ambig)
+      expected <<- n_fish * phat
+      lglk <- nobs %*% log(phat + (nobs==0))        # avoid 0log0 gotcha
+      pen <- penscale * sum( log( cosh( params-start_par)))
+    return( lglk - pen)
+    }
+  pA <- pB <- pC <- pO <- (-1) # overwritten when lglk runs
+
+  n_fish <- nrow( geno_amb)
+  n_loci <- ncol( geno_amb)
+  gobs <- gpred <- matrix( 0, n_loci, length( genotypes_ambig), dimnames=list( NULL, genotypes_ambig))
+  for( g in genotypes_ambig) {
+    gobs[,g] <- colSums( geno_amb==g)
+  }
+
+  # MVB: Old code looks pretty slow.
+  # Calc g.freq for all loci **BUT ONLY ACCEPTABLE FISH** to preserve matrix size
+  # g.freq <- apply(gABO.obs[!iamb.f, ], 2, function(x) table(factor(x,levels=c("AA","AB","BB","OO"))))
+
+  pambig_est <- matrix(NA, n_loci, 4, dimnames=list( NULL, cq( A, B, C, O)))   # nloci rows, 2 cols (pA, pB) (p0 = 1-rowSums(p.est))
+  conv <- rep( NA, n_loci) # convergence diagnostic
+
+  tiny <- 2^-12 # avoid rounding error
+
+  scatn( 'Starting ambig-geno_amb MALF/NALF estimation on %i loci:\n', n_loci)
+  evalq( # for debug speed
+  for( ll in 1:n_loci)  {
+    if( ll %% 50 == 0) { cat( '\r', ll); flush.console() }
+    has_C <- sum( gobs[ll,cq( AC, BC, CCO)])>0
+
+    # Rough ests based on presence: mild overflow guard
+    pA <- 1 - sqrt( 1- sum( gobs[ll, cq( AAO, AB, AC)]) / (1 + n_fish))
+    pB <- 1 - sqrt( 1- sum( gobs[ll, cq( BBO, AB, BC)]) / (1 + n_fish))
+    pC <- if( !has_C) 0 else 1 - sqrt( 1- sum( gobs[ll, cq( CCO, AC, BC)]) / (1 + n_fish))
+
+    # Really, loci with rubbish pB (or pA) should have been chucked by now... but just in case...
+    if( pA==0) pA <- 1/(2*n_fish)
+    if( pB==0) pB <- 1/(2*n_fish)
+
+
+    # Hard overflow guard...
+    duhhh <- pA + pB + pC
+    if( duhhh > 0.99) {
+      duhhh <- duhhh + 0.011 # push it over 1
+      pA <- pA / duhhh
+      pB <- pB / duhhh
+      pC <- pC / duhhh
+    }
+
+    "logit" <- function(p) qlogis(p)
+
+    start_par <- c( logit( pA), logit( pB / (1-pA)), if( has_C) logit( pC / (1-pA-pB)))
+
+    # Set reasonable penalty scale
+    penscale <- 0
+    testo <- numeric( 3)
+    for( i in 1:3) {
+      testo[ i] <- lglk( start_par+c( -1, 0, 1)[i], nobs=gobs[ll,])
+    }
+    penscale <- max( abs( diff( testo))) / 1e4
+
+    fit <- nlminb( start_par, NEG( lglk), nobs=gobs[ll,])
+    conv[ll] <- fit$convergence
+    besto <- fit$par
+
+    # Try refit with reduced and recentred penalty
+    start_par <- besto
+    penscale <- penscale / 10
+    fit <- nlminb( start_par, NEG( lglk), nobs=gobs[ll,])
+
+    # Make sure 'expected' is up-to-date
+    lglk( fit$par, nobs=gobs[ll,])
+    gpred[ll,] <- expected
+    pambig_est[ll,] <- c( pA, pB, pC, pO)
+  }) # for, evalq
+
+  scatn( 'Convergence result table (0 is ideal)')
+  print( table( conv))
+
+  # Gene frequency for subsequent analysis (pA, pB, p0)
+  lociar@locinfo$pambig <- pambig_est
+  lociar@gobs <- gobs
+  lociar@gpred <- gpred # for chi-sq checks
+  lociar@subset_like_loci <- c( lociar@subset_like_loci, 'gobs', 'gpred')
+
+return( lociar)
+}
+
+#' make_pgeno(): bare documentation
+#'
+#' This function has the bare minimum of documentation necessary for roxygen to parse it.
+#' We should probably add proper documentation here. Ported from genocalldart April 2019,
+#' along with the 'genocalldart imports kinference' switch.
+#'
+#' @param pA a param
+#' @param pB a param
+#' @param pC a param
+#' @param which_genotypes e.g., genotypes_ambig. If no C-genos are requested, pC is forced to 0 so
+#'                        new O includes C.
+#' @export
+
+"make_pgeno" <-
+function( pA, pB, pC, which_genotypes) {
+###
+# which_genotypes eg genotypes_ambig. If no C-genos requested then pC is forced to 0 so new O includes C
+  if( !any( grepl( 'C', which_genotypes))) {
+    pC <- 0
+  }
+
+  pO <- pmax( 0, 1 - pA - pB - pC) # rounding error guard
+  pAO <- 2*pA*pO
+  pAA <- sqr( pA)
+  pAAO  <- pAA + pAO
+  pAB  <- 2*pA*pB
+  pBO <- 2*pB*pO
+  pBB <- sqr( pB)
+  pBBO  <- pBB + pBO
+  pAC <- 2*pA*pC
+  pCO <- 2*pC*pO
+  pCC <- sqr( pC)
+  pCCO <- pCC + pCO
+  pBC <- 2*pB*pC
+  pOO  <- pO^2
+
+  # Could be scalar or vector: c or cbind
+  funco <- if( length( pO) > 1) cbind else c
+  phat <- do.call( funco, FOR( which_genotypes, get( 'p' %&% .)))
+  names( phat) <- sub( '[.].*', '', names( phat)) # loco R name-extrusion habit FFS
+return( phat)
+}
+
+#' re_est_ALF(): re-estimate allele frequencies after read-in with load_whopper.
+#'
+#' Returns locus-specific allele frequency estimates.
+#'
+#' @param snpg an snpg object
+#' @export
+
+"re_est_ALF" <-
+function( snpg) {
+## check to be called after load_whopper loads entire dataset
+
+  define_genotypes()
+  n_samp <- nrow( snpg)
+  n_loci <- ncol( snpg)
+    gamb <- snpg # includes C but won't be used
+    gamb@diplos  <- genotypes_ambig
+  gamb[ snpg==AB] <- AB
+  gamb[ snpg==OO] <- OO
+  gamb[ snpg==AO] <- AAO
+  gamb[ snpg==AA] <- AAO
+  gamb[ snpg==BO] <- BBO
+  gamb[ snpg==BB] <- BBO
+
+  ## snpg@geno_amb <- gamb # required by...
+  new_ALFs <- est_ALF_ABCO( snpg, geno_amb = gamb)
+return( new_ALFs)
+}
 
 #' @export
 "[.SPAgeno" <-

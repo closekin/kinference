@@ -2,9 +2,10 @@
 % Please edit documentation in R/kinference.R
 \name{snpgdsToSnpgeno}
 \alias{snpgdsToSnpgeno}
-\title{Convert 'snpgds' file to snpgeno}
+\title{Convert 'snpgds' file bits to snpgeno}
 \usage{
-snpgdsToSnpgeno(genos, Locus, Our_sample, info, Our_plate = NULL)
+snpgdsToSnpgeno(genos, Locus, Our_sample, info = NULL, locinfo = NULL,
+  Our_plate = NULL)
 }
 \arguments{
 \item{genos}{an individual-by-locus matrix of genotypes in snpgds coding format}
@@ -15,10 +16,12 @@ snpgdsToSnpgeno(genos, Locus, Our_sample, info, Our_plate = NULL)
 
 \item{info}{a data.frame of sample information, length equal to nrow(genos)}
 
-\item{Our_plate}{an optional vector of plate IDs, length equal to nrow(genos).}
+\item{locinfo}{a data.frame of locus information, length equal to ncol(genos)}
+
+\item{Our_plate}{an optional vector of plate IDs, length equal to nrow(genos)}
 }
 \description{
-snpgdsToSnpgeno takes a elements from a snpgds file and builds a snpgeno R object.
+Takes bits of a snpgds and stitches them together into a snpgeno
 }
 \examples{
 genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
