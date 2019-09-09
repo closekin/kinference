@@ -9,9 +9,8 @@ Suggests: knitr, rmarkdown, Oarray, Oarray.support, genocalldart, mixtools, xtab
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
 Version: 0.0.80
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
 KeepSource: TRUE
-

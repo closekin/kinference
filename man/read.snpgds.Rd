@@ -4,7 +4,7 @@
 \alias{read.snpgds}
 \title{read a snpgds file into 'snpgeno' format}
 \usage{
-read.snpgds(filename, locusField, sampleField, infoFrame = NULL,
+read.snpgds(filename, locusID, sampleID, infoFrame = NULL,
   infoFields = NULL, locinfoFrame = NULL, locinfoFields = NULL,
   plateField = NULL)
 }
@@ -12,9 +12,9 @@ read.snpgds(filename, locusField, sampleField, infoFrame = NULL,
 \item{filename}{a character string giving the snpgds file name, formatted as
 snpgdsExampleFileName().}
 
-\item{locusField}{a character string giving the name for locus IDs. Cannot be blank}
+\item{locusID}{a character string giving the name for locus IDs. Cannot be blank}
 
-\item{sampleField}{a character string giving the name for sample IDs. Cannot be blank}
+\item{sampleID}{a character string giving the name for sample IDs. Cannot be blank}
 
 \item{infoFrame}{an optional character string giving the name for sample metadata frame}
 
@@ -38,18 +38,18 @@ field names (using infoFields and/or locinfoFields). If all are NULL, no metadat
 other than the locus ID and sample ID are read in.
 }
 \examples{
-library(SNPRelate)
+## library(SNPRelate)
 ## simplest possible case (no locus or sample metadata other than IDs;
 ## will add an all-one plate field):
-snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id")
+## snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusID = "snp.id", sampleID = "sample.id")
 
 ## more likely: either sample or locus metadata is a single frame,
 ## and the other is a bunch of separate fields. In this case, sample
 ## metadata is a single frame and locus metadata is separate fields.
-snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id", infoFrame = "sample.annot", locinfoFields = c("snp.rs.id", "snp.position", "snp.chromosome", "snp.allele"))
-
-If your population of interest is a subset the samples, you should re-estimate allele
-frequencies ('pbonzer') for that subset:
-snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
-snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
+## snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusID = "snp.id", sampleID = "sample.id",
+##                        infoFrame = "sample.annot", locinfoFields = c("snp.rs.id", "snp.position", "snp.chromosome", "snp.allele"))
+## If your population of interest is a subset the samples, you should re-estimate allele
+## frequencies ('pbonzer') for that subset:
+## snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
+## snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
 }

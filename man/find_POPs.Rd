@@ -10,12 +10,12 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, max_diff_genos, keep_n = 0.5 * nrow(snpg))
 
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  one_in_X_eta, keep_n = 1e+05, eta = NULL, keep_thresh = NULL,
-  nbins = 50, bins = NULL)
+  keep_n = 1e+05, eta = NULL, keep_thresh = NULL, nbins = 50,
+  bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  one_in_X_eta, rough_n_pairs_to_keep = NA, eta = NULL,
-  keep_thresh = NULL, keep_n = 0.5 * nrow(snpg), nbins, quick = TRUE,
+  rough_n_pairs_to_keep = NA, eta = NULL, keep_thresh = NULL,
+  keep_n = 0.5 * nrow(snpg), nbins, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
 }
 \arguments{
@@ -41,11 +41,6 @@ the data.}
 
 \item{keep_n}{Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
 a warning if the number of identified pairs equals keep_n.}
-
-\item{one_in_X_eta}{expected number of false-positive UPs you can tolerate.
-Setting this to say \code{1e6} means you'd expect 1 per million
-comparisons. Used to set the threshold \code{eta}, which is
-returned automatically.}
 
 \item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override
 \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
@@ -83,6 +78,11 @@ on avoiding false-positives (which is probably the
 Right Thing To Do). 0.99 could be completely fine...
 (but hopefully \code{WPSEX_UP_POP_balance} won't
 affect the result much anyway.)}
+
+\item{one_in_X_eta}{expected number of false-positive UPs you can tolerate.
+Setting this to say \code{1e6} means you'd expect 1 per million
+comparisons. Used to set the threshold \code{eta}, which is
+returned automatically.}
 }
 \value{
 a \code{data.frame} with 3 columns: statistic (\code{PLOD} or

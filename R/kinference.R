@@ -1305,7 +1305,6 @@ return( ret)
 
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta,
     keep_n=100000,
     eta= NULL,
     keep_thresh= NULL,
@@ -1320,6 +1319,8 @@ stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
+  one_in_X_eta <- 1e6 ## still 'used' (but seems to be ignored) internally;
+                        ## replaced by keep_n at top level
   keep_thresh_set <- !is.null( keep_thresh)
   if( !keep_thresh_set) {
       keep_thresh <- -1e23 # no PLOD will get that far!!
@@ -1712,7 +1713,6 @@ return( result)
 
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    one_in_X_eta, # die
     rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
     eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
                # or calc from E/V of UPs
@@ -1726,6 +1726,9 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
+
+    one_in_X_eta <- 1e6 ## still used (seems ignored?) internally via set_thresholds.
+    ## supplanted by keep_n at top level.
 
   # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
   # ... it's really AAO/BBO so not a true exclu but
@@ -2473,7 +2476,7 @@ return( lociar)
       mids_SPA <- unlist(mids_SPA[good_ind])
       # plot predicted density. Slowish with vecless 1.0
       lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
-            col='blue')
+            col='green')
   }
 
 return( ilglk)
@@ -4058,7 +4061,9 @@ return( gt4)
 #'
 #' Takes bits of a snpgds and stitches them together into a snpgeno
 #'
-#' @param genos an individual-by-locus matrix of genotypes in snpgds coding format
+#' @param genos an individual-by-locus matrix of genotypes in snpgds coding format:
+#'              Four possible values stored as 0, 1, 2 and 3, where. "0" indicates
+#'              BB, "1" indicates AB, "2" indicates AA, and "3" is a missing genotype.
 #' @param Locus a vector of locus IDs, length equal to ncol(genos)
 #' @param Our_sample a vector of sample IDs, length equal to nrow(genos)
 #' @param info a data.frame of sample information, length equal to nrow(genos)
@@ -4066,16 +4071,16 @@ return( gt4)
 #' @param Our_plate an optional vector of plate IDs, length equal to nrow(genos)
 #' @export
 #' @examples
-#' genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
-#' genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
-#' Locus <- read.gdsn(index.gdsn(genofile, "snp.id"))
-#' Our_sample <- read.gdsn(index.gdsn(genofile, "sample.id"))
-#' info <- read.gdsn(index.gdsn(genofile, "sample.annot"))
-#' genos <- genos[info$pop.group == "YRI", ]
-#' Our_sample <- Our_sample[info$pop.group == "YRI"]
-#' info <- info[info$pop.group == "YRI",]
+#' ## genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
+#' ## genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
+#' ## Locus <- read.gdsn(index.gdsn(genofile, "snp.id"))
+#' ## Our_sample <- read.gdsn(index.gdsn(genofile, "sample.id"))
+#' ## info <- read.gdsn(index.gdsn(genofile, "sample.annot"))
+#' ## genos <- genos[info$pop.group == "YRI", ]
+#' ## Our_sample <- Our_sample[info$pop.group == "YRI"]
+#' ## info <- info[info$pop.group == "YRI",]
 #' ## those subsets because there are 4 populations in the hapmap data - keep only one for kinf.
-#' newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
+#' ## newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
 
 snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NULL, Our_plate = NULL ) {
 
@@ -4150,8 +4155,8 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NUL
 #'
 #' @param filename a character string giving the snpgds file name, formatted as
 #'                 snpgdsExampleFileName().
-#' @param locusField a character string giving the name for locus IDs. Cannot be blank
-#' @param sampleField a character string giving the name for sample IDs. Cannot be blank
+#' @param locusID a character string giving the name for locus IDs. Cannot be blank
+#' @param sampleID a character string giving the name for sample IDs. Cannot be blank
 #' @param infoFrame an optional character string giving the name for sample metadata frame
 #' @param infoFields an optional character vector giving the names for sample metadata variables
 #' @param locinfoFrame an optional character string giving the name for locus metadata frame
@@ -4160,30 +4165,30 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NUL
 #'                   specific plate ID
 #' @export
 #' @examples
-#' library(SNPRelate)
+#' ## library(SNPRelate)
 #' ## simplest possible case (no locus or sample metadata other than IDs;
 #' ## will add an all-one plate field):
-#' snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id")
+#' ## snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusID = "snp.id", sampleID = "sample.id")
 #'
 #' ## more likely: either sample or locus metadata is a single frame,
 #' ## and the other is a bunch of separate fields. In this case, sample
 #' ## metadata is a single frame and locus metadata is separate fields.
-#' snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusField = "snp.id", sampleField = "sample.id", infoFrame = "sample.annot", locinfoFields = c("snp.rs.id", "snp.position", "snp.chromosome", "snp.allele"))
-#'
-#' If your population of interest is a subset the samples, you should re-estimate allele
-#' frequencies ('pbonzer') for that subset:
-#' snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
-#' snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
+#' ## snpgeno <- read.snpgds(filename = snpgdsExampleFileName(), locusID = "snp.id", sampleID = "sample.id",
+#' ##                        infoFrame = "sample.annot", locinfoFields = c("snp.rs.id", "snp.position", "snp.chromosome", "snp.allele"))
+#' ## If your population of interest is a subset the samples, you should re-estimate allele
+#' ## frequencies ('pbonzer') for that subset:
+#' ## snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
+#' ## snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
 
-read.snpgds <- function(filename, locusField, sampleField,
+read.snpgds <- function(filename, locusID, sampleID,
                         infoFrame = NULL, infoFields = NULL,
                         locinfoFrame = NULL, locinfoFields = NULL,
                         plateField = NULL) {
 
     genofile <- snpgdsOpen(filename, allow.duplicate = TRUE)
     genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
-    Locus <- read.gdsn(index.gdsn(genofile, locusField))
-    Our_sample <- read.gdsn(index.gdsn(genofile, sampleField))
+    Locus <- read.gdsn(index.gdsn(genofile, locusID))
+    Our_sample <- read.gdsn(index.gdsn(genofile, sampleID))
 
     if(!is.null(infoFields)) {
         info <- data.frame(matrix(data = NA, nrow = length(Our_sample), ncol = length(infoFields)))

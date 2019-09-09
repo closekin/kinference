@@ -8,7 +8,9 @@ snpgdsToSnpgeno(genos, Locus, Our_sample, info = NULL, locinfo = NULL,
   Our_plate = NULL)
 }
 \arguments{
-\item{genos}{an individual-by-locus matrix of genotypes in snpgds coding format}
+\item{genos}{an individual-by-locus matrix of genotypes in snpgds coding format:
+Four possible values stored as 0, 1, 2 and 3, where. "0" indicates
+BB, "1" indicates AB, "2" indicates AA, and "3" is a missing genotype.}
 
 \item{Locus}{a vector of locus IDs, length equal to ncol(genos)}
 
@@ -24,14 +26,14 @@ snpgdsToSnpgeno(genos, Locus, Our_sample, info = NULL, locinfo = NULL,
 Takes bits of a snpgds and stitches them together into a snpgeno
 }
 \examples{
-genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
-genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
-Locus <- read.gdsn(index.gdsn(genofile, "snp.id"))
-Our_sample <- read.gdsn(index.gdsn(genofile, "sample.id"))
-info <- read.gdsn(index.gdsn(genofile, "sample.annot"))
-genos <- genos[info$pop.group == "YRI", ]
-Our_sample <- Our_sample[info$pop.group == "YRI"]
-info <- info[info$pop.group == "YRI",]
+## genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
+## genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
+## Locus <- read.gdsn(index.gdsn(genofile, "snp.id"))
+## Our_sample <- read.gdsn(index.gdsn(genofile, "sample.id"))
+## info <- read.gdsn(index.gdsn(genofile, "sample.annot"))
+## genos <- genos[info$pop.group == "YRI", ]
+## Our_sample <- Our_sample[info$pop.group == "YRI"]
+## info <- info[info$pop.group == "YRI",]
 ## those subsets because there are 4 populations in the hapmap data - keep only one for kinf.
-newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
+## newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
 }
