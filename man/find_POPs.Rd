@@ -10,11 +10,9 @@ find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, max_diff_genos, keep_n = 0.5 * nrow(snpg))
 
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  keep_n = 1e+05, eta = NULL, keep_thresh = NULL, nbins = 50,
-  bins = NULL)
+  keep_n = 1e+05, nbins = 50, bins = NULL)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  rough_n_pairs_to_keep = NA, eta = NULL, keep_thresh = NULL,
   keep_n = 0.5 * nrow(snpg), nbins, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
 }
@@ -42,26 +40,11 @@ the data.}
 \item{keep_n}{Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
 a warning if the number of identified pairs equals keep_n.}
 
-\item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override
-\code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
-
 \item{nbins}{number of bins to group the stats from the sub-'eta' pairs into. The
 bins will be set at quantiles of the expected distribution for UPs.}
 
 \item{bins}{binning for PLODs (we throw away ones outside the range and bin them
 according to this within)}
-
-\item{rough_n_pairs_to_keep}{For checking, you can set this to trap many more
-high-scoring pairs than you expect there to "really"
-be, say a few thousand (NB the number of pairs retained
-won't exactly equal this). You can subsequently look at
-the "lucky losers" with high but sub-'eta' stats, and
-then filter them out yourself by applying a cutoff of
-\code{eta}. If you leave \code{rough_n_pairs_to_keep}
-at its default of NA, the trap will be set at \code{eta},
-so the result will contain exactly the pairs you want.
-Values above \code{eta} will always be kept, even if you
-specify something silly for \code{rough_n_pairs_to_keep}.}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic
 \code{:=} operator. It speeds up the SPA bit but almost all the time
@@ -83,6 +66,21 @@ affect the result much anyway.)}
 Setting this to say \code{1e6} means you'd expect 1 per million
 comparisons. Used to set the threshold \code{eta}, which is
 returned automatically.}
+
+\item{rough_n_pairs_to_keep}{For checking, you can set this to trap many more
+high-scoring pairs than you expect there to "really"
+be, say a few thousand (NB the number of pairs retained
+won't exactly equal this). You can subsequently look at
+the "lucky losers" with high but sub-'eta' stats, and
+then filter them out yourself by applying a cutoff of
+\code{eta}. If you leave \code{rough_n_pairs_to_keep}
+at its default of NA, the trap will be set at \code{eta},
+so the result will contain exactly the pairs you want.
+Values above \code{eta} will always be kept, even if you
+specify something silly for \code{rough_n_pairs_to_keep}.}
+
+\item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override
+\code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
 }
 \value{
 a \code{data.frame} with 3 columns: statistic (\code{PLOD} or

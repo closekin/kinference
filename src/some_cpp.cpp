@@ -227,7 +227,7 @@ BEGIN_RCPP
     // cache misses
 
     // IntegerMatrix::Column geno1_i = geno1(_,i);
-    j_max = symmo ? i : n_samps2;
+    j_max = symmo ? i : n_samps2; // j_max is i if symmo, or n_samps2 otherwise
     for( j = 0; j < j_max; j++) {
       // IntegerMatrix::Column geno2_j = geno2(_,j);
       // calculate the PLOD
@@ -268,6 +268,7 @@ BEGIN_RCPP
       };
 
       // how did that effect this bit vvvvv
+      // this is where we should update re: issue #36.
       for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
         n_PLODs_below( ibin) += (int) ( this_PLOD < bins( ibin));
       };
@@ -461,7 +462,7 @@ BEGIN_RCPP
         n_kept += 1;
       };
 
-
+      // update this for loop for issue #36 with the new even-spaced bins.
       for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
         n_Nexclu_below( ibin) += (int) ( this_Nexclu < bins( ibin));
       };

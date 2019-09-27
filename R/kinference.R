@@ -1306,21 +1306,28 @@ return( ret)
 "find_HSPs" <- ## from DLM
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     keep_n=100000,
-    eta= NULL,
-    keep_thresh= NULL,
     nbins= 50,
-    bins= NULL
-    ) {
+    bins= NULL) {
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
+    stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
+
+    hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+    PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
+                                                    PUP6, PUP4, PUP3))
+
+    if(hspPower_change | PLODSPA_change) {
+        warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+    }
 
   one_in_X_eta <- 1e6 ## still 'used' (but seems to be ignored) internally;
-                        ## replaced by keep_n at top level
+    ## replaced by keep_n at top level
+    eta <- NULL
+    keep_thresh <- NULL
   keep_thresh_set <- !is.null( keep_thresh)
   if( !keep_thresh_set) {
       keep_thresh <- -1e23 # no PLOD will get that far!!
@@ -1713,10 +1720,6 @@ return( result)
 
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
-    rough_n_pairs_to_keep= NA, # C code cutoff, but merge w/ keep_thresh
-    eta= NULL, # DO NOT CALL THIS THIS, but stats cutoff value needs spec
-               # or calc from E/V of UPs
-    keep_thresh= NULL, # merge, C code return cutoff
     keep_n=0.5*nrow(snpg),
     nbins,
     quick=TRUE,
@@ -1727,8 +1730,18 @@ stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
+    hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+    PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
+                                                    PUP6, PUP4, PUP3))
+    if(hspPower_change | PLODSPA_change) {
+        warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+    }
+
     one_in_X_eta <- 1e6 ## still used (seems ignored?) internally via set_thresholds.
     ## supplanted by keep_n at top level.
+    eta <- NULL
+    keep_thresh <- NULL
+    rough_n_pairs_to_keep <- NA
 
   # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
   # ... it's really AAO/BBO so not a true exclu but
@@ -2193,7 +2206,8 @@ return( c( whmo))
     li[ names( s6)] <- s6 # instead of cbind--- this overwrites
   }
 
-  lociar@locinfo <- li
+    lociar@locinfo <- li
+    lociar@hspPower_checksum <- sum( li$pbonzer, li$snerr, li$useN)
 return( lociar)
 }
 
@@ -2914,12 +2928,13 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
     return( e)
     } # function make_K
 
-
   Kenv <- make_K( PUP, LOD)
     geno6@Kenv <- Kenv
 
     class(geno6) <- c("SPAgeno", "snpgeno")  ## new SPAgeno class to auto-update SPA
-                                             ## after subset operations.
+    ## after subset operations.
+
+    geno6@PLODSPA_checksum <- sum( useN, LOD6, LOD4, PUP6, PUP4, LOD3, PUP3)
 
   # PUP and LOD are in Kenv now, so don't duplicate them in locinfo
   # They are really the "workhorse" versions, and are a bit cheaty, so don't want
@@ -3580,9 +3595,9 @@ return( retval)
                   lwd=2,col=5)
         }
         if( showUP["Normal"]) {
-            lines(hspsa@bins,log(diff(c(0,pnorm(hspsa@bins, mean = hspsa@mean_theory,
-                                      sd = sqrt(hspsa@var_theory)) *
-                                      sum(hspsa@n_PLODs_in_bin[hspsa@bins<0])))),
+            lines(hsps@bins,log(diff(c(0,pnorm(hsps@bins, mean = hsps@mean_theory,
+                                      sd = sqrt(hsps@var_theory)) *
+                                      sum(hsps@n_PLODs_in_bin[hsps@bins<0])))),
                   lwd = 2, col = 5) ## Normal approx
         }
         legendBits <- data.frame(allNames = c("UP","POP","HSP","FSP"), allNumbers = c(5,1,8,9))
@@ -3634,7 +3649,7 @@ return( retval)
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
         hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
-                       col="lightgrey",main="HSP PLOD",xlab="PLOD", ...)
+                       col="lightgrey",xlab="PLOD", ...)
         if( HSPmean) {
             E.hsp = hsps@mean_HSP
             abline(v=E.hsp,lwd=2,col=8)
