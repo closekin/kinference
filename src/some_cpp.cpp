@@ -130,9 +130,12 @@ SEXP HSP_paircomps_lots(
   double eta,
   double min_keep_PLOD,
   int keep_n, // number of PLODs to return
-  NumericVector bins
+  double minbin, // SB insertion
+  double binterval, // SB insertion
+  int nbins // SB insertion
   ) {
-BEGIN_RCPP
+    // NumericVector bins // SB deletion: to be replaced with minbin, binterval, and nbins
+  BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
 #include <../genobasics-vistu/r_int_defs_debug.h>
@@ -143,7 +146,7 @@ BEGIN_RCPP
   int n_samps2;
   int n_loci;
   int n_genopairs;
-  int n_bins;
+  //  int n_bins; // SB deletion
   int n_kept;
   int n_sub_PLOD; // discarded ones
   int i;
@@ -153,13 +156,18 @@ BEGIN_RCPP
   int g1g2;
   // int g1; // debugging
   // int g2;  // debugging
-  int ibin;
+  // int ibin; // SB deletion
   double this_PLOD;
   double this_LOD;
   double mean_sub_PLOD;
   double mean_sub_PLOD2;
   double var_sub_PLOD;
+  int which_bin; // SB addition
+  IntegerVector n_PLODs_in_bin( nbins); // SB addition
 
+  // n_bins = bins.size(); // SB deletion
+  // IntegerVector n_PLODs_below( n_bins); // SB deletion
+  
   n_geno = pair_geno. nrow();
   ASSERTO( pair_geno.ncol() == n_geno);
 
@@ -182,9 +190,6 @@ BEGIN_RCPP
     ASSERTO( n_samps1 == n_samps2);
   };
 
-  n_bins = bins.size();
-  IntegerVector n_PLODs_below( n_bins);
-
   // Need to grow the kept-values, so std::vector is apparently better
   // NumericVector big_PLOD( guess_n_keep);
   // IntegerVector big_i( guess_n_keep);
@@ -206,7 +211,6 @@ BEGIN_RCPP
     }
   };
   std::priority_queue< PLODder, std::vector<PLODder>, my_greater> PLODing_along;
-
 
   // check compilation; at one point couldn't find scope
   // now can, but following line doesn't work; prolly doesn't matter
@@ -269,20 +273,28 @@ BEGIN_RCPP
 
       // how did that effect this bit vvvvv
       // this is where we should update re: issue #36.
-      for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
-        n_PLODs_below( ibin) += (int) ( this_PLOD < bins( ibin));
-      };
+      // Begin SB deletion:
+      //      for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
+      //        n_PLODs_below( ibin) += (int) ( this_PLOD < bins( ibin));
+      //      };
+      // end SB deletion
+
+      // here, we need to input the new solution re: issue #36
+      which_bin = floor((this_PLOD - minbin) / binterval); // SB addition. Goddamn 0-base.
+      which_bin = max(0, min(which_bin, nbins)); // SB addition
+      n_PLODs_in_bin[ which_bin] += 1; // SB addition
+      
     }; // for j
   }; // for i
 
   mean_sub_PLOD /= n_sub_PLOD;
-  var_sub_PLOD = mean_sub_PLOD2 / n_sub_PLOD - mean_sub_PLOD*mean_sub_PLOD;
+  var_sub_PLOD = mean_sub_PLOD2 / n_sub_PLOD - mean_sub_PLOD * mean_sub_PLOD;
 
   // n_PLODs_below is cumul but should really be n_PLODs_in_bin, so...
-  for( ibin = n_bins; ibin > 0; ibin--){
-    n_PLODs_below[ ibin] -= n_PLODs_below[ ibin-1];
-  };
-
+  //  for( ibin = n_bins; ibin > 0; ibin--){ // SB deletion
+  //  n_PLODs_below[ ibin] -= n_PLODs_below[ ibin-1];  // SB deletion
+  //  };  // this performs differencing between the 'n_PLODs_below' series. // SB deletion
+  
   // build big_i, big_j, big_PLOD
   big_i.reserve(PLODing_along.size());
   big_j.reserve(PLODing_along.size());
@@ -302,7 +314,7 @@ return( Rcpp::List::create(
       Rcpp::Named("big_PLOD")=wrap( big_PLOD),
       Rcpp::Named("big_i")=wrap( big_i),
       Rcpp::Named("big_j")=wrap( big_j),
-      Rcpp::Named( "n_PLODs_in_bin")=n_PLODs_below,
+      Rcpp::Named( "n_PLODs_in_bin")=n_PLODs_in_bin, // SB modification. was n_PLODs_below
       Rcpp::Named( "mean_sub_PLOD")=mean_sub_PLOD,
       Rcpp::Named( "var_sub_PLOD")=var_sub_PLOD
   ));

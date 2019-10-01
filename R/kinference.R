@@ -1307,7 +1307,10 @@ return( ret)
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     keep_n=100000,
     nbins= 50,
-    bins= NULL) {
+    ## bins= NULL ## SB deletion
+    minbin,
+    binterval
+    ) {
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
@@ -1372,10 +1375,14 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
   attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
   temp_snpg <- t( temp_snpg)
 
-  if( is.null( bins)) {
-    qq <- (2:nbins-1)/nbins
-    bins <- snpg@Kenv$inv_CDF( qq)
-  }
+##  if( is.null( bins)) {
+##    qq <- (2:nbins-1)/nbins
+##    bins <- snpg@Kenv$inv_CDF( qq)
+    ##  }
+    bins <- seq(minbin+binterval+binterval, (minbin + (nbins*binterval) + binterval), binterval)
+    ## effing zero-base, is what I should say here...
+    ## the 'minbin + binterval' offsets the zero-base. The additional '+ binterval' offsets
+    ## the fact that bin labels denote the highest point in their range.
   binprobs <- snpg@Kenv$CDF( bins)
 
   # Trying special-cases here to minimize copying
@@ -1393,7 +1400,10 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
         eta= eta,
         min_keep_PLOD= keep_thresh,
         keep_n = keep_n,
-        bins= bins
+        ##        bins= bins ## SB deletion
+        minbin = minbin,
+        binterval = binterval,
+        nbins = nbins
       )
   } else { # different subsets
     xresult <- HSP_paircomps_lots(
@@ -1405,7 +1415,10 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
         eta= eta,
         min_keep_PLOD= keep_thresh,
         keep_n = keep_n,
-        bins= bins
+        ##         bins= bins ## SB deletion
+        minbin = minbin,
+        binterval = binterval,
+        nbins = nbins
       )
   }
 

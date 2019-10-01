@@ -5,8 +5,8 @@ paircomps <- function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_lo
     .Call('_kinference_paircomps', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci)
 }
 
-HSP_paircomps_lots <- function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, bins) {
-    .Call('_kinference_HSP_paircomps_lots', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, bins)
+HSP_paircomps_lots <- function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins) {
+    .Call('_kinference_HSP_paircomps_lots', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
 }
 
 POP_paircomps_lots <- function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
