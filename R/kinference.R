@@ -1852,6 +1852,10 @@ stopifnot( all( ww>0))
   # prolly not needed but HSP C code already does it
   qq <- (2:nbins-1)/nbins
   pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
+    minbin <- min(pciles) ## SB insertion
+    nbins <- length(qq) ## SB insertion
+    binterval <- (max(pciles) - min(pciles)) / length(qq) ## SB edit: evenly-spaced bins over
+    ## pre-existing range, but what defined that range, and what should it be?
 
   # Trying special-cases here to minimize copying
   if( symmo){
@@ -1866,9 +1870,12 @@ stopifnot( all( ww>0))
         eta= eta,
         max_keep_wpsex= keep_thresh,
         keep_n = keep_n,
-        bins= pciles,
+##         bins= bins, ## SB edit, evenly-spaced 'bins', not not pciles
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
+        BBO= match( 'BB', snpg@diplos),
+        minbin = minbin,
+        nbins = nbins+1, ## bloody zero-base
+        binterval = binterval
       )
   } else { # different subsets
     result <- POP_wt_paircomps_lots(
@@ -1879,9 +1886,12 @@ stopifnot( all( ww>0))
         eta= eta,
         max_keep_wpsex= keep_thresh,
         keep_n = keep_n,
-        bins= pciles,
+##         bins= bins, ## SB edit: evenly-spaced 'bins', not pciles
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
-        BBO= match( 'BB', snpg@diplos)
+        BBO= match( 'BB', snpg@diplos),
+        minbin = minbin,
+        nbins = nbins+1, ## bloody zero-base
+        binterval = binterval
       )
   }
 
@@ -1891,6 +1901,9 @@ stopifnot( all( ww>0))
       message("Returning the ", keep_n, " pairs with the most POP-like wpsex scores, increase keep_n if more are required")
   }
 
+  n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB addition
+  bins <- seq(minbin+binterval, minbin+(nbins*binterval)+binterval, binterval)
+  ## SB addition. Bloody zero-base.
 
   # construct the result
   result <- with( result, data.frame( wpsex=big_wpsex, i=big_i, j=big_j))
@@ -1905,7 +1918,8 @@ stopifnot( all( ww>0))
   result <- result %without.name% cq( big_wpsex, big_i, big_j)
 
   # add extra info
-  result@bins <- pciles
+  result@bins <- bins ## NOT pciles
+  result@n_wpsex_in_bin <- n_wpsex_in_bin ## SB addition
   result@eta <- eta
   result@keep_thresh <- keep_thresh
   result@n_loci <- length( pop_loci)

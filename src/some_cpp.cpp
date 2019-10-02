@@ -527,11 +527,14 @@ SEXP POP_wt_paircomps_lots(
   double eta,
   double max_keep_wpsex,
   int keep_n, // number of pairs to return
-  NumericVector bins,
   int AAO,
-  int BBO
+  int BBO,
+  double minbin, // SB insertion
+  int nbins, // SB insertion
+  double binterval // SB insertion
 ) {
   BEGIN_RCPP
+    // NumericVector bins, // SB deletion
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
 #include <../genobasics-vistu/r_int_defs_debug.h>
@@ -540,7 +543,7 @@ SEXP POP_wt_paircomps_lots(
   int n_samps1;
   int n_samps2;
   int n_loci;
-  int n_bins;
+  //  int n_bins; // SB deletion
   int n_kept;
   int n_hi_wpsex; // discarded ones
   int i;
@@ -551,12 +554,17 @@ SEXP POP_wt_paircomps_lots(
   int iiloc;
   int n_AAOs1_i;
   int n_BBOs1_i;
-  int ibin;
+  //  int ibin; // SB deletion
   double this_wpsex;
   double mean_hi_wpsex;
   double mean_hi_wpsex2;
   double var_hi_wpsex;
+  int which_bin; // SB addition
+  IntegerVector n_wpsex_in_bin( nbins); // SB addition
 
+  // n_bins = bins.size(); // SB deletion
+  // IntegerVector n_wpsex_below( n_bins); // SB deletion
+  
   // Ensure matching size of LOD and pair_geno
   // Can't seem to directly get length of pair_geno@what...
   // ... even though ALL R objects have a length
@@ -574,9 +582,6 @@ SEXP POP_wt_paircomps_lots(
 
   IntegerVector which_AAOs1_i( n_loci);
   IntegerVector which_BBOs1_i( n_loci);
-
-  n_bins = bins.size();
-  IntegerVector n_wpsex_below( n_bins);
 
   // Need to grow the kept-values, so std::vector is apparently better
   //std::vector<double> big_wpsex;
@@ -669,9 +674,17 @@ SEXP POP_wt_paircomps_lots(
         n_kept += 1;
       };
 
-      for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
-        n_wpsex_below( ibin) += (int) ( this_wpsex < bins( ibin));
-      };
+      // make fixes here re: issue 36
+      // begin SB deletion
+      //  for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
+      //    n_wpsex_below( ibin) += (int) ( this_wpsex < bins( ibin));
+      //  };
+      // end SB deletion
+
+      // here, input the new solution re: issue 36
+      which_bin = floor((this_wpsex - minbin) / binterval); // SB addition
+      which_bin = max(0, min(which_bin, nbins)); // SB addition
+      n_wpsex_in_bin[ which_bin] += 1; // SB addition
     }; // for j
   }; // for i
 
@@ -679,9 +692,10 @@ SEXP POP_wt_paircomps_lots(
   var_hi_wpsex = mean_hi_wpsex2 / n_hi_wpsex - mean_hi_wpsex*mean_hi_wpsex;
 
   // n_wpsex_below is cumul but should really be n_wpsex_in_bin, so...
-  for( ibin = n_bins; ibin > 0; ibin--){
-    n_wpsex_below[ ibin] -= n_wpsex_below[ ibin-1];
-  };
+  // probably going to have to make fixes here, too...
+  // for( ibin = n_bins; ibin > 0; ibin--){ // SB deletion
+  //  n_wpsex_below[ ibin] -= n_wpsex_below[ ibin-1]; // SB deletion
+  // }; // SB deletion
 
   // build big_i, big_j, big_Nexclu
   big_i.reserve(WPSEXing_along.size());
@@ -701,7 +715,7 @@ SEXP POP_wt_paircomps_lots(
     Rcpp::Named("big_wpsex")=wrap( big_WPSEX),
     Rcpp::Named("big_i")=wrap( big_i),
     Rcpp::Named("big_j")=wrap( big_j),
-    Rcpp::Named( "n_wpsex_in_bin")=n_wpsex_below,
+    Rcpp::Named( "n_wpsex_in_bin")= n_wpsex_in_bin, // SB modification. Was n_wpsex_below
     Rcpp::Named( "mean_hi_wpsex")=mean_hi_wpsex,
     Rcpp::Named( "var_hi_wpsex")=var_hi_wpsex
   ));

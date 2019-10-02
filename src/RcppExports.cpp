@@ -64,8 +64,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // POP_wt_paircomps_lots
-SEXP POP_wt_paircomps_lots(RawMatrix geno1, RawMatrix geno2, NumericVector w, bool symmo, double eta, double max_keep_wpsex, int keep_n, NumericVector bins, int AAO, int BBO);
-RcppExport SEXP _kinference_POP_wt_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP wSEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_wpsexSEXP, SEXP keep_nSEXP, SEXP binsSEXP, SEXP AAOSEXP, SEXP BBOSEXP) {
+SEXP POP_wt_paircomps_lots(RawMatrix geno1, RawMatrix geno2, NumericVector w, bool symmo, double eta, double max_keep_wpsex, int keep_n, int AAO, int BBO, double minbin, int nbins, double binterval);
+RcppExport SEXP _kinference_POP_wt_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP wSEXP, SEXP symmoSEXP, SEXP etaSEXP, SEXP max_keep_wpsexSEXP, SEXP keep_nSEXP, SEXP AAOSEXP, SEXP BBOSEXP, SEXP minbinSEXP, SEXP nbinsSEXP, SEXP bintervalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,10 +76,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< double >::type max_keep_wpsex(max_keep_wpsexSEXP);
     Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type bins(binsSEXP);
     Rcpp::traits::input_parameter< int >::type AAO(AAOSEXP);
     Rcpp::traits::input_parameter< int >::type BBO(BBOSEXP);
-    rcpp_result_gen = Rcpp::wrap(POP_wt_paircomps_lots(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, bins, AAO, BBO));
+    Rcpp::traits::input_parameter< double >::type minbin(minbinSEXP);
+    Rcpp::traits::input_parameter< int >::type nbins(nbinsSEXP);
+    Rcpp::traits::input_parameter< double >::type binterval(bintervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(POP_wt_paircomps_lots(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, minbin, nbins, binterval));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -144,7 +146,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kinference_paircomps", (DL_FUNC) &_kinference_paircomps, 7},
     {"_kinference_HSP_paircomps_lots", (DL_FUNC) &_kinference_HSP_paircomps_lots, 11},
     {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 9},
-    {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 10},
+    {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 12},
     {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 5},
     {"_kinference_DUP_paircomps_incomplete_lots", (DL_FUNC) &_kinference_DUP_paircomps_incomplete_lots, 5},
     {"_kinference_indiv_lglk_geno", (DL_FUNC) &_kinference_indiv_lglk_geno, 2},
