@@ -15,3 +15,4 @@ calculate_LOD_HSP(lociar, k = 0.5)
 This function has only the bare minimum of documentation necessary for roxygen to
 parse it. We should probably add some proper documentation here.
 }
+\keyword{internal}

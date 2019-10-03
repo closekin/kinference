@@ -42,8 +42,8 @@ function( libname, pkgname) {
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
 #' parse it. We should probably add some proper documentation here.
+#' @keywords internal
 #' @param nlocal a param
-#' @export
 
 "add_pairprob_error" <-
 function( nlocal=sys.parent()) mlocal({
@@ -127,7 +127,7 @@ function( nlocal=sys.parent()) mlocal({
 #' @param P a param
 #' @param snerr a param
 #' @param record TRUE or FALSE
-#' @export
+#' @keywords internal
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
 
@@ -182,7 +182,7 @@ return( pp6_err)
 #' @param P a param
 #' @param snerr a param
 #' @param record TRUE or FALSE
-#' @export
+#' @keywords internal
 #' @importFrom vecless set_recording
 
 "calc_g6probs_IBD1_scalar" <-
@@ -251,7 +251,7 @@ return( pp6_err)
 #' @param P a param
 #' @param snerr a param
 #' @param record TRUE or FALSE
-#' @export
+#' @keywords internal
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
 
@@ -1166,7 +1166,7 @@ function( snpg, candiHSPs) {
 #' "supposed" to have those in the mix by the time you run
 #' find_FSPs_from_HSPs(), but maybe I should fix that at some point.
 #'
-#' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs find_FSPs_from_candiHSPs
+#' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs find_FSPs_from_candiHSPs find_FSPs_from_POPs_v2
 #' @param snpg a \code{snpgeno} object
 #' @param candiPOPs candidate kin-pairs--- normally, a dataframe
 #'                  with rows being pairs and columns _i_ and _j_ (and possibly
@@ -1964,13 +1964,12 @@ function( thing, seed) {
 #'               \code{"poor"} detectes DNA degredation (there are too
 #'               few heterozygotes).
 #' @param hist_pars parameters to pass to \code{\link{hist}}
-#' @param multhresh A param.
 #' @param showPlot show the plot? Default TRUE
 #' @keywords misc
 #' @export
 
 "hetzminoo_fancy" <-
-function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1, showPlot = TRUE) {
+function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), showPlot = TRUE) {
 ###################
   define_genotypes()
   extract.named( snpg@locinfo[ cq(  PUP4, pbonzer)]) ## used to also call use6; not used
@@ -2060,7 +2059,7 @@ function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), multhresh=1, showPl
   switch( mode( hist_pars),
     list = {
         hist_pars <- add_list_defaults( hist_pars,
-            main=sprintf( '%s: multhresh=%5.2f', target, multhresh),
+            main=sprintf( target),
             xlim= range( whmo), # so cutoff lines show
             xlab='', nclass=50)
         if (showPlot) {
@@ -2502,7 +2501,7 @@ return( lociar)
   dens_SPA <- renorm_SPA( K, dK, ddK, 'func')
 
   indiv_lglk_hist_pars <- add_list_defaults( indiv_lglk_hist_pars,
-      main   = 'Geno lglk by specimen', #sprintf( 'Geno lglk by specimen: multhresh=%5.2f', method, multhresh_indiv_lglk_fish),
+      main   = 'Geno lglk by specimen',
       xlim   = range( ilglk),
       col    = "grey",
       border = NA,
@@ -2653,7 +2652,7 @@ return( sg)
 #'
 #' @param g6p0 a param
 #' @param g6p1 a param
-#' @export
+#' @keywords internal
 
 map6to4 <- function(g6p0, g6p1){
 
@@ -2694,7 +2693,7 @@ map6to4 <- function(g6p0, g6p1){
 #'
 #' @param g6p0 a param
 #' @param g6p1 a param
-#' @export
+#' @keywords internal
 
 map6to3 <- function(g6p0, g6p1){
 
@@ -2737,7 +2736,7 @@ map6to3 <- function(g6p0, g6p1){
 #' @param pIBD1 a param
 #' @param want_LOD_table a param. Defaults to FALSE
 #' @param k a param. Defaults to 0.5
-#' @export
+#' @keywords internal
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
 
@@ -2981,7 +2980,7 @@ return( geno6)
 #'
 #' @param keeping a param
 #' @param nlocal a param. Defaults to sys.parent().
-#' @export
+#' @keywords internal
 #' @importFrom mvbutils cq mlocal %is.a%
 
 "set_thresholds" <-
@@ -3029,7 +3028,7 @@ stopifnot( keeping %in% cq( hi, lo))
 #' parse it. We should probably add some proper documentation here.
 #'
 #' @param lociar a param
-#' @export
+#' @keywords internal
 
 calculate_IBD <- function(lociar){
 
@@ -3065,7 +3064,7 @@ calculate_IBD <- function(lociar){
 #' @param ck a 'SPAgeno' object
 #' @param n a param. ?The number of animals to simulate?
 #' @param nq a param. Defaults to 20. ?The number of quantiles?
-#' @export
+#' @keywords internal
 #' @importFrom atease @ @<-
 #' @importFrom gbasics rsample
 #' @importFrom stats var
@@ -3332,7 +3331,7 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n
 #'
 #' @param l a param
 #' @param ... other params, passed to something.
-#' @export
+#' @keywords internal
 #' @useDynLib kinference
 #' @importFrom Rcpp evalCpp
 #' @importFrom mvbutils %without.name% ?
@@ -3390,7 +3389,7 @@ return( l)
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
 
-  genotypes <- cq( OO, AO, BO, AB, AA, BB, AAO, BBO, AC, BC, CO, CC, "CCO")
+  genotypes <- cq( OO, AO, BO, AB, AA, BB, AAO, BBO, BBOO, AC, BC, CO, CC, "CCO")
   genotypes_ambig <- cq( OO, AB, AC, BC, AAO, BBO, "CCO") ## sans quotes, CCO is treated as global
   genotypes4_ambig <- cq( OO, AB, AAO, BBO)
   genotypes6 <- cq( AA, AB, AO, BB, BO, OO)
@@ -3419,7 +3418,8 @@ return( l)
 #' @param tol a param. Defaults to formals( ridder)$tol
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
-#' @export
+#' @keywords internal
+
 "inv_CDF_SPA2" <-
     function( p, K, dK, ddK, tol=formals( ridder)$tol) {
 
@@ -3509,7 +3509,7 @@ return( x)
 #'
 #' @param lociar a param
 #' @param k a param. Defaults to 0.5
-#' @export
+#' @keywords internal
 
 "calculate_LOD_HSP" <- ## badly in need of fixing; duplicated or redundant and doesn't have the pIBD2 stuff
     function(lociar, k=0.5) {
@@ -3697,6 +3697,51 @@ return( retval)
         }
         if(!HSPmean) {
             legendBits <- legendBits[legendBits$allNames != "HSP",]
+        }
+        if(!FSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "FSP",]
+        }
+
+        legend("topright", legend = legendBits$allNames,
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
+    }
+
+#' FSP_POP_histo(): FPstat distro plot for separating FSPs from POPs
+#'
+#' Plots an absolute-frequency histogram for the output of
+#' \code{find_FSPs_from_POPs_v2()}.
+#'
+#' @param fsps2 the output of a call to \code{find_FSPs_from_POPs_v2()}
+#' @param bin hist bin width. Default 100. bin is used to define 'breaks' (along
+#'            with xlim, if given), so you can't manually pass in 'breaks'.
+#' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
+#' @param POPmean plot the mean PLOD for POPs? Default TRUE
+#' @param ... additional pars, passed to \code{hist()}
+#' @seealso PLOD_loghisto
+#' @export
+
+"FSP_POP_histo" <-
+    function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
+
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+        if(exists("xlim")) {
+            lb <- min(xlim)
+            ub <- max(xlim)
+        } else {
+            lb <- min(fsps2$FPstat)
+            ub <- max(fsps2$FPstat)+bin
+        }
+
+        hist.plod=hist(fsps2$FPstat, breaks=seq(lb, ub, bin),
+                       col="lightgrey",xlab="FPstat", ...)
+        if( POPmean) { abline(v = fsps2@E_FPstat[1], col = 1, lwd = 2) }
+        if( FSPmean) { abline(v = fsps2@E_FPstat[2], col = 9, lwd = 2) }
+
+        legendBits <- data.frame(allNames = c("POP","FSP"), allNumbers = c(1,9))
+        if(!POPmean) {
+            legendBits <- legendBits[legendBits$allNames != "POP",]
         }
         if(!FSPmean) {
             legendBits <- legendBits[legendBits$allNames != "FSP",]
@@ -4404,7 +4449,7 @@ return( lociar)
 #' @param pC a param
 #' @param which_genotypes e.g., genotypes_ambig. If no C-genos are requested, pC is forced to 0 so
 #'                        new O includes C.
-#' @export
+#' @keywords internal
 
 "make_pgeno" <-
 function( pA, pB, pC, which_genotypes) {
@@ -4463,6 +4508,363 @@ function( snpg) {
   new_ALFs <- est_ALF_ABCO( snpg, geno_amb = gamb)
 return( new_ALFs)
 }
+
+#' @rdname find_FSPs_from_POPs
+#' @export
+
+find_FSPs_from_POPs_v2 <- function( snpg, candiPOPs, keep_indiv=FALSE) {
+###### ADD ALIAS TO DOCO for find_FSPs_from_POPs and ensure this is exported
+###### ... which this function should replace
+###### ... keep the old one as 'old_find_FSPs_from_POPs' for now...
+###### ... mainly so I don't have rewrite doco before today's mtg
+    ## used to have unused var 'max_med_mul'. Removed.
+
+    ## Don't need full pairwise screening for FSPs (do post hoc on a few hundred
+## candidate POPs), hence all in R.
+
+  define_genotypes()
+
+  # 'candiPOPs' normally from 'find_POPs'; or can be M*2 matrix of rows in snpg that are poss POPs
+  # if former, make latter
+
+  if( candiPOPs %is.a% 'data.frame') {
+    candiPOPs <- as.matrix( candiPOPs[ cq( i, j)])
+  }
+  snpg <- snpg[ c( candiPOPs),]
+
+  n_pairs <- nrow( candiPOPs)
+
+  useN <- snpg@locinfo$useN
+  if( is.null( useN)) {
+      useN <- ifelse( snpg@locinfo$use6, 6, 4)
+    }
+
+  # Yet to write 'make_prgeno'...
+  # extract.named( make_prgeno( snpg, genotypes4_ambig)) # pA pB pO pgeno[,'AB'] pgeno[,'AAO'] etc
+  pA <- snpg@locinfo$pbonzer[,'A']
+  pB <- snpg@locinfo$pbonzer[,'B']
+  pO <- 1-pA-pB
+  n_loci <- length( pA)
+
+  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
+  pgeno[,AB] <- 2*pA*pB
+    pgeno[,OO] <- sqr( pO)
+  pgeno[,AAO] <- sqr( pA) + 2*pA*pO
+  pgeno[,BBO] <- sqr( pB) + 2*pB*pO
+
+  off <- 1 # until vecless has arbitrary-base arrays
+  # so that index {off} means 0 ibd, {off+1} means 1, {off+2} means 2
+
+  Pr_same_given_k <- array( 0, c( n_loci, 3))
+
+  Pr_same_given_k[ useN != 6,{off+2}] <- 1 # no errors between the "big 4" (or 3)
+
+  Pr_same_given_k[ useN==3, {off+0}] <- (
+      sqr( 2*pA*pB) +
+      sqr( sqr( pA) + 2*pA*pO) +
+      sqr( sqr( 1-pA))
+    )[ useN==3]
+
+  # Shared copy first, then other copies ie AB/O means ...
+  # ... A shared, 2nd copy B and other 2nd copy O
+  # ... (XuY) means X or Y (u for union)
+  Pr_same_given_k[ useN==3, {off+1}] <- (
+      pA * (sqr( pB) + sqr(1-pB)) +             # AB/B, A(AuO)/(AuO)
+      pB * (sqr( pA) + sqr(1-pA)) +             # BA/A, B(BuO)/(BuO)
+      pO * (sqr( pA) + sqr(1-pA))               # O(OuB)/(OuB)
+    )[ useN==3]
+
+
+  Pr_same_given_k[ useN==4, {off+0}] <- (sqr( 2*pA*pB) +
+      sqr( sqr( pA) + 2*pA*pO) +
+      sqr( sqr( pB) + 2*pB*pO) +
+      sqr( sqr( pO))
+    )[ useN==4]
+
+  Pr_same_given_k[ useN==4,{off+1}] <- (
+      pA * (sqr( pB) + sqr(1-pB)) +             # AB/B, A(AuO)/(AuO)
+      pB * (sqr( pA) + sqr(1-pA)) +             # BA/A, B(BuO)/(BuO)
+      pO * (sqr( pO) + sqr(pA) + sqr( pB))      # OX/X
+    )[ useN==4]
+
+  # Pretty ugly for 6way...
+  # ... save a bit of work by re-using some PUP calcs
+  P6 <- snpg@locinfo$PUP6
+  snerr <- snpg$locinfo$snerr
+
+  same6 <- do.on( strsplit( colnames( P6), '/'), .[1]==.[2])
+  Pr_same_given_k[ useN==6, {off+0}] <- (rowSums( P6[ , same6])
+    )[ useN==6]
+  Pr_same_given_k[ useN==6, {off+2}] <- (
+      2*pA*pB +
+      sqr( pA) * ( 1- 2*( 1 - snerr[ , 'AA2AO']) * snerr[, 'AA2AO']) +
+      sqr( pB) * ( 1- 2*( 1 - snerr[ , 'BB2BO']) * snerr[, 'BB2BO']) +
+      2*pA*pO * ( 1- 2*( 1 - snerr[ , 'AO2AA']) * snerr[, 'AO2AA']) +
+      2*pB*pO * ( 1- 2*( 1 - snerr[ , 'BB2BO']) * snerr[, 'BB2BO']) +
+      sqr( pO)
+    )[ useN==6]
+  Pr_same_given_k[ useN==6, {off+1}] <- (
+      pA * (
+        sqr( pB) +
+        sqr( pA) * ( sqr( snerr[ , 'AA2AO']) + sqr( 1-snerr[, 'AA2AO'])) +
+        sqr( pO) * ( sqr( snerr[ , 'AO2AA']) + sqr( 1-snerr[, 'AO2AA'])) +
+        2*pA*pO*( (1-snerr[ , 'AA2AO']) * snerr[, 'AO2AA'] + snerr[ , 'AA2AO'] * (1-snerr[ , 'AO2AA']))) +
+      pB * (
+        sqr( pA) +
+        sqr( pB) * ( sqr( snerr[ , 'BB2BO']) + sqr( 1-snerr[, 'BB2BO'])) +
+        sqr( pO) * ( sqr( snerr[ , 'BO2BB']) + sqr( 1-snerr[, 'BO2BB'])) +
+        2*pB*pO*( (1-snerr[ , 'BB2BO']) * snerr[, 'BO2BB'] + snerr[ , 'BB2BO'] * (1-snerr[ , 'BO2BB']))) +
+      pO * (
+        sqr( pA) * ( sqr( snerr[ , 'AA2AO']) + sqr( 1-snerr[, 'AA2AO'])) +
+        sqr( pB) * ( sqr( snerr[ , 'BB2BO']) + sqr( 1-snerr[, 'BB2BO'])) +
+        sqr( pO) )
+    )[ useN==6]
+
+  Pr_nibd_FSP <- c( 1/4, 1/2, 1/4)
+  Pr_nibd_POP <- c( 0, 1, 0)
+
+  Pr_same_FSP[ l]:= Pr_nibd_FSP[ k] %[k]% Pr_same_given_k[ l, k]
+  Pr_same_POP[ l]:= Pr_nibd_POP[ k] %[k]% Pr_same_given_k[ l, k] # or Pr_same_given_k[ l, {off+1}]
+
+  # From find_POPs: UP case then POP case
+  Pr_psex_given_k <- Pr_same_given_k
+  Pr_psex_given_k[] <- NA
+
+  Pr_psex_given_k[ useN==3,{off+0}] <- 2 * (
+      (2*pA*pO + pA*pA) * (2*pB*pO + pB*pB + pO*pO)  # AAO/BBOO
+    )[ useN==3]
+  Pr_psex_given_k[ useN==3,{off+1}] <- (pO * (2*pA*(pB+pO))
+    )[ useN==3]
+  Pr_psex_given_k[ useN==3,{off+2}] <- 0
+
+  Pr_psex_given_k[ useN==4,{off+0}] <- 2 * (
+      (2*pA*pO + pA*pA) * (2*pB*pO + pB*pB) +  # AAO/BBO
+      2*pA*pB * sqr( pO) # AB/OO
+    )[ useN==4]
+  Pr_psex_given_k[ useN==4,{off+1}] <- (pO * (2*pA*pB)
+    )[ useN==4]
+  Pr_psex_given_k[ useN==4,{off+2}] <- 0
+
+  # Cols of P6 are alphabetical, but by *2nd* geno before 1st !
+  Pr_psex_given_k[ useN==6,{off}] <-
+    rowSums( P6[,c( 'OO/AB', 'BB/AA', 'OO/AA', 'OO/BB', 'BO/AA', 'BB/AO')])[ useN==6]
+  Pr_psex_given_k[ useN==6,{off+1}] <- 2*(
+      0 +  # AB/OO
+      pO * (pA*pB*snerr[,'AO2AA']*snerr[,'BO2BB']) +  # AA/BB O shared; 1 A, 1 B, both misclassed
+      pO * (pO*pA*snerr[,'AO2AA']) +  # AA/OO O shared, 1 O & 1 A, A misclassed
+      pO * (pO*pB*snerr[,'BO2BB']) +  # BB/OO O shared, 1 O & 1 B, B misclassed
+      pO * (pB*pA*snerr[,'AO2AA']*(1-snerr[,'BO2BB'])) + # AA/BO, O shared, A misclassed, B not
+      pO * (pA*pB*snerr[,'BO2BB']*(1-snerr[,'AO2AA'])) # BB/AO, O shared, B misclassed, A not
+    )[useN==6]
+  Pr_psex_given_k[ useN==6,{off+2}] <- 0 # Not possible AFAICS
+
+  Pr_psex_FSP[ l]:= Pr_nibd_FSP[ k] %[k]% Pr_psex_given_k[ l, k]
+  Pr_psex_POP[ l]:= Pr_nibd_POP[ k] %[k]% Pr_psex_given_k[ l, k] # Pr_psex_given_k[ l, {off+1}]
+
+  # For brevity:
+  px <- Pr_psex_FSP
+  ps <- Pr_same_FSP
+
+  # 2x2 eqn to solve:
+  # [ px(1-px), -ps*px   ] = [ Dxx] * lambda
+  # [ -ps*px,   ps(1-ps) ]   [ Dss]
+
+  inv_DET <- 1 / (px * (1-px) * ps * (1-ps) - sqr( ps*px))
+  inv_DET <- 1 / (ps*px*(1-ps-px))
+  Dx <- Pr_psex_FSP - Pr_psex_POP
+  Ds <- Pr_same_FSP - Pr_same_POP
+
+  # 2x2 matrix inverse...
+  ws <- (px*(1-px)*Ds + ps*px*Dx) * inv_DET
+  wx <- (ps*px*Ds + ps*(1-ps)*Dx) * inv_DET
+
+  # Check:
+  # rbind( ps*(1-ps)*ws - ps*px*wx, Ds)
+  # rbind( -ps*px*ws + px*(1-px)*wx, Dx)
+
+  # Paranoia... only happens if ps==0 or px==0
+  wx[ !is.finite( inv_DET)] <- 0
+  ws[ !is.finite( inv_DET)] <- 0
+
+  # Not-very-optimal cap on ws...
+  #ws <- pmin( ws, max_med_mul * median( ws))
+
+  # Scaling could go here, eg to ensure ws[stat|FSP]=n_loci ignoring linkage
+  V_FSP <- px*sqr(wx) + ps*sqr(ws) - sqr( px*wx + ps*ws)
+  rescalor <- sqrt( n_loci / sum( V_FSP))
+  wx <- wx * rescalor
+  ws <- ws * rescalor
+  V_FSP_nolink <- px*sqr(wx) + ps*sqr(ws) - sqr( px*wx + ps*ws)
+  V_POP <- (px-Dx)*sqr(wx) + (ps-Ds)*sqr(ws) - sqr( (px-Dx)*wx + (ps-Ds)*ws)
+
+  E_FSP <- wx * px + ws * ps
+  E_POP <- wx * Pr_psex_POP + ws * Pr_same_POP
+
+  # g1 & g2 are 6way. Produce 4way and 3way equivs...
+  # Yet to write 'recode_geno'...
+  snpg6 <- snpg
+
+  snpg4 <- snpg
+  snpg4@diplos <- genotypes4_ambig
+  snpg4[ snpg6==AO] <- AAO
+  snpg4[ snpg6==AA] <- AAO
+  snpg4[ snpg6==BO] <- BBO
+  snpg4[ snpg6==BB] <- BBO
+  snpg4[ snpg6==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
+  snpg4[ snpg6==AB] <- AB
+
+  snpg3 <- snpg4
+  snpg3@diplos <- genotypes3_ambig
+  snpg3[ snpg4==AB] <- AB
+  snpg3[ snpg4==AAO] <- AAO
+  snpg3[ snpg4==BBO] <- BBOO
+  snpg3[ snpg4==OO] <- BBOO
+
+  g1_6 <- snpg6[ 1 %upto% n_pairs,]
+  g2_6 <- snpg6[ n_pairs + (1 %upto% n_pairs),]
+
+  g1_4 <- snpg4[ 1 %upto% n_pairs,]
+  g2_4 <- snpg4[ n_pairs + (1 %upto% n_pairs),]
+
+  g1_3 <- snpg3[ 1 %upto% n_pairs,]
+  g2_3 <- snpg3[ n_pairs + (1 %upto% n_pairs),]
+
+  is_same <- is_psex <- matrix( FALSE, n_pairs, n_loci)
+  is_same[, useN==3] <- (g1_3==g2_3)[, useN==3]
+  is_same[, useN==4] <- (g1_4==g2_4)[, useN==4]
+  is_same[, useN==6] <- (g1_6==g2_6)[, useN==6]
+
+  # With psex, the g1/g2 order can matter--- so, do it one way, then swap g1 & g2
+  is_psex[, useN==3] <- (
+      (g1_3==AAO & g2_3==BBOO) |
+      (g2_3==AAO & g1_3==BBOO)
+    )[ , useN==3]
+  is_psex[, useN==4] <- (
+      (g1_4==AB & g2_4==OO) |
+      (g1_4==AAO & g2_4==BBO)
+    )[ , useN==4]
+  is_psex[, useN==4] <- is_psex[, useN==4] | (
+      (g2_4==AB & g1_4==OO) |
+      (g2_4==AAO & g1_4==BBO)
+    )[ , useN==4]
+  is_psex[, useN==6] <- (
+      (g1_6==AB & g2_6==OO) |
+      (g1_6==AA & g2_6==BB) |
+      (g1_6==AA & g2_6==OO) |
+      (g1_6==BB & g2_6==OO) |
+      (g1_6==AA & g2_6==BO) |
+      (g1_6==BB & g2_6==AO)
+    )[, useN==6]
+  is_psex[, useN==6] <- is_psex[, useN==6] |       (
+      (g2_6==AB & g1_6==OO) |
+      (g2_6==AA & g1_6==BB) |
+      (g2_6==AA & g1_6==OO) |
+      (g2_6==BB & g1_6==OO) |
+      (g2_6==AA & g1_6==BO) |
+      (g2_6==BB & g1_6==AO)
+    )[ ,useN==6]
+
+  stat[i]:= wx[l] %[l]% is_psex[ i, l] + ws[ l] %[l]% is_same[ i, l]
+
+  ret <- data.frame(
+      FPstat= stat,
+      i = candiPOPs[,1],
+      j = candiPOPs[,2]
+    )
+
+  ret@E_FPstat <- c( POP=sum( E_POP), FSP=sum( E_FSP))
+  # No point in returning V_FSP, since the variance will depend on linkage
+  ret@V_FPstat <- c( POP=sum( V_POP))
+
+
+  if( keep_indiv) {
+    attributes( ret) <- c( attributes( ret), returnList(
+        is_same, is_psex,
+        Pr_same_FSP, Pr_psex_FSP,
+        Pr_same_POP, Pr_psex_POP))
+  }
+  ret@call <- sys.call()
+return( ret)
+
+#  Set up for real data--- in this case, with 'useN==4' for all loci since 6 looked a bit iffy
+#  s11nodup_all4 <- s11nodup
+#  s11nodup_all4$locinfo$use6 <- NULL
+#  s11nodup_all4$locinfo$useN <- 4L
+#  simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
+#  simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
+#  kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
+#  hist( simbo4_next$FPstat, nc=50)
+#  abline( v=simbo4_next@E_FPstat, col='green') # theory means
+#  95% of all POPs should be Left of the line drawn next:
+#  abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
+#  Can't say for FSPs, becoz linkage
+#
+#  Real data:
+#  testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
+#  abline( v=testo4$FPstat, col='red')
+#
+
+}
+
+
+#' Do a thing, don't tell the user
+#'
+#' forp_sim from simcheck_FSP_POP(); findings from find_FSPs_from_POPs_v2( forp_sim, candiPOPs...)
+#' In principle, should ask for candiPOPs too... but, by definition that doesn't specify the *true*
+#' relationship. So, minimal paranoia only...
+#'
+#' @keywords internal
+#' @param forp_sim a param
+#' @param findings a param
+#' @param plot. a param. Default TRUE
+
+postprocess_simcheck_FSP_POP <- function( forp_sim, findings, plot.=TRUE) {
+
+  # Are the names what we expect from simcheck_FSP_POP ..?
+  stopifnot( all( grepl( '^[FP][0-9]+_[AB]$', forp_sim$info$Our_sample)))
+
+  # ... doesn't proof against someone scrambling the order, of course!
+  extract.named( attributes( findings)[ grep( '_same|_psex', atts( findings), value=TRUE)] )
+
+  N <- nrow( is_same) / 2
+  FSPs <- 1:N
+  POPs <- N + FSPs
+
+  if( plot.) {
+    opar <- par( no.readonly=TRUE)
+    on.exit( par( opar))
+
+    # Code from 'handy::clear.graphs'
+    par(mfrow = c(1, 1))
+    plot(0, 0, type = "n", axes = F, xlab = "", ylab = "")
+    par(mfrow = c(2,2), pty='s')
+  }
+
+  useN <- forp_sim$locinfo$useN
+
+  ucols <- c( useN3='blue', useN4='orange', useN6='lightgreen')
+
+  # Generate emp_Pr_psex_POP etc
+  for( kinno in cq( FSP, POP)) {
+    for( compo in cq( same, psex)) {
+      emp <- colMeans( get( 'is_' %&% compo)[ get( kinno %&% 's'),])
+      assign( sprintf( 'emp_Pr_%s_%s', compo, kinno), emp)
+      if( plot.) {
+        ana <- get( sprintf( 'Pr_%s_%s', compo, kinno))
+        plot( ana, emp, xlim=range( c( ana, emp)), ylim=range( c( ana, emp)),
+          xlab='', ylab='', main='', type='n', col='grey', asp=1)
+        points( ana, emp, col=ucols[ 'useN' %&% useN], pch='.', cex=2)
+        legend( 'topleft', legend=as.character( c( 3,4,6)),
+            col=c( 'blue', 'orange', 'lightgreen'), pch=rep( '.', 3), pt.cex=10)
+        abline( 0, 1)
+        title( sprintf( '%s %s X: theory Y: data', compo, kinno), sub=1)
+      }
+    }
+  }
+
+return( NULL)
+}
+
 
 #' @export
 "[.SPAgeno" <-
@@ -4828,7 +5230,6 @@ globalVariables( package="kinference",
                        ,"denom"
                        ,"dens_SPA"
                        ,"hist_pars"
-                       ,"multhresh"
                        ,"lv"
                        ,"lines"
                        ,"mids"

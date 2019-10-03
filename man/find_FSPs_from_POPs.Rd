@@ -4,11 +4,14 @@
 \alias{find_FSPs_from_HSPs}
 \alias{find_FSPs_from_POPs}
 \alias{find_FSPs_from_candiHSPs}
+\alias{find_FSPs_from_POPs_v2}
 \title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
 \usage{
 find_FSPs_from_HSPs(snpg, candiHSPs)
 
 find_FSPs_from_POPs(snpg, candiPOPs)
+
+find_FSPs_from_POPs_v2(snpg, candiPOPs, keep_indiv = FALSE)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}

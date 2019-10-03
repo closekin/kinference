@@ -13,3 +13,4 @@ calculate_IBD(lociar)
 This function has only the bare minimum of documentation necessary for roxygen to
 parse it. We should probably add some proper documentation here.
 }
+\keyword{internal}

@@ -19,3 +19,4 @@ predict_hsp_util(pIBD0, pIBD1, pIBD2, want_LOD_table = FALSE, k = 0.5)
 This function has only the bare minimum of documentation necessary for roxygen to
 parse it. We should probably add some proper documentation here.
 }
+\keyword{internal}

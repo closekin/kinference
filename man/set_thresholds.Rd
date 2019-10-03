@@ -18,3 +18,4 @@ function causes a NOTE from R CMD check, pertaining to the undefined global vari
 'keep_n'. set_thresholds() operates in mvbutils::mlocal({}) space, and every caller
 function has 'keep_n' correctly defined.
 }
+\keyword{internal}

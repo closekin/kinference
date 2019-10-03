@@ -21,3 +21,4 @@ This function has the bare minimum of documentation necessary for roxygen to par
 We should probably add proper documentation here. Ported from genocalldart April 2019,
 along with the 'genocalldart imports kinference' switch.
 }
+\keyword{internal}

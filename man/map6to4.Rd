@@ -20,3 +20,4 @@ From the name, it seems like this is the reverse operation of map4todummy6() -
 it allows you to convert 6-way genotypes (ABO, BBO, etc.) to 4-way genotypes
 (AA, BB, AB, BA), for use in functions that require one or the other.
 }
+\keyword{internal}

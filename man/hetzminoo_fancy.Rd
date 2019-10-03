@@ -5,7 +5,7 @@
 \title{Heterozygotes minus "OO" checking}
 \usage{
 hetzminoo_fancy(snpg, target = c("rich", "poor"), hist_pars = list(),
-  multhresh = 1, showPlot = TRUE)
+  showPlot = TRUE)
 }
 \arguments{
 \item{snpg}{a \code{\link[gbasics]{snpgeno}} object}
@@ -16,8 +16,6 @@ contaminated data (there are too many heterozygotes) and
 few heterozygotes).}
 
 \item{hist_pars}{parameters to pass to \code{\link{hist}}}
-
-\item{multhresh}{A param.}
 
 \item{showPlot}{show the plot? Default TRUE}
 }

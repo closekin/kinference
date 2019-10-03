@@ -21,3 +21,4 @@ inv_CDF_SPA2(p, K, dK, ddK, tol = formals(ridder)$tol)
 This function has only the bare minimum of documentation necessary for roxygen to
 parse it. We should probably add some proper documentation here.
 }
+\keyword{internal}
