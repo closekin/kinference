@@ -804,17 +804,16 @@ SEXP DUP_paircomps_lots(
           // Faster version could "unroll" this a bit and only do the if-check every 10 loci or so
           this_ndiff += (int)( geno2( iloc, j) != geno1( iloc, i));
 
-	  //          if( this_ndiff > max_diff_genos) { // not a dup // SB deletion
-	    // this if() makes things much faster, but kills ndiff counts above max_diff_genos
-	  // break; // SB deletion
-          // }; // SB deletion
+	  //  if( this_ndiff > max_diff_genos) { // not a dup // SB deletion
+	    // this if() makes things faster, but kills ndiff counts above max_diff_genos
+	  //break; // SB deletion
+          //}; // SB deletion
         };
 
         // here, input the new binning routine - SB
         which_bin = floor((this_ndiff - minbin) / binterval); // SB addition
         which_bin = max(0, min(which_bin, nbins)); // SB addition
         n_ndiff_in_bin[ which_bin] += 1; // SB addition
-
 
 	
         if( this_ndiff > max_diff_genos) {

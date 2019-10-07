@@ -782,7 +782,8 @@ return( snpg)
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
          subset2=subset1, max_diff_genos, keep_n=0.5*nrow(snpg),
-         nbins = 50, minbin = 0, binterval = (0.6*ncol(snpg))/nbins) {
+         nbins = 50, minbin = 0, binterval = (0.6*ncol(snpg))/nbins,
+         showPlot = TRUE) {
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
@@ -880,7 +881,12 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
     if(length(result$ndiff) == keep_n){
         message("Returning the ", keep_n, " most similar pairs, increase keep_n if more are required")
 ## warning("Number of returned duplicates equals keep_n. There may be more than keep_n duplicates. Increase keep_n to make sure you have them all!")
-  }
+    }
+
+    if( showPlot) {
+        plot( result@bins,log(result@n_ndiff_in_bin),type='S', xlab="n different genos",
+             ylab="log(Frequency)")
+    }
 
 return( result)
 }

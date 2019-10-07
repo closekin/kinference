@@ -8,7 +8,8 @@
 \usage{
 find_duplicates(snpg, subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1, max_diff_genos, keep_n = 0.5 * nrow(snpg),
-  nbins = 50, minbin = 0, binterval = (0.6 * ncol(snpg))/nbins)
+  nbins = 50, minbin = 0, binterval = (0.6 * ncol(snpg))/nbins,
+  showPlot = TRUE)
 
 find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   keep_n = 1e+05, nbins = 50, minbin, binterval)
