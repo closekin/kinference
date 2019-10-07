@@ -20,11 +20,22 @@ Surplus elements in \code{ij}, perhaps plus attributes \code{groups}
         class).
 }
 \description{
-Constructs equivalence classes from pairwise equivalences, and returns
-the "surplus" elements; if you then drop those elements, only one
-element from each eq-class will be retained. Requires 2-col matrix
-showing equivalent pairs. Code is taken from Numerical Recipes so I
-should rewrite it perhaps (original algorithm is by Knuth).
+Takes an input of row numbers as a two-column data.frame or matrix, or the
+output from `find_duplicates()`. In the latter case, will silently transform
+the input into a two-column matrix before proceeding. In any case, input
+data are row numbers in a `snpgeno` object, such that each duplicate pair
+occupies a row. Identifies 'groups' of equivalent observations (e.g., if i
+and j are duplicates, and j and k are duplicates, then i, j, and k are all
+equivalent). Outputs a vector of the row numbers for all-but-one of each
+group.
+}
+\details{
+Constructs equivalence classes from pairwise equivalences, and
+returns the "surplus" elements; if you then drop those elements,
+only one element from each eq-class will be retained. Requires
+2-col matrix showing equivalent pairs. Code is taken from Numerical
+Recipes so I should rewrite it perhaps (original algorithm is by
+Knuth).
 }
 \examples{
 pairs <- matrix( c(

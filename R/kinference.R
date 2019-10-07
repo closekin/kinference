@@ -606,11 +606,21 @@ returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 
 #' drop_dups_pairwise_equiv(): Equivalence class sifter
 #'
-#' Constructs equivalence classes from pairwise equivalences, and returns
-#' the "surplus" elements; if you then drop those elements, only one
-#' element from each eq-class will be retained. Requires 2-col matrix
-#' showing equivalent pairs. Code is taken from Numerical Recipes so I
-#' should rewrite it perhaps (original algorithm is by Knuth).
+#' Takes an input of row numbers as a two-column data.frame or matrix, or the
+#' output from `find_duplicates()`. In the latter case, will silently transform
+#' the input into a two-column matrix before proceeding. In any case, input
+#' data are row numbers in a `snpgeno` object, such that each duplicate pair
+#' occupies a row. Identifies 'groups' of equivalent observations (e.g., if i
+#' and j are duplicates, and j and k are duplicates, then i, j, and k are all
+#' equivalent). Outputs a vector of the row numbers for all-but-one of each
+#' group.
+#'
+#' Constructs equivalence classes from pairwise equivalences, and
+#' returns the "surplus" elements; if you then drop those elements,
+#' only one element from each eq-class will be retained. Requires
+#' 2-col matrix showing equivalent pairs. Code is taken from Numerical
+#' Recipes so I should rewrite it perhaps (original algorithm is by
+#' Knuth).
 #'
 #' @param ij 2-column matrix or data.frame; probably "row numbers" in a
 #'           dataset, though might work with character strings too
@@ -641,6 +651,11 @@ returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 #' @export
 
 "drop_dups_pairwise_equiv" <- function( ij, want_groups=FALSE) {
+
+  if(ncol(ij) == 3) {
+    ij <- ij[,2:3]
+  }  ## so that users don't have to specify it every time
+
   ij <- as.matrix( ij) # in case it was a data.frame
   uij <- unique( c( ij))
   ij[] <- match( ij, uij)
