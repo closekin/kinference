@@ -17,8 +17,8 @@ POP_wt_paircomps_lots <- function(geno1, geno2, w, symmo, eta, max_keep_wpsex, k
     .Call('_kinference_POP_wt_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, minbin, nbins, binterval)
 }
 
-DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_genos, keep_n) {
-    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos, keep_n)
+DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_genos, keep_n, minbin, nbins, binterval) {
+    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos, keep_n, minbin, nbins, binterval)
 }
 
 DUP_paircomps_incomplete_lots <- function(geno1, geno2, symmo, max_diff_ppn, limit) {

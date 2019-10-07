@@ -730,7 +730,10 @@ SEXP DUP_paircomps_lots(
   RawMatrix geno2, // n_loci, n_samps1,
   bool symmo, // should only be true if geno1==geno2
   double max_diff_genos, // max tolerated discrepant 4way genos to be a "true duplicate"
-  int keep_n // number of pairs to return
+  int keep_n, // number of pairs to return
+  double minbin, // SB insertion
+  int nbins, // SB insertion
+  double binterval // SB insertion
 ) {
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
@@ -747,6 +750,8 @@ SEXP DUP_paircomps_lots(
   int j_max;
   int iloc;
   int this_ndiff;
+  int which_bin; // SB insertion
+  IntegerVector n_ndiff_in_bin( nbins); //SB addition
 
   n_loci = geno1.nrow();
   n_samps1 = geno1.ncol();
@@ -756,7 +761,6 @@ SEXP DUP_paircomps_lots(
   if( symmo) {
     ASSERTO( n_samps1 == n_samps2);
   };
-
 
   // Need to grow the kept-values, so std::vector is apparently better
   //std::vector<double> big_similar;
@@ -799,11 +803,20 @@ SEXP DUP_paircomps_lots(
         for( iloc = 0; iloc < n_loci; iloc++) {
           // Faster version could "unroll" this a bit and only do the if-check every 10 loci or so
           this_ndiff += (int)( geno2( iloc, j) != geno1( iloc, i));
-          if( this_ndiff > max_diff_genos) { // not a dup
-        break;
-          };
+
+	  //          if( this_ndiff > max_diff_genos) { // not a dup // SB deletion
+	    // this if() makes things much faster, but kills ndiff counts above max_diff_genos
+	  // break; // SB deletion
+          // }; // SB deletion
         };
 
+        // here, input the new binning routine - SB
+        which_bin = floor((this_ndiff - minbin) / binterval); // SB addition
+        which_bin = max(0, min(which_bin, nbins)); // SB addition
+        n_ndiff_in_bin[ which_bin] += 1; // SB addition
+
+
+	
         if( this_ndiff > max_diff_genos) {
       continue;
         } else {
@@ -828,7 +841,7 @@ SEXP DUP_paircomps_lots(
 
           // as before
           n_kept += 1;
-        };
+        };	
       }; // if j not already known to be a dup
     }; // for j
   }; // for i
@@ -846,12 +859,12 @@ SEXP DUP_paircomps_lots(
     similaring_along.pop();
   }
 
-
   // make a list object using wrap() for the stdvectors
   return( Rcpp::List::create( 
     Rcpp::Named("big_similar")=wrap( big_similar),
     Rcpp::Named("big_i")=wrap( big_i),
-    Rcpp::Named("big_j")=wrap( big_j)
+    Rcpp::Named("big_j")=wrap( big_j),
+    Rcpp::Named("n_ndiff_in_bin")=n_ndiff_in_bin // SB addition
   ));
 
   END_RCPP

@@ -86,8 +86,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DUP_paircomps_lots
-SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_genos, int keep_n);
-RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_genosSEXP, SEXP keep_nSEXP) {
+SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_genos, int keep_n, double minbin, int nbins, double binterval);
+RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_genosSEXP, SEXP keep_nSEXP, SEXP minbinSEXP, SEXP nbinsSEXP, SEXP bintervalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -96,7 +96,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type symmo(symmoSEXP);
     Rcpp::traits::input_parameter< double >::type max_diff_genos(max_diff_genosSEXP);
     Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
-    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_genos, keep_n));
+    Rcpp::traits::input_parameter< double >::type minbin(minbinSEXP);
+    Rcpp::traits::input_parameter< int >::type nbins(nbinsSEXP);
+    Rcpp::traits::input_parameter< double >::type binterval(bintervalSEXP);
+    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_genos, keep_n, minbin, nbins, binterval));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -147,7 +150,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kinference_HSP_paircomps_lots", (DL_FUNC) &_kinference_HSP_paircomps_lots, 11},
     {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 9},
     {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 12},
-    {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 5},
+    {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 8},
     {"_kinference_DUP_paircomps_incomplete_lots", (DL_FUNC) &_kinference_DUP_paircomps_incomplete_lots, 5},
     {"_kinference_indiv_lglk_geno", (DL_FUNC) &_kinference_indiv_lglk_geno, 2},
     {"_kinference_K_indiv", (DL_FUNC) &_kinference_K_indiv, 4},

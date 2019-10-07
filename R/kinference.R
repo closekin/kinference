@@ -781,7 +781,8 @@ return( snpg)
 
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
-         subset2=subset1, max_diff_genos, keep_n=0.5*nrow(snpg)){
+         subset2=subset1, max_diff_genos, keep_n=0.5*nrow(snpg),
+         nbins = 50, minbin = 0, binterval = (0.6*ncol(snpg))/nbins) {
 
   # Sanity...
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
@@ -815,6 +816,8 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
   temp_snpg <- t( temp_snpg)
 
+  bins <- seq(minbin+binterval, (minbin + (nbins*binterval)), binterval)
+
   # Trying special-cases here to minimize copying
   if( my.all.equal( subset1, subset2)) {
     if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
@@ -838,7 +841,10 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno2= temp_snpg,
         symmo= TRUE,
         max_diff_genos = max_diff_genos,
-        keep_n = keep_n
+        keep_n = keep_n,
+        minbin = minbin,
+        nbins = nbins,
+        binterval = binterval
       ) ## DLM version, 24/9/18
 #  } else { # different subsets
 #    result <- DUP_paircomps_lots(
@@ -854,14 +860,21 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno2= temp_snpg[ , subset2],
         symmo= FALSE,
         max_diff_genos = max_diff_genos,
-        keep_n = keep_n
+        keep_n = keep_n,
+        minbin = minbin,
+        nbins = nbins,
+        binterval = binterval
       )
   }  ## DLM version, 24/9/18
+
+  n_ndiff_in_bin <- result$n_ndiff_in_bin
 
   # just return the data.frame with 3 columns, everything else goes in
   # the attributes
   result <- with( result, data.frame( ndiff=big_similar, i=big_i, j=big_j))
   result@call <- sys.call()
+  result@bins <- bins
+  result@n_ndiff_in_bin <- n_ndiff_in_bin
 
   # warning if we're running up against storage constraints
     if(length(result$ndiff) == keep_n){
@@ -3714,8 +3727,8 @@ return( retval)
 #' @param fsps2 the output of a call to \code{find_FSPs_from_POPs_v2()}
 #' @param bin hist bin width. Default 100. bin is used to define 'breaks' (along
 #'            with xlim, if given), so you can't manually pass in 'breaks'.
-#' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
-#' @param POPmean plot the mean PLOD for POPs? Default TRUE
+#' @param FSPmean plot the expected mean FP stat for FSPs? Default TRUE
+#' @param POPmean plot the expected mean FP stat for POPs? Default TRUE
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_loghisto
 #' @export

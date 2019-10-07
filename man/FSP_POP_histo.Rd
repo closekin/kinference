@@ -13,9 +13,9 @@ FSP_POP_histo(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE,
 \item{bin}{hist bin width. Default 100. bin is used to define 'breaks' (along
 with xlim, if given), so you can't manually pass in 'breaks'.}
 
-\item{FSPmean}{plot the mean PLOD for FSPs? Default TRUE}
+\item{FSPmean}{plot the expected mean FP stat for FSPs? Default TRUE}
 
-\item{POPmean}{plot the mean PLOD for POPs? Default TRUE}
+\item{POPmean}{plot the expected mean FP stat for POPs? Default TRUE}
 
 \item{...}{additional pars, passed to \code{hist()}}
 }
