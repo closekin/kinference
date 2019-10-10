@@ -6,7 +6,7 @@
 \usage{
 HSP_histo(hsps, lb, ub = max(hsps$PLOD) + 10, fullsib_cut, bin = 5,
   HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE,
-  ...)
+  main = "", ...)
 }
 \arguments{
 \item{hsps}{the output of a call to \code{find_HSPs()}}

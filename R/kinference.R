@@ -1413,10 +1413,10 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 ##    qq <- (2:nbins-1)/nbins
 ##    bins <- snpg@Kenv$inv_CDF( qq)
     ##  }
-    bins <- seq(minbin+binterval+binterval, (minbin + (nbins*binterval) + binterval), binterval)
+    bins <- seq(minbin+binterval, (minbin + (nbins*binterval)), binterval)
     ## effing zero-base, is what I should say here...
-    ## the 'minbin + binterval' offsets the zero-base. The additional '+ binterval' offsets
-    ## the fact that bin labels denote the highest point in their range.
+    ## the 'minbin + binterval' offsets the fact that bin labels denote the highest point
+    ## in their range.
   binprobs <- snpg@Kenv$CDF( bins)
 
   # Trying special-cases here to minimize copying
@@ -1769,6 +1769,7 @@ return( result)
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     keep_n=0.5*nrow(snpg),
     nbins,
+    maxbin = NULL,
     quick=TRUE,
     WPSEX_UP_POP_balance=0.99) {
 ###################
@@ -1873,22 +1874,28 @@ stopifnot( all( ww>0))
 
   if( quick) {
     K <- compile_vecless( K(0))
-    dK <- compile_vecless( dK(0))
+    dK <- compile_vecless( dK(0)) ## dK(0) should be the mean of wpsex
     ddK <- compile_vecless( ddK(0))
   }
 
   symmo <- my.all.equal( subset1, subset2)
-  inv_CDF <- renorm_SPA_cumul( K, dK, ddK)$inv_CDF
+  ## inv_CDF <- renorm_SPA_cumul( K, dK, ddK)$inv_CDF
 
-  set_thresholds( keeping='lo') # cf 'hi' for HSPs
+  set_thresholds( keeping='lo') # cf 'hi' for HSPs ## something ought to be done here, probably
 
   # Prepare for diagnostics of #excl
   # prolly not needed but HSP C code already does it
-  qq <- (2:nbins-1)/nbins
-  pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
-    minbin <- min(pciles) ## SB insertion
-    nbins <- length(qq) ## SB insertion
-    binterval <- (max(pciles) - min(pciles)) / length(qq) ## SB edit: evenly-spaced bins over
+##  qq <- (2:nbins-1)/nbins ## looks weird. Trying w/o the -1 in 2:nbins-1...
+##  pciles <- inv_CDF( qq) # inv_CDF_SPA2 may struggle with LOWER tail...
+    ##    minbin <- min(pciles) ## SB insertion
+
+    if(is.null(maxbin)) {
+        maxbin  <-  dK(0)+6*sqrt(ddK(0))
+    }  ## sets the upper limit, defaulting to six-sigma above the expected mean wpsex
+    ## dK(0) gives expected mean wpsex
+    minbin <- 0  ## and thus it should stay, lest errors
+    ## nbins <- length(qq) ## SB insertion. Redefines nbins: should probably be killed.
+    binterval <- (maxbin - minbin) / nbins ## SB edit: evenly-spaced bins over
     ## pre-existing range, but what defined that range, and what should it be?
 
   # Trying special-cases here to minimize copying
@@ -1908,7 +1915,7 @@ stopifnot( all( ww>0))
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos),
         minbin = minbin,
-        nbins = nbins+1, ## bloody zero-base
+        nbins = nbins, ## bloody zero-base
         binterval = binterval
       )
   } else { # different subsets
@@ -1924,7 +1931,7 @@ stopifnot( all( ww>0))
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos),
         minbin = minbin,
-        nbins = nbins+1, ## bloody zero-base
+        nbins = nbins, ## bloody zero-base
         binterval = binterval
       )
   }
@@ -1936,7 +1943,7 @@ stopifnot( all( ww>0))
   }
 
   n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB addition
-  bins <- seq(minbin+binterval, minbin+(nbins*binterval)+binterval, binterval)
+  bins <- seq(minbin+binterval, minbin+(nbins*binterval), binterval)
   ## SB addition. Bloody zero-base.
 
   # construct the result
@@ -3704,13 +3711,13 @@ return( retval)
 
 "HSP_histo" <-
     function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
-             HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, ...) {
+             HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
         hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
-                       col="lightgrey",xlab="PLOD", ...)
+                       col="lightgrey",xlab="PLOD", main = main, ...)
         if( HSPmean) {
             E.hsp = hsps@mean_HSP
             abline(v=E.hsp,lwd=2,col=8)

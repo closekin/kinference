@@ -13,6 +13,7 @@ using namespace std;
 #define STRINGIZE(x) STRINGIZE2(x)
 #define STRINGIZE2(x) #x
 #define LINE_STRING STRINGIZE(__LINE__)
+// #define MVBDEBUG
 bool stoppity(
     std::string errmsg
 ){
@@ -39,7 +40,7 @@ SEXP paircomps(
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <../genobasics-vistu/r_int_defs_debug.h> // gonna need to find a search path.
 #endif
     int npc; // #comps
     int n_geno;
@@ -281,7 +282,7 @@ SEXP HSP_paircomps_lots(
 
       // here, we need to input the new solution re: issue #36
       which_bin = floor((this_PLOD - minbin) / binterval); // SB addition. Goddamn 0-base.
-      which_bin = max(0, min(which_bin, nbins)); // SB addition
+      which_bin = max(0, min(which_bin, nbins-1)); // SB addition
       n_PLODs_in_bin[ which_bin] += 1; // SB addition
       
     }; // for j
@@ -683,7 +684,7 @@ SEXP POP_wt_paircomps_lots(
 
       // here, input the new solution re: issue 36
       which_bin = floor((this_wpsex - minbin) / binterval); // SB addition
-      which_bin = max(0, min(which_bin, nbins)); // SB addition
+      which_bin = max(0, min(which_bin, nbins-1)); // SB addition
       n_wpsex_in_bin[ which_bin] += 1; // SB addition
     }; // for j
   }; // for i
@@ -812,7 +813,7 @@ SEXP DUP_paircomps_lots(
 
         // here, input the new binning routine - SB
         which_bin = floor((this_ndiff - minbin) / binterval); // SB addition
-        which_bin = max(0, min(which_bin, nbins)); // SB addition
+        which_bin = max(0, min(which_bin, nbins-1)); // SB addition
         n_ndiff_in_bin[ which_bin] += 1; // SB addition
 
 	

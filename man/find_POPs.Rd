@@ -15,7 +15,7 @@ find_HSPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
   keep_n = 1e+05, nbins = 50, minbin, binterval)
 
 find_POPs(snpg, subset1 = 1 \%upto\% nrow(snpg), subset2 = subset1,
-  keep_n = 0.5 * nrow(snpg), nbins, quick = TRUE,
+  keep_n = 0.5 * nrow(snpg), nbins, maxbin = NULL, quick = TRUE,
   WPSEX_UP_POP_balance = 0.99)
 }
 \arguments{
