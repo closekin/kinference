@@ -29,7 +29,8 @@ and j are duplicates, and j and k are duplicates, then i, j, and k are all
 equivalent). Outputs a vector of the row numbers for all-but-one of each
 group.
 }
-\details{
+\section{originalDocumentation}{
+
 Constructs equivalence classes from pairwise equivalences, and
 returns the "surplus" elements; if you then drop those elements,
 only one element from each eq-class will be retained. Requires
@@ -37,6 +38,7 @@ only one element from each eq-class will be retained. Requires
 Recipes so I should rewrite it perhaps (original algorithm is by
 Knuth).
 }
+
 \examples{
 pairs <- matrix( c(
 294, 289,

@@ -42,8 +42,20 @@ the data.}
 \item{keep_n}{Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
 a warning if the number of identified pairs equals keep_n.}
 
-\item{nbins}{number of bins to group the stats from the sub-'eta' pairs into. The
-bins will be set at quantiles of the expected distribution for UPs.}
+\item{nbins}{find_blah functions summarise their results into bins (in the part of the
+range where individual results are uninteresting), as well as returning
+individual results (in the part of the range where individual results are
+interesting). \code{ nbins} sets the number of bins to use.}
+
+\item{minbin}{find_blah functions summarise their results into bins (in the part of the
+range where individual results are uninteresting), as well as returning
+individual results (in the part of the range where individual results are
+interesting). \code{ minbin} sets the lower limit of the lowest bin.}
+
+\item{binterval}{find_blah functions summarise their results into bins (in the part of
+the range where individual results are uninteresting), as well as
+returning individual results (in the part of the range where individual
+results are interesting). \code{ binterval} sets the bin width.}
 
 \item{quick}{whether to "compile" the functions for SPA, which use the magic
 \code{:=} operator. It speeds up the SPA bit but almost all the time
@@ -80,9 +92,6 @@ specify something silly for \code{rough_n_pairs_to_keep}.}
 
 \item{eta, keep_thresh}{see \bold{Description}. Can specify either or both. These override
 \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.}
-
-\item{bins}{binning for PLODs (we throw away ones outside the range and bin them
-according to this within)}
 }
 \value{
 a \code{data.frame} with 3 columns: statistic (\code{PLOD} or

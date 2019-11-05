@@ -281,8 +281,8 @@ SEXP HSP_paircomps_lots(
       // end SB deletion
 
       // here, we need to input the new solution re: issue #36
-      which_bin = floor((this_PLOD - minbin) / binterval); // SB addition. Goddamn 0-base.
-      which_bin = max(0, min(which_bin, nbins-1)); // SB addition
+      which_bin = floor((this_PLOD - minbin) / binterval); // SB addition
+      which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
       n_PLODs_in_bin[ which_bin] += 1; // SB addition
       
     }; // for j
@@ -684,7 +684,7 @@ SEXP POP_wt_paircomps_lots(
 
       // here, input the new solution re: issue 36
       which_bin = floor((this_wpsex - minbin) / binterval); // SB addition
-      which_bin = max(0, min(which_bin, nbins-1)); // SB addition
+      which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
       n_wpsex_in_bin[ which_bin] += 1; // SB addition
     }; // for j
   }; // for i
@@ -813,7 +813,7 @@ SEXP DUP_paircomps_lots(
 
         // here, input the new binning routine - SB
         which_bin = floor((this_ndiff - minbin) / binterval); // SB addition
-        which_bin = max(0, min(which_bin, nbins-1)); // SB addition
+        which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
         n_ndiff_in_bin[ which_bin] += 1; // SB addition
 
 	

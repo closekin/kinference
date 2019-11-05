@@ -301,8 +301,6 @@ return( pp6_err)
 
 #' Find chains in HSPs; summarize sib-groups
 #'
-#' Find chains of relatives of fish `seed`.
-#'
 #' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
 #' \code{chain_pairwise} organizes them into chains within which each sample
 #' can be linked to another by a succession of direct pairwise links. The
@@ -615,6 +613,7 @@ returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 #' equivalent). Outputs a vector of the row numbers for all-but-one of each
 #' group.
 #'
+#' @section originalDocumentation:
 #' Constructs equivalence classes from pairwise equivalences, and
 #' returns the "surplus" elements; if you then drop those elements,
 #' only one element from each eq-class will be retained. Requires
@@ -1643,8 +1642,6 @@ return( result)
 #'            \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.
 #' @param keep_n Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
 #'               a warning if the number of identified pairs equals keep_n.
-#' @param nbins number of bins to group the stats from the sub-'eta' pairs into. The
-#'              bins will be set at quantiles of the expected distribution for UPs.
 #' @param max_diff_genos (\code{find_duplicates}) max number of discrepant 4-way
 #'                       genotypes to tolerate in "identical" fish. Try increasing
 #'                       this from say 10 upwards, and hopefully nothing much will
@@ -1655,8 +1652,22 @@ return( result)
 #' @param quick whether to "compile" the functions for SPA, which use the magic
 #'              \code{:=} operator. It speeds up the SPA bit but almost all the time
 #'              is spent on actual POP-finding...
-#' @param bins binning for PLODs (we throw away ones outside the range and bin them
-#'             according to this within)
+#' @param nbins find_blah functions summarise their results into bins (in the part of the
+#'              range where individual results are uninteresting), as well as returning
+#'              individual results (in the part of the range where individual results are
+#'              interesting). \code{ nbins} sets the number of bins to use.
+#' @param binterval find_blah functions summarise their results into bins (in the part of
+#'                  the range where individual results are uninteresting), as well as
+#'                  returning individual results (in the part of the range where individual
+#'                  results are interesting). \code{ binterval} sets the bin width.
+#' @param minbin find_blah functions summarise their results into bins (in the part of the
+#'               range where individual results are uninteresting), as well as returning
+#'               individual results (in the part of the range where individual results are
+#'               interesting). \code{ minbin} sets the lower limit of the lowest bin.
+#' @param maxbin find_blah functions summarise their results into bins (in the part of the
+#'               range where individual results are uninteresting), as well as returning
+#'               individual results (in the part of the range where individual results are
+#'               interesting). \code{ maxbin} sets the lower limit of the highest bin.
 #'
 #' @return a \code{data.frame} with 3 columns: statistic (\code{PLOD} or
 #'         \code{wpsex} or \code{ndiff} number of mismatching genotypes),
@@ -1915,7 +1926,7 @@ stopifnot( all( ww>0))
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos),
         minbin = minbin,
-        nbins = nbins, ## bloody zero-base
+        nbins = nbins,
         binterval = binterval
       )
   } else { # different subsets
@@ -1931,7 +1942,7 @@ stopifnot( all( ww>0))
         AAO= match( 'AA', snpg@diplos), # NB NB: AO has been recoded to AA
         BBO= match( 'BB', snpg@diplos),
         minbin = minbin,
-        nbins = nbins, ## bloody zero-base
+        nbins = nbins,
         binterval = binterval
       )
   }
@@ -2119,16 +2130,17 @@ return( c( whmo))
 
 #' hsp_power(): Preparation for kin-finding
 #'
+#' @section hsp_power:
 #' \code{hsp_power} computes locus-wide LOD and PUP tables for each possible
 #' genopair, and adds them to the "locinfo" attribute. It also calculates mean
 #' and variance of LOD, and those can be used to calculate "Ediff" and
 #' "SEdiff". It's needed before \code{\link{hetzminoo_fancy}} and
 #' \code{prepare_PLOD_SPA}.
 #'
+#' @section prepare_PLOD_SPA:
 #' \code{prepare_PLOD_SPA} prepares a \code{snpgeno} for "exact" (SPA)
 #' calculations of the null distro of PLOD (ie for true UPs). to a
 #' \code{snpgeno}, ready for . It's needed before \code{\link{find_HSPs}}.
-#'
 #' The \code{useN} field of \code{lociar@locinfo} determines whether 6-way,
 #' 4-way, or 3-way genotypes are assumed in calculating LOD tables.
 #'
@@ -3705,6 +3717,7 @@ return( retval)
 #' @param HSPdist plot the distribution of PLOD for HSPs? Default TRUE
 #' @param POPmean plot the mean PLOD for POPs? Default TRUE
 #' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
+#' @param main passed straight to \code{hist()}
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_loghisto
 #' @export

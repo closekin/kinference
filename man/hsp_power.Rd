@@ -27,17 +27,22 @@ reduce if reeeeally slow.)}
         SPA calculations
 }
 \description{
+hsp_power(): Preparation for kin-finding
+}
+\section{hsp_power}{
+
 \code{hsp_power} computes locus-wide LOD and PUP tables for each possible
 genopair, and adds them to the "locinfo" attribute. It also calculates mean
 and variance of LOD, and those can be used to calculate "Ediff" and
 "SEdiff". It's needed before \code{\link{hetzminoo_fancy}} and
 \code{prepare_PLOD_SPA}.
 }
-\details{
+
+\section{prepare_PLOD_SPA}{
+
 \code{prepare_PLOD_SPA} prepares a \code{snpgeno} for "exact" (SPA)
 calculations of the null distro of PLOD (ie for true UPs). to a
 \code{snpgeno}, ready for . It's needed before \code{\link{find_HSPs}}.
-
 The \code{useN} field of \code{lociar@locinfo} determines whether 6-way,
 4-way, or 3-way genotypes are assumed in calculating LOD tables.
 
@@ -48,6 +53,7 @@ whatever-is-needed later on-the-fly. Updated July 2019: have just added
 P2share to the mix, and added several 'whatever-is-neededs' to the output
 of prepare_PLOD_SPA.
 }
+
 \examples{
 ## Need some examples!
 }

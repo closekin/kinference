@@ -26,9 +26,6 @@ samples are on the bottom and right. \code{get_chain} returns the row-subset
 of \code{thing} that is chained to \code{seed}.
 }
 \description{
-Find chains of relatives of fish `seed`.
-}
-\details{
 For checking veracity of \emph{potential} half-sibs or other kin-pairs.
 \code{chain_pairwise} organizes them into chains within which each sample
 can be linked to another by a succession of direct pairwise links. The
@@ -40,7 +37,8 @@ pairwise links between the other chain-members are weak. You'd only run
 used) within a particular suspect range, so each chain may have
 false-negatives (i.e. missing direct links), but the general idea should be
 clear.
-
+}
+\details{
 \code{get_chain} finds the chain for one specific sample.
 }
 \keyword{misc}

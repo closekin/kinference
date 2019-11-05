@@ -29,6 +29,8 @@ so you can't pass 'breaks' via \code{...}}
 
 \item{FSPmean}{plot the mean PLOD for FSPs? Default TRUE}
 
+\item{main}{passed straight to \code{hist()}}
+
 \item{...}{additional pars, passed to \code{hist()}}
 }
 \description{
