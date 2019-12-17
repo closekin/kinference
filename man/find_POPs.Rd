@@ -57,6 +57,11 @@ the range where individual results are uninteresting), as well as
 returning individual results (in the part of the range where individual
 results are interesting). \code{ binterval} sets the bin width.}
 
+\item{maxbin}{find_blah functions summarise their results into bins (in the part of the
+range where individual results are uninteresting), as well as returning
+individual results (in the part of the range where individual results are
+interesting). \code{ maxbin} sets the lower limit of the highest bin.}
+
 \item{quick}{whether to "compile" the functions for SPA, which use the magic
 \code{:=} operator. It speeds up the SPA bit but almost all the time
 is spent on actual POP-finding...}

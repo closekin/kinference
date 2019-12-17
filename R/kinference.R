@@ -1352,9 +1352,11 @@ stopifnot( is.numeric( subset1) && is.numeric( subset2))
 stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
     stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
-    hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
-    PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
-                                                    PUP6, PUP4, PUP3))
+    hspPower_change <- round(snpg@hspPower_checksum) != round(with(snpg@locinfo,
+                                                                   sum(pbonzer, snerr, useN)))
+    PLODSPA_change <- round(snpg@PLODSPA_checksum) != round(with(snpg@locinfo,
+                                                                 sum(useN, LOD6, LOD4, LOD3,
+                                                                     PUP6, PUP4, PUP3)))
 
     if(hspPower_change | PLODSPA_change) {
         warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
@@ -4504,6 +4506,7 @@ return( lociar)
 #' @param which_genotypes e.g., genotypes_ambig. If no C-genos are requested, pC is forced to 0 so
 #'                        new O includes C.
 #' @keywords internal
+#' @export
 
 "make_pgeno" <-
 function( pA, pB, pC, which_genotypes) {
