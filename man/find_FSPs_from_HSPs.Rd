@@ -1,0 +1,57 @@
+\name{find_FSPs_from_HSPs}
+\alias{find_FSPs_from_HSPs}
+\alias{find_FSPs_from_POPs}
+\alias{find_FSPs_from_candiHSPs}
+\alias{find_FSPs_from_POPs_v2}
+\title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
+\description{For pairs already picked as likely parent-offspring pairs (POPs), i.e., those with a weighted pseudo-exclusion (WPSEX) statistic less than some threshold, they might be full sibling pairs (FSPs). This function checks potential POPs with very low WPSEX values for their potential to be FSPs.
+}
+\usage{
+find_FSPs_from_HSPs(snpg, candiHSPs)
+find_FSPs_from_POPs(snpg, candiPOPs)
+find_FSPs_from_POPs_v2(snpg, candiPOPs, keep_indiv = FALSE)
+}
+\arguments{
+\item{  snpg}{a \code{snpgeno} object}
+\item{  candiHSPs}{candidate kin-pairs- normally, a dataframe with rows being pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again one pair).}
+\item{  candiPOPs}{candidate kin-pairs- normally, a dataframe with rows being pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again one pair).}
+}
+\details{
+The general idea of find_FSPs_from_POPs() is that pairs which are \emph{either} POPs \emph{or} FSPs should stand out very clearly from everything else, via find_POPs(). Then the job is to pick between those possibilities. The workflow is supposed to be:
+
+\itemize{
+\item nail POPs/FSPs first with find_POPs()
+\item pick between them with find_FSPs_from_POPs() (update: this doesn't work very well...)
+\item look for HSPs and filter out already-known POPs and FSPs
+}
+
+Hence the other function, find_FSPs_from_HSPs(), is theoretically unnecessary in that you have already run find_POPs() and find_FSPs_from_POPs() so you should know which of your "HSPs" are really something else. But, nevertheless it's handy to have.
+
+Both functions return expected values under different possible kin-types (not variances, since these cannot be predicted for all kin-types).
+
+The statistic for find_FSPs_from_POPs() is based on the weighted sum of the number of exactly-matching 4-way genotypes, with weights chosen to have high power for this particular discrimination. Weighting is optimized for the unlikely scenario that POPs and FSPs are equally likely a priori, but in practice the weights are not sensitive to this. The test is deliberately crude and robust- e.g. it avoids exclusion-based checks- on the assumption that you have enough loci to pick HSPs, so the more-related kin-types should be slam-dunks. \bold{But} it doesn't seem powerful enough. More worked needed...
+
+find_FSPs_from_HSPs() again uses 4-way genotypes only (to avoid having to worry about errors) but in a properly optimal PLOD designed for FSP/HSP discrimination- its expectation is positive for FSPs and negative for HSPs. Theoretical means for those are returned as attributes (variances cannot be predicted). Haven't added means for POPs or UPs since you're not "supposed" to have those in the mix by the time you run find_FSPs_from_HSPs(), but maybe I should fix that at some point.
+}
+\examples{
+# pops_or_fsps <- find_POPs( mysnpg, ...)
+## do histograms etc to find likely ones
+# discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps \%where\% (wpsex < 0.042))
+# hist( discro, nc=30, col='grey')
+# abline( v=discro@E_POP, col='red')
+# text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
+# abline( v=discro@E_FSP, col='lightblue')
+# text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+# abline( v=discro@E_HSP, col='pink', lty='dashed')
+# text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
+###
+# h_or_f <- find_HSPs( mysnpg, ...)
+## do histograms etc to find likely sib pairs
+# discro2 <- find_FSPs_from_HSPs(  mysngp, h_or_f \%where\% (PLOD > 55))
+# hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
+# abline( v=discro2@E_HSP, col='orange')
+# text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
+# abline( v=discro2@E_FSP, col='lightblue')
+# text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+}
+\keyword{misc}

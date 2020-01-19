@@ -1,50 +1,50 @@
-# This is package kinference
+# This is package kinference 
 
-#".onLoad" <-
-#function( libname, pkgname) {
-#  oa <- base::system.file( sprintf( '/R/load_%s_dll.R', pkgname),
-#      package=pkgname, lib.loc=libname)
-#  if( !nzchar( oa)) {
-#    oa <- base::system.file( sprintf( '/R/load_%s_dll.r', pkgname),
-#        package=pkgname, lib.loc=libname)
-#  }
-#
-#  base::source( oa, local=TRUE)
-##}
 
-#' kinference
-#'
-#' Kin-finding pairwisely for close-kin mark-recapture
-#'
+#' Pairwise kin-finding
+#' 
+#' Find pairs of closely-related kin among large samples of genotypes. Also
+#' some QC functions: see \code{<<blah>>}. <ETC>. See vignette
+#' \code{<some_vignette>}.
+#' 
+#' 
+#' @rdname 00kinference
 #' @docType package
+#' @aliases kinference kinference-package
 #' @author Mark V Bravington, David L Miller, Shane M Baylis
-#' @import Rcpp atease mvbutils gbasics vecless debug abind BH
-#' @importFrom Rcpp sourceCpp evalCpp
-#' @useDynLib kinference
-#' @name kinference
+#' @keywords misc
 NULL
 
-"old.onLoad" <-
-function( libname, pkgname) {
-  cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
-  if( !exists( 'onload_autowrap', asNamespace( pkgname), inherits=FALSE, mode='function')) {
-    # then source() the R script and create it here...
-    my_dll <- getOption( sprintf( '%s_debug_C', FALSE))
-    oa <- system.file( 'R/onload_autowrap.R', package=pkgname, lib.loc=libname)
-    eval( substitute( source( oa, local=TRUE), list( oa=oa)), asNamespace( pkgname))
-  }
 
-  onload_autowrap( pkgname, libname)
-}  ## ported from MVB_kinference 25/9/18
+".onLoad" <-
+function( libname, pkgname) {
+## Allows "developer overrides" when debugging C code
+  Cloader <- sprintf( 'run_Cloaders_%s', pkgname)
+  if( exists( Cloader, envir=asNamespace( pkgname), mode='function')) {
+    get( Cloader)()
+  }
+}
+
+
+
+
+".onUnload" <-
+function( libpath) {
+  # In theory, could figure out the right argument from libpath, but...
+  library.dynam.unload( 'kinference', .__NAMESPACE__.$path)
+}
+
+
 
 
 #' add_pairprob_error(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it. We should probably add some proper documentation here. MVB: no--- it's not exported and not meant to be usered ;) !
+#' We can/should give (more) comments in the code, but not via R-sodding-oxygen...
 #' @keywords internal
 #' @param nlocal a param
-
+#' @export
 "add_pairprob_error" <-
 function( nlocal=sys.parent()) mlocal({
 ## Needs pp_true and snerr
@@ -119,6 +119,9 @@ function( nlocal=sys.parent()) mlocal({
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
 
+
+
+
 #' calc_g6probs_IBD0_scalar(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -130,7 +133,7 @@ function( nlocal=sys.parent()) mlocal({
 #' @keywords internal
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
-
+#' @export
 "calc_g6probs_IBD0_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -174,17 +177,23 @@ return( pp6_err)
 }
 
 
+
+
 #' calc_g6probs_IBD1_scalar(): Bare documentation
-#'
-#' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
-#'
+#' 
+#' This function has only the bare minimum of documentation necessary for
+#' roxygen to parse it. We should probably add some proper documentation here.
+#' MVB: no we shouldn't! Roxygen shouldn't be going near this function, which
+#' is meant to be purely for internal use inside the package. Any
+#' necessary-for-the-maintainer documentation should go just into comments
+#' inside the function, and doesn't need to follow clunky R-doco rules. [In
+#' particular, this sentence that I'm writing should ultimately not exist ;) !]
+#' 
+#' 
 #' @param P a param
 #' @param snerr a param
 #' @param record TRUE or FALSE
-#' @keywords internal
-#' @importFrom vecless set_recording
-
+#' @export
 "calc_g6probs_IBD1_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -243,6 +252,9 @@ stopifnot( my.all.equal( names( P), names( ABCO)))
 return( pp6_err)
 }
 
+
+
+
 #' calc_g6probs_IBD2_scalar(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -254,7 +266,7 @@ return( pp6_err)
 #' @keywords internal
 #' @importFrom vecless set_recording
 #' @importFrom mvbutils %&%
-
+#' @export
 "calc_g6probs_IBD2_scalar" <-
 function( P, snerr, record=FALSE) {
 ## SCALAR-ONLY VERSION... this is hard enough!
@@ -299,6 +311,8 @@ return( pp6_err)
 }
 
 
+
+
 #' Find chains in HSPs; summarize sib-groups
 #'
 #' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
@@ -328,9 +342,7 @@ return( pp6_err)
 #' not. The rows and columns of each matrix are sorted so that the linkiest
 #' samples are on the bottom and right. \code{get_chain} returns the row-subset
 #' of \code{thing} that is chained to \code{seed}.
-#' @keywords misc
 #' @export
-
 "chain_pairwise" <-
 function( thing) {
   extract.named( thing[cq(i,j)])
@@ -369,7 +381,10 @@ function( thing) {
 
   # Biggest chains last--- easiest to see!
 pairmats[ order( do.on( pairmats, nrow( .)))]
-}  ## chain_pairwise ported from MVB_kinference 24/11/18
+}
+
+
+
 
 #' check_FPosity(): QC for kin-finding
 #'
@@ -399,16 +414,15 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 #' ## highlight some known suspects
 #' # abline( v=Pr_Fpos_5[ suspects], col='red')
 #' @export
-
 "check_FPosity" <-
-    function( snpg, nsim=0){
+function( snpg, nsim=0){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot( 'Kenv' %in% names( attributes( snpg)))
 
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
-  kinference::define_genotypes()
+  define_genotypes()
   for( iwhat in cq( LOD, PUP, PUPLOD, PUPLOD2)) {
     assign( 'O' %&% iwhat, snpg@Kenv[[ iwhat]])
   }
@@ -565,41 +579,6 @@ return( result)
 }
 
 
-#' crapometer(): splice hetzminoo_fancy and ilglk_geno for ?better crap-detection
-#'
-#' crapometer is a bivariate combination of hetzminoo_fancy and ilglk_geno, which may be
-#' better at identifying 'suspect' samples. It may or may not end up in the final
-#' kinference toolchain.
-#'
-#' @param snpg a param
-#' @param focusees a param
-#' @param boring a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils for \code{ \%upto\% }.
-#' @export
-
-"crapometer" <-
-function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
-## Bivariate combo of hetzminoo_fancy and ilglk_geno; perhaps this will be better for
-# finding suspect samples. But seemingly not much (for school shark), so I haven't exported itfi.
-
-  hmfr <- hetzminoo_fancy( snpg, 'rich', hist_pars=list( plot=FALSE)) # still plots...
-  lglk <- kinference::ilglk_geno( snpg, indiv_lglk_hist_pars=list( plot=FALSE))
-
-  # Could use SPA to "Gaussianize"...
-  stat <- cbind( hmfr, lglk)
-  mdull <- colMeans( stat[ boring,]) # mean() doesnt' work column-wise, unlike var()...
-  vdull <- var( stat[ boring, ])
-  sstat[ f, s]:= stat[ f, s] - mdull[ s]
-
-  # should do this with cholesky but the doco is SO SHITE
-  iv <- solve( vdull)
-  # dist <- sstat %*% (iv %*% t( sstat)) god knows what the bloody syntax is supposed to bloody be
-  dist[ f]:= sstat[ f, s] %[s]% iv[ s, s1] %[s1]% sstat[ f, s1]
-
-  hist( dist[ boring], nc=50)
-  abline( v=dist[ focusees], col='red')
-
-returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
-} ## Crapometer imported from MVB2 24/9/18
 
 
 #' drop_dups_pairwise_equiv(): Equivalence class sifter
@@ -648,8 +627,8 @@ returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
 #' #[1] 904 905 857
 #' @importFrom mvbutils do.on %except% FOR
 #' @export
-
-"drop_dups_pairwise_equiv" <- function( ij, want_groups=FALSE) {
+"drop_dups_pairwise_equiv" <-
+function( ij, want_groups=FALSE) {
 
   if(ncol(ij) == 3) {
     ij <- ij[,2:3]
@@ -712,6 +691,8 @@ return( drops)
 }
 
 
+
+
 #' est_ALF_6way(): estimation of ALFs given 6-way genotypes and snerr
 #'
 #' Performs 'straight' estimation of ALFs, given 6-way genotypes and snerr. Won't
@@ -722,7 +703,6 @@ return( drops)
 #' @param snpg a snpgeno object with 'snerr' included
 #' @param control a param. Defaults to an empty list
 #' @export
-
 "est_ALF_6way" <-
 function( snpg, control=list()) {
 #### "Straight" estimation of ALFs given 6way genotypes and precalced snerr
@@ -783,16 +763,16 @@ function( snpg, control=list()) {
 
   snpg$locinfo$pbonzer <- pbonzer
 return( snpg)
-}  ## est_ALF_6way imported from MVB2 24/9/18
+}
+
 
 
 
 #' @rdname find_POPs
-#' @export
 #' @importFrom gbasics sqr
 #' @importFrom atease @
 #' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal %without.name%
-
+#' @export
 "find_duplicates" <-
 function(snpg, subset1=1 %upto% nrow( snpg),
          subset2=subset1, max_diff_genos, keep_n=0.5*nrow(snpg),
@@ -906,6 +886,8 @@ return( result)
 }
 
 
+
+
 #' find_dups_with_missing(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -921,7 +903,6 @@ return( result)
 #' @param max_diff_ppn a param
 #' @param limit a param. Default 10000.
 #' @export
-
 "find_dups_with_missing" <-
 function( snpg,
   subset1= 1 %upto% nrow( snpg),
@@ -1008,11 +989,86 @@ stop( sprintf( 'Hit limit=%i dups by %i-th sample; aborting', limit, result))
   result@call <- sys.call()
 
 return( result)
-} ## find_dups_with_missing ported in during merge 24/9/18
+}
 
 
 
-#' @rdname find_FSPs_from_POPs
+
+#' Find full-sib pairs among parent-offspring pairs or among half-sib pairs
+#' 
+#' For pairs already picked as likely parent-offspring pairs (POPs), i.e.,
+#' those with a weighted pseudo-exclusion (WPSEX) statistic less than some
+#' threshold, they might be full sibling pairs (FSPs). This function checks
+#' potential POPs with very low WPSEX values for their potential to be FSPs.
+#' 
+#' The general idea of find_FSPs_from_POPs() is that pairs which are
+#' \emph{either} POPs \emph{or} FSPs should stand out very clearly from
+#' everything else, via find_POPs(). Then the job is to pick between those
+#' possibilities. The workflow is supposed to be:
+#' 
+#' \itemize{ \item nail POPs/FSPs first with find_POPs() \item pick between
+#' them with find_FSPs_from_POPs() (update: this doesn't work very well...)
+#' \item look for HSPs and filter out already-known POPs and FSPs }
+#' 
+#' Hence the other function, find_FSPs_from_HSPs(), is theoretically
+#' unnecessary in that you have already run find_POPs() and
+#' find_FSPs_from_POPs() so you should know which of your "HSPs" are really
+#' something else. But, nevertheless it's handy to have.
+#' 
+#' Both functions return expected values under different possible kin-types
+#' (not variances, since these cannot be predicted for all kin-types).
+#' 
+#' The statistic for find_FSPs_from_POPs() is based on the weighted sum of the
+#' number of exactly-matching 4-way genotypes, with weights chosen to have high
+#' power for this particular discrimination. Weighting is optimized for the
+#' unlikely scenario that POPs and FSPs are equally likely a priori, but in
+#' practice the weights are not sensitive to this. The test is deliberately
+#' crude and robust- e.g. it avoids exclusion-based checks- on the assumption
+#' that you have enough loci to pick HSPs, so the more-related kin-types should
+#' be slam-dunks. \bold{But} it doesn't seem powerful enough. More worked
+#' needed...
+#' 
+#' find_FSPs_from_HSPs() again uses 4-way genotypes only (to avoid having to
+#' worry about errors) but in a properly optimal PLOD designed for FSP/HSP
+#' discrimination- its expectation is positive for FSPs and negative for HSPs.
+#' Theoretical means for those are returned as attributes (variances cannot be
+#' predicted). Haven't added means for POPs or UPs since you're not "supposed"
+#' to have those in the mix by the time you run find_FSPs_from_HSPs(), but
+#' maybe I should fix that at some point.
+#' 
+#' @aliases find_FSPs_from_HSPs find_FSPs_from_POPs find_FSPs_from_candiHSPs
+#' find_FSPs_from_POPs_v2
+#' @param snpg a \code{snpgeno} object
+#' @param candiHSPs candidate kin-pairs- normally, a dataframe with rows being
+#' pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from
+#' find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again
+#' one pair).
+#' @param candiPOPs candidate kin-pairs- normally, a dataframe with rows being
+#' pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from
+#' find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again
+#' one pair).
+#' @examples
+#' 
+#' # pops_or_fsps <- find_POPs( mysnpg, ...)
+#' ## do histograms etc to find likely ones
+#' # discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps \%where\% (wpsex < 0.042))
+#' # hist( discro, nc=30, col='grey')
+#' # abline( v=discro@E_POP, col='red')
+#' # text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
+#' # abline( v=discro@E_FSP, col='lightblue')
+#' # text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+#' # abline( v=discro@E_HSP, col='pink', lty='dashed')
+#' # text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
+#' ###
+#' # h_or_f <- find_HSPs( mysnpg, ...)
+#' ## do histograms etc to find likely sib pairs
+#' # discro2 <- find_FSPs_from_HSPs(  mysngp, h_or_f \%where\% (PLOD > 55))
+#' # hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
+#' # abline( v=discro2@E_HSP, col='orange')
+#' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
+#' # abline( v=discro2@E_FSP, col='lightblue')
+#' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+#' 
 #' @export
 "find_FSPs_from_HSPs" <-
 function( snpg, candiHSPs) {
@@ -1148,89 +1204,10 @@ function( snpg, candiHSPs) {
   ret@call <- sys.call()
 
   return(ret)
-}  ## version taken from MVB2 at 24/9/18
+}
 
 
 
-
-#' Find full-sib pairs among parent-offspring pairs or among half-sib pairs
-#'
-#' For pairs already picked as likely parent-offspring pairs (POPs),
-#' i.e., those with a weighted pseudo-exclusion (WPSEX) statistic
-#' less than some threshold, they might be full sibling pairs (FSPs).
-#' This function checks potential POPs with very low WPSEX values for
-#' their potential to be FSPs.
-#'
-#' The general idea of find_FSPs_from_POPs() is that pairs which are
-#' _either_ POPs _or_ FSPs should stand out very clearly from
-#' everything else, via find_POPs(). Then the job is to pick
-#' between those possibilities. The workflow is supposed to be:
-#'
-#' \itemize{
-#' \item nail POPs/FSPs first with find_POPs()
-#' \item pick between them with find_FSPs_from_POPs() (update: this doesn't
-#' work very well...)
-#' \item look for HSPs and filter out already-known POPs and FSPs
-#' }
-#'
-#' Hence the other function, find_FSPs_from_HSPs(), is theoretically
-#' unnecessary in that you have already run find_POPs() and
-#' find_FSPs_from_POPs() so you should know which of your "HSPs" are
-#' really something else. But, nevertheless it's handy to have.
-#'
-#' Both functions return expected values under different possible kin-types
-#' (not variances, since these cannot be predicted for all kin-types).
-#'
-#' The statistic for find_FSPs_from_POPs() is based on the weighted sum
-#' of the number of exactly-matching 4-way genotypes, with weights chosen to
-#' have high power for this particular discrimination. Weighting is optimized
-#' for the unlikely scenario that POPs and FSPs are equally likely a priori,
-#' but in practice the weights are not sensitive to this. The test is
-#' deliberately crude and robust--- e.g. it avoids exclusion-based checks---
-#' on the assumption that you have enough loci to pick HSPs, so the
-#' more-related kin-types should be slam-dunks. *But* it doesn't seem
-#' powerful enough. More worked needed...
-#'
-#' find_FSPs_from_HSPs() again uses 4-way genotypes only (to avoid having
-#' to worry about errors) but in a properly optimal PLOD designed for FSP/HSP
-#' discrimination--- its expectation is positive for FSPs and negative for
-#' HSPs. Theoretical means for those are returned as attributes (variances
-#' cannot be predicted). Haven't added means for POPs or UPs since you're not
-#' "supposed" to have those in the mix by the time you run
-#' find_FSPs_from_HSPs(), but maybe I should fix that at some point.
-#'
-#' @aliases find_FSPs_from_POPs find_FSPs_from_HSPs find_FSPs_from_candiHSPs find_FSPs_from_POPs_v2
-#' @param snpg a \code{snpgeno} object
-#' @param candiPOPs candidate kin-pairs--- normally, a dataframe
-#'                  with rows being pairs and columns _i_ and _j_ (and possibly
-#'                  others) e.g. from find_POPs() or find_HSPs(). Can also be a
-#'                  2-column matrix (each row again one pair).
-#' @param candiHSPs candidate kin-pairs--- normally, a dataframe
-#'                  with rows being pairs and columns _i_ and _j_ (and possibly
-#'                  others) e.g. from find_POPs() or find_HSPs(). Can also be a
-#'                  2-column matrix (each row again one pair).
-#' @keywords misc
-#' @examples
-#' # pops_or_fsps <- find_POPs( mysnpg, ...)
-#' ## do histograms etc to find likely ones
-#' # discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042))
-#' # hist( discro, nc=30, col='grey')
-#' # abline( v=discro@E_POP, col='red')
-#' # text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
-#' # abline( v=discro@E_FSP, col='lightblue')
-#' # text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#' # abline( v=discro@E_HSP, col='pink', lty='dashed')
-#' # text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
-#' ###
-#' # h_or_f <- find_HSPs( mysnpg, ...)
-#' ## do histograms etc to find likely sib pairs
-#' # discro2 <- find_FSPs_from_HSPs(  mysngp, h_or_f %where% (PLOD > 55))
-#' # hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
-#' # abline( v=discro2@E_HSP, col='orange')
-#' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
-#' # abline( v=discro2@E_FSP, col='lightblue')
-#' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#' @export
 
 "find_FSPs_from_POPs" <-
 function( snpg, candiPOPs) {
@@ -1331,12 +1308,9 @@ return( ret)
 }
 
 
-#' @rdname find_POPs
-#' @importFrom atease @
-#' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
-#' @export
 
-"find_HSPs" <- ## from DLM
+
+"find_HSPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     keep_n=100000,
     nbins= 50,
@@ -1487,296 +1461,7 @@ return( result)
 }
 
 
-#' Kin-finders for loads-of-SNPs datasets
-#'
-#' @aliases find_POPs find_HSPs find_duplicates
-#'
-#' @description
-#' These take a \code{snpgeno} dataset that has been processed as
-#' far as \code{check6and4} (and for HSPs, \code{prepare_PLOD_SPA})
-#' and find various relations between the samples. Relationships
-#' include duplicates (DUPs/dupes; \code{find_duplicates}),
-#' parent-offspring pairs (POPs; \code{find_POPs_vs}) and half-sibling
-#' pairs (HSPs; \code{find_HSPs}). Unrelated pairs are referred to as
-#' UPs. One can specify the same or different subsets of the
-#' \code{snpgeno} for comparison: e.g., first subset for the adults,
-#' second for the juveniles.
-#'
-#' @section Kinformation:
-#' The idea is that kin-finding is based on a statistic and a threshold
-#' \code{eta}, where the latter is chosen to keep false-positives down
-#' to a user-specified level. Anything "beyond" \code{eta} will be
-#' treated as a kin-pair ("beyond" depends on how the statistic is
-#' defined, i.e. whether a kin-pair should come out very low or very high).
-#' However, you're also likely to want to look post hoc at the distro of
-#' computed statistics \emph{near} \code{eta}, to see whether separation
-#' is as clean (or otherwise) as expected--- and also very unbeyond
-#' \code{eta} into the zone where UPs are entirely dominant, to check that
-#' theory is OK. So, as well as returning the "interesting" pairs that have
-#' a statistic close to or on the non-UP size of \code{eta}, the POP and HSP
-#' versions also return \emph{summaries} of the distribution of the
-#' statistic. The thing is that there will be zillions of statistics from
-#' UPs--- enough to blow out computer memory--- and they are not individually
-#' interesting. Specifically, the main things returned are:
-#'
-#' \itemize{
-#' \item mean and variance of stats. Computation is restricted to those on
-#' the UP-side of \code{eta} (which is nearly all of them, usually) in order
-#' to avoid distortion from non-UP cases. The latter will often be so rare
-#' that distortion would be negligible--- but means and variances are not
-#' "robust", so . Almost all will be include
-#' \item counts of binned stats, regardless of whether above or below
-#' \code{eta}. The bins are set based on SPAs to the theoretical
-#' distributions, and chosen so that an equal number of UP-pairs should
-#' fall into each bin.
-#' \item cases where the stat is "interesting", i.e. on the non-UP side of
-#' \code{keep_thresh}, as a \code{data.frame}. See \bold{Value} for details
-#' }
-#'
-#' The process is controlled by three numbers: \code{nbins} for number of
-#' bins, \code{eta} itself, and some nearby threshold \code{keep_thresh}
-#' on the UP-side of \code{eta} (it will be automatically set to \code{eta}
-#' otherwise) to determine which pairs are explicitly retained for your
-#' inspection. There are two ways to specify \code{eta} and \code{keep_thresh}.
-#' Usually, you would start with the indirect method, where you choose the
-#' predicted-false-positive proportion of UP-pairs via the parameter
-#' \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then
-#' use SPAs to the corresponding values of \code{eta} and \code{keep_thresh};
-#' the returned value of \code{eta} is what you can subsequently use to make
-#' the actual kin-decisions yourself after the event (by subsetting the
-#' "interesting" pairs, comparing the statistic for each pair to
-#' \code{eta})--- assuming that observed does match expected.
-#'
-#' But, sometimes it doesn't. In that case, the predicted values of \code{eta}
-#' and \code{keep_thresh} may be way off the mark, and lead to retaining faaar
-#' too few or too many pairs. If so, then look at the histogram of retained
-#' statistics from an initial run, and try setting \code{eta} and/or
-#' \code{keep_thresh} manually, rather than futzing around with the indirect
-#' parameters until you get what you were after.
-#'
-#' @section Duplicates:
-#' You have to set the retention threshold manually, via \code{max_diff_genos}
-#' (see arguments). Post-processing step needed to to get the indices to remove
-#' -- use \code{\link{drop_dups_pairwise_equiv}}, see \bold{Examples}.
-#'
-#' To avoid running \code{find_duplicates} on large numbers of fish at once,
-#' one can split the dataset; see \bold{Examples}. You first need to run on each
-#' subset separately (avoiding a quadratic number of comparisons) and reduce it
-#' to non-duplicates (again, see \code{\link{drop_dups_pairwise_equiv}}), then
-#' check the pair of reduced subsets (this will compare everything in the first
-#' to everything in second, as the subsets are different). Note that when the
-#' subsets are different, comparisons are made only \emph{between} subsets, not
-#' \emph{within} each subset.
-#'
-#' Uses 4-way genotyping only, since these should be largely error-free. (Looks
-#' like the exceptions are from samples with dodgy DNA.)
-#'
-#' @section Parent-offspring pairs:
-#' 4-way genotypes are used to find "pseudo-exclusions" of the form AAO/BBO,
-#' which \emph{usually} means AA/BB or AO/BB or AA/BO (a true exclusion), but
-#' \emph{could} mean AO/BO (not an exclusion).
-#'
-#' \code{find_POPs} merely counts these, for loci where \code{Pr[O]+Pr[C]<pOC_max}
-#' in order to avoid excess noise from AO/BO cases.
-#' \code{find_POPs} uses all loci (by default) but weights them semi-optimally
-#' so that pseudo-exclusions from loci with high "false pseudo-exclusion
-#' probability" (i.e., high \code{Pr[AO/BO|UP]}) count much less than ones from
-#' loci with very low null rates, for which AAO/BBO almost certainly means AA/BB.
-#' We call this "Weighted PSeudo-EXclusion" ("WPSEX").
-#'
-#' The case AB/OO is also a (non-pseudo) exclusion, but is rarer than AAO/BBO
-#' (non-existent for loci without nulls, of course). The count of such cases is
-#' included in the output for "interesting" pairs in \code{find_POPs}; see
-#' \bold{Value}.
-#'
-#' POP-finding is based on 4-way genotypes (OO, AAO, BBO, AB) to avoid
-#' complications from genotyping-error-rates, and uses pseudo-exclusions rather
-#' than likelihood-ratios; the latter is very sensitive to
-#' false-negative-exclusions arising from typing-error, or even from mutation
-#' with so many SNPs. You can get round that by including estimates of
-#' typing-error-rate, but that's not necessarily easy to estimate in advance
-#' insofar as it applies per-locus to POPs.
-#'
-#' @section Speed:
-#' These are written in C (\code{Rcpp}) for speed, but for big datasets they
-#' might still be quite slow. In the first instance, I certainly wouldn't try
-#' them on 20,000 fish at once; I'd try with say 1000 then if that's OK 5000
-#' etc. Bear in mind that they can always be run on different subsets of the
-#' data, and the results patched back together (results will not change by doing
-#' that). If you can run jobs in parallel, that could help a lot.
-#'
-#' @param snpg a \code{snpgeno} object
-#' @param subset1 numeric vector of which samples to use (not logical,
-#'                not negative). Defaults to all of them. Iff subset1 and subset2
-#'                are identical, only half the comparisons are done (i.e., not
-#'                _i_ with _j_ then _j_ with _i_). Some sanity checks are done.
-#' @param subset2 numeric vector of which samples to use (not logical,
-#'                not negative). Defaults to all of them. Iff subset1 and subset2
-#'                are identical, only half the comparisons are done (i.e., not
-#'                _i_ with _j_ then _j_ with _i_). Some sanity checks are done.
-#' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which
-#'                             is proportional to (difference in probability of
-#'                             pseudo-exclusion between UP and POP) / (variance
-#'                             of indicator of pseudo-exclusion). But, should this
-#'                             be variance assuming UP or POP?
-#'                             \code{WPSEX_UP_POP_balance} sets the balance; bigger
-#'                             values make it more UPpity, so placing more emphasis
-#'                             on avoiding false-positives (which is probably the
-#'                             Right Thing To Do). 0.99 could be completely fine...
-#'                             (but hopefully \code{WPSEX_UP_POP_balance} won't
-#'                             affect the result much anyway.)
-#' @param one_in_X_eta expected number of false-positive UPs you can tolerate.
-#'                     Setting this to say \code{1e6} means you'd expect 1 per million
-#'                     comparisons. Used to set the threshold \code{eta}, which is
-#'                     returned automatically.
-#' @param rough_n_pairs_to_keep For checking, you can set this to trap many more
-#'                              high-scoring pairs than you expect there to "really"
-#'                              be, say a few thousand (NB the number of pairs retained
-#'                              won't exactly equal this). You can subsequently look at
-#'                              the "lucky losers" with high but sub-'eta' stats, and
-#'                              then filter them out yourself by applying a cutoff of
-#'                              \code{eta}. If you leave \code{rough_n_pairs_to_keep}
-#'                              at its default of NA, the trap will be set at \code{eta},
-#'                              so the result will contain exactly the pairs you want.
-#'                              Values above \code{eta} will always be kept, even if you
-#'                              specify something silly for \code{rough_n_pairs_to_keep}.
-#' @param eta,keep_thresh see \bold{Description}. Can specify either or both. These override
-#'            \code{one_in_X_eta} and \code{rough_n_pairs_to_keep} respectively.
-#' @param keep_n Integer. Defines the ?maximum number of candidate pairs to keep. Will provide
-#'               a warning if the number of identified pairs equals keep_n.
-#' @param max_diff_genos (\code{find_duplicates}) max number of discrepant 4-way
-#'                       genotypes to tolerate in "identical" fish. Try increasing
-#'                       this from say 10 upwards, and hopefully nothing much will
-#'                       change (though at some point things will change a lot, as
-#'                       you get into the non-duplicate bit of the distribution).
-#'                       See \bold{Duplicates} for how to remove duplicates from
-#'                       the data.
-#' @param quick whether to "compile" the functions for SPA, which use the magic
-#'              \code{:=} operator. It speeds up the SPA bit but almost all the time
-#'              is spent on actual POP-finding...
-#' @param nbins find_blah functions summarise their results into bins (in the part of the
-#'              range where individual results are uninteresting), as well as returning
-#'              individual results (in the part of the range where individual results are
-#'              interesting). \code{ nbins} sets the number of bins to use.
-#' @param binterval find_blah functions summarise their results into bins (in the part of
-#'                  the range where individual results are uninteresting), as well as
-#'                  returning individual results (in the part of the range where individual
-#'                  results are interesting). \code{ binterval} sets the bin width.
-#' @param minbin find_blah functions summarise their results into bins (in the part of the
-#'               range where individual results are uninteresting), as well as returning
-#'               individual results (in the part of the range where individual results are
-#'               interesting). \code{ minbin} sets the lower limit of the lowest bin.
-#' @param maxbin find_blah functions summarise their results into bins (in the part of the
-#'               range where individual results are uninteresting), as well as returning
-#'               individual results (in the part of the range where individual results are
-#'               interesting). \code{ maxbin} sets the lower limit of the highest bin.
-#'
-#' @return a \code{data.frame} with 3 columns: statistic (\code{PLOD} or
-#'         \code{wpsex} or \code{ndiff} number of mismatching genotypes),
-#'         \code{i} (index in \code{subset1} of the first pair-member),
-#'         \code{j} (index in \code{subset2} of the second). Note that
-#'         \code{i} and \code{j} refer to the \emph{subsets}, not to the
-#'         rows of the original \code{snpg}. Note that, iff you have set
-#'         \code{rough_n_pairs_to_keep}, these will include pairs below the
-#'         FP cutoff (which is returned as \code{eta}).
-#'
-#'         \code{find_POPs} adds a column named \code{nABOO}, showing the
-#'         number of AB/OO exclusions for that potential POP. This is a useful
-#'         additional diagnostic; it should be close to 0 for true POPs (it
-#'         can only result from genotyping error or mutation, whereas AAO/BBO
-#'         can result from nulls). For UPs, I was seeing values typically in
-#'         the low 20s, which is pretty good separation.
-#'
-#'         For duplicates, not \emph{all} pairwise duplicates are recorded,
-#'         unless the subsets are different--- otherwise you could have
-#'         quadratic horror of enormous numbers of pairs arising from a cluster
-#'         of say 100 identical controls! Since "duplication" is transitive (ie
-#'         if i & j are the same, and i & k are the same, then j & k must also
-#'         be the same), only the necessary ones are recorded to allow you to
-#'         filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are
-#'         all duplicates, you'll get this:
-#'         %#
-#'         \item{# without "ndiff" column}{}
-#'         \item{  i j}{}
-#'         \item{  3 1}{}
-#'         \item{  4 3}{}
-#'         \item{  6 4}{}
-#'
-#'         but you won't see the pairings for 1/4, 1/6, 3/6. If you just want
-#'         to strip out all duplicates bar one in each group (and you don't
-#'         care which one is kept), then you can use the function
-#'         \code{\link{drop_dups_pairwise_equiv}} --- see \bold{Examples}.
-#'
-#'         For POPs and HSPs, the following are also returned as attributes
-#'         (that can be accessed by \code{@} if \code{atease} is loaded). The
-#'         main point is that the "boring" below-threshold pairs get put into
-#'         bins and are not kept individually. The names sometimes change
-#'         depending on which statistic is being used.
-#'
-#'         \item{eta}{false-positive cutoff to be applied to the statistic in
-#'         question (automatically done if \code{rough_n_pairs_to_keep==NA},
-#'         or up to you if not). Variance of the stat will only be calculated
-#'         from values to the "UP side" of \code{eta}. However, the set of
-#'         retained pairs/individuals is actually controlled by...}
-#'         \item{keep_thresh}{the cutoff used to retain "interesting" pairs.
-#'         Usually obvious from the range of statistic values.}
-#'         \item{mean_sub_<stat>, var_sub_<stat>}{empirical values for the
-#'         statistic when it is below \code{eta} (ie nearly always).}
-#'         \item{mean_theory, var_theory}{of the statistic, to compare to
-#'         previous.}
-#'         \item{n_<stat>_in_bin}{number of pairs whose statstic fell within
-#'         the range of each bin}
-#'         \item{bins}{cutpoints for the bins. These should be quantiles,
-#'         according to the SPA; so if practice matches theory, the
-#'         numbers-per-bin should all be similar.}
-#'
-#' @examples
-#' \dontrun{
-#' ## duplicate checking. ckmini2 has 6 fish where 1,3,4,6 are all identical (zero differing loci).
-#' ## there's only 7 crappy loci and I faked the data for this anyway, so strict identical is needed
-#' ## All-in-one
-#' #test <- find_duplicates( ckmini2, max=0) # strict identity
-#' #test
-#' ##  ndiff i j
-#' ##1     0 3 1
-#' ##2     0 4 3
-#' ##3     0 6 4
-#' ## To remove them--- subtlety of keeping ONE from each group
-#' #droppies <- drop_dups_pairwise_equiv( test[,2:3])
-#' #droppies # 1, 4, 6
-#' #ckmini2_nodups <- ckmini2[ -droppies, ]
-#' ## Two-stage
-#' #first_half <- 1:3
-#' #second_half <- (1:nrow( ckmini2)) \%except\% first_half
-#' #test1 <- find_duplicates( ckmini2, subset1=first_half, subset2=first_half, max=0)
-#' #test1
-#' ##  ndiff i j
-#' ##1     0 3 1
-#' #droppies1 <- first_half[ drop_dups_pairwise_equiv( test1[,2:3])] # NB must do lookup in subset
-#' #test2 <- find_duplicates( ckmini2, subset1=second_half, subset2=second_half, max=0)
-#' #droppies2 <- second_half[ drop_dups_pairwise_equiv( test2[,2:3])] # 4
-#' ## Now check 2nd half vs 1st
-#' #test2_1 <- find_duplicates( ckmini2,
-#' #    subset1=first_half \%except\% droppies1,
-#' #    subset2=second_half \%except\% droppies2,
-#' #    max=0)
-#' ## Simpler since no internal checks. Just remove 2nd-halfers that match something in the 1st-half
-#' #droppies2_1 <- (second_half \%except\% droppies2)[ test2_1[,'j']) # 6
-#' #droppies <- c( droppies1, droppies2, droppies2_1)
-#' #ckmini2_nodups2 <- ckmini2[ -droppies,]
-#' ## HSPs: comparing everything with itself (not sensible for real data, should take out adults first)
-#' ## set threshold for 1 FP
-#' #test <- find_HSPs( ckdata, one_in_X_eta=sqr( nrow( ckdata))/2 )
-#' ## POPs: Ad-Ju comps; again 1 FP
-#' #test <- find_POPs( ckdata, subset1=adults, subset2=juves,
-#' #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
-#' }
-#' @importFrom gbasics sqr
-#' @importFrom atease @
-#' @importFrom vecless := compile_vecless
-#' @importFrom stats runif
-#' @importFrom mvbutils cq %upto% %that.are.in% my.all.equal extract.named %without.name%
-#' @export
+
 
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
@@ -1984,8 +1669,8 @@ stopifnot( all( ww>0))
 return( result)
 }
 
-#' @rdname chain_pairwise
-#' @export
+
+
 
 "get_chain" <-
 function( thing, seed) {
@@ -2006,6 +1691,9 @@ function( thing, seed) {
   thing %where% (i %in% set | j %in% set)
 }
 
+
+
+
 #' Heterozygotes minus "OO" checking
 #'
 #' This test looks at whether the allele frequencies in a given fish seem
@@ -2019,9 +1707,7 @@ function( thing, seed) {
 #'               few heterozygotes).
 #' @param hist_pars parameters to pass to \code{\link{hist}}
 #' @param showPlot show the plot? Default TRUE
-#' @keywords misc
 #' @export
-
 "hetzminoo_fancy" <-
 function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), showPlot = TRUE) {
 ###################
@@ -2130,6 +1816,8 @@ return( c( whmo))
 }
 
 
+
+
 #' hsp_power(): Preparation for kin-finding
 #'
 #' @section hsp_power:
@@ -2165,12 +1853,11 @@ return( c( whmo))
 #'         SPA calculations
 #' @importFrom atease @ @<-
 #' @importFrom vecless make_playback
-#' @keywords misc
 #' @examples
 #' ## Need some examples!
 #' @export
-
-"hsp_power" <- function( lociar,
+"hsp_power" <-
+function( lociar,
     want_LOD_table=TRUE, # T/F
     k # 0.5 for HSPs
 ){
@@ -2292,6 +1979,9 @@ return( c( whmo))
 return( lociar)
 }
 
+
+
+
 #' hsp_power2(): Kin-finding power for microhaplotyped loci
 #'
 #' This is a short-term fudge for checking HSP-finding power of a bunch of loci that
@@ -2323,7 +2013,6 @@ return( lociar)
 #' @seealso hsp_power
 #' @importFrom atease @ @<-
 #' @importFrom vecless make_playback
-#' @keywords misc
 #' @examples
 #' # ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
 #' # POW <- hsp_power2( ALF)
@@ -2344,8 +2033,8 @@ return( lociar)
 #' # ... so that's probably OK...
 #' # this is a test.
 #' @export
-
-hsp_power2 <- function( lociar,
+"hsp_power2" <-
+function( lociar,
     want_LOD_table=TRUE, # T/F
     k # 0.5 for HSPs
 ){
@@ -2412,6 +2101,8 @@ return( lociar)
 }
 
 
+
+
 #' Check individual genotypes for aggregate typicality
 #'
 #' \code{ilglk_geno} Computes log-likelihood of entire 4-way genotype of
@@ -2456,14 +2147,13 @@ return( lociar)
 #' @importFrom mvbutils cq extract.named
 #' @importFrom gbasics sqr
 #' @import vecless
-#' @keywords misc
 #' @examples
 #' # ll <- lglk_loci( snpg)
 #' # hist( ll$sdiff, nc=30, col='grey')
 #' # abline( v=0, col='green')
 #' @export
-
-"ilglk_geno" <- function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE, showPlot = TRUE) {
+"ilglk_geno" <-
+function(snpg, indiv_lglk_hist_pars=list(), quick=TRUE, showPlot = TRUE) {
   define_genotypes()
   extract.named( snpg@locinfo[ cq( pbonzer)])
 
@@ -2577,9 +2267,8 @@ return( lociar)
 return( ilglk)
 }
 
-#' lglk_loci(): Check individual genotypes for aggregate typicality
-#' @rdname ilglk_geno
-#' @export
+
+
 
 "lglk_loci" <-
 function( snpg) {
@@ -2631,7 +2320,9 @@ function( snpg) {
 
 
 return( returnList( elg, sdelg, olg, sdiff=sqrt( n_f) * (olg-elg) / sdelg))
-} ## ported from MVB_kinference 25/9/18
+}
+
+
 
 
 #' map4todummy6(): Change SNP-genotype encoding
@@ -2654,9 +2345,7 @@ return( returnList( elg, sdelg, olg, sdiff=sqrt( n_f) * (olg-elg) / sdelg))
 #'         attribute is augmented with a dummy \code{snerr} matrix, and the
 #'         \code{use6} column is set to \code{FALSE}. Allele freqs are not
 #'         estimated, so you'll need to do that separately.
-#' @keywords misc
 #' @export
-
 "map4todummy6" <-
 function( sg, quietly=FALSE) {
   stopifnot( sg %is.a% 'snpgeno')
@@ -2693,7 +2382,9 @@ stop( "Only meant for 'genotypes4_ambig' data")
   sg[] <- x
   class( sg) <- 'snpgeno'
 return( sg)
-}  ## ported from MVB_kinference 25/9/18
+}
+
+
 
 
 #' map6to4(): Bare documentation
@@ -2708,8 +2399,9 @@ return( sg)
 #' @param g6p0 a param
 #' @param g6p1 a param
 #' @keywords internal
-
-map6to4 <- function(g6p0, g6p1){
+#' @export
+"map6to4" <-
+function(g6p0, g6p1){
 
   define_genotypes()
 
@@ -2737,6 +2429,9 @@ map6to4 <- function(g6p0, g6p1){
 
 }
 
+
+
+
 #' map6to3(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -2749,8 +2444,9 @@ map6to4 <- function(g6p0, g6p1){
 #' @param g6p0 a param
 #' @param g6p1 a param
 #' @keywords internal
-
-map6to3 <- function(g6p0, g6p1){
+#' @export
+"map6to3" <-
+function(g6p0, g6p1){
 
   define_genotypes()
 
@@ -2782,6 +2478,8 @@ map6to3 <- function(g6p0, g6p1){
 }
 
 
+
+
 #' predict_hsp_util(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -2794,7 +2492,7 @@ map6to3 <- function(g6p0, g6p1){
 #' @keywords internal
 #' @importFrom atease @ @<-
 #' @importFrom gbasics make_genopairer sqr
-
+#' @export
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
@@ -2876,13 +2574,10 @@ return( retval)
 }
 
 
-#' @rdname hsp_power
-#' @export
-#' @importFrom mvbutils cq %except% %not.in%
-#' @importFrom atease @ @<-
-#' @importFrom gbasics make_genopairer sqr
 
-"prepare_PLOD_SPA" <- function( geno6, n_pts_SPA_renorm=201) {
+
+"prepare_PLOD_SPA" <-
+function( geno6, n_pts_SPA_renorm=201) {
     ## To be run after hsp_power( ..., want_LOD_table=TRUE)
 
 # n_pts_SPA_renorm should really be as big as R can handle without running
@@ -3025,6 +2720,8 @@ return( geno6)
 }
 
 
+
+
 #' set_thresholds(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3037,7 +2734,7 @@ return( geno6)
 #' @param nlocal a param. Defaults to sys.parent().
 #' @keywords internal
 #' @importFrom mvbutils cq mlocal %is.a%
-
+#' @export
 "set_thresholds" <-
 function( keeping, nlocal=sys.parent()) mlocal({
 stopifnot( keeping %in% cq( hi, lo))
@@ -3075,7 +2772,8 @@ stopifnot( keeping %in% cq( hi, lo))
   }
 })
 
-# Calculate some log-odds
+
+
 
 #' calculate_IBD(): Bare documentation
 #'
@@ -3084,8 +2782,9 @@ stopifnot( keeping %in% cq( hi, lo))
 #'
 #' @param lociar a param
 #' @keywords internal
-
-calculate_IBD <- function(lociar){
+#' @export
+"calculate_IBD" <-
+function(lociar){
 
   define_genotypes()
   li <- lociar@locinfo
@@ -3111,6 +2810,8 @@ calculate_IBD <- function(lociar){
 }
 
 
+
+
 #' simtest_Kstuff(): check for (big) mistakes in SPA calcs
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3124,8 +2825,9 @@ calculate_IBD <- function(lociar){
 #' @importFrom gbasics rsample
 #' @importFrom stats var
 #' @importFrom mvbutils scatn
-
-"simtest_Kstuff" <- function( ck, n, nq=20) {
+#' @export
+"simtest_Kstuff" <-
+function( ck, n, nq=20) {
   # ck needs locinfo$LOD
   extract.named( ck@Kenv) # 4ways pretending to be 6ways
   mg <- LOD@mg
@@ -3166,16 +2868,13 @@ calculate_IBD <- function(lociar){
 return( invisible( PLOD))
 }
 
-#' sqr(): multiply an input by itself.
-#'
-#' Does what it says on the tin. Might also be imported from MVButils,
-#' depending on the caller.
-#'
-#' @param x an argument for which multiplication is possible.
-#' @export
+
+
 
 "sqr" <-
-function( x) x*x  ## ported from MVB, 25/9/18
+function( x) x*x
+
+
 
 
 #' Predict variance of PLOD for HCPs and HTPs
@@ -3280,7 +2979,6 @@ function( x) x*x  ## ported from MVB, 25/9/18
 #' #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
 #' }
 #' @export
-
 "var.PLOD.kin" <-
 function( linfo, emp.V.HSP=V.noX( C.equiv, 2),
          kin.true=c( 'HCP', 'HTP', 'HSP'), debug=FALSE, C.equiv=NULL) {
@@ -3378,7 +3076,751 @@ function( linfo, emp.V.HSP=V.noX( C.equiv, 2),
 return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n.meio)))
 }
 
-## first two lines here are for Rcpp to work
+# MVB's workaround for futile CRAN 'no visible blah' check:
+globalVariables( package="kinference",
+  names=c( ".Traceback"
+    ,"Cloader"
+    ,"pkgname"
+    ,".__NAMESPACE__."
+    ,"path"
+    ,"x"
+    ,"defaults"
+    ,"..."
+    ,"l"
+    ,"g_err"
+    ,"genotypes_C"
+    ,"perr"
+    ,"g_1"
+    ,"g_2"
+    ,"AA_BB"
+    ,"A"
+    ,"B"
+    ,"snerr"
+    ,"AO_BO"
+    ,"O"
+    ,"pp_err"
+    ,"gg"
+    ,"g1_err"
+    ,"g1"
+    ,"g2_err"
+    ,"g2"
+    ,"pp_true"
+    ,"add_up"
+    ,"result"
+    ,"dimor"
+    ,"i"
+    ,"other"
+    ,"."
+    ,"OO"
+    ,"CC"
+    ,"CO"
+    ,"AO"
+    ,"AC"
+    ,"BO"
+    ,"BC"
+    ,"pp6_err"
+    ,"genotypes6"
+    ,"P"
+    ,"pr2"
+    ,"record"
+    ,"ABCO"
+    ,"is_het"
+    ,"gp1"
+    ,"gp2"
+    ,"pp3"
+    ,"su1u2"
+    ,"implied"
+    ,"swap12"
+    ,"swap34"
+    ,"cimplied"
+    ,"implstr"
+    ,"has_impl2"
+    ,"first_impl"
+    ,"second_impl"
+    ,"cimpl2"
+    ,"li"
+    ,"lociar"
+    ,"locinfo"
+    ,"li1"
+    ,"temp0"
+    ,"pbonzer"
+    ,"cg6p0"
+    ,"temp1"
+    ,"cg6p1"
+    ,"temp2"
+    ,"cg6p2"
+    ,"pIBD0"
+    ,"pIBD1"
+    ,"pIBD2"
+    ,"LODs"
+    ,"nl"
+    ,"Phsp"
+    ,"k"
+    ,"Pup"
+    ,"LOD"
+    ,"mg"
+    ,"ngp"
+    ,"wanted"
+    ,"gpLOD"
+    ,"gpPUP"
+    ,"LOD_as_2D"
+    ,"PUP_as_2D"
+    ,"omg"
+    ,"double_wanted"
+    ,"what"
+    ,"E.HSP"
+    ,"%[i,j]%"
+    ,"j"
+    ,"E.UP"
+    ,"E2.UP"
+    ,"V.UP"
+    ,"Ediff"
+    ,"sdiff"
+    ,"retval"
+    ,"PUP"
+    ,"thing"
+    ,"ij"
+    ,"ijpairs"
+    ,"is_pair"
+    ,"test"
+    ,"y"
+    ,"xtest"
+    ,"to.do"
+    ,"chains"
+    ,"pairmats"
+    ,"this_chain"
+    ,"this_pairs"
+    ,"o"
+    ,"snpg"
+    ,"og"
+    ,"iwhat"
+    ,"PUPLOD"
+    ,"PUPLOD2"
+    ,"Kenv"
+    ,"OLOD"
+    ,"useN"
+    ,"temp_snpg"
+    ,"recode4to6temp"
+    ,"AA"
+    ,"BB"
+    ,"recode3to6temp"
+    ,"n_loci"
+    ,"OPUP"
+    ,"NPUP"
+    ,"ig"
+    ,"gjseq"
+    ,"XXi"
+    ,"gj"
+    ,"Pg"
+    ,"gi"
+    ,"e_CLOD"
+    ,"%[gj]%"
+    ,"e2_CLOD"
+    ,"geno"
+    ,"g1seq"
+    ,"my_e_CLOD"
+    ,"%[g1]%"
+    ,"my_e2_CLOD"
+    ,"my_v_CLOD"
+    ,"my_rat_CLOD"
+    ,"%[l]%"
+    ,"SUM_"
+    ,"nsim"
+    ,"gsim"
+    ,"il"
+    ,"sim_e_CLOD"
+    ,"sim_e2_CLOD"
+    ,"sim_v_CLOD"
+    ,"sim_rat_CLOD"
+    ,"K"
+    ,"ETT"
+    ,"it"
+    ,"g"
+    ,"tt"
+    ,"log_S"
+    ,"%[g]%"
+    ,"dK"
+    ,"g12"
+    ,"LODOK"
+    ,"S"
+    ,"%[g12]%"
+    ,"SL"
+    ,"ddK"
+    ,"SLL"
+    ,"gbasics"
+    ,"bins"
+    ,"qq"
+    ,"nq"
+    ,"mean_theory"
+    ,"var_theory"
+    ,"symmo"
+    ,"subset1"
+    ,"big_PLOD"
+    ,"big_i"
+    ,"big_j"
+    ,"binprobs"
+    ,"eta"
+    ,"keep_thresh"
+    ,"n_fish"
+    ,"geno6"
+    ,"diplos"
+    ,"p6"
+    ,"calc_g6probs"
+    ,"g6pred"
+    ,"g6obs"
+    ,"pval6"
+    ,"thresh_pchisq_6and4"
+    ,"extra_title"
+    ,"pval"
+    ,"g4obs"
+    ,"g4pred"
+    ,"pval4"
+    ,"return_what"
+    ,"gobs"
+    ,"gpred"
+    ,"chistat"
+    ,"DoF"
+    ,"pchisq"
+    ,"liffies"
+    ,"thresh_pchisq_loci"
+    ,"keep_loci"
+    ,"iffy_loci"
+    ,"par"
+    ,"hist"
+    ,"seq_paxis"
+    ,"mtext"
+    ,"abline"
+    ,"opar"
+    ,"gtypes"
+    ,"plot"
+    ,"points"
+    ,"legend"
+    ,"trim"
+    ,"C"
+    ,"genotypes"
+    ,"AB"
+    ,"AAO"
+    ,"BBO"
+    ,"BBOO"
+    ,"genotypes_ambig"
+    ,"genotypes4_ambig"
+    ,"genotypes3_ambig"
+    ,"NA_geno"
+    ,"uij"
+    ,"n"
+    ,"m"
+    ,"nf"
+    ,"groups"
+    ,"keeps"
+    ,"drops"
+    ,"want_groups"
+    ,"geno1"
+    ,"geno2"
+    ,"max_diff_ppn"
+    ,"limit"
+    ,"max_diff_genos"
+    ,"keep_n"
+    ,"minbin"
+    ,"nbins"
+    ,"binterval"
+    ,"pobs"
+    ,"lglk_l"
+    ,"ppar"
+    ,"pAO"
+    ,"pAA"
+    ,"pBO"
+    ,"pBB"
+    ,"pAB"
+    ,"pOO"
+    ,"AA2AO"
+    ,"AO2AA"
+    ,"BB2BO"
+    ,"BO2BB"
+    ,"n_l"
+    ,"Nlglk"
+    ,"flush.console"
+    ,"pstart"
+    ,"fitto"
+    ,"nlminb"
+    ,"control"
+    ,"geno_amb"
+    ,"plogis"
+    ,"expected"
+    ,"lglk"
+    ,"has_C"
+    ,"params"
+    ,"pA"
+    ,"pB"
+    ,"pC"
+    ,"pO"
+    ,"phat"
+    ,"nobs"
+    ,"pen"
+    ,"penscale"
+    ,"start_par"
+    ,"pambig_est"
+    ,"conv"
+    ,"tiny"
+    ,"ll"
+    ,"CCO"
+    ,"duhhh"
+    ,"qlogis"
+    ,"p"
+    ,"testo"
+    ,"fit"
+    ,"convergence"
+    ,"besto"
+    ,"pambig"
+    ,"subset_like_loci"
+    ,"subset2"
+    ,"gtab"
+    ,"pid"
+    ,"n_ndiff_in_bin"
+    ,"big_similar"
+    ,"ndiff"
+    ,"showPlot"
+    ,"OO_code"
+    ,"big_ndiff"
+    ,"big_ncomp"
+    ,"candiHSPs"
+    ,"sibg"
+    ,"just_sibg"
+    ,"PUP4"
+    ,"LOD4"
+    ,"PHSP4"
+    ,"P_k0"
+    ,"P_k1"
+    ,"P_k2"
+    ,"nsib"
+    ,"nloci"
+    ,"kappa_fsp"
+    ,"kappa_hsp"
+    ,"p12fsp"
+    ,"p12hsp"
+    ,"OD_FH"
+    ,"LOD_FH"
+    ,"PLOD_FH"
+    ,"OPHSP"
+    ,"p12fspa"
+    ,"p12hspa"
+    ,"EPLOD_FH_F"
+    ,"EPLOD_FH_H"
+    ,"ret"
+    ,"candiPOPs"
+    ,"just_snpg"
+    ,"n_pairs"
+    ,"pgeno"
+    ,"off"
+    ,"Pr_same_given_k"
+    ,"Pr_nsame_FSP"
+    ,"Pr_same_FSP"
+    ,"%[k]%"
+    ,"Pr_same_POP"
+    ,"Pr_nsame_HSP"
+    ,"Pr_same_HSP"
+    ,"SD_FSP"
+    ,"SD_POP"
+    ,"SDwt_POP"
+    ,"SD_denom"
+    ,"wt"
+    ,"wtsame"
+    ,"E_FSP"
+    ,"E_POP"
+    ,"E_HSP"
+    ,"E_UP"
+    ,"use6"
+    ,"P6"
+    ,"PUP6"
+    ,"same6"
+    ,"Pr_nibd_FSP"
+    ,"Pr_nibd_POP"
+    ,"Pr_psex_given_k"
+    ,"Pr_psex_FSP"
+    ,"Pr_psex_POP"
+    ,"px"
+    ,"ps"
+    ,"inv_DET"
+    ,"Dx"
+    ,"Ds"
+    ,"ws"
+    ,"wx"
+    ,"V_FSP"
+    ,"rescalor"
+    ,"V_FSP_nolink"
+    ,"V_POP"
+    ,"snpg6"
+    ,"snpg4"
+    ,"snpg3"
+    ,"g1_6"
+    ,"g2_6"
+    ,"g1_4"
+    ,"g2_4"
+    ,"g1_3"
+    ,"g2_3"
+    ,"is_same"
+    ,"is_psex"
+    ,"stat"
+    ,"E_FPstat"
+    ,"V_FPstat"
+    ,"keep_indiv"
+    ,"hspPower_change"
+    ,"hspPower_checksum"
+    ,"PLODSPA_change"
+    ,"PLODSPA_checksum"
+    ,"LOD6"
+    ,"LOD3"
+    ,"PUP3"
+    ,"one_in_X_eta"
+    ,"keep_thresh_set"
+    ,"inv_CDF"
+    ,"temp_LOD"
+    ,"CDF"
+    ,"xresult"
+    ,"mean_HSP"
+    ,"mean_POP"
+    ,"E.POP"
+    ,"mean_FSP"
+    ,"E.FSP"
+    ,"rough_n_pairs_to_keep"
+    ,"p0"
+    ,"pex"
+    ,"delta"
+    ,"SD"
+    ,"SD_combo"
+    ,"WPSEX_UP_POP_balance"
+    ,"V_combo"
+    ,"ww"
+    ,"pop_loci"
+    ,"opphetz"
+    ,"pex_up"
+    ,"rr"
+    ,"log1m_pexup"
+    ,"KK"
+    ,"retw"
+    ,"dKK"
+    ,"ddKK"
+    ,"n_sim_check"
+    ,"Ktest"
+    ,"runif"
+    ,"ewx"
+    ,"quick"
+    ,"maxbin"
+    ,"big_wpsex"
+    ,"n_wpsex_in_bin"
+    ,"snpg_i"
+    ,"snpg_j"
+    ,"isABOO"
+    ,"nABOO"
+    ,"palette"
+    ,"lb"
+    ,"xlim"
+    ,"ub"
+    ,"fsps2"
+    ,"FPstat"
+    ,"bin"
+    ,"hist.plod"
+    ,"POPmean"
+    ,"FSPmean"
+    ,"legendBits"
+    ,"allNames"
+    ,"allNumbers"
+    ,"oset"
+    ,"set"
+    ,"seed"
+    ,"newj"
+    ,"newi"
+    ,"gt4"
+    ,"gt6"
+    ,"v"
+    ,"target"
+    ,"edash"
+    ,"msqrt_v"
+    ,"median"
+    ,"use_loci"
+    ,"whmo"
+    ,"f"
+    ,"four_pab_poo"
+    ,"compaboo"
+    ,"etwab"
+    ,"etwoo"
+    ,"denom"
+    ,"dens_SPA"
+    ,"hist_pars"
+    ,"lv"
+    ,"lines"
+    ,"mids"
+    ,"breaks"
+    ,"counts"
+    ,"badhetz_hist_pars"
+    ,"hsps"
+    ,"PLOD"
+    ,"main"
+    ,"HSPmean"
+    ,"E.hsp"
+    ,"HSPdist"
+    ,"V.hsp"
+    ,"fullsib_cut"
+    ,"obs.num"
+    ,"exp.num"
+    ,"pnorm"
+    ,"cloddo"
+    ,"clod.stat"
+    ,"ECLOD"
+    ,"VCLOD"
+    ,"hetz.poor"
+    ,"ilglk"
+    ,"hist1"
+    ,"tf"
+    ,"quantile"
+    ,"CLOD_prop"
+    ,"colour"
+    ,"rgb"
+    ,"ilglk_prop"
+    ,"hetz_prop"
+    ,"hist2"
+    ,"pair_geno"
+    ,"min_keep_PLOD"
+    ,"g6p0"
+    ,"g6p1"
+    ,"g6p2"
+    ,"s6"
+    ,"want_LOD_table"
+    ,"mm"
+    ,"yup"
+    ,"%[j]%"
+    ,"g4p0"
+    ,"g4p1"
+    ,"g4p2"
+    ,"s4"
+    ,"g3p0"
+    ,"g3p1"
+    ,"g3p2"
+    ,"s3"
+    ,"e0_6way"
+    ,"e0"
+    ,"v0_6way"
+    ,"v0"
+    ,"e1_6way"
+    ,"e1"
+    ,"v1_6way"
+    ,"v1"
+    ,"e0_4way"
+    ,"v0_4way"
+    ,"e1_4way"
+    ,"v1_4way"
+    ,"e0_3way"
+    ,"v0_3way"
+    ,"e1_3way"
+    ,"v1_3way"
+    ,"n_samps"
+    ,"info"
+    ,"Our_plate"
+    ,"Our_sample"
+    ,"Locus"
+    ,"lpgeno"
+    ,"ttp1"
+    ,"etp1l"
+    ,"num"
+    ,"num2"
+    ,"ntest"
+    ,"Ksim"
+    ,"meansim"
+    ,"genos"
+    ,"lp"
+    ,"ilglk_manual"
+    ,"indiv_lglk_hist_pars"
+    ,"mids_SPA"
+    ,"good_ind"
+    ,"isqrt_2pi"
+    ,"sqrt_ddK_s"
+    ,"Leg_trans"
+    ,"u"
+    ,"w"
+    ,"CSPA"
+    ,"s"
+    ,"dnorm"
+    ,"p_target"
+    ,"isK2"
+    ,"seps"
+    ,"is_lower"
+    ,"hi"
+    ,"lo"
+    ,"q0"
+    ,"qnorm"
+    ,"bingo"
+    ,"mean_x"
+    ,"s0"
+    ,"bad"
+    ,"C0"
+    ,"toobig"
+    ,"multor"
+    ,"bracketed"
+    ,"step"
+    ,"snext"
+    ,"tol"
+    ,"hmfr"
+    ,"kinference"
+    ,"mdull"
+    ,"boring"
+    ,"vdull"
+    ,"var"
+    ,"sstat"
+    ,"iv"
+    ,"dist"
+    ,"%[s1]%"
+    ,"%[s]%"
+    ,"s1"
+    ,"focusees"
+    ,"vec_LOD"
+    ,"elg"
+    ,"elg2"
+    ,"sdelg"
+    ,"GG"
+    ,"n_f"
+    ,"olg"
+    ,"%[f]%"
+    ,"which_genotypes"
+    ,"pAAO"
+    ,"pBBO"
+    ,"pAC"
+    ,"pCO"
+    ,"pCC"
+    ,"pCCO"
+    ,"pBC"
+    ,"funco"
+    ,"sg"
+    ,"dips"
+    ,"quietly"
+    ,"warn"
+    ,"granulum"
+    ,"granulum_loci"
+    ,"n_PLODs_in_bin"
+    ,"UP"
+    ,"HSP"
+    ,"POP"
+    ,"FSP"
+    ,"showUP"
+    ,"tfA"
+    ,"histA"
+    ,"tfB"
+    ,"histB"
+    ,"tfC"
+    ,"histC"
+    ,"na.omit"
+    ,"max_keep_Nexclu"
+    ,"max_keep_wpsex"
+    ,"forp_sim"
+    ,"findings"
+    ,"atts"
+    ,"N"
+    ,"FSPs"
+    ,"POPs"
+    ,"plot."
+    ,"ucols"
+    ,"kinno"
+    ,"compo"
+    ,"same"
+    ,"psex"
+    ,"emp"
+    ,"ana"
+    ,"title"
+    ,"Ppop"
+    ,"Pfsp"
+    ,"P1"
+    ,"e2.1"
+    ,"matto"
+    ,"cn6"
+    ,"cn4"
+    ,"cn3"
+    ,"ichangio"
+    ,"was1"
+    ,"was2"
+    ,"now1"
+    ,"now2"
+    ,"iget4"
+    ,"iget3"
+    ,"hasO_4way"
+    ,"hasO_3way"
+    ,"make_K"
+    ,"e"
+    ,"n_pts_SPA_renorm"
+    ,"n_samp"
+    ,"gamb"
+    ,"new_ALFs"
+    ,"genofile"
+    ,"snpgdsOpen"
+    ,"filename"
+    ,"snpgdsGetGeno"
+    ,"read.gdsn"
+    ,"index.gdsn"
+    ,"locusID"
+    ,"sampleID"
+    ,"infoFields"
+    ,"field"
+    ,"infoFrame"
+    ,"plateField"
+    ,"locinfoFields"
+    ,"locinfoFrame"
+    ,"snpgdsClose"
+    ,"keeping"
+    ,"probinverts"
+    ,"XX"
+    ,"ck"
+    ,"g12_code"
+    ,"this_g12"
+    ,"LOD_obs"
+    ,"pciles"
+    ,"their_diplos"
+    ,"xgenos"
+    ,"rawgenos"
+    ,"temp"
+    ,"kin.true"
+    ,"n.meio"
+    ,"linfo"
+    ,"L"
+    ,"count.l"
+    ,"e0.l"
+    ,"e1.l"
+    ,"v0.l"
+    ,"v1.l"
+    ,"V.noX"
+    ,"meioses"
+    ,"EofV"
+    ,"VofE"
+    ,"C.equiv"
+    ,"C.hat"
+    ,"emp.V.HSP"
+    ,"V0"
+    ,"ell"
+    ,"e2.0"
+    ,"e1.0"
+    ,"e1.1"
+    ,"phi"
+    ,"mul"
+    ,"r"
+    ,"PSstar"
+    ,"P0star"
+    ,"si2"
+    ,"si3"
+    ,"si4"
+    ,"V.allX"
+    ,"rho"
+    ,"p11.8"
+    ,"p01.8"
+    ,"p00.8"
+    ,"p11"
+    ,"p01.10"
+    ,"p00"
+    ,"EL"
+    ,"EL2"
+    ,"VL"
+    ,"mtrace"
+    ,"rho.hat"
+    ,"Vx"
+))
+
+
+
 #' add_list_defaults(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3390,14 +3832,16 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n
 #' @useDynLib kinference
 #' @importFrom Rcpp evalCpp
 #' @importFrom mvbutils %without.name% ?
-
+#' @export
 "add_list_defaults" <-
-    function( l, ...) {
+function( l, ...) {
 ###### Add defaults to list 'l' if not already in 'l'
   defaults <- list(...)
   l <- c( l, defaults %without.name% names( l))
 return( l)
 }
+
+
 
 
 #' define_genotypes(): Documentation (warning?) ported from gbasics
@@ -3408,11 +3852,11 @@ return( l)
 #' a lot of routines run it internally as a first step so that their
 #' subsequent code is simpler- and that is the intended use. If you
 #' run it from the R prompt, the things will be created in
-#' ‘.GlobalEnv’.
+#' '.GlobalEnv'.
 #'
 #' The full set of possible genotypes are created as objects; e.g.
-#' there will be an object ‘AB’ which is really a string "AB", but
-#' with a ‘noquote’ attribute so that you just see it without the
+#' there will be an object 'AB' which is really a string "AB", but
+#' with a "noquote" attribute so that you just see it without the
 #' quotes.
 #'
 #' It also creates some allowed groupings of genotypes (e.g. if there
@@ -3429,18 +3873,20 @@ return( l)
 #'               see 'mlocal'. Leave this alone unless you _really_
 #'               know what you're doing. Defaults to sys.parent()
 #' @return None, but various objects are created; see the code.
-#' @export
 #' @importFrom mvbutils cq extract.named named mlocal
 #' @seealso 'mlocal' in package 'mvbutils'.
 #' @examples
 #' ## Not run:
 #'
 #' # define_genotypes()
-#' # A # thar she
+#' A # prints as just A
+#' unclass(A) # [1] "A"
+#' genotypes6['AA'] # prints as AA
+#' unclass( genotypes6['AA']) # [1] "AA"
 #' ## End(Not run)
-
+#' @export
 "define_genotypes" <-
-    function( nlocal=sys.parent()) mlocal({
+function( nlocal=sys.parent()) mlocal({
   ABCO <- named( cq( A, B, C, O))
   extract.named( ABCO) # A, B, C, and O
 
@@ -3461,6 +3907,7 @@ return( l)
 
 
 
+
 #' inv_CDF_SPA2(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3474,9 +3921,9 @@ return( l)
 #' @importFrom stats pnorm dnorm qnorm
 #' @importFrom gbasics logit inv.logit
 #' @keywords internal
-
+#' @export
 "inv_CDF_SPA2" <-
-    function( p, K, dK, ddK, tol=formals( ridder)$tol) {
+function( p, K, dK, ddK, tol=formals( ridder)$tol) {
 
 ######## Invert L-R SPA approx to CDF on "s-scale"
 ######## Avoids "double iteration" of nonlinearity
@@ -3557,6 +4004,8 @@ return( x)
 }
 
 
+
+
 #' calculate_LOD_HSP(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
@@ -3565,9 +4014,9 @@ return( x)
 #' @param lociar a param
 #' @param k a param. Defaults to 0.5
 #' @keywords internal
-
-"calculate_LOD_HSP" <- ## badly in need of fixing; duplicated or redundant and doesn't have the pIBD2 stuff
-    function(lociar, k=0.5) {
+#' @export
+"calculate_LOD_HSP" <-
+function(lociar, k=0.5) {
 
   LODs <- calculate_IBD(lociar)
 
@@ -3626,6 +4075,8 @@ return( retval)
 }
 
 
+
+
 #' PLOD_loghisto(): PLOD distro log-frequency plot with UP and HSP expetations
 #'
 #' Plots a log-frequency histogram for the output of \code{find_HSPs()}, with
@@ -3659,9 +4110,8 @@ return( retval)
 #'               magenta.
 #' @param ... additional pars, passed to \code{plot}
 #' @export
-
 "PLOD_loghisto" <-
-    function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
+function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
@@ -3700,6 +4150,8 @@ return( retval)
     }
 
 
+
+
 #' HSP_histo(): PLOD distro frequency plot for the HSP and/or HTP bump regions
 #'
 #' Plots an absolute-frequency histogram for the output of \code{find_HSPs()}, with
@@ -3723,9 +4175,8 @@ return( retval)
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_loghisto
 #' @export
-
 "HSP_histo" <-
-    function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
+function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
              HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
@@ -3762,6 +4213,9 @@ return( retval)
                lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
     }
 
+
+
+
 #' FSP_POP_histo(): FPstat distro plot for separating FSPs from POPs
 #'
 #' Plots an absolute-frequency histogram for the output of
@@ -3775,9 +4229,8 @@ return( retval)
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_loghisto
 #' @export
-
 "FSP_POP_histo" <-
-    function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
+function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
@@ -3808,6 +4261,8 @@ return( retval)
     }
 
 
+
+
 #' HSP_oddness_oneway(): show the distributions of oddness metrics over an HSP histo
 #'
 #' Plots an absolute-frequency histogram for the output of \code{find_HSPs()}, with
@@ -3832,9 +4287,8 @@ return( retval)
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_oddness_oneway
 #' @export
-
 "HSP_oddness_oneway" <-
-    function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
              ...) {
 
@@ -3872,11 +4326,10 @@ return( retval)
     }
 
 
-#' @rdname HSP_oddness_oneway
-#' @export
+
 
 "HSP_oddness_twoway" <-
-    function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
              ...) {
 
@@ -3914,6 +4367,8 @@ return( retval)
     }
 
 
+
+
 #' PLOD_oddness_oneway(): show densities of oddness metrics over the PLOD range
 #'
 #' Plots the percentage of all pairs in each bin with an 'unusually' low
@@ -3935,9 +4390,8 @@ return( retval)
 #'            so you cannot pass them via \code{...}.
 #' @seealso HSP_oddness_oneway
 #' @export
-
 "PLOD_oddness_oneway" <-
-    function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
+function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
 
         palette("default")
@@ -3974,11 +4428,9 @@ return( retval)
 
 
 
-#' @rdname PLOD_oddness_oneway
-#' @export
 
 "PLOD_oddness_twoway" <-
-    function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
+function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
 
         palette("default")
@@ -4013,6 +4465,9 @@ return( retval)
                title='BOTH members of the pair have:', pch=15:17,col=2:4)
     }
 
+
+
+
 #' check6and4(): bare documentation
 #'
 #' Checks 6-way and 4-way genotype frequencies against HWE expectations, and generates
@@ -4031,7 +4486,6 @@ return( retval)
 #' @importFrom stats na.omit
 #' @importFrom stats quantile
 #' @export
-
 "check6and4" <-
 function( geno6,
     thresh_pchisq_6and4,
@@ -4076,6 +4530,8 @@ return( returnList( pval6, pval4))
 }
 
 
+
+
 #' chisq_genofreq_check(): check genotype frequencies against HWE expectations
 #'
 #' Checks observed genotype frequencies against expected frequencies, presumably with expectation
@@ -4096,7 +4552,6 @@ return( returnList( pval6, pval4))
 #' @importFrom graphics par
 #' @seealso kinference::check6and4
 #' @export
-
 "chisq_genofreq_check" <-
 function( lociar,
     gpred= lociar@gpred,
@@ -4179,6 +4634,8 @@ return( lociar)
 }
 
 
+
+
 #' gtab6to4(): condense 6-way genotype counts to 4-way
 #'
 #' Condenses 6-way genotype counts to 4-way (e.g., gives 'AAO' instead of AA or AO)
@@ -4186,7 +4643,6 @@ return( lociar)
 #' @return a genotype object scored as 4-way.
 #' @seealso gtab4
 #' @export
-
 "gtab6to4" <-
 function( gt6) {
 ######### Condense 6way-genotype counts to 4way (AAO instead of AA, AO)
@@ -4198,6 +4654,8 @@ function( gt6) {
   gt4[,BBO] <- gt6[,BB] + gt6[,BO]
 return( gt4)
 }
+
+
 
 
 #' Convert 'snpgds' file bits to snpgeno
@@ -4212,7 +4670,6 @@ return( gt4)
 #' @param info a data.frame of sample information, length equal to nrow(genos)
 #' @param locinfo a data.frame of locus information, length equal to ncol(genos)
 #' @param Our_plate an optional vector of plate IDs, length equal to nrow(genos)
-#' @export
 #' @examples
 #' ## genofile <- snpgdsOpen(snpgdsExampleFileName(), allow.duplicate = TRUE)
 #' ## genos <- snpgdsGetGeno(genofile, sample.id = NULL, snp.id = NULL, snpfirstdim = FALSE, .snpread = NA, with.id = FALSE, verbose = TRUE)
@@ -4224,8 +4681,9 @@ return( gt4)
 #' ## info <- info[info$pop.group == "YRI",]
 #' ## those subsets because there are 4 populations in the hapmap data - keep only one for kinf.
 #' ## newSnpgeno <- snpgdsToSnpgeno(genos = genos, Locus = Locus, Our_sample = Our_sample, info = info)
-
-snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NULL, Our_plate = NULL ) {
+#' @export
+"snpgdsToSnpgeno" <-
+function(genos, Locus, Our_sample, info = NULL, locinfo = NULL, Our_plate = NULL ) {
 
     define_genotypes()
     ## translate 0-based 'snpgds' coding to 1-based 'diplos' coding
@@ -4286,6 +4744,9 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NUL
     return( temp)
 }
 
+
+
+
 #' read a snpgds file into 'snpgeno' format
 #'
 #' This is a wrapper for 'snpgdsToSnpgeno', allowing one-line conversion from
@@ -4306,7 +4767,6 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NUL
 #' @param locinfoFields an optional character vector giving the names for locus metadata variables
 #' @param plateField an optional character string giving the field name for sample-
 #'                   specific plate ID
-#' @export
 #' @examples
 #' ## library(SNPRelate)
 #' ## simplest possible case (no locus or sample metadata other than IDs;
@@ -4322,8 +4782,9 @@ snpgdsToSnpgeno <- function(genos, Locus, Our_sample, info = NULL, locinfo = NUL
 #' ## frequencies ('pbonzer') for that subset:
 #' ## snpgeno <- snpgeno[snpgeno$info$pop.group == "YRI",]
 #' ## snpgeno$locinfo$pbonzer <- re_est_ALF(snpgeno)$locinfo$pambig
-
-read.snpgds <- function(filename, locusID, sampleID,
+#' @export
+"read.snpgds" <-
+function(filename, locusID, sampleID,
                         infoFrame = NULL, infoFields = NULL,
                         locinfoFrame = NULL, locinfoFields = NULL,
                         plateField = NULL) {
@@ -4372,6 +4833,8 @@ read.snpgds <- function(filename, locusID, sampleID,
 }
 
 
+
+
 #' est_ALF_ABCO(): bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for Roxygen to parse it. We
@@ -4380,7 +4843,6 @@ read.snpgds <- function(filename, locusID, sampleID,
 #' @param lociar a genotype object with the @geno_amb attribute.
 #' @seealso geno_dembig_ABC
 #' @export
-
 "est_ALF_ABCO" <-
 function( lociar, geno_amb = lociar@geno_amb) {
 ########## Taken largely from "pipeline_for_SBT_baits.r"
@@ -4494,6 +4956,9 @@ stop( "No 'geno_amb' attribute :(")
 return( lociar)
 }
 
+
+
+
 #' make_pgeno(): bare documentation
 #'
 #' This function has the bare minimum of documentation necessary for roxygen to parse it.
@@ -4507,7 +4972,6 @@ return( lociar)
 #'                        new O includes C.
 #' @keywords internal
 #' @export
-
 "make_pgeno" <-
 function( pA, pB, pC, which_genotypes) {
 ###
@@ -4538,13 +5002,15 @@ function( pA, pB, pC, which_genotypes) {
 return( phat)
 }
 
+
+
+
 #' re_est_ALF(): re-estimate allele frequencies after read-in with load_whopper.
 #'
 #' Returns locus-specific allele frequency estimates.
 #'
 #' @param snpg an snpg object
 #' @export
-
 "re_est_ALF" <-
 function( snpg) {
 ## check to be called after load_whopper loads entire dataset
@@ -4566,10 +5032,11 @@ function( snpg) {
 return( new_ALFs)
 }
 
-#' @rdname find_FSPs_from_POPs
-#' @export
 
-find_FSPs_from_POPs_v2 <- function( snpg, candiPOPs, keep_indiv=FALSE) {
+
+
+"find_FSPs_from_POPs_v2" <-
+function( snpg, candiPOPs, keep_indiv=FALSE) {
 ###### ADD ALIAS TO DOCO for find_FSPs_from_POPs and ensure this is exported
 ###### ... which this function should replace
 ###### ... keep the old one as 'old_find_FSPs_from_POPs' for now...
@@ -4864,6 +5331,8 @@ return( ret)
 }
 
 
+
+
 #' Do a thing, don't tell the user
 #'
 #' forp_sim from simcheck_FSP_POP(); findings from find_FSPs_from_POPs_v2( forp_sim, candiPOPs...)
@@ -4874,8 +5343,9 @@ return( ret)
 #' @param forp_sim a param
 #' @param findings a param
 #' @param plot. a param. Default TRUE
-
-postprocess_simcheck_FSP_POP <- function( forp_sim, findings, plot.=TRUE) {
+#' @export
+"postprocess_simcheck_FSP_POP" <-
+function( forp_sim, findings, plot.=TRUE) {
 
   # Are the names what we expect from simcheck_FSP_POP ..?
   stopifnot( all( grepl( '^[FP][0-9]+_[AB]$', forp_sim$info$Our_sample)))
@@ -4923,7 +5393,8 @@ return( NULL)
 }
 
 
-#' @export
+
+
 "[.SPAgeno" <-
 function( x, i, j, ..., drop=FALSE){
     x <- NextMethod( '[')
@@ -4932,7 +5403,9 @@ function( x, i, j, ..., drop=FALSE){
 return( x)
 }
 
-#' @export
+
+
+
 "[<-.SPAgeno" <-
 function( x, i, j, value) {
 
@@ -4946,511 +5419,853 @@ return( x)
 
 
 
+"paircomps" <-
+function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
+    .Call('_kinference_paircomps', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci)
+}
+
+
+
+
+"HSP_paircomps_lots" <-
+function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins) {
+    .Call('_kinference_HSP_paircomps_lots', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
+}
+
+
+
+
+"POP_paircomps_lots" <-
+function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
+    .Call('_kinference_POP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO)
+}
+
+
+
+
+"POP_wt_paircomps_lots" <-
+function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, minbin, nbins, binterval) {
+    .Call('_kinference_POP_wt_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, minbin, nbins, binterval)
+}
+
+
+
+
+"DUP_paircomps_lots" <-
+function(geno1, geno2, symmo, max_diff_genos, keep_n, minbin, nbins, binterval) {
+    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_genos, keep_n, minbin, nbins, binterval)
+}
+
+
+
+
+"DUP_paircomps_incomplete_lots" <-
+function(geno1, geno2, symmo, max_diff_ppn, limit) {
+    .Call('_kinference_DUP_paircomps_incomplete_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_ppn, limit)
+}
+
+
+
+
+"indiv_lglk_geno" <-
+function(lpgeno, geno) {
+    .Call('_kinference_indiv_lglk_geno', PACKAGE = 'kinference', lpgeno, geno)
+}
+
+
+
+
+"K_indiv" <-
+function(tt, geno, vec_LOD, Pg) {
+    .Call('_kinference_K_indiv', PACKAGE = 'kinference', tt, geno, vec_LOD, Pg)
+}
+
+
+
+
+#' Combine two QC steps: experimental
+#' 
+#' \code{juicyQC} is a bivariate combination of \code{hetzminoo_fancy} and
+#' \code{ilglk_geno}, which \emph{may} be better at identifying "suspect"
+#' samples. It may or may not end up in the final kinference toolchain.
+#' 
+#' 
+#' @param snpg a param
+#' @param focusees a param
+#' @param boring a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils
+#' for \code{\%upto\%}.
+#' @export
+"juicyQC" <-
+function( snpg, focusees, boring=1 %upto% nrow( snpg)) {
+## Bivariate combo of hetzminoo_fancy and ilglk_geno; perhaps this will be better for
+# finding suspect samples. But seemingly not much (for school shark), so I haven't exported itfi.
+
+  hmfr <- hetzminoo_fancy( snpg, 'rich', hist_pars=list( plot=FALSE)) # still plots...
+  lglk <- kinference::ilglk_geno( snpg, indiv_lglk_hist_pars=list( plot=FALSE))
+
+  # Could use SPA to "Gaussianize"...
+  stat <- cbind( hmfr, lglk)
+  mdull <- colMeans( stat[ boring,]) # mean() doesnt' work column-wise, unlike var()...
+  vdull <- var( stat[ boring, ])
+  sstat[ f, s]:= stat[ f, s] - mdull[ s]
+
+  # should do this with built-in cholesky stuff, but its doco is SO SHITE
+  iv <- solve( vdull)
+  # dist <- sstat %*% (iv %*% t( sstat)) god knows what the bloody syntax is supposed to bloody be
+  dist[ f]:= sstat[ f, s] %[s]% iv[ s, s1] %[s1]% sstat[ f, s1]
+
+  hist( dist[ boring], nc=50)
+  abline( v=dist[ focusees], col='red')
+
+returnList( general_dist=dist[ boring], focus_dist=dist[ focusees])
+}
+
+
+
+
 # MVB's workaround for futile CRAN 'no visible blah' check:
 globalVariables( package="kinference",
-                names=c( ".Traceback"
-                       ,"oa"
-                       ,"pkgname"
-                       ,"libname"
-                       ,"g_err"
-                       ,"genotypes_C"
-                       ,"perr"
-                       ,"g_1"
-                       ,"g_2"
-                       ,"AA_BB"
-                       ,"A"
-                       ,"B"
-                       ,"snerr"
-                       ,"AO_BO"
-                       ,"O"
-                       ,"pp_err"
-                       ,"gg"
-                       ,"g1_err"
-                       ,"g1"
-                       ,"g2_err"
-                       ,"g2"
-                       ,"pp_true"
-                       ,"add_up"
-                       ,"result"
-                       ,"dimor"
-                       ,"i"
-                       ,"other"
-                       ,"..."
-                       ,"."
-                       ,"OO"
-                       ,"CC"
-                       ,"CO"
-                       ,"AO"
-                       ,"AC"
-                       ,"BO"
-                       ,"BC"
-                       ,"pp6_err"
-                       ,"genotypes6"
-                       ,"P"
-                       ,"pr2"
-                       ,"record"
-                       ,"ABCO"
-                       ,"is_het"
-                       ,"gp1"
-                       ,"gp2"
-                       ,"pp3"
-                       ,"su1u2"
-                       ,"implied"
-                       ,"swap12"
-                       ,"swap34"
-                       ,"cimplied"
-                       ,"implstr"
-                       ,"has_impl2"
-                       ,"first_impl"
-                       ,"second_impl"
-                       ,"cimpl2"
-                       ,"thing"
-                       ,"j"
-                       ,"ij"
-                       ,"ijpairs"
-                       ,"is_pair"
-                       ,"test"
-                       ,"x"
-                       ,"y"
-                       ,"xtest"
-                       ,"to.do"
-                       ,"chains"
-                       ,"pairmats"
-                       ,"this_chain"
-                       ,"this_pairs"
-                       ,"o"
-                       ,"snpg"
-                       ,"og"
-                       ,"iwhat"
-                       ,"LOD"
-                       ,"PUP"
-                       ,"PUPLOD"
-                       ,"PUPLOD2"
-                       ,"Kenv"
-                       ,"mg"
-                       ,"OLOD"
-                       ,"use6"
-                       ,"locinfo"
-                       ,"use4"
-                       ,"temp_snpg"
-                       ,"recode4to6temp"
-                       ,"AA"
-                       ,"BB"
-                       ,"n_loci"
-                       ,"OPUP"
-                       ,"NPUP"
-                       ,"ig"
-                       ,"gjseq"
-                       ,"XXi"
-                       ,"l"
-                       ,"gj"
-                       ,"Pg"
-                       ,"gi"
-                       ,"e_CLOD"
-                       ,"%[gj]%"
-                       ,"e2_CLOD"
-                       ,"geno"
-                       ,"g1seq"
-                       ,"my_e_CLOD"
-                       ,"%[g1]%"
-                       ,"my_e2_CLOD"
-                       ,"my_v_CLOD"
-                       ,"my_rat_CLOD"
-                       ,"%[l]%"
-                       ,"SUM_"
-                       ,"nsim"
-                       ,"gsim"
-                       ,"il"
-                       ,"sim_e_CLOD"
-                       ,"sim_e2_CLOD"
-                       ,"sim_v_CLOD"
-                       ,"sim_rat_CLOD"
-                       ,"K"
-                       ,"ETT"
-                       ,"it"
-                       ,"g"
-                       ,"tt"
-                       ,"log_S"
-                       ,"%[g]%"
-                       ,"dK"
-                       ,"g12"
-                       ,"LODOK"
-                       ,"S"
-                       ,"%[g12]%"
-                       ,"SL"
-                       ,"ddK"
-                       ,"SLL"
-                       ,"gbasics"
-                       ,"bins"
-                       ,"qq"
-                       ,"nq"
-                       ,"mean_theory"
-                       ,"var_theory"
-                       ,"symmo"
-                       ,"subset1"
-                       ,"big_PLOD"
-                       ,"big_i"
-                       ,"big_j"
-                       ,"binprobs"
-                       ,"eta"
-                       ,"keep_thresh"
-                       ,"hmfr"
-                       ,"lglk"
-                       ,"kinference"
-                       ,"stat"
-                       ,"mdull"
-                       ,"boring"
-                       ,"vdull"
-                       ,"var"
-                       ,"sstat"
-                       ,"f"
-                       ,"s"
-                       ,"iv"
-                       ,"dist"
-                       ,"%[s1]%"
-                       ,"%[s]%"
-                       ,"s1"
-                       ,"hist"
-                       ,"abline"
-                       ,"focusees"
-                       ,"expr"
-                       ,"obj"
-                       ,"name"
-                       ,"expand_dim"
-                       ,"prefixdims"
-                       ,"dimorlen"
-                       ,"d"
-                       ,"e"
-                       ,"where"
-                       ,"whoami"
-                       ,"uij"
-                       ,"n"
-                       ,"m"
-                       ,"nf"
-                       ,"k"
-                       ,"groups"
-                       ,"keeps"
-                       ,"drops"
-                       ,"want_groups"
-                       ,"nl"
-                       ,"pobs"
-                       ,"pbonzer"
-                       ,"lglk_l"
-                       ,"p6"
-                       ,"ppar"
-                       ,"pAO"
-                       ,"pAA"
-                       ,"pBO"
-                       ,"pBB"
-                       ,"pAB"
-                       ,"pOO"
-                       ,"AA2AO"
-                       ,"AO2AA"
-                       ,"AB"
-                       ,"BB2BO"
-                       ,"BO2BB"
-                       ,"n_l"
-                       ,"Nlglk"
-                       ,"flush.console"
-                       ,"pstart"
-                       ,"fitto"
-                       ,"nlminb"
-                       ,"control"
-                       ,"subset2"
-                       ,"diplos"
-                       ,"genotypes4_ambig"
-                       ,"AAO"
-                       ,"BBO"
-                       ,"gtab"
-                       ,"pid"
-                       ,"DUP_paircomps_lots"
-                       ,"max_diff_genos"
-                       ,"big_similar"
-                       ,"max_diff_ppn"
-                       ,"OO_code"
-                       ,"NA_geno"
-                       ,"DUP_paircomps_incomplete_lots"
-                       ,"limit"
-                       ,"big_ndiff"
-                       ,"big_ncomp"
-                       ,"candiHSPs"
-                       ,"sibg"
-                       ,"just_sibg"
-                       ,"PUP4"
-                       ,"LOD4"
-                       ,"PHSP4"
-                       ,"P_k0"
-                       ,"P_k1"
-                       ,"P_k2"
-                       ,"nsib"
-                       ,"nloci"
-                       ,"kappa_fsp"
-                       ,"kappa_hsp"
-                       ,"p12fsp"
-                       ,"p12hsp"
-                       ,"OD_FH"
-                       ,"LOD_FH"
-                       ,"PLOD_FH"
-                       ,"OPHSP"
-                       ,"p12fspa"
-                       ,"p12hspa"
-                       ,"EPLOD_FH_F"
-                       ,"EPLOD_FH_H"
-                       ,"ret"
-                       ,"E_FSP"
-                       ,"E_HSP"
-                       ,"candiPOPs"
-                       ,"just_snpg"
-                       ,"n_pairs"
-                       ,"pA"
-                       ,"pB"
-                       ,"pO"
-                       ,"pgeno"
-                       ,"off"
-                       ,"Pr_same_given_k"
-                       ,"Pr_nsame_FSP"
-                       ,"Pr_same_FSP"
-                       ,"%[k]%"
-                       ,"Pr_same_POP"
-                       ,"Pr_nsame_HSP"
-                       ,"Pr_same_HSP"
-                       ,"SD_FSP"
-                       ,"SD_POP"
-                       ,"SDwt_POP"
-                       ,"SD_denom"
-                       ,"wt"
-                       ,"wtsame"
-                       ,"E_POP"
-                       ,"E_UP"
-                       ,"inv_CDF"
-                       ,"LOD6"
-                       ,"temp_LOD"
-                       ,"nbins"
-                       ,"CDF"
-                       ,"HSP_paircomps_lots"
-                       ,"bits"
-                       ,"make_CLOD"
-                       ,"PHSP"
-                       ,"Pg2_g1_H"
-                       ,"e_CLOD_HSP"
-                       ,"p0"
-                       ,"pex"
-                       ,"delta"
-                       ,"SD"
-                       ,"SD_combo"
-                       ,"WPSEX_UP_POP_balance"
-                       ,"V_combo"
-                       ,"ww"
-                       ,"pop_loci"
-                       ,"AAish"
-                       ,"BBish"
-                       ,"HSP"
-                       ,"UP"
-                       ,"POP"
-                       ,"FSP"
-                       ,"rr"
-                       ,"log1m_pexup"
-                       ,"KK"
-                       ,"retw"
-                       ,"dKK"
-                       ,"ddKK"
-                       ,"n_sim_check"
-                       ,"Ktest"
-                       ,"runif"
-                       ,"ewx"
-                       ,"quick"
-                       ,"pciles"
-                       ,"POP_wt_paircomps_lots"
-                       ,"n_in_bin"
-                       ,"n_wpsex_in_bin"
-                       ,"big_wpsex"
-                       ,"snpg_i"
-                       ,"snpg_j"
-                       ,"isABOO"
-                       ,"nABOO"
-                       ,"oset"
-                       ,"set"
-                       ,"seed"
-                       ,"newj"
-                       ,"newi"
-                       ,"v"
-                       ,"target"
-                       ,"edash"
-                       ,"msqrt_v"
-                       ,"median"
-                       ,"use_loci"
-                       ,"whmo"
-                       ,"four_pab_poo"
-                       ,"compaboo"
-                       ,"etwab"
-                       ,"etwoo"
-                       ,"denom"
-                       ,"dens_SPA"
-                       ,"hist_pars"
-                       ,"lv"
-                       ,"lines"
-                       ,"mids"
-                       ,"breaks"
-                       ,"counts"
-                       ,"badhetz_hist_pars"
-                       ,"li"
-                       ,"lociar"
-                       ,"li1"
-                       ,"temp0"
-                       ,"cg6p0"
-                       ,"temp1"
-                       ,"cg6p1"
-                       ,"g6p0"
-                       ,"g6p1"
-                       ,"s6"
-                       ,"want_LOD_table"
-                       ,"map6to4"
-                       ,"mm"
-                       ,"yup"
-                       ,"%[j]%"
-                       ,"g4p0"
-                       ,"g4p1"
-                       ,"s4"
-                       ,"PUP6"
-                       ,"n_samps"
-                       ,"snpg4"
-                       ,"info"
-                       ,"Our_plate"
-                       ,"Our_sample"
-                       ,"Locus"
-                       ,"lpgeno"
-                       ,"ttp1"
-                       ,"etp1l"
-                       ,"num"
-                       ,"num2"
-                       ,"ntest"
-                       ,"Ksim"
-                       ,"meansim"
-                       ,"genos"
-                       ,"lp"
-                       ,"ilglk"
-                       ,"indiv_lglk_geno"
-                       ,"ilglk_manual"
-                       ,"indiv_lglk_hist_pars"
-                       ,"mids_SPA"
-                       ,"good_ind"
-                       ,"elg"
-                       ,"elg2"
-                       ,"sdelg"
-                       ,"GG"
-                       ,"n_f"
-                       ,"olg"
-                       ,"%[f]%"
-                       ,"sg"
-                       ,"dips"
-                       ,"quietly"
-                       ,"warn"
-                       ,"my_dll"
-                       ,"onload_autowrap"
-                       ,"pIBD1"
-                       ,"Phsp"
-                       ,"pIBD0"
-                       ,"Pup"
-                       ,"ngp"
-                       ,"wanted"
-                       ,"gpLOD"
-                       ,"gpPUP"
-                       ,"LOD_as_2D"
-                       ,"PUP_as_2D"
-                       ,"omg"
-                       ,"double_wanted"
-                       ,"what"
-                       ,"E.HSP"
-                       ,"%[i,j]%"
-                       ,"E.UP"
-                       ,"E2.UP"
-                       ,"V.UP"
-                       ,"Ediff"
-                       ,"sdiff"
-                       ,"retval"
-                       ,"geno6"
-                       ,"cn6"
-                       ,"cn4"
-                       ,"ichangio"
-                       ,"was1"
-                       ,"was2"
-                       ,"now1"
-                       ,"now2"
-                       ,"iget4"
-                       ,"hasO"
-                       ,"make_K"
-                       ,"n_pts_SPA_renorm"
-                       ,"keeping"
-                       ,"hi"
-                       ,"lo"
-                       ,"probinverts"
-                       ,"one_in_X_eta"
-                       ,"rough_n_pairs_to_keep"
-                       ,"XX"
-                       ,"ck"
-                       ,"g12_code"
-                       ,"this_g12"
-                       ,"LOD_obs"
-                       ,"PLOD"
-                       ,"bin"
-                       ,"kin.true"
-                       ,"n.meio"
-                       ,"linfo"
-                       ,"L"
-                       ,"count.l"
-                       ,"e0"
-                       ,"e0.l"
-                       ,"e1"
-                       ,"e1.l"
-                       ,"v0"
-                       ,"v0.l"
-                       ,"v1"
-                       ,"v1.l"
-                       ,"V.noX"
-                       ,"p"
-                       ,"meioses"
-                       ,"EofV"
-                       ,"VofE"
-                       ,"C"
-                       ,"C.equiv"
-                       ,"C.hat"
-                       ,"emp.V.HSP"
-                       ,"V0"
-                       ,"ell"
-                       ,"e2.1"
-                       ,"e2.0"
-                       ,"e1.0"
-                       ,"e1.1"
-                       ,"phi"
-                       ,"mul"
-                       ,"r"
-                       ,"PSstar"
-                       ,"P0star"
-                       ,"si2"
-                       ,"si3"
-                       ,"si4"
-                       ,"V.allX"
-                       ,"rho"
-                       ,"p11.8"
-                       ,"p01.8"
-                       ,"p00.8"
-                       ,"p11"
-                       ,"p01.10"
-                       ,"p00"
-                       ,"EL"
-                       ,"EL2"
-                       ,"VL"
-                       ,"rho.hat"
-                       ,"Vx"
-                       ,"useN"
-                       ,"g3p0"
-                       ,"g3p1"
-                       ,"genotypes3_ambig"
-                       ,"keep_n"
-                       ,"LOD3"
-                       ,"PUP3"
-                       ,"mean_HSP"
-                       ,"n_PLODs_in_bin"
-                        )
-                )
+  names=c( ".Traceback"
+    ,"Cloader"
+    ,"pkgname"
+    ,".__NAMESPACE__."
+    ,"path"
+    ,"x"
+    ,"defaults"
+    ,"..."
+    ,"l"
+    ,"g_err"
+    ,"genotypes_C"
+    ,"perr"
+    ,"g_1"
+    ,"g_2"
+    ,"AA_BB"
+    ,"A"
+    ,"B"
+    ,"snerr"
+    ,"AO_BO"
+    ,"O"
+    ,"pp_err"
+    ,"gg"
+    ,"g1_err"
+    ,"g1"
+    ,"g2_err"
+    ,"g2"
+    ,"pp_true"
+    ,"add_up"
+    ,"result"
+    ,"dimor"
+    ,"i"
+    ,"other"
+    ,"."
+    ,"OO"
+    ,"CC"
+    ,"CO"
+    ,"AO"
+    ,"AC"
+    ,"BO"
+    ,"BC"
+    ,"pp6_err"
+    ,"genotypes6"
+    ,"P"
+    ,"pr2"
+    ,"record"
+    ,"ABCO"
+    ,"is_het"
+    ,"gp1"
+    ,"gp2"
+    ,"pp3"
+    ,"su1u2"
+    ,"implied"
+    ,"swap12"
+    ,"swap34"
+    ,"cimplied"
+    ,"implstr"
+    ,"has_impl2"
+    ,"first_impl"
+    ,"second_impl"
+    ,"cimpl2"
+    ,"li"
+    ,"lociar"
+    ,"locinfo"
+    ,"li1"
+    ,"temp0"
+    ,"pbonzer"
+    ,"cg6p0"
+    ,"temp1"
+    ,"cg6p1"
+    ,"temp2"
+    ,"cg6p2"
+    ,"pIBD0"
+    ,"pIBD1"
+    ,"pIBD2"
+    ,"LODs"
+    ,"nl"
+    ,"Phsp"
+    ,"k"
+    ,"Pup"
+    ,"LOD"
+    ,"mg"
+    ,"ngp"
+    ,"wanted"
+    ,"gpLOD"
+    ,"gpPUP"
+    ,"LOD_as_2D"
+    ,"PUP_as_2D"
+    ,"omg"
+    ,"double_wanted"
+    ,"what"
+    ,"E.HSP"
+    ,"%[i,j]%"
+    ,"j"
+    ,"E.UP"
+    ,"E2.UP"
+    ,"V.UP"
+    ,"Ediff"
+    ,"sdiff"
+    ,"retval"
+    ,"PUP"
+    ,"thing"
+    ,"ij"
+    ,"ijpairs"
+    ,"is_pair"
+    ,"test"
+    ,"y"
+    ,"xtest"
+    ,"to.do"
+    ,"chains"
+    ,"pairmats"
+    ,"this_chain"
+    ,"this_pairs"
+    ,"o"
+    ,"snpg"
+    ,"og"
+    ,"iwhat"
+    ,"PUPLOD"
+    ,"PUPLOD2"
+    ,"Kenv"
+    ,"OLOD"
+    ,"useN"
+    ,"temp_snpg"
+    ,"recode4to6temp"
+    ,"AA"
+    ,"BB"
+    ,"recode3to6temp"
+    ,"n_loci"
+    ,"OPUP"
+    ,"NPUP"
+    ,"ig"
+    ,"gjseq"
+    ,"XXi"
+    ,"gj"
+    ,"Pg"
+    ,"gi"
+    ,"e_CLOD"
+    ,"%[gj]%"
+    ,"e2_CLOD"
+    ,"geno"
+    ,"g1seq"
+    ,"my_e_CLOD"
+    ,"%[g1]%"
+    ,"my_e2_CLOD"
+    ,"my_v_CLOD"
+    ,"my_rat_CLOD"
+    ,"%[l]%"
+    ,"SUM_"
+    ,"nsim"
+    ,"gsim"
+    ,"il"
+    ,"sim_e_CLOD"
+    ,"sim_e2_CLOD"
+    ,"sim_v_CLOD"
+    ,"sim_rat_CLOD"
+    ,"K"
+    ,"ETT"
+    ,"it"
+    ,"g"
+    ,"tt"
+    ,"log_S"
+    ,"%[g]%"
+    ,"dK"
+    ,"g12"
+    ,"LODOK"
+    ,"S"
+    ,"%[g12]%"
+    ,"SL"
+    ,"ddK"
+    ,"SLL"
+    ,"gbasics"
+    ,"bins"
+    ,"qq"
+    ,"nq"
+    ,"mean_theory"
+    ,"var_theory"
+    ,"symmo"
+    ,"subset1"
+    ,"big_PLOD"
+    ,"big_i"
+    ,"big_j"
+    ,"binprobs"
+    ,"eta"
+    ,"keep_thresh"
+    ,"n_fish"
+    ,"geno6"
+    ,"diplos"
+    ,"p6"
+    ,"calc_g6probs"
+    ,"g6pred"
+    ,"g6obs"
+    ,"pval6"
+    ,"thresh_pchisq_6and4"
+    ,"extra_title"
+    ,"pval"
+    ,"g4obs"
+    ,"g4pred"
+    ,"pval4"
+    ,"return_what"
+    ,"gobs"
+    ,"gpred"
+    ,"chistat"
+    ,"DoF"
+    ,"pchisq"
+    ,"liffies"
+    ,"thresh_pchisq_loci"
+    ,"keep_loci"
+    ,"iffy_loci"
+    ,"par"
+    ,"hist"
+    ,"seq_paxis"
+    ,"mtext"
+    ,"abline"
+    ,"opar"
+    ,"gtypes"
+    ,"plot"
+    ,"points"
+    ,"legend"
+    ,"trim"
+    ,"C"
+    ,"genotypes"
+    ,"AB"
+    ,"AAO"
+    ,"BBO"
+    ,"BBOO"
+    ,"genotypes_ambig"
+    ,"genotypes4_ambig"
+    ,"genotypes3_ambig"
+    ,"NA_geno"
+    ,"uij"
+    ,"n"
+    ,"m"
+    ,"nf"
+    ,"groups"
+    ,"keeps"
+    ,"drops"
+    ,"want_groups"
+    ,"geno1"
+    ,"geno2"
+    ,"max_diff_ppn"
+    ,"limit"
+    ,"max_diff_genos"
+    ,"keep_n"
+    ,"minbin"
+    ,"nbins"
+    ,"binterval"
+    ,"pobs"
+    ,"lglk_l"
+    ,"ppar"
+    ,"pAO"
+    ,"pAA"
+    ,"pBO"
+    ,"pBB"
+    ,"pAB"
+    ,"pOO"
+    ,"AA2AO"
+    ,"AO2AA"
+    ,"BB2BO"
+    ,"BO2BB"
+    ,"n_l"
+    ,"Nlglk"
+    ,"flush.console"
+    ,"pstart"
+    ,"fitto"
+    ,"nlminb"
+    ,"control"
+    ,"geno_amb"
+    ,"plogis"
+    ,"expected"
+    ,"lglk"
+    ,"has_C"
+    ,"params"
+    ,"pA"
+    ,"pB"
+    ,"pC"
+    ,"pO"
+    ,"phat"
+    ,"nobs"
+    ,"pen"
+    ,"penscale"
+    ,"start_par"
+    ,"pambig_est"
+    ,"conv"
+    ,"tiny"
+    ,"ll"
+    ,"CCO"
+    ,"duhhh"
+    ,"qlogis"
+    ,"p"
+    ,"testo"
+    ,"fit"
+    ,"convergence"
+    ,"besto"
+    ,"pambig"
+    ,"subset_like_loci"
+    ,"subset2"
+    ,"gtab"
+    ,"pid"
+    ,"n_ndiff_in_bin"
+    ,"big_similar"
+    ,"ndiff"
+    ,"showPlot"
+    ,"OO_code"
+    ,"big_ndiff"
+    ,"big_ncomp"
+    ,"candiHSPs"
+    ,"sibg"
+    ,"just_sibg"
+    ,"PUP4"
+    ,"LOD4"
+    ,"PHSP4"
+    ,"P_k0"
+    ,"P_k1"
+    ,"P_k2"
+    ,"nsib"
+    ,"nloci"
+    ,"kappa_fsp"
+    ,"kappa_hsp"
+    ,"p12fsp"
+    ,"p12hsp"
+    ,"OD_FH"
+    ,"LOD_FH"
+    ,"PLOD_FH"
+    ,"OPHSP"
+    ,"p12fspa"
+    ,"p12hspa"
+    ,"EPLOD_FH_F"
+    ,"EPLOD_FH_H"
+    ,"ret"
+    ,"candiPOPs"
+    ,"just_snpg"
+    ,"n_pairs"
+    ,"pgeno"
+    ,"off"
+    ,"Pr_same_given_k"
+    ,"Pr_nsame_FSP"
+    ,"Pr_same_FSP"
+    ,"%[k]%"
+    ,"Pr_same_POP"
+    ,"Pr_nsame_HSP"
+    ,"Pr_same_HSP"
+    ,"SD_FSP"
+    ,"SD_POP"
+    ,"SDwt_POP"
+    ,"SD_denom"
+    ,"wt"
+    ,"wtsame"
+    ,"E_FSP"
+    ,"E_POP"
+    ,"E_HSP"
+    ,"E_UP"
+    ,"use6"
+    ,"P6"
+    ,"PUP6"
+    ,"same6"
+    ,"Pr_nibd_FSP"
+    ,"Pr_nibd_POP"
+    ,"Pr_psex_given_k"
+    ,"Pr_psex_FSP"
+    ,"Pr_psex_POP"
+    ,"px"
+    ,"ps"
+    ,"inv_DET"
+    ,"Dx"
+    ,"Ds"
+    ,"ws"
+    ,"wx"
+    ,"V_FSP"
+    ,"rescalor"
+    ,"V_FSP_nolink"
+    ,"V_POP"
+    ,"snpg6"
+    ,"snpg4"
+    ,"snpg3"
+    ,"g1_6"
+    ,"g2_6"
+    ,"g1_4"
+    ,"g2_4"
+    ,"g1_3"
+    ,"g2_3"
+    ,"is_same"
+    ,"is_psex"
+    ,"stat"
+    ,"E_FPstat"
+    ,"V_FPstat"
+    ,"keep_indiv"
+    ,"hspPower_change"
+    ,"hspPower_checksum"
+    ,"PLODSPA_change"
+    ,"PLODSPA_checksum"
+    ,"LOD6"
+    ,"LOD3"
+    ,"PUP3"
+    ,"one_in_X_eta"
+    ,"keep_thresh_set"
+    ,"inv_CDF"
+    ,"temp_LOD"
+    ,"CDF"
+    ,"xresult"
+    ,"mean_HSP"
+    ,"mean_POP"
+    ,"E.POP"
+    ,"mean_FSP"
+    ,"E.FSP"
+    ,"rough_n_pairs_to_keep"
+    ,"p0"
+    ,"pex"
+    ,"delta"
+    ,"SD"
+    ,"SD_combo"
+    ,"WPSEX_UP_POP_balance"
+    ,"V_combo"
+    ,"ww"
+    ,"pop_loci"
+    ,"opphetz"
+    ,"pex_up"
+    ,"rr"
+    ,"log1m_pexup"
+    ,"KK"
+    ,"retw"
+    ,"dKK"
+    ,"ddKK"
+    ,"n_sim_check"
+    ,"Ktest"
+    ,"runif"
+    ,"ewx"
+    ,"quick"
+    ,"maxbin"
+    ,"big_wpsex"
+    ,"n_wpsex_in_bin"
+    ,"snpg_i"
+    ,"snpg_j"
+    ,"isABOO"
+    ,"nABOO"
+    ,"palette"
+    ,"lb"
+    ,"xlim"
+    ,"ub"
+    ,"fsps2"
+    ,"FPstat"
+    ,"bin"
+    ,"hist.plod"
+    ,"POPmean"
+    ,"FSPmean"
+    ,"legendBits"
+    ,"allNames"
+    ,"allNumbers"
+    ,"oset"
+    ,"set"
+    ,"seed"
+    ,"newj"
+    ,"newi"
+    ,"gt4"
+    ,"gt6"
+    ,"v"
+    ,"target"
+    ,"edash"
+    ,"msqrt_v"
+    ,"median"
+    ,"use_loci"
+    ,"whmo"
+    ,"f"
+    ,"four_pab_poo"
+    ,"compaboo"
+    ,"etwab"
+    ,"etwoo"
+    ,"denom"
+    ,"dens_SPA"
+    ,"hist_pars"
+    ,"lv"
+    ,"lines"
+    ,"mids"
+    ,"breaks"
+    ,"counts"
+    ,"badhetz_hist_pars"
+    ,"hsps"
+    ,"PLOD"
+    ,"main"
+    ,"HSPmean"
+    ,"E.hsp"
+    ,"HSPdist"
+    ,"V.hsp"
+    ,"fullsib_cut"
+    ,"obs.num"
+    ,"exp.num"
+    ,"pnorm"
+    ,"cloddo"
+    ,"clod.stat"
+    ,"ECLOD"
+    ,"VCLOD"
+    ,"hetz.poor"
+    ,"ilglk"
+    ,"hist1"
+    ,"tf"
+    ,"quantile"
+    ,"CLOD_prop"
+    ,"colour"
+    ,"rgb"
+    ,"ilglk_prop"
+    ,"hetz_prop"
+    ,"hist2"
+    ,"pair_geno"
+    ,"min_keep_PLOD"
+    ,"g6p0"
+    ,"g6p1"
+    ,"g6p2"
+    ,"s6"
+    ,"want_LOD_table"
+    ,"mm"
+    ,"yup"
+    ,"%[j]%"
+    ,"g4p0"
+    ,"g4p1"
+    ,"g4p2"
+    ,"s4"
+    ,"g3p0"
+    ,"g3p1"
+    ,"g3p2"
+    ,"s3"
+    ,"e0_6way"
+    ,"e0"
+    ,"v0_6way"
+    ,"v0"
+    ,"e1_6way"
+    ,"e1"
+    ,"v1_6way"
+    ,"v1"
+    ,"e0_4way"
+    ,"v0_4way"
+    ,"e1_4way"
+    ,"v1_4way"
+    ,"e0_3way"
+    ,"v0_3way"
+    ,"e1_3way"
+    ,"v1_3way"
+    ,"n_samps"
+    ,"info"
+    ,"Our_plate"
+    ,"Our_sample"
+    ,"Locus"
+    ,"lpgeno"
+    ,"ttp1"
+    ,"etp1l"
+    ,"num"
+    ,"num2"
+    ,"ntest"
+    ,"Ksim"
+    ,"meansim"
+    ,"genos"
+    ,"lp"
+    ,"ilglk_manual"
+    ,"indiv_lglk_hist_pars"
+    ,"mids_SPA"
+    ,"good_ind"
+    ,"isqrt_2pi"
+    ,"sqrt_ddK_s"
+    ,"Leg_trans"
+    ,"u"
+    ,"w"
+    ,"CSPA"
+    ,"s"
+    ,"dnorm"
+    ,"p_target"
+    ,"isK2"
+    ,"seps"
+    ,"is_lower"
+    ,"hi"
+    ,"lo"
+    ,"q0"
+    ,"qnorm"
+    ,"bingo"
+    ,"mean_x"
+    ,"s0"
+    ,"bad"
+    ,"C0"
+    ,"toobig"
+    ,"multor"
+    ,"bracketed"
+    ,"step"
+    ,"snext"
+    ,"tol"
+    ,"hmfr"
+    ,"kinference"
+    ,"mdull"
+    ,"boring"
+    ,"vdull"
+    ,"var"
+    ,"sstat"
+    ,"iv"
+    ,"dist"
+    ,"%[s1]%"
+    ,"%[s]%"
+    ,"s1"
+    ,"focusees"
+    ,"vec_LOD"
+    ,"elg"
+    ,"elg2"
+    ,"sdelg"
+    ,"GG"
+    ,"n_f"
+    ,"olg"
+    ,"%[f]%"
+    ,"which_genotypes"
+    ,"pAAO"
+    ,"pBBO"
+    ,"pAC"
+    ,"pCO"
+    ,"pCC"
+    ,"pCCO"
+    ,"pBC"
+    ,"funco"
+    ,"sg"
+    ,"dips"
+    ,"quietly"
+    ,"warn"
+    ,"granulum"
+    ,"granulum_loci"
+    ,"n_PLODs_in_bin"
+    ,"UP"
+    ,"HSP"
+    ,"POP"
+    ,"FSP"
+    ,"showUP"
+    ,"tfA"
+    ,"histA"
+    ,"tfB"
+    ,"histB"
+    ,"tfC"
+    ,"histC"
+    ,"na.omit"
+    ,"max_keep_Nexclu"
+    ,"max_keep_wpsex"
+    ,"forp_sim"
+    ,"findings"
+    ,"atts"
+    ,"N"
+    ,"FSPs"
+    ,"POPs"
+    ,"plot."
+    ,"ucols"
+    ,"kinno"
+    ,"compo"
+    ,"same"
+    ,"psex"
+    ,"emp"
+    ,"ana"
+    ,"title"
+    ,"Ppop"
+    ,"Pfsp"
+    ,"P1"
+    ,"e2.1"
+    ,"matto"
+    ,"cn6"
+    ,"cn4"
+    ,"cn3"
+    ,"ichangio"
+    ,"was1"
+    ,"was2"
+    ,"now1"
+    ,"now2"
+    ,"iget4"
+    ,"iget3"
+    ,"hasO_4way"
+    ,"hasO_3way"
+    ,"make_K"
+    ,"e"
+    ,"n_pts_SPA_renorm"
+    ,"n_samp"
+    ,"gamb"
+    ,"new_ALFs"
+    ,"genofile"
+    ,"snpgdsOpen"
+    ,"filename"
+    ,"snpgdsGetGeno"
+    ,"read.gdsn"
+    ,"index.gdsn"
+    ,"locusID"
+    ,"sampleID"
+    ,"infoFields"
+    ,"field"
+    ,"infoFrame"
+    ,"plateField"
+    ,"locinfoFields"
+    ,"locinfoFrame"
+    ,"snpgdsClose"
+    ,"keeping"
+    ,"probinverts"
+    ,"XX"
+    ,"ck"
+    ,"g12_code"
+    ,"this_g12"
+    ,"LOD_obs"
+    ,"pciles"
+    ,"their_diplos"
+    ,"xgenos"
+    ,"rawgenos"
+    ,"temp"
+    ,"kin.true"
+    ,"n.meio"
+    ,"linfo"
+    ,"L"
+    ,"count.l"
+    ,"e0.l"
+    ,"e1.l"
+    ,"v0.l"
+    ,"v1.l"
+    ,"V.noX"
+    ,"meioses"
+    ,"EofV"
+    ,"VofE"
+    ,"C.equiv"
+    ,"C.hat"
+    ,"emp.V.HSP"
+    ,"V0"
+    ,"ell"
+    ,"e2.0"
+    ,"e1.0"
+    ,"e1.1"
+    ,"phi"
+    ,"mul"
+    ,"r"
+    ,"PSstar"
+    ,"P0star"
+    ,"si2"
+    ,"si3"
+    ,"si4"
+    ,"V.allX"
+    ,"rho"
+    ,"p11.8"
+    ,"p01.8"
+    ,"p00.8"
+    ,"p11"
+    ,"p01.10"
+    ,"p00"
+    ,"EL"
+    ,"EL2"
+    ,"VL"
+    ,"mtrace"
+    ,"rho.hat"
+    ,"Vx"
+))
+
+
+# The end
 

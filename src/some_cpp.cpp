@@ -1,5 +1,4 @@
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::depends(BH)]]
 
 #include <RcppArmadillo.h>
 // #include <boost/tuple/tuple.hpp>
@@ -168,7 +167,7 @@ SEXP HSP_paircomps_lots(
 
   // n_bins = bins.size(); // SB deletion
   // IntegerVector n_PLODs_below( n_bins); // SB deletion
-  
+
   n_geno = pair_geno. nrow();
   ASSERTO( pair_geno.ncol() == n_geno);
 
@@ -284,7 +283,7 @@ SEXP HSP_paircomps_lots(
       which_bin = floor((this_PLOD - minbin) / binterval); // SB addition
       which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
       n_PLODs_in_bin[ which_bin] += 1; // SB addition
-      
+
     }; // for j
   }; // for i
 
@@ -295,7 +294,7 @@ SEXP HSP_paircomps_lots(
   //  for( ibin = n_bins; ibin > 0; ibin--){ // SB deletion
   //  n_PLODs_below[ ibin] -= n_PLODs_below[ ibin-1];  // SB deletion
   //  };  // this performs differencing between the 'n_PLODs_below' series. // SB deletion
-  
+
   // build big_i, big_j, big_PLOD
   big_i.reserve(PLODing_along.size());
   big_j.reserve(PLODing_along.size());
@@ -565,7 +564,7 @@ SEXP POP_wt_paircomps_lots(
 
   // n_bins = bins.size(); // SB deletion
   // IntegerVector n_wpsex_below( n_bins); // SB deletion
-  
+
   // Ensure matching size of LOD and pair_geno
   // Can't seem to directly get length of pair_geno@what...
   // ... even though ALL R objects have a length
@@ -712,7 +711,7 @@ SEXP POP_wt_paircomps_lots(
   }
 
   // make a list object using wrap() for the stdvectors
-  return( Rcpp::List::create( 
+  return( Rcpp::List::create(
     Rcpp::Named("big_wpsex")=wrap( big_WPSEX),
     Rcpp::Named("big_i")=wrap( big_i),
     Rcpp::Named("big_j")=wrap( big_j),
@@ -805,9 +804,9 @@ SEXP DUP_paircomps_lots(
           // Faster version could "unroll" this a bit and only do the if-check every 10 loci or so
           this_ndiff += (int)( geno2( iloc, j) != geno1( iloc, i));
 
-	  //  if( this_ndiff > max_diff_genos) { // not a dup // SB deletion
-	    // this if() makes things faster, but kills ndiff counts above max_diff_genos
-	  //break; // SB deletion
+   //  if( this_ndiff > max_diff_genos) { // not a dup // SB deletion
+     // this if() makes things faster, but kills ndiff counts above max_diff_genos
+   //break; // SB deletion
           //}; // SB deletion
         };
 
@@ -816,7 +815,7 @@ SEXP DUP_paircomps_lots(
         which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
         n_ndiff_in_bin[ which_bin] += 1; // SB addition
 
-	
+
         if( this_ndiff > max_diff_genos) {
       continue;
         } else {
@@ -841,7 +840,7 @@ SEXP DUP_paircomps_lots(
 
           // as before
           n_kept += 1;
-        };	
+        };
       }; // if j not already known to be a dup
     }; // for j
   }; // for i
@@ -860,7 +859,7 @@ SEXP DUP_paircomps_lots(
   }
 
   // make a list object using wrap() for the stdvectors
-  return( Rcpp::List::create( 
+  return( Rcpp::List::create(
     Rcpp::Named("big_similar")=wrap( big_similar),
     Rcpp::Named("big_i")=wrap( big_i),
     Rcpp::Named("big_j")=wrap( big_j),
@@ -1111,7 +1110,7 @@ BEGIN_RCPP
     }; // l
   }; // i
 
-return( Rcpp::List::create( 
+return( Rcpp::List::create(
   Rcpp::Named("K")=K
 ));
 END_RCPP
