@@ -1,13 +1,13 @@
-# This is package kinference 
+# This is package kinference
 
 
 #' Pairwise kin-finding
-#' 
+#'
 #' Find pairs of closely-related kin among large samples of genotypes. Also
 #' some QC functions: see \code{<<blah>>}. <ETC>. See vignette
 #' \code{<some_vignette>}.
-#' 
-#' 
+#'
+#'
 #' @rdname 00kinference
 #' @docType package
 #' @aliases kinference kinference-package
@@ -180,19 +180,24 @@ return( pp6_err)
 
 
 #' calc_g6probs_IBD1_scalar(): Bare documentation
-#' 
+#'
 #' This function has only the bare minimum of documentation necessary for
-#' roxygen to parse it. We should probably add some proper documentation here.
+#' roxygen to parse it. <!--We should probably add some proper documentation here.-->
 #' MVB: no we shouldn't! Roxygen shouldn't be going near this function, which
 #' is meant to be purely for internal use inside the package. Any
 #' necessary-for-the-maintainer documentation should go just into comments
 #' inside the function, and doesn't need to follow clunky R-doco rules. [In
 #' particular, this sentence that I'm writing should ultimately not exist ;) !]
-#' 
-#' 
+#' SB: I have used the keyword 'internal' here - if I understand the roxygen
+#' documentation, this means the function does not appear in the package index,
+#' and isn't subjected to 'rigorous' R automated tests. The existence of *some*
+#' documentation per function is necessary to prevent roxygen from throwing a
+#' hissy fit, but I think this is a reasonable balance.
+#'
 #' @param P a param
 #' @param snerr a param
 #' @param record TRUE or FALSE
+#' @keywords internal
 #' @export
 "calc_g6probs_IBD1_scalar" <-
 function( P, snerr, record=FALSE) {
@@ -258,7 +263,7 @@ return( pp6_err)
 #' calc_g6probs_IBD2_scalar(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param P a param
 #' @param snerr a param
@@ -891,7 +896,7 @@ return( result)
 #' find_dups_with_missing(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here. From the name,
+#' parse it. From the name,
 #' it seems like this function might do a similar thing to find_duplicates(), but with
 #' special handling for missing data. The structure of the code is certainly similar.
 #'
@@ -995,29 +1000,29 @@ return( result)
 
 
 #' Find full-sib pairs among parent-offspring pairs or among half-sib pairs
-#' 
+#'
 #' For pairs already picked as likely parent-offspring pairs (POPs), i.e.,
 #' those with a weighted pseudo-exclusion (WPSEX) statistic less than some
 #' threshold, they might be full sibling pairs (FSPs). This function checks
 #' potential POPs with very low WPSEX values for their potential to be FSPs.
-#' 
+#'
 #' The general idea of find_FSPs_from_POPs() is that pairs which are
 #' \emph{either} POPs \emph{or} FSPs should stand out very clearly from
 #' everything else, via find_POPs(). Then the job is to pick between those
 #' possibilities. The workflow is supposed to be:
-#' 
+#'
 #' \itemize{ \item nail POPs/FSPs first with find_POPs() \item pick between
 #' them with find_FSPs_from_POPs() (update: this doesn't work very well...)
 #' \item look for HSPs and filter out already-known POPs and FSPs }
-#' 
+#'
 #' Hence the other function, find_FSPs_from_HSPs(), is theoretically
 #' unnecessary in that you have already run find_POPs() and
 #' find_FSPs_from_POPs() so you should know which of your "HSPs" are really
 #' something else. But, nevertheless it's handy to have.
-#' 
+#'
 #' Both functions return expected values under different possible kin-types
 #' (not variances, since these cannot be predicted for all kin-types).
-#' 
+#'
 #' The statistic for find_FSPs_from_POPs() is based on the weighted sum of the
 #' number of exactly-matching 4-way genotypes, with weights chosen to have high
 #' power for this particular discrimination. Weighting is optimized for the
@@ -1027,7 +1032,7 @@ return( result)
 #' that you have enough loci to pick HSPs, so the more-related kin-types should
 #' be slam-dunks. \bold{But} it doesn't seem powerful enough. More worked
 #' needed...
-#' 
+#'
 #' find_FSPs_from_HSPs() again uses 4-way genotypes only (to avoid having to
 #' worry about errors) but in a properly optimal PLOD designed for FSP/HSP
 #' discrimination- its expectation is positive for FSPs and negative for HSPs.
@@ -1035,7 +1040,7 @@ return( result)
 #' predicted). Haven't added means for POPs or UPs since you're not "supposed"
 #' to have those in the mix by the time you run find_FSPs_from_HSPs(), but
 #' maybe I should fix that at some point.
-#' 
+#'
 #' @aliases find_FSPs_from_HSPs find_FSPs_from_POPs find_FSPs_from_candiHSPs
 #' find_FSPs_from_POPs_v2
 #' @param snpg a \code{snpgeno} object
@@ -1048,7 +1053,7 @@ return( result)
 #' find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again
 #' one pair).
 #' @examples
-#' 
+#'
 #' # pops_or_fsps <- find_POPs( mysnpg, ...)
 #' ## do histograms etc to find likely ones
 #' # discro <- find_FSPs_from_POPs( mysngp, pops_or_fsps \%where\% (wpsex < 0.042))
@@ -1068,7 +1073,7 @@ return( result)
 #' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
 #' # abline( v=discro2@E_FSP, col='lightblue')
 #' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#' 
+#'
 #' @export
 "find_FSPs_from_HSPs" <-
 function( snpg, candiHSPs) {
@@ -2390,7 +2395,7 @@ return( sg)
 #' map6to4(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' From the name, it seems like this is the reverse operation of map4todummy6() -
 #' it allows you to convert 6-way genotypes (ABO, BBO, etc.) to 4-way genotypes
@@ -2435,7 +2440,7 @@ function(g6p0, g6p1){
 #' map6to3(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' From the name, it seems like this is the reverse operation of map4todummy6() -
 #' it allows you to convert 6-way genotypes (ABO, BBO, etc.) to 3-way genotypes
@@ -2483,10 +2488,11 @@ function(g6p0, g6p1){
 #' predict_hsp_util(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param pIBD0 a param
 #' @param pIBD1 a param
+#' @param pIBD2 a param
 #' @param want_LOD_table a param. Defaults to FALSE
 #' @param k a param. Defaults to 0.5
 #' @keywords internal
@@ -2725,7 +2731,7 @@ return( geno6)
 #' set_thresholds(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here. This
+#' parse it. This
 #' function causes a NOTE from R CMD check, pertaining to the undefined global variable
 #' 'keep_n'. set_thresholds() operates in mvbutils::mlocal({}) space, and every caller
 #' function has 'keep_n' correctly defined.
@@ -2778,7 +2784,7 @@ stopifnot( keeping %in% cq( hi, lo))
 #' calculate_IBD(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param lociar a param
 #' @keywords internal
@@ -2815,7 +2821,7 @@ function(lociar){
 #' simtest_Kstuff(): check for (big) mistakes in SPA calcs
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param ck a 'SPAgeno' object
 #' @param n a param. ?The number of animals to simulate?
@@ -3824,7 +3830,7 @@ globalVariables( package="kinference",
 #' add_list_defaults(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param l a param
 #' @param ... other params, passed to something.
@@ -3911,7 +3917,7 @@ function( nlocal=sys.parent()) mlocal({
 #' inv_CDF_SPA2(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param p a param
 #' @param K a param
@@ -4009,7 +4015,7 @@ return( x)
 #' calculate_LOD_HSP(): Bare documentation
 #'
 #' This function has only the bare minimum of documentation necessary for roxygen to
-#' parse it. We should probably add some proper documentation here.
+#' parse it.
 #'
 #' @param lociar a param
 #' @param k a param. Defaults to 0.5
@@ -4596,7 +4602,7 @@ stop( 'test must be "Pearson" or "G"')
   abline( v=thresh_pchisq_loci, col='red')
 
   # Locussy fits
-  opar <- par(mfrow=c(2, ncol( gpred) %/% 2),
+  opar <- par(mfrow=c(2, ceiling(ncol( gpred) / 2)),
       mar=c( 3, 3, 0, 0)+0.1, oma=c( 2, 2, 3, 1))
   # omi=c(0,0,.6,0),mai=c(.8,.8,.2,.2)) Paige uses absolute margins
   on.exit( par( opar))
@@ -4837,10 +4843,10 @@ function(filename, locusID, sampleID,
 
 #' est_ALF_ABCO(): bare documentation
 #'
-#' This function has only the bare minimum of documentation necessary for Roxygen to parse it. We
-#' should probably add some proper documentation here. Ported from 'genocalldart' April 2019,
-#' when 'genocalldart' was set to import 'kinference'.
+#' This function has only the bare minimum of documentation necessary for Roxygen to parse it.
+#' Ported from 'genocalldart' April 2019, when 'genocalldart' was set to import 'kinference'.
 #' @param lociar a genotype object with the @geno_amb attribute.
+#' @keywords internal
 #' @seealso geno_dembig_ABC
 #' @export
 "est_ALF_ABCO" <-
@@ -4962,8 +4968,8 @@ return( lociar)
 #' make_pgeno(): bare documentation
 #'
 #' This function has the bare minimum of documentation necessary for roxygen to parse it.
-#' We should probably add proper documentation here. Ported from genocalldart April 2019,
-#' along with the 'genocalldart imports kinference' switch.
+#' Ported from genocalldart April 2019, along with the 'genocalldart imports kinference'
+#' switch.
 #'
 #' @param pA a param
 #' @param pB a param
@@ -5484,12 +5490,12 @@ function(tt, geno, vec_LOD, Pg) {
 
 
 #' Combine two QC steps: experimental
-#' 
+#'
 #' \code{juicyQC} is a bivariate combination of \code{hetzminoo_fancy} and
 #' \code{ilglk_geno}, which \emph{may} be better at identifying "suspect"
 #' samples. It may or may not end up in the final kinference toolchain.
-#' 
-#' 
+#'
+#'
 #' @param snpg a param
 #' @param focusees a param
 #' @param boring a param, default \code{1 \%upto\% nrow(snpg)}. See mvbutils
@@ -6269,3 +6275,65 @@ globalVariables( package="kinference",
 
 # The end
 
+geno6 <- SHS
+
+"check6and4and3" <-
+function( geno6,
+    thresh_pchisq_6and4,
+    return_what=c( 'just_pvals', 'all'),
+    extra_title = "") {
+##########
+  n_fish <- nrow( geno6)
+  n_loci <- ncol( geno6)
+  define_genotypes()
+  diplos <- geno6@diplos
+stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
+
+  p6 <- with( geno6@locinfo,
+      calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'],
+          snerr=snerr))[,genotypes6]
+  # At some point, will also need p6_IBD... later...
+
+  # Chi-sq check: requires gpred & gobs attr on geno6
+  g6pred <- p6 * n_fish
+  g6obs <- matrix( 0, n_loci, 6, dimnames=list( NULL, genotypes6))
+
+  for( ig in genotypes6) {
+    g6obs[,ig] <- colSums( geno6==match( ig, diplos))
+  }
+
+  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G',
+      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+
+  g4obs <- gtab6to4( g6obs)
+  g4pred <- gtab6to4( g6pred)
+  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G',
+      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+
+  g3obs <- gtab6to3(g6obs)
+  g3pred <- gtab6to3(g6pred)
+  pval3 <- chisq_genofreq_check( geno6, gobs=g3obs, gpred=g3pred, test='G',
+    thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+
+  return_what <- match.arg( return_what)
+  if( return_what=='all') {
+    geno6@locinfo$pval6 <- pval6
+    geno6@locinfo$pval4 <- pval4
+return( geno6)
+  } else {
+return( returnList( pval6, pval4))
+  }
+}
+
+
+
+"gtab6to3" <-
+function( gt6) {
+######### Condense 6way-genotype counts to 3way (AAO instead of AA, AO)
+  define_genotypes()
+  gt3 <- matrix( 0, nrow( gt6), 3, dimnames=list( dimnames( gt6)[[1]], genotypes3_ambig))
+  gt3[,AB] <- gt6[,AB]
+  gt3[,AAO] <- gt6[,AA] + gt6[,AO]
+  gt3[,BBOO] <- gt6[,BB] + gt6[,BO] + gt6[,OO]
+return( gt3)
+}
