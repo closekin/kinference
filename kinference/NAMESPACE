@@ -1,0 +1,84 @@
+useDynLib( kinference, .registration=TRUE)
+export( "chain_pairwise",
+"check_FPosity",
+"check6and4",
+"chisq_genofreq_check",
+"drop_dups_pairwise_equiv",
+"est_ALF_6way",
+"est_ALF_ABCO",
+"find_duplicates",
+"find_dups_with_missing",
+"find_HSPs",
+"find_POPs",
+"FSP_POP_histo",
+"get_chain",
+"hetzminoo_fancy",
+"HSP_histo",
+"HSP_oddness_oneway",
+"HSP_oddness_twoway",
+"hsp_power",
+"hsp_power2",
+"ilglk_geno",
+"PLOD_loghisto",
+"PLOD_oddness_oneway",
+"PLOD_oddness_twoway",
+"prepare_PLOD_SPA",
+"re_est_ALF",
+"split_FSPs_from_HSPs",
+"split_FSPs_from_POPs",
+"split_FSPs_from_POPs_v2",
+"var_PLOD_kin")
+import( Rcpp)
+import( atease)
+import( mvbutils)
+import( gbasics)
+import( vecless)
+importFrom( Rcpp, evalCpp)
+importFrom( Rcpp, sourceCpp)
+importFrom( atease, "@")
+importFrom( atease, "@<-")
+importFrom( gbasics, inv.logit)
+importFrom( gbasics, logit)
+importFrom( gbasics, make_genopairer)
+importFrom( gbasics, rsample)
+importFrom( gbasics, snpgeno)
+importFrom( gbasics, sqr)
+importFrom( grDevices, rgb)
+importFrom( graphics, legend)
+importFrom( graphics, mtext)
+importFrom( graphics, par)
+importFrom( graphics, plot)
+importFrom( graphics, points)
+importFrom( mvbutils, "%&%")
+importFrom( mvbutils, "%except%")
+importFrom( mvbutils, "%is.a%")
+importFrom( mvbutils, "%is.not.a%")
+importFrom( mvbutils, "%not.in%")
+importFrom( mvbutils, "%that.are.in%")
+importFrom( mvbutils, "%upto%")
+importFrom( mvbutils, "%where%")
+importFrom( mvbutils, "%without.name%")
+importFrom( mvbutils, "?")
+importFrom( mvbutils, FOR)
+importFrom( mvbutils, cq)
+importFrom( mvbutils, do.on)
+importFrom( mvbutils, extract.named)
+importFrom( mvbutils, mlocal)
+importFrom( mvbutils, my.all.equal)
+importFrom( mvbutils, named)
+importFrom( mvbutils, scatn)
+importFrom( stats, dnorm)
+importFrom( stats, na.omit)
+importFrom( stats, pchisq)
+importFrom( stats, pnorm)
+importFrom( stats, qnorm)
+importFrom( stats, quantile)
+importFrom( stats, runif)
+importFrom( stats, var)
+importFrom( vecless, ":=")
+importFrom( vecless, compile_vecless)
+importFrom( vecless, make_playback)
+importFrom( vecless, set_recording)
+S3method( "[", "SPAgeno")
+S3method( "[<-", "SPAgeno")
+
