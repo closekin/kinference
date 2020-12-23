@@ -1120,7 +1120,7 @@ return( lociar)
 #' 
 #' Some categories will "catch" others (eg \code{find_HSPs} will certainly
 #' include find POPs too), so you may need the splitter routines such as
-#' \code{find_POPs_from_HSPs} afterwards. The safest general-purpose
+#' \code{split_POPs_from_HSPs} afterwards. The safest general-purpose
 #' strategy--- but often not the most sensible, if your data is nicely
 #' organized and you know what you want--- would be:
 #' 
@@ -1131,16 +1131,16 @@ return( lociar)
 #' 
 #' \code{find_POPs_from_HSPs} to split HSPs from POPs/FSPs
 #' 
-#' \code{find_POPs_from_FSPs} to split the latter--- though current version
-#' (Dec 2020) doesn't work particularly well (new method is under devel), so
-#' maybe rather use age if you can.
+#' \code{split_POPs_from_FSPs} to split the latter--- though current version
+#' (Dec 2020) doesn't work particularly well, so maybe rather use age if you
+#' can. A new algorithm is being developed.
 #' 
 #' These functions (the non-splitters, ie \code{find_XXX}) might be run on huge
 #' numbers of samples, entailing a huge^2 number of comparisons. You don't want
 #' all those individual comparison results, and your computer certainly
 #' wouldn't enjoy trying to keep them! So the general idea is to set a
 #' threshold for what constitutes "maybe worth keeping individually" (that you
-#' expect will be generous enough to contain everything you \bold{do} want,
+#' expect will be generous enough to contain everything you \emph{do} want,
 #' plus some dross), and then to retain just binned counts of the relevant comp
 #' statistic for all comps (usually, the vast majority) which don't make your
 #' threshold.
@@ -1155,20 +1155,20 @@ return( lociar)
 #' 
 #' For \code{find_duplicates}, there are at least two different use-cases.
 #' First, you might want an initial run on a non-too-large subset of your data,
-#' to check that dups \emph{can} be clearly distinguished and how many
-#' genotyping errors there tend to be (based on duplicates). For that, you can
-#' set \code{nbins} and choose some reasonable guess as to \code{max_diff_loci}
-#' (say, 5\% of the number of loci). Because you set \code{nbins>0},
-#' \emph{every} pair (almost...) gets checked at \emph{all} loci, so it can be
-#' slow. Thus, if you have done this before and have a good sense of "how bad
-#' can a real duplicate be?", then set \code{nbins=0} (and \code{max_diff_geno}
-#' to a small but safe value that won't miss any realistic
-#' duplicate-with-genotyping-error) so it will abort a comparison early as soon
-#' as it reaches \code{max_diff_geno} differing loci. That saves a \emph{lot}
-#' of time on big datasets! You won't get a histo of number-of-diffs, but you
-#' don't need one for that use-case. The "almost" is that
-#' \code{find_duplicates} uses "transitivity" (if A is a dup of B and of C,
-#' then we don't need to check B vs C), so it only counts differences for
+#' to check that dups \emph{can} be clearly distinguished and to look at
+#' typical extent of genotyping errors (based on clear duplicates that don't
+#' match at every locus). For that, you can set \code{nbins} and choose some
+#' reasonable guess as to \code{max_diff_loci} (say, 5\% of the number of
+#' loci). Because you set \code{nbins>0}, \emph{every} pair (almost...) gets
+#' checked at \emph{all} loci, so it can be slow. Thus, if you have done this
+#' before and have a good sense of "how bad can a real duplicate be?", then set
+#' \code{nbins=0} (and \code{max_diff_geno} to a small but safe value that
+#' won't miss any realistic duplicate-with-genotyping-error) so it will abort a
+#' comparison early as soon as it reaches \code{max_diff_geno} differing loci.
+#' That saves a \emph{lot} of time on big datasets! You won't get a histo of
+#' number-of-diffs, but you don't need one for that use-case. The "almost" is
+#' that \code{find_duplicates} uses "transitivity" (if A is a dup of B and of
+#' C, then we don't need to check B vs C), so it only counts differences for
 #' not-yet-known duplicates \emph{based on} \code{max_diff_loci}. To discard
 #' duplicates and to find entire equivalence-classes of duplicates, e.g. from a
 #' control specimen included in numerous plates, see
@@ -1191,19 +1191,17 @@ return( lociar)
 #' @param limit_pairs Integer. Defines the \emph{maximum} number of candidate
 #' pairs to keep. Will provide a warning if the number of identified pairs
 #' equals limit_pairs.
-#' @param nbins,minbin,maxbin find_blah functions summarise their results into
-#' bins (in the part of the range where individual results are uninteresting),
-#' as well as returning individual results that pass the "interesting"
-#' threshold. The details differ between functions (at the moment), but:'nbins'
-#' sets the number of bins, \code{minbin} sets the top value of the lowest bin
-#' (so that bin stretches from -Inf to \code{minbin} for HSPs); \code{maxbin}
-#' sets the highest, and it's a guess for HSPs... So for HSPs, the minimum is 3
-#' bins (-Inf:minbin),[minbin:maxbin),[maxbin:Inf). Need to clarify somewhere
-#' exactly how this works for the different functions! It's all in the
-#' vignette, though...
-#' @param quick (\code{find_POPs}) whether to "compile" the functions for SPA,
-#' which use the magic \code{:=} operator. It speeds up the SPA bit but almost
-#' all the time is spent on actual POP-finding...
+#' @param nbins,minbin,maxbin \code{find_XXX} functions summarise their
+#' pairwise comparison statistics into bins (in the part of the range where
+#' exact values are uninteresting), as well as returning specific pairs that
+#' pass the "interesting" threshold. \code{nbins} sets the number of bins,
+#' \code{minbin} sets the top value of the lowest bin (so that bin stretches
+#' from -Inf to \code{minbin} for HSPs); \code{maxbin} sets the highest. For
+#' HSPs, the minimum is 3 bins (-Inf:minbin),[minbin:maxbin),[maxbin:Inf).
+#' \code{minbin} is not used for duplicates or (at present) for POPs, since the
+#' statistics there are defined so that the lowest possible value is 0. The
+#' defaults for \code{minbin} and/or \code{maxbin} may not be what you need in
+#' all cases, so be prepared to select manually and then re-run.
 #' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which
 #' is proportional to (difference in probability of pseudo-exclusion between UP
 #' and POP) / (variance of indicator of pseudo-exclusion). But, should this be
@@ -1212,11 +1210,13 @@ return( lociar)
 #' false-positives (which is probably the Right Thing To Do). 0.99 could be
 #' completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect
 #' the result much anyway.)
-#' @param keep_thresh (\code{find_HSPs} and \code{find_POPs}) determines which
-#' pairs to retain for individual inspection. For \code{find_HSPs}, this is the
+#' @param keep_thresh (\code{find_HSPs} and \code{find_POPs}) is the analog of
+#' \code{max_diff_loci} for \code{find_duplicates}. It determines which pairs
+#' to retain for individual inspection. For \code{find_HSPs}, this is the
 #' lowest retained PLOD; for \code{find_POPs} (currently), it's the highest
-#' retained \code{wpsex}. Set it to include "anything interesting" and expect
-#' false positives--- ie be willing to have some weaker kin in there, and to
+#' retained \code{wpsex}. Set it with the aim of including "anything
+#' interesting" (ie not \emph{missing} any interesting pairs) and expect false
+#' positives--- ie be willing to have some weaker kin in there, and to
 #' subsequently filter those out yourself "manually", as per vignette. For
 #' HSPs, values like 0 (near the HTP mean) or -5 are a good start. For POPs,
 #' experiment (at a total guess, try 0.1). You may have to re-run the function
@@ -1609,12 +1609,15 @@ return( result)
 
 
 "find_HSPs" <-
-function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
+function(
+    snpg,
+    subset1=1 %upto% nrow( snpg),
+    subset2=subset1,
     limit_pairs= 0.5 * nrow( snpg),
     keep_thresh,
     eta= NULL,
     nbins= 50,
-    minbin,
+    minbin= NULL,
     maxbin= NULL
 ){
 ## snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
@@ -1661,20 +1664,30 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
   temp_snpg <- t( temp_snpg)
 
+  li <- snpg@locinfo # convenient
+
   # MVB: don't trust length of seqs with non-integer steps!
   # bins <- seq(minbin+binterval, (minbin + (nbins*binterval)), binterval)
+
+  EHSP <- sum( li$E.HSP) / 3 # who knows?!
+  if( is.null( eta)) {
+    eta <- EHSP / 3 # who knows?!
+  }
+
+  if( is.null( minbin)) {
+    VUP <- sum( li$V.UP)
+    EUP <- sum( li$E.UP)
+    minbin <- EUP - sqrt( VUP) * 1.645 # 5% of UPs below that
+  }
+
   if( is.null( maxbin)) {
-    mean_POP <- sum(snpg@locinfo$E.POP)
-    maxbin <- 1.1 * mean_POP
+    EPOP <- sum( li$E.POP)
+    maxbin <- EPOP + (EPOP - EHSP) * 0.1
   }
   bins <- seq( from=minbin, to=maxbin, length=nbins-1)
 
   # Distro of PLOD|UP via SPA
   binprobs <- c( snpg@Kenv$CDF( bins), 1)
-
-  if( is.null( eta)) {
-    eta <- sum(snpg@locinfo$E.HSP) / 3 # who knows?!
-  }
 
   # Trying special-case "all vs all" here to minimize copying
   if( symmo) {
@@ -4896,9 +4909,12 @@ globalVariables( package="kinference",
     ,"PUP4"
     ,"PUP3"
     ,"temp_LOD"
-    ,"mean_POP"
-    ,"E.POP"
+    ,"EHSP"
     ,"minbin"
+    ,"VUP"
+    ,"EUP"
+    ,"EPOP"
+    ,"E.POP"
     ,"CDF"
     ,"xresult"
     ,"HSP_paircomps_lots"
@@ -4906,6 +4922,7 @@ globalVariables( package="kinference",
     ,"mean_UP"
     ,"var_UP"
     ,"mean_HSP"
+    ,"mean_POP"
     ,"mean_FSP"
     ,"E.FSP"
     ,"sngp"
