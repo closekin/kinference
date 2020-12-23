@@ -1,0 +1,17 @@
+Package: kinference
+Title: Pairwise kin-finding from genotypes
+Author: Mark V Bravington, David L Miller, Shane M Baylis
+Description: Kin-finding and QC tools geared towards close-kin mark-recapture.
+Maintainer: Shane M Baylis <shane.m.baylis@gmail.com>
+License: GPL
+Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 6.1.1
+SystemRequirements: C++11
+NeedsCompilation: YES
+Encoding: UTF-8
+KeepSource: TRUE
+Version: 0.0.119
+Collate: kinference.R Cloaders_kinference.R kinference-package.R

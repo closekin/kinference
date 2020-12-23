@@ -1,0 +1,62 @@
+\name{simcheck_FSP_POP}
+\alias{simcheck_FSP_POP}
+\alias{postprocess_simcheck_FSP_POP}
+\title{Check POP/FSP splitter; private.}
+\description{
+This doco shouldn't be visible in the package! (KEYWORDS internal)
+
+\code{simcheck_FSP_POP} simulates POPs and FSPs based on a known set of loci, ready for checking \code{\link{find_FSPs_from_POPs}} or variants. Quick.
+
+\code{postprocess_simcheck_FSP_POP} can be used to graphically confirm that the analytical probabilities of samenames and pseudoexclusion actually match the simulated values--- it is amazingly difficult to get the formulae right. You wouldn't generally need \code{postprocess...} if you are working with a real set of loci.
+}
+\usage{
+simcheck_FSP_POP( snpg, chromos, N)
+# then: findings <- find_FSPs_from_POPs_v2( snpg,
+#   cbind( seq( 1, length=N, by=2), seq( 2, length=N, by=2)), keep_indiv=TRUE)
+postprocess_simcheck_FSP_POP( forp_sim, findings, plot.=TRUE)
+}
+\arguments{
+\item{ snpg}{a \code{snpgeno} object with known allele freqs and error rates (i.e. \code{pbonzer} and \code{snerr} must exist in \code{snpg$locinfo})}
+\item{ chromos}{Controls the extent of linkage:how many "chromosomes" should the loci be split between? There's no crossover within these "chromosomes", but they inherit independently of each other. Loci are allocated to chromosomes in sequence, so that if there are 3 chromosomes, the first locus goes to "C1", the second to "C2", third to "C3", fourth to "C1", etc. Returned object will have an extra field \code{$locinfo$chromosim}.}
+\item{ N}{number of pairs of each type (ie this many FSPs, and this many POPs).}
+\item{ forp_sim}{result of previous call to \code{simcheck_FSP_POP}}
+\item{ findings}{result of previous call to \code{find_FSPs_from_POPs_v2( forp_sim, ..., keep_indiv=TRUE)}--- which generates the \code{is_same} and \code{is_psex} matrices for (pairs * loci), and the by-locus vectors \code{Pr_same_FSP}, \code{Pr_psex_FSP}, \code{Pr_same_POP}, \code{Pr_psex_POP}.}
+\item{ plot.}{whether to plot. Can't see why this would ever be false...}
+}
+\value{
+\code{simcheck_FSP_POP} returns a \code{snpgeno} object with \code{4*N} rows, and an attribute "callo" recording the call. The \code{$info} contains just one column, "Our_sample", with names like "F17_A" and "P6_B"; those would respectively indicate the first (A) member of the 17th FSP, and the second (B) member of the 6th POP. The \code{locinfo} field is unchanged, except as noted under "chromos" above.
+\code{postprocess_simcheck_FSP_POP} just plots.
+}
+\seealso{\code{\link{find_FSPs_from_POPs}}
+}
+\keyword{internal
+}
+\examples{
+ForP <- simcheck_FSP_POP( my_snpg, 10, 1000)
+ForP$locinfo$useN[] <- 3 # minimal but most robust genotype
+test3 <- find_FSPs_from_POPs_v2( ForP,
+    cbind( seq( 1, by=2, length=1000),
+      seq( 1, by=2, length=1000)),
+    keep_indiv=TRUE) # need keep_indiv=T for postprocess...() to work
+postprocess_simcheck_FSP_POP( ForP, test3)
+hist( test3, nc=50)
+abline( v=test$E_FPstat, col='blue') # POP and FSP means
+\dontrun{
+# Sim from real loci--- in this case, with 'useN==4' for all loci since 6 looked a bit iffy
+library( atease)
+s11nodup_all4 <- s11nodup
+s11nodup_all4$locinfo$use6 <- NULL
+s11nodup_all4$locinfo$useN <- 4L
+simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
+simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
+kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
+hist( simbo4_next$FPstat, nc=50)
+abline( v=simbo4_next@E_FPstat, col='green') # theory means
+# 95\% of all POPs should be Left of the line drawn next:
+abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
+# Can't say for FSPs, becoz linkage
+# Real data:
+testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
+abline( v=testo4$FPstat, col='red')
+}
+}

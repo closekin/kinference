@@ -1,0 +1,14 @@
+\name{prepare_PLOD_SPA}
+\alias{prepare_PLOD_SPA}
+\title{Prepare for kin-finding}
+\description{\code{prepare_PLOD_SPA} is something you have to run before using some kin-finding/QC tools, to set up your \code{snpgeno} object for fancy maths woooo (saddlepoint approximations). There are no meaningful options, you just have to run this. It can be \emph{slightly} slow which is why it's a separate step.
+}
+\usage{prepare_PLOD_SPA(geno6, n_pts_SPA_renorm = 201)
+}
+\arguments{
+\item{ geno6}{a \code{snpgeno} object that has been thru \code{hsp_power}}
+\item{ n_pts_SPA_renorm}{how accurate to make the approximation. Default should be fine.}
+}
+\value{A \code{SPAgeno} object, which has extra stuff allowing "null distributions" (eg PLODs for true UPs) to be calculated. Various sanity checks are incorporated to try to stop you from stuffing up with out-of-synch loci etc later.
+}
+\keyword{misc}
