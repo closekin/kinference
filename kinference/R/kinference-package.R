@@ -47,3 +47,19 @@ NULL
 
 
 
+
+
+#' Don't call these yourself
+#' 
+#' Some functions that need to be exported so that other related packages can
+#' find them, but that you should not be messing about with.
+#' 
+#' 
+#' @aliases Internals make_pgeno
+#' @param pA,pB,pC,which_genotypes arguments
+#' @return Ooooh yes. Great value.
+#' @keywords misc
+NULL
+
+
+

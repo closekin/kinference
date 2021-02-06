@@ -2868,6 +2868,7 @@ function( pA, pB, pC, which_genotypes) {
   pCCO <- pCC + pCO
   pBC <- 2*pB*pC
   pOO  <- pO^2
+  pBBOO <- pBBO + pOO
 
   # Could be scalar or vector: c or cbind
   funco <- if( length( pO) > 1) cbind else c
@@ -5099,6 +5100,7 @@ globalVariables( package="kinference",
     ,"pCC"
     ,"pCCO"
     ,"pBC"
+    ,"pBBOO"
     ,"funco"
     ,"genotypes3"
     ,"mm"
