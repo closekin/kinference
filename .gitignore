@@ -5,3 +5,4 @@ src/*.dll
 vignettes/dave-practice.rda
 vignettes/fsps_for_dave.rda
 .Rhistory
+man/*
