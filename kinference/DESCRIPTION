@@ -8,10 +8,10 @@ Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
 KeepSource: TRUE
 Version: 0.0.125
-Collate: kinference.R Cloaders_kinference.R kinference-package.R
+Collate: kinference.R Cloaders_kinference.R kinference-package.R RcppExports.R
