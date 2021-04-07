@@ -7,7 +7,7 @@
 HSP_histo(
   hsps,
   lb,
-  ub = max(hsps$PLOD) + 10,
+  ub = max(hsps$PLOD) + bin,
   fullsib_cut,
   bin = 5,
   HSPmean = TRUE,

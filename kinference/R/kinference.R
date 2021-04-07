@@ -1519,7 +1519,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno2= temp_snpg,
         symmo= TRUE,
         max_diff_loci = max_diff_loci,
-        limit_pairs = limit_pairs,
+        keep_n = limit_pairs,
         nbins = nbins,
         binterval = binterval
       ) ## DLM version, 24/9/18
@@ -1529,7 +1529,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno2= temp_snpg[ , subset2],
         symmo= FALSE,
         max_diff_loci = max_diff_loci,
-        limit_pairs = limit_pairs,
+        keep_n = limit_pairs,
         nbins = nbins,
         binterval = binterval
       )
@@ -1551,8 +1551,10 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
     }
 
     if( showPlot) {
-        plot( result@bins,log(result@n_ndiff_in_bin),type='S', xlab="n different genos",
-             ylab="log(Frequency)")
+        plot(c(result@bins), log(result@n_ndiff_in_bin[1:(length(result@n_ndiff_in_bin)-2)]),
+             type = "S", xlab = "n different genos", ylab = "log(Frequency)")
+             ## plot( result@bins,log(result@n_ndiff_in_bin),type='S', xlab="n different genos",
+             ## ylab="log(Frequency)")
     }
 
 return( result)
@@ -1899,7 +1901,8 @@ stopifnot( all( ww>0))
   } # else NYI, which would have been picked up in sanity checks
 
   # Remove extranea
-  attributes( temp_snpg) <- temp_snpg@dim # that's yer lot; just the scores
+  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
+##  attributes( temp_snpg) <- temp_snpg@dim # that's yer lot; just the scores
   temp_snpg <- t( temp_snpg)
 
   n_loci <- ncol( snpg)
@@ -1974,7 +1977,7 @@ stopifnot( all( ww>0))
         symmo= TRUE,
         eta= eta,
         max_keep_wpsex= keep_thresh,
-        limit_pairs = limit_pairs,
+        keep_n = limit_pairs,
         AAO= AAish,
         BBO= BBish,
         nbins = nbins,
@@ -2002,7 +2005,7 @@ stopifnot( all( ww>0))
   }
 
   n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB addition
-  bins <- seq(minbin+binterval, minbin+(nbins*binterval), binterval)
+  bins <- seq(0+binterval, 0+(nbins*binterval), binterval)
   ## SB addition. Bloody zero-base.
 
   # construct the result
@@ -2274,7 +2277,7 @@ return( c( whmo))
 #' @keywords misc
 #' @export HSP_histo
 "HSP_histo" <-
-function(hsps, lb, ub = max(hsps$PLOD)+10, fullsib_cut, bin = 5,
+function(hsps, lb, ub = max(hsps$PLOD)+bin, fullsib_cut, bin = 5,
              HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
 
         palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
@@ -2472,6 +2475,20 @@ function( lociar,
   li <- lociar@locinfo
   li1 <- li[1,]
 
+`%without.names%` <- function( x, what) {
+    new.names <- names( x) %except% what
+    if( identical( new.names, names( x))) {
+      return( x)   # also works if names(x) is NULL!
+    }
+
+    oatts <- attributes( x)
+    # oatts must exist, since nameless-x returns earlier
+    x <- x[ new.names]
+    oatts$names <- new.names
+    attributes( x) <- oatts
+    return( x)
+}
+
   temp0 <- with( li1, calc_g6probs_IBD0_scalar( pbonzer, snerr, record=TRUE))
   cg6p0 <- make_playback( calc_g6probs_IBD0_scalar, temp0)
 
@@ -2490,11 +2507,11 @@ function( lociar,
   # For the 4-ways, must condense g6p's
   if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
     extract.named( map6to4( g6p0, g6p1, g6p2))
-    s4 <- predict_hsp_util( g4p0, g4p1, g4p2, want_LOD_table, k=k)
+    s4 <- predict_hsp_util( g4p0, g4p1, g4p2, want_LOD_table, k=k) %without.names% "matto"
 
     ### 3way too:
     extract.named( map6to3( g6p0, g6p1, g6p2))
-    s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k)
+    s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k) %without.names% "matto"
 
     if( want_LOD_table) { # overrides predict_hsp_util's version of want_LOD_table
       li$LOD6 <- s6@LOD # matrix
@@ -3102,8 +3119,11 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
 
         binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
 
-        plot( hsps@bins,log(hsps@n_PLODs_in_bin)[-1],type='S', ...,  xlab="PLOD",
-             ylab="log(Frequency)")
+        ## c++ gives bins that are out in a different direction for bins and n_in_bin
+        plot(hsps@bins[-1], log(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-2)]),
+         ..., type = "S", xlab = "PLOD", ylab = "log(Frequency)")
+        ## plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
+        ##      ylab="log(Frequency)")
         if( UP) { abline(v = hsps@mean_UP, col = 5, lwd = 2) }
         if( HSP) { abline(v = hsps@mean_HSP, col = 8, lwd = 2) }
         if( POP) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
@@ -3116,7 +3136,7 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
             lines(hsps@bins,log(diff(c(0,pnorm(binmids, mean = hsps@mean_UP,
                                       sd = sqrt(hsps@var_UP)) *
                                       sum(hsps@n_PLODs_in_bin[binmids<0])))),
-                  lwd = 2, col = "black") ## Normal approx
+                  lwd = 2, col = 5) ## Normal approx
         }
         legendBits <- data.frame(allNames = c("UP","POP","HSP","FSP"), allNumbers = c(5,1,8,9))
         if(!UP) {
