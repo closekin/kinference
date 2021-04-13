@@ -29,6 +29,7 @@
 #' @importFrom gbasics rsample
 #' @importFrom gbasics snpgeno
 #' @importFrom gbasics sqr
+#' @importFrom gbasics define_genotypes
 #' @importFrom grDevices rgb
 #' @importFrom graphics legend
 #' @importFrom graphics mtext

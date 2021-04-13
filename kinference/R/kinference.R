@@ -1939,8 +1939,8 @@ stopifnot( all( ww>0))
      }
 
     K <- compile_vecless( K(0))
-    dK <- compile_vecless( dK(0)) ## dK(0) should be the mean of wpsex
-    ddK <- compile_vecless( ddK(0))
+    dK <- compile_vecless( dK(0)) ## dK(0) should be the mean of wpsex for true UPs
+    ddK <- compile_vecless( ddK(0)) ## should be the var of ditto
 
     #  n_sim_check <- 1000
     #  Ktest <- function( tt) {
@@ -1953,7 +1953,10 @@ stopifnot( all( ww>0))
     # Could do now predict binprobs *for UPs) via renorm_SPA_cumul
     # Let's not
     # What we need, is...
-    maxbin  <-  dK(0)+2*sqrt(ddK(0))
+      maxbin  <-  dK(0)+2*sqrt(ddK(0))
+      if(is.null(eta) ) {
+          eta <- dK(0)-3*sqrt(ddK(0))
+      }
   }
 
   if( nbins<2) {
@@ -1991,7 +1994,7 @@ stopifnot( all( ww>0))
         symmo= FALSE,
         eta= eta,
         max_keep_wpsex= keep_thresh,
-        limit_pairs = limit_pairs,
+        keep_n = limit_pairs,
         AAO= AAish,
         BBO= BBish,
         nbins = nbins,
