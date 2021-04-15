@@ -1759,7 +1759,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
     EPOP <- sum( li$E.POP)
     maxbin <- EPOP + (EPOP - EHSP) * 0.1
   }
-  bins <- seq( from=minbin, to=maxbin, length=nbins-1)
+  bins <- seq( from=minbin, to=maxbin, length=nbins)
   binterval <- bins[2] - bins[1]
 
   # Distro of PLOD|UP via SPA
@@ -1841,13 +1841,13 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 stopifnot( (snpg %is.a% 'snpgeno') && (my.all.equal( snpg@diplos, genotypes6) || my.all.equal( snpg@diplos, genotypes4_ambig)))
 
-  # SB checks--- but NB rowSums( pbonzer==1) !
-  hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
-  PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
-                                                  PUP6, PUP4, PUP3))
-  if(hspPower_change | PLODSPA_change) {
-    warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
-  }
+  ## # SB checks--- but NB rowSums( pbonzer==1) !
+  ## hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+  ## PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
+  ##                                                 PUP6, PUP4, PUP3))
+  ## if(hspPower_change | PLODSPA_change) {
+  ##   warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+  ## }
 
   # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
   # ... it's really AAO/BBO so not a true exclu but
@@ -1908,7 +1908,6 @@ stopifnot( all( ww>0))
   n_loci <- ncol( snpg)
 
   # Prepare for diagnostics of #excl
-  if( is.null( maxbin)) {
     ## Defaults to two-sigma above *UP* mean... which will cover almost all
 
     # Distro of #excl loci for UPs
@@ -1953,19 +1952,22 @@ stopifnot( all( ww>0))
     # Could do now predict binprobs *for UPs) via renorm_SPA_cumul
     # Let's not
     # What we need, is...
+  if( is.null( maxbin)) {
       maxbin  <-  dK(0)+2*sqrt(ddK(0))
-      if(is.null(eta) ) {
-          eta <- dK(0)-3*sqrt(ddK(0))
-      }
+  }
+
+  if(is.null(eta) ) {
+      eta <- dK(0)-3*sqrt(ddK(0))
   }
 
   if( nbins<2) {
     warning( 'nbins<2 is senseless; gonna use 2')
     nbins <- 2
   }
-  binterval <- maxbin / (nbins-1) # bin *starting* at maxbin counts all bigger
-  bins <- seq( from= 0, to= maxbin, length=nbins-1)[-1]
-  # binprobs not set
+  bins <- seq( from= 0, to= maxbin, length=nbins)
+  ## binterval <- maxbin / (nbins-1) # bin *starting* at maxbin counts all bigger
+                                        # binprobs not set
+  binterval <- bins[2] - bins[1]
 
   # Trying special-cases here to minimize copying
   symmo <- my.all.equal( subset1, subset2)
@@ -2007,8 +2009,8 @@ stopifnot( all( ww>0))
     message("Returning just the ", limit_pairs, " pairs with the most POP-like wpsex scores, increase 'limit_pairs' if more are required")
   }
 
-  n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB addition
-  bins <- seq(0+binterval, 0+(nbins*binterval), binterval)
+  n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB tweak; the 'below zero' bin must be empty
+  # bins <- seq(0+binterval, 0+(nbins*binterval), binterval)
   ## SB addition. Bloody zero-base.
 
   # construct the result
@@ -3123,7 +3125,7 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
         binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
 
         ## c++ gives bins that are out in a different direction for bins and n_in_bin
-        plot(hsps@bins[-1], log(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-2)]),
+        plot(hsps@bins[-1], log(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
          ..., type = "S", xlab = "PLOD", ylab = "log(Frequency)")
         ## plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
         ##      ylab="log(Frequency)")
