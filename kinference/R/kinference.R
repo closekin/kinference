@@ -4675,10 +4675,10 @@ function(
   L <- sum( count.l)
   pi <- count.l / L
 
-  e0 <- pi %*% e0.l
-  e1 <- pi %*% e1.l
-  v0 <- pi %*% v0.l
-  v1 <- pi %*% v1.l
+  e0 <- c( pi %*% e0.l)
+  e1 <- c( pi %*% e1.l)
+  v0 <- c( pi %*% v0.l)
+  v1 <- c( pi %*% v1.l)
 
   # noX = no crossover, i.e. all in separate equal chromos
   V.noX <- function( C, meioses) {
@@ -4702,8 +4702,8 @@ function(
   # Entirely Xover on one single chromo
   # Should these be done separately by locus type, then averaged??
   ell <- 1 %upto% (L-1)
-  e2.1 <- pi %*% (sqr( e1.l) + v1.l)
-  e2.0 <- pi %*% (sqr( e0.l) + v0.l)
+  e2.1 <- c(pi %*% (sqr( e1.l) + v1.l) ) ## length-one arrays are out for R4.0
+  e2.0 <- c(pi %*% (sqr( e0.l) + v0.l) ) ## length-one arrays are out for R4.0
   e1.0 <- e0 # pi %*% e0.l
   e1.1 <- e1
 
@@ -4721,9 +4721,9 @@ function(
     # and 2-s.i. == 1 or 0
 
     # This code could be much more efficient; pre-compute P0star, and much reduce the phi-calcs
-    PSstar[] <<- phi( rho, 4, 3 - 2*si2) *
-        (if( meioses>2) phi( rho, 2, 3 - 2*si3) else 1) *
-        (if( meioses>3) phi( rho, 2, 3 - 2*si4) else 1)
+    PSstar[] <<- phi( c(rho), 4, 3 - 2*si2) *
+        (if( meioses>2) phi( c(rho), 2, 3 - 2*si3) else 1) *
+        (if( meioses>3) phi( c(rho), 2, 3 - 2*si4) else 1)
 
     P0star[] <<-  (2-si2) *
         (if( meioses>2) 2-si3 else 1) *
