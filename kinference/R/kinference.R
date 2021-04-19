@@ -4675,7 +4675,7 @@ function(
   L <- sum( count.l)
   pi <- count.l / L
 
-  e0 <- c( pi %*% e0.l)
+  e0 <- c( pi %*% e0.l) ## c() to squish length-one arrays for R4.0 compliance
   e1 <- c( pi %*% e1.l)
   v0 <- c( pi %*% v0.l)
   v1 <- c( pi %*% v1.l)
@@ -4723,7 +4723,8 @@ function(
     # This code could be much more efficient; pre-compute P0star, and much reduce the phi-calcs
     PSstar[] <<- phi( c(rho), 4, 3 - 2*si2) *
         (if( meioses>2) phi( c(rho), 2, 3 - 2*si3) else 1) *
-        (if( meioses>3) phi( c(rho), 2, 3 - 2*si4) else 1)
+        (if( meioses>3) phi( c(rho), 2, 3 - 2*si4) else 1) ## SB( c(rho) instead of length-one
+      ## array because R4.0 compliance
 
     P0star[] <<-  (2-si2) *
         (if( meioses>2) 2-si3 else 1) *
