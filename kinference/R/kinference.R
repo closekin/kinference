@@ -4615,43 +4615,49 @@ return( ret)
 #' co-inherited loci, from which estimates-of-co-inherited-variance and
 #' inferences about kin-ppns can be made.
 #'
-#' @param linfo locus info, a \code{data.frame} with columns \code{e0},
-#' \code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one "type" of
-#' locus, i.e., with roughly the same values of e/v 0/1, and \code{count} says
-#' how many such loci there are. e/v 0/1 are means and variances of the
-#' per-locus LOD (note no P) when the locus is or isn't co-inherited.
-#' @param emp.V.HSP empirical variance of PLOD for deffo HSPs. You're supposed
-#' to be running this on real data, so that \code{emp.V.HSP} is an actual
-#' number; however, for testing purposes, you can set up an artificial version
-#' via \code{C.equiv} below.
-#' @param kin.true Var[PLOD|kin.true]. The default, \code{"HCP"}, corresponds
-#' to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"} to 2; the latter is only
-#' for debugging, since it should reproduce the original empirical variance!
+#' @param linfo either a 'snpgeno' object, or its "locinfo" attribute
+#'     (or a fake one). The "locinfo" should be a \code{data.frame}
+#'     with columns \code{e0}, \code{e1}, \code{v0}, \code{v1},
+#'     \code{count}. Each row is one "type" of locus, i.e., with
+#'     roughly the same values of e/v 0/1, and \code{count} says how
+#'     many such loci there are. e/v 0/1 are means and variances of
+#'     the per-locus LOD (note no P) when the locus is or isn't
+#'     co-inherited.
+#' @param emp_V_HSP empirical variance of PLOD for deffo HSPs. You're
+#'     supposed to be running this on real data, so that
+#'     \code{emp.V.HSP} is an actual number; however, for testing
+#'     purposes, you can set up an artificial version via
+#'     \code{C.equiv} below.
+#' @param kin_true Var[PLOD|kin.true]. The default, \code{"HCP"},
+#'     corresponds to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"}
+#'     to 2; the latter is only for debugging, since it should
+#'     reproduce the original empirical variance!
 #' @param debug Logical flag. Defaults to FALSE.
-#' @param C.equiv for artificial test, with \code{emp.V.HSP} set to the
-#' no-crossover variance from \code{C.equiv} chromos (need not be integer).
-#' Ignored if \code{emp.V.HSP} is set.
+#' @param C_equiv for artificial test, with \code{emp.V.HSP} set to
+#'     the no-crossover variance from \code{C.equiv} chromos (need not
+#'     be integer).  Ignored if \code{emp.V.HSP} is set.
 #' @return Vector with names \code{V0}, \code{Vx}, \code{C.hat},
-#' \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances under the no-
-#' and all-crossover scenarios; \code{C.hat} is estimated equivalent number of
-#' chromosomes, and \code{rho.hat} is per-locus crossover rate, under the same
-#' scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
-#' \code{kin.true}) shows how many meioses are involved; yes, a perverse way to
-#' return that piece of info.
+#'     \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances
+#'     under the no- and all-crossover scenarios; \code{C.hat} is
+#'     estimated equivalent number of chromosomes, and \code{rho.hat}
+#'     is per-locus crossover rate, under the same
+#'     scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
+#'     \code{kin.true}) shows how many meioses are involved; yes, a
+#'     perverse way to return that piece of info.
 #' @keywords misc
 #' @examples
 #'
 #' \dontrun{
 #' # H1CPs, for "simulation" equiv to 22 no-Xover chromos
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=22)
+#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
 #' #        VUP       V.HSP          V0          Vx       C.hat     rho.hat n.meio.HCP
 #' #     1.3500    208.2273     91.9010    101.8270     22.0000      0.2616      4.0000
 #' # HTPs
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=22, kin='HTP')
+#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
 #' #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
 #' #    1.3500   208.2273   156.5642   186.1779    22.0000     0.2616     3.0000
 #' # Vars would go up with fewer equiv chromos
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=5, kin='HTP')
+#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
 #' #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
 #' #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
 #' }
@@ -4660,20 +4666,41 @@ return( ret)
 "var_PLOD_kin" <-
 function(
     linfo,
-    emp.V.HSP= V.noX( C.equiv, 2),
-    kin.true=c( 'HCP', 'HTP', 'HSP'),
+    emp_V_HSP= V.noX( C.equiv, 2),
+    kin_true=c( 'HCP', 'HTP', 'HSP'),
     debug=FALSE,
-    C.equiv=NULL
+    C_equiv=NULL
 ){
 #########
-  kin.true <- match.arg( kin.true)
-  n.meio <- c( HCP=4, HTP=3, HSP=2)[ kin.true]
+  if( linfo %is.a% 'snpgeno') {
+    linfo <- linfo@locinfo
+  }
+  kin_true <- match.arg( kin_true)
+  n.meio <- c( HCP=4, HTP=3, HSP=2)[ kin_true]
 
 # linfo should be a DF with cols e0, e1, v0, v1, count
-  names( linfo) <- names( linfo) %&% '.l'
-  extract.named( linfo)
+#  names( linfo) <- names( linfo) %&% '.l'
+# extract.named( linfo)
+
+  count.l <- linfo$count # only present if linfo is simulated eg 100 loci like this one, 100 like the next...
+  if( is.null( count.l)){
+    count.l <- rep( 1, nrow( linfo))
+  }
+
   L <- sum( count.l)
   pi <- count.l / L
+
+  for( thing in cq(e0, e1, v0, v1) ) {
+    this <- c(rep(NaN, nrow(linfo)))
+    for( way in unique(linfo$useN)) {
+        this[linfo$useN == way] <- with(linfo, get(sprintf("%s_%iway", thing, way)))[linfo$useN == way]
+    }
+    assign(thing %&% ".l", this)
+  }
+
+  #for( thing in cq( e0, e1, v0, v1)) { ## R4.1 refuses to parse a row-wise get; replaced by above
+  #  assign( thing %&% '.l', with( linfo, get( sprintf( '%s_%iway', thing, useN))))
+  #}
 
   e0 <- c( pi %*% e0.l) ## c() to squish length-one arrays for R4.0 compliance
   e1 <- c( pi %*% e1.l)
@@ -4689,12 +4716,12 @@ function(
   }
 
   # MoM for HSPs:
-  if( !is.null( C.equiv)) {
-    C.hat <- C.equiv <- min( L, C.equiv)
+  if( !is.null( C_equiv)) {
+    C.hat <- C_equiv <- min( L, C_equiv)
   } else {
-    C.hat <- if( V.noX( 1, 2) < emp.V.HSP) 1 else
-        if( V.noX( L, 2) > emp.V.HSP) L else
-        find.root( V.noX, target=emp.V.HSP, start=1, step=1, fdirection='decreasing',
+    C.hat <- if( V.noX( 1, 2) < emp_V_HSP) 1 else
+        if( V.noX( L, 2) > emp_V_HSP) L else
+        find.root( V.noX, target=emp_V_HSP, start=1, step=1, fdirection='decreasing',
             min.x=1, max.x=L, meioses=2)
   }
   V0 <- V.noX( C.hat, meioses=n.meio)
@@ -4753,11 +4780,11 @@ function(
 
   # If no Odis (e.g. with very few loci!) then no point in going further
   rho.hat <- if( C.hat > L-1) 100 else
-      find.root( V.allX, target=emp.V.HSP, start=1/L, step=0.2/L,
+      find.root( V.allX, target=emp_V_HSP, start=1/L, step=0.2/L,
           fdirection='decreasing', min.x=0, meioses=2)
   Vx <- V.allX( rho.hat, meioses=n.meio)
 
-return( unlist( returnList( VUP=L*v0, V.HSP=emp.V.HSP, V0, Vx, C.hat, rho.hat, n.meio)))
+return( unlist( returnList( VUP=L*v0, V.HSP=emp_V_HSP, V0, Vx, C.hat, rho.hat, n.meio)))
 }
 
 # MVB's workaround for futile CRAN 'no visible blah' check:
@@ -5442,7 +5469,7 @@ globalVariables( package="kinference",
     ,"stat"
     ,"V_FPstat"
     ,"keep_indiv"
-    ,"kin.true"
+    ,"kin_true"
     ,"n.meio"
     ,"linfo"
     ,"L"
@@ -5455,9 +5482,9 @@ globalVariables( package="kinference",
     ,"meioses"
     ,"EofV"
     ,"VofE"
-    ,"C.equiv"
+    ,"C_equiv"
     ,"C.hat"
-    ,"emp.V.HSP"
+    ,"emp_V_HSP"
     ,"V0"
     ,"ell"
     ,"e2.0"

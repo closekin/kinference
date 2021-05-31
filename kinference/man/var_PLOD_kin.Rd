@@ -6,42 +6,48 @@
 \usage{
 var_PLOD_kin(
   linfo,
-  emp.V.HSP = V.noX(C.equiv, 2),
-  kin.true = c("HCP", "HTP", "HSP"),
+  emp_V_HSP = V.noX(C.equiv, 2),
+  kin_true = c("HCP", "HTP", "HSP"),
   debug = FALSE,
-  C.equiv = NULL
+  C_equiv = NULL
 )
 }
 \arguments{
-\item{linfo}{locus info, a \code{data.frame} with columns \code{e0},
-\code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one "type" of
-locus, i.e., with roughly the same values of e/v 0/1, and \code{count} says
-how many such loci there are. e/v 0/1 are means and variances of the
-per-locus LOD (note no P) when the locus is or isn't co-inherited.}
+\item{linfo}{either a 'snpgeno' object, or its "locinfo" attribute
+(or a fake one). The "locinfo" should be a \code{data.frame}
+with columns \code{e0}, \code{e1}, \code{v0}, \code{v1},
+\code{count}. Each row is one "type" of locus, i.e., with
+roughly the same values of e/v 0/1, and \code{count} says how
+many such loci there are. e/v 0/1 are means and variances of
+the per-locus LOD (note no P) when the locus is or isn't
+co-inherited.}
 
-\item{emp.V.HSP}{empirical variance of PLOD for deffo HSPs. You're supposed
-to be running this on real data, so that \code{emp.V.HSP} is an actual
-number; however, for testing purposes, you can set up an artificial version
-via \code{C.equiv} below.}
+\item{emp_V_HSP}{empirical variance of PLOD for deffo HSPs. You're
+supposed to be running this on real data, so that
+\code{emp.V.HSP} is an actual number; however, for testing
+purposes, you can set up an artificial version via
+\code{C.equiv} below.}
 
-\item{kin.true}{Var[PLOD|kin.true]. The default, \code{"HCP"}, corresponds
-to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"} to 2; the latter is only
-for debugging, since it should reproduce the original empirical variance!}
+\item{kin_true}{Var[PLOD|kin.true]. The default, \code{"HCP"},
+corresponds to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"}
+to 2; the latter is only for debugging, since it should
+reproduce the original empirical variance!}
 
 \item{debug}{Logical flag. Defaults to FALSE.}
 
-\item{C.equiv}{for artificial test, with \code{emp.V.HSP} set to the
-no-crossover variance from \code{C.equiv} chromos (need not be integer).
-Ignored if \code{emp.V.HSP} is set.}
+\item{C_equiv}{for artificial test, with \code{emp.V.HSP} set to
+the no-crossover variance from \code{C.equiv} chromos (need not
+be integer).  Ignored if \code{emp.V.HSP} is set.}
 }
 \value{
 Vector with names \code{V0}, \code{Vx}, \code{C.hat},
-\code{rho.hat}, \code{n.meio.<XXX>}. First two are variances under the no-
-and all-crossover scenarios; \code{C.hat} is estimated equivalent number of
-chromosomes, and \code{rho.hat} is per-locus crossover rate, under the same
-scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
-\code{kin.true}) shows how many meioses are involved; yes, a perverse way to
-return that piece of info.
+    \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances
+    under the no- and all-crossover scenarios; \code{C.hat} is
+    estimated equivalent number of chromosomes, and \code{rho.hat}
+    is per-locus crossover rate, under the same
+    scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
+    \code{kin.true}) shows how many meioses are involved; yes, a
+    perverse way to return that piece of info.
 }
 \description{
 Aim is to work out how much your putative half-sibling pairs (HSPs) might be
@@ -91,15 +97,15 @@ inferences about kin-ppns can be made.
 
 \dontrun{
 # H1CPs, for "simulation" equiv to 22 no-Xover chromos
-var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=22)
+var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
 #        VUP       V.HSP          V0          Vx       C.hat     rho.hat n.meio.HCP
 #     1.3500    208.2273     91.9010    101.8270     22.0000      0.2616      4.0000
 # HTPs
-var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=22, kin='HTP')
+var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
 #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
 #    1.3500   208.2273   156.5642   186.1779    22.0000     0.2616     3.0000
 # Vars would go up with fewer equiv chromos
-var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C.equiv=5, kin='HTP')
+var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
 #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
 #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
 }
