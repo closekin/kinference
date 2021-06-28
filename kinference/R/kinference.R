@@ -4787,6 +4787,70 @@ function(
 return( unlist( returnList( VUP=L*v0, V.HSP=emp_V_HSP, V0, Vx, C.hat, rho.hat, n.meio)))
 }
 
+
+#' add a kin-type legend with the default colour scheme
+#'
+#' Package kinference uses a constant colour scheme for kin types,
+#' designed to be colourblind-friendly and to allow clear visual
+#' distinction between kin classes that share similar relatedness
+#' levels. We recommend that users maintain this colour scheme in any
+#' custom plots they create. This utility function adds a legend with
+#' kinship acronyms and their colours. By default, it will display
+#' only the "top four" kin classes (UP, FSP, POP, and HSP)
+#'
+#' @param position passed to 'legend'. Must be one of "topleft",
+#'     "top", "topright", etc.
+#' @param include a character vector of kin-classes to
+#'     include. Limited to "POP", "GGP", "HCP", "FCP", "UP", "HTP",
+#'     "FTP", "HSP", and "FSP".  Will automatically include "UP",
+#'     "POP", "FSP", and "HSP" unless these are specifically
+#'     _excluded_. Will trigger a warning if any values are also in
+#'     'exclude', as those values will be excluded.
+#' @param exclude a character vector of kin-classes to
+#'     exclude. Limited to "POP", "GGP", "HCP", "FCP", "UP", "HTP",
+#'     "FTP", "HSP", and "FSP". Will trigger a warning if any values
+#'     are also in 'include'.
+#' @param ... additional args, passed to legend()
+#' @return adds a legend to the current plot
+#' @keywords misc
+
+kinlegend <- function(position = "topright", include = character(), exclude = character(), ...) {
+
+    palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+              "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+    if(sum(include %in% exclude) > 0) {
+        stop(paste("kin class(es) '",
+                   paste(include[include %in% exclude], collapse = ", "),
+                   "' is/are in both 'include' and 'exclude'", sep = "")
+             )
+    }
+
+    if(!all(include %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
+        warning("some unrecognised kin classes in 'include'")
+    }
+    if(!all(exclude %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
+        warning("unrecognised kin classes in 'exclude'")
+    }
+
+    ## the default set
+    allNames <- c("UP","POP","HSP","FSP")
+
+    ## add any extras from 'include'
+    allNames <- unique(c(include, allNames))
+
+    ## remove those in 'exclude'
+    allNames <- allNames[!allNames %in% exclude]
+
+    ## find their palette numbers
+    allNumbers <- match(allNames, c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))
+
+    legend(position, legend = allNames,
+               lwd = 2, lty = 1, col = allNumbers, bg = "white", ...)
+}
+
+
+
 # MVB's workaround for futile CRAN 'no visible blah' check:
 globalVariables( package="kinference",
   names=c( ".Traceback"
