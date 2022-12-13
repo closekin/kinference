@@ -4813,6 +4813,7 @@ return( unlist( returnList( VUP=L*v0, V.HSP=emp_V_HSP, V0, Vx, C.hat, rho.hat, n
 #' @param ... additional args, passed to legend()
 #' @return adds a legend to the current plot
 #' @keywords misc
+#' @export
 
 kinlegend <- function(position = "topright", include = character(), exclude = character(), ...) {
 

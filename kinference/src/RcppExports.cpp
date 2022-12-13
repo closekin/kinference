@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // paircomps
 SEXP paircomps(IntegerMatrix pair_geno, NumericMatrix LOD, RawMatrix geno1, RawMatrix geno2, bool symmo, int granulum, int granulum_loci);
 RcppExport SEXP _kinference_paircomps(SEXP pair_genoSEXP, SEXP LODSEXP, SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP granulumSEXP, SEXP granulum_lociSEXP) {
