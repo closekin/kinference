@@ -66,7 +66,6 @@
 #' @importFrom vecless compile_vecless
 #' @importFrom vecless make_playback
 #' @importFrom vecless set_recording
-NULL
 
 
 
@@ -94,7 +93,6 @@ NULL
 #' 0.5 (the default) is probably OK.
 #' @seealso simcheck_FSP_POP
 #' @keywords internal
-NULL
 
 
 
@@ -113,7 +111,6 @@ NULL
 #' @param which_genotypes arguments
 #' @return Ooooh yes. Great value.
 #' @keywords misc
-NULL
 
 
 

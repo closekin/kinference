@@ -8,7 +8,7 @@ Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
