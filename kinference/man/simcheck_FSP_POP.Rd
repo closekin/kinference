@@ -77,9 +77,9 @@ simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
 simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
 kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
 hist( simbo4_next$FPstat, nc=50)
-abline( v=simbo4_next@E_FPstat, col='green') # theory means
+abline( v=simbo4_next$E_FPstat, col='green') # theory means
 # 95\% of all POPs should be Left of the line drawn next:
-abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
+abline( v=simbo4_next$E_FPstat['POP']+2*sqrt( simbo4_next$V_FPstat), col='blue', lty=1)
 # Can't say for FSPs, becoz linkage
 # Real data:
 testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)

@@ -4,7 +4,7 @@
 \alias{est_ALF_ABCO}
 \title{Estimate allele frequencies, including nulls}
 \usage{
-est_ALF_ABCO(lociar, geno_amb = lociar@geno_amb)
+est_ALF_ABCO(lociar, geno_amb = lociar$geno_amb)
 }
 \arguments{
 \item{lociar}{a \code{loc.ar} object with the @geno_amb attribute.}

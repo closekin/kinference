@@ -47,9 +47,12 @@ test_that("find_HSPs gets the right PLODs for a really small fake dataset", {
     smallsnpg <- snpgeno(10, 10, diplos = c("AAO", "AB", "BBO", "OO"), info = info, locinfo = locinfo)
     smallsnpg[] <- sample(c("AAO", "AB", "BBO", "OO"), 100, replace = TRUE, prob = c(0.45, 0.3, 0.21, 0.04))
 
-    test0 <- re_est_ALF(smallsnpg)
+    smallsnpg$locinfo$pbonzer <- re_est_ALF(smallsnpg)$locinfo$pambig
+    smallsnpg$locinfo$snerr <- 0
+    smallsnpg$locinfo$useN <- 4
 
     test1 <- hsp_power(smallsnpg, k = 0.5)
+    test2 <- prepare_PLOD_SPA(test1)
 })
 
 
