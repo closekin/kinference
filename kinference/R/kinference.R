@@ -2477,7 +2477,7 @@ function( lociar,
 ){
 ############
   define_genotypes()
-  li <- lociar@locinfo
+  li <- lociar$locinfo
   li1 <- li[1,]
 
 `%without.names%` <- function( x, what) {

@@ -28,6 +28,7 @@
 #' @importFrom gbasics make_genopairer
 #' @importFrom gbasics rsample
 #' @importFrom gbasics snpgeno
+#' @importFrom gbasics snpgeno.default
 #' @importFrom gbasics sqr
 #' @importFrom gbasics define_genotypes
 #' @importFrom grDevices rgb
