@@ -52,7 +52,7 @@ test_that("find_HSPs gets the right PLODs for a really small fake dataset", {
     smallsnpg$locinfo$useN <- 4
 
     test1 <- hsp_power(smallsnpg, k = 0.5)
-    test2 <- prepare_PLOD_SPA(test1)
+    test2 <- prepare_PLOD_SPA(test1)  ## error here. Probably related to atease removal
 })
 
 
