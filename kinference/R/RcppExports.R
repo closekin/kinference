@@ -2,34 +2,34 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 paircomps <- function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
-    .Call('_kinference_paircomps', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci)
+    .Call(`_kinference_paircomps`, pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci)
 }
 
 HSP_paircomps_lots <- function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins) {
-    .Call('_kinference_HSP_paircomps_lots', PACKAGE = 'kinference', pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
+    .Call(`_kinference_HSP_paircomps_lots`, pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
 }
 
 POP_paircomps_lots <- function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
-    .Call('_kinference_POP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO)
+    .Call(`_kinference_POP_paircomps_lots`, geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO)
 }
 
 POP_wt_paircomps_lots <- function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval) {
-    .Call('_kinference_POP_wt_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval)
+    .Call(`_kinference_POP_wt_paircomps_lots`, geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval)
 }
 
 DUP_paircomps_lots <- function(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval) {
-    .Call('_kinference_DUP_paircomps_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval)
+    .Call(`_kinference_DUP_paircomps_lots`, geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval)
 }
 
 DUP_paircomps_incomplete_lots <- function(geno1, geno2, symmo, max_diff_ppn, limit) {
-    .Call('_kinference_DUP_paircomps_incomplete_lots', PACKAGE = 'kinference', geno1, geno2, symmo, max_diff_ppn, limit)
+    .Call(`_kinference_DUP_paircomps_incomplete_lots`, geno1, geno2, symmo, max_diff_ppn, limit)
 }
 
 indiv_lglk_geno <- function(lpgeno, geno) {
-    .Call('_kinference_indiv_lglk_geno', PACKAGE = 'kinference', lpgeno, geno)
+    .Call(`_kinference_indiv_lglk_geno`, lpgeno, geno)
 }
 
 K_indiv <- function(tt, geno, vec_LOD, Pg) {
-    .Call('_kinference_K_indiv', PACKAGE = 'kinference', tt, geno, vec_LOD, Pg)
+    .Call(`_kinference_K_indiv`, tt, geno, vec_LOD, Pg)
 }
 

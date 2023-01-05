@@ -6,8 +6,8 @@
 \usage{
 chisq_genofreq_check(
   lociar,
-  gpred = lociar$gpred,
-  gobs = lociar$gobs,
+  gpred = lociar@gpred,
+  gobs = lociar@gobs,
   thresh_pchisq_loci,
   test,
   trim,

@@ -87,21 +87,21 @@ but maybe I should fix that at some point.
 ## do histograms etc to find likely ones
 # discro <- split_FSPs_from_POPs( mysngp, pops_or_fsps \%where\% (wpsex < 0.042))
 # hist( discro, nc=30, col='grey')
-# abline( v=discro$E_POP, col='red')
-# text( discro$E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
-# abline( v=discro$E_FSP, col='lightblue')
-# text( discro$E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-# abline( v=discro$E_HSP, col='pink', lty='dashed')
-# text( discro$E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
+# abline( v=discro@E_POP, col='red')
+# text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
+# abline( v=discro@E_FSP, col='lightblue')
+# text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+# abline( v=discro@E_HSP, col='pink', lty='dashed')
+# text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
 ###
 # h_or_f <- find_HSPs( mysnpg, ...)
 ## do histograms etc to find likely sib pairs
 # discro2 <- split_FSPs_from_HSPs(  mysngp, h_or_f \%where\% (PLOD > 55))
 # hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
-# abline( v=discro2$E_HSP, col='orange')
-# text( discro2$E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
-# abline( v=discro2$E_FSP, col='lightblue')
-# text( discro2$E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+# abline( v=discro2@E_HSP, col='orange')
+# text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
+# abline( v=discro2@E_FSP, col='lightblue')
+# text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
 
 }
 \keyword{misc}
