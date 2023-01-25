@@ -10,6 +10,8 @@
 #' The most important doco is the vignette (but it's broken at time of
 #' writing!) which shows the operations in more detail.
 #'
+#' @docType package
+#' @name kinference
 #' @aliases kinference kinference-package
 #' @author Mark V Bravington, David L Miller, Shane M Baylis
 #' @keywords misc
@@ -67,7 +69,7 @@
 #' @importFrom vecless compile_vecless
 #' @importFrom vecless make_playback
 #' @importFrom vecless set_recording
-
+NULL
 
 
 
@@ -87,6 +89,7 @@
 #' identified as potential POPs, hence low computational demand.
 #'
 #'
+#' @name split_FSPs_from_POPs
 #' @param snpg a \code{snpgeno} object
 #' @param candiPOPs a 2-column matrix of of row-numbers in \code{snpg}, for
 #' pairs known to be either POPs or FSPs (eg from \code{find_POPs}).
@@ -94,7 +97,7 @@
 #' 0.5 (the default) is probably OK.
 #' @seealso simcheck_FSP_POP
 #' @keywords internal
-
+NULL
 
 
 
@@ -105,6 +108,7 @@
 #' find them, but that you should not be messing about with.
 #'
 #'
+#' @name make_pgeno
 #' @aliases Internals make_pgeno
 #' @param pA an arg
 #' @param pB an arg
@@ -112,6 +116,6 @@
 #' @param which_genotypes arguments
 #' @return Ooooh yes. Great value.
 #' @keywords misc
-
+NULL
 
 

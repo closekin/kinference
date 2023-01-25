@@ -4057,7 +4057,6 @@ function( snpg, candiHSPs) {
   P_k2 <- 0 * P_k0 # get the shape right
   P_k2[l, i, i] := sqrt(P_k0[l, i, i])
 
-
   nsib <- nrow( candiHSPs)
   nloci <- ncol(sibg)
 
@@ -4066,7 +4065,6 @@ function( snpg, candiHSPs) {
   kappa_hsp <- c(1/2, 1/2, 0)
 
   p12fsp <- p12hsp <- matrix(NA, nloci, nsib)
-
 
   # split sibg into g1 and g2 for the two parts of the pairs
   g1 <- sibg[1:nsib, ]
@@ -4566,6 +4564,144 @@ return( ret)
 #  abline( v=testo4$FPstat, col='red')
 #
 
+}
+
+#' @rdname split_FSPs_from_HSPs
+#' @export
+"split_HSPs_from_HTPs" <-
+function( snpg, candiHTPs) {
+  # For pairs already picked as possible HSPs, they might be HTPs
+
+  # Don't need full pairwise screening for FSPs (do post hoc on a few hundred
+  # HSPs), hence all in R.
+
+  define_genotypes()
+
+  # HSPs normally from 'find_HSPs'; or can be M*2 matrix of rows in snpg that are poss HSPs
+  # if former, make latter
+
+  if( candiHTPs %is.a% 'data.frame') {
+    candiHTPs <- as.matrix( candiHTPs[ cq( i, j)])
+  }
+  sibg <- just_sibg <- snpg[ c( candiHTPs),]
+
+  # Transform to 4way genotypes
+  # based on code in find_duplicates
+  # careful, since "factor level" of AB and OO is different in 4way vs 6way
+  sibg@diplos <- genotypes4_ambig
+  sibg[ just_sibg==AO] <- AAO
+  sibg[ just_sibg==AA] <- AAO
+  sibg[ just_sibg==BO] <- BBO
+  sibg[ just_sibg==BB] <- BBO
+  sibg[ just_sibg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
+  sibg[ just_sibg==AB] <- AB
+
+  extract.named( snpg@locinfo[ cq( PUP4, LOD4)])
+
+  # what is happening here? Is this magick?! Need to parcel up somewhere else.
+  OLOD <- LOD4
+  OPUP <- PUP4
+  # Need lookups into the compressed matrix LOD4 (which should really be 3D array but Rcpp can't cope poor baby)
+  # mg <- OLOD@mg # doesn't exist; lost when LOD4 gets plonked into locinfo data.frame
+
+  mg <- make_genopairer( genotypes4_ambig)
+
+  # Can't quite do this with vecless!
+  OLOD[ is.na( OLOD)] <- 0 # set to NA for 4way loci
+  n_loci <- nrow( OPUP)
+  PUP4 <- LOD4 <- array( 0, c( n_loci, 4, 4))
+  for( ig in 1:4) {
+    gjseq <- mg[ , ig]
+    XXi[ l, gj] := OPUP[ l, gj=gjseq] # Shouldn't work with new vecless syntax... but does !?
+    PUP4[ l, {ig}, gj] := XXi[ l, gj]
+    # NPUP[,ig,] <- OPUP[ , mg[,ig]]
+
+    XXi[ l, gj] := OLOD[ l, gj=gjseq]
+    LOD4[ l, {ig}, gj] := XXi[ l, gj]
+  }
+
+  # recover the column/row/etc names
+  dimnames(PUP4) <- dimnames(LOD4) <- list(NULL, rownames(mg), rownames(mg))
+
+  # These DO NOT sum to 1 by locus, because G1G2 and G2G1 are doubled-up
+  # They would, if g1 & g2 were sorted
+  # It doesn't matter for calculating *observed* PLODs, but care is needed with the expectations below...
+
+  ## calculate the P[g1, g2 | k shared alleles]
+  # since we save the LOD (for HSP vs UP) and the P[UP] calculate
+  # P[g1 g2 | HSP] from that
+  PHSP4 <- exp( LOD4) * PUP4 # Pr[gg|HSP] <- 0.5 * PUP4 + 0.5 * Pr[gg|kappa=1]
+  P_k0 <- PUP4
+  P_k1 <- 2*PHSP4 - PUP4
+  P_k1[ P_k1 < 0] <- 0 # rounding error
+  # P_k2 <- sqrt(diag(P_k0)) <- we are doing this-ish
+  P_k2 <- 0 * P_k0 # get the shape right
+  P_k2[l, i, i] := sqrt(P_k0[l, i, i])
+
+  nsib <- nrow( candiHTPs)
+  nloci <- ncol(sibg)
+
+  # if only R were zero-indexed...
+##   kappa_fsp <- c(1/4, 1/2, 1/4)
+    kappa_hsp <- c(1/2, 1/2, 0)
+    kappa_htp <- c(3/4, 1/4, 0)
+
+
+  p12hsp <- p12htp <- matrix(NA, nloci, nsib)
+
+  # split sibg into g1 and g2 for the two parts of the pairs
+  g1 <- sibg[1:nsib, ]
+  g2 <- sibg[(nsib+1):(2*nsib), ]
+
+  # for loop version of the code
+  g1 <- as.character(g1)
+  g2 <- as.character(g2)
+  evalq(for(i in 1:nsib){
+    for(l in 1:nloci){
+      # P[g_1l g_2l | HSP]
+      p12hsp[l, i] <- kappa_hsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_hsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_hsp[3] * P_k2[l, g1[i, l], g2[i, l]]
+      # P[g_1l g_2l | HTP]
+      p12htp[l, i] <- kappa_htp[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_htp[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_htp[3] * P_k2[l, g1[i, l], g2[i, l]]
+    }
+  })
+  OD_ST <- p12hsp/p12htp
+  LOD_ST <- log(OD_ST)
+  PLOD_ST <- colSums(LOD_ST)
+
+  # Expectations
+  # Need sum-to-1 here, so either rewrite when vecless2 appears, or work with compressed forms...
+  OPHTP <- exp( OLOD) * OPUP # Pr[gg|HTP] <- 0.5 * PUP4 + 0.5 * Pr[gg|kappa=1]
+  P_k0 <- OPUP
+  P_k1 <- 2*OPHTP - OPUP
+  P_k1[ P_k1 < 0] <- 0 # rounding error
+  P_k2 <- 0 * P_k0 # get the shape right
+  P_k2[ , diag( mg)] <- sqrt( P_k0[ , diag( mg)]) # only the cases where g1==g2
+
+  p12hspa <- kappa_hsp[1] * P_k0 +  kappa_hsp[2] * P_k1 + kappa_hsp[3] * P_k2
+  p12htpa <- kappa_htp[1] * P_k0 + kappa_htp[2] * P_k1 + kappa_htp[3] * P_k2
+
+  EPLOD_ST_HS <- sum(log(p12hspa/p12htpa) * p12hspa)
+  EPLOD_ST_HT <- sum(log(p12hspa/p12htpa) * p12htpa)
+
+  # format a return object
+  ret <- data.frame(PLOD_ST = PLOD_ST,
+                    i       = candiHTPs[,1],
+                    j       = candiHTPs[,2])
+
+  # Next 2 are COMPLETELY WRONG !!!
+##  ret@E_HSP <- EPLOD_ST_F
+##  ret@E_HTP <- EPLOD_ST_H
+
+  ret@E_HSP <- EPLOD_ST_HS
+  ret@E_HTP <- EPLOD_ST_HT
+
+  ret@call <- sys.call()
+
+  return(ret)
 }
 
 
