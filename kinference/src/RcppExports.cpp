@@ -90,8 +90,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DUP_paircomps_lots
-SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_loci, int keep_n, int nbins, double binterval);
-RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_lociSEXP, SEXP keep_nSEXP, SEXP nbinsSEXP, SEXP bintervalSEXP) {
+SEXP DUP_paircomps_lots(RawMatrix geno1, RawMatrix geno2, bool symmo, double max_diff_loci, int keep_n, int nbins, double binterval, double maxbin);
+RcppExport SEXP _kinference_DUP_paircomps_lots(SEXP geno1SEXP, SEXP geno2SEXP, SEXP symmoSEXP, SEXP max_diff_lociSEXP, SEXP keep_nSEXP, SEXP nbinsSEXP, SEXP bintervalSEXP, SEXP maxbinSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -102,7 +102,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type keep_n(keep_nSEXP);
     Rcpp::traits::input_parameter< int >::type nbins(nbinsSEXP);
     Rcpp::traits::input_parameter< double >::type binterval(bintervalSEXP);
-    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval));
+    Rcpp::traits::input_parameter< double >::type maxbin(maxbinSEXP);
+    rcpp_result_gen = Rcpp::wrap(DUP_paircomps_lots(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval, maxbin));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -146,21 +147,4 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(K_indiv(tt, geno, vec_LOD, Pg));
     return rcpp_result_gen;
 END_RCPP
-}
-
-static const R_CallMethodDef CallEntries[] = {
-    {"_kinference_paircomps", (DL_FUNC) &_kinference_paircomps, 7},
-    {"_kinference_HSP_paircomps_lots", (DL_FUNC) &_kinference_HSP_paircomps_lots, 11},
-    {"_kinference_POP_paircomps_lots", (DL_FUNC) &_kinference_POP_paircomps_lots, 9},
-    {"_kinference_POP_wt_paircomps_lots", (DL_FUNC) &_kinference_POP_wt_paircomps_lots, 11},
-    {"_kinference_DUP_paircomps_lots", (DL_FUNC) &_kinference_DUP_paircomps_lots, 7},
-    {"_kinference_DUP_paircomps_incomplete_lots", (DL_FUNC) &_kinference_DUP_paircomps_incomplete_lots, 5},
-    {"_kinference_indiv_lglk_geno", (DL_FUNC) &_kinference_indiv_lglk_geno, 2},
-    {"_kinference_K_indiv", (DL_FUNC) &_kinference_K_indiv, 4},
-    {NULL, NULL, 0}
-};
-
-RcppExport void R_init_kinference(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
 }

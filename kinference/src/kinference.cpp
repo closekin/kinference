@@ -40,7 +40,7 @@ SEXP paircomps(
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h> // gonna need to find a search path.
+#include <r_int_defs_debug.h> // gonna need to find a search path.
 #endif
     int npc; // #comps
     int n_geno;
@@ -140,7 +140,7 @@ SEXP HSP_paircomps_lots(
 
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_geno;
@@ -230,14 +230,13 @@ SEXP HSP_paircomps_lots(
     // Bigger speedup would come from "blocking" as per mat-mult to reduce
     // cache misses
 
-    // IntegerMatrix::Column geno1_i = geno1(_,i);
+    RawVector genoi = geno1( _, i);
     j_max = symmo ? i : n_samps2; // j_max is i if symmo, or n_samps2 otherwise
     for( j = 0; j < j_max; j++) {
-      // IntegerMatrix::Column geno2_j = geno2(_,j);
-      // calculate the PLOD
+      RawVector genoj = geno2( _, j);
       this_PLOD = 0;
       for( iloc = 0; iloc < n_loci; iloc++ ) {
-        g1g2 = pair_geno( geno1( iloc, i)-1, geno2( iloc, j)-1); // Effing 0-base...
+        g1g2 = pair_geno( genoi[ iloc]-1, genoj[ iloc]-1); // Effing 0-base...
         ASSERTO( (g1g2 >= 1) && (g1g2 <= n_genopairs));
         this_LOD = LOD( g1g2-1, iloc); // Effing 0-base...
         this_PLOD += this_LOD;
@@ -339,7 +338,7 @@ SEXP POP_paircomps_lots(
 BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_samps1;
@@ -420,14 +419,14 @@ BEGIN_RCPP
 
     // For speed, only check exlcus over loci where g1 == AAO (then just check if g2 == BBO there) and conversely
     // Set up info for i; only done once
-
+    RawVector genoi = geno1( _, i);
     n_AAOs1_i = 0;
     n_BBOs1_i = 0;
     for( iloc = 0; iloc < n_loci; iloc++) {
-      if( geno1( iloc, i) == AAO) {
+      if( genoi[ iloc] == AAO) {
         which_AAOs1_i[ n_AAOs1_i] = iloc;
         n_AAOs1_i += 1;
-      } else if( geno1( iloc, i) == BBO) {
+      } else if( genoi[ iloc] == BBO) {
         which_BBOs1_i[ n_BBOs1_i] = iloc;
         n_BBOs1_i += 1;
       }
@@ -435,17 +434,18 @@ BEGIN_RCPP
 
     j_max = symmo ? i : n_samps2;
     for( j = 0; j < j_max; j++) {
+      RawVector genoj = geno2( _, j);      
       this_Nexclu = 0;
       for( iiloc = 0; iiloc < n_AAOs1_i; iiloc++) {
         iloc = which_AAOs1_i[ iiloc];
         #if defined( MVBDEBUG)
-        g2 = geno2( iloc, j);
+        g2 = genoj[ iloc];
         #endif
-        this_Nexclu += (int)( geno2( which_AAOs1_i[ iiloc], j) == BBO);
+        this_Nexclu += (int)( genoj[ which_AAOs1_i[ iiloc]] == BBO);
       };
 
       for( iiloc = 0; iiloc < n_BBOs1_i; iiloc++) {
-        this_Nexclu += (int)( geno2( which_BBOs1_i[ iiloc], j) == AAO);
+        this_Nexclu += (int)( genoj[ which_BBOs1_i[ iiloc]] == AAO);
       };
 
       if( this_Nexclu > eta) { // common; predictable branch
@@ -540,7 +540,7 @@ SEXP POP_wt_paircomps_lots(
     // NumericVector bins, // SB deletion
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_samps1;
@@ -621,14 +621,15 @@ SEXP POP_wt_paircomps_lots(
 
     // For speed, only check exlcus over loci where g1 == AAO (then just check if g2 == BBO there) and conversely
     // Set up info for i; only done once
+    RawVector genoi = geno1( _, i);
 
     n_AAOs1_i = 0;
     n_BBOs1_i = 0;
     for( iloc = 0; iloc < n_loci; iloc++) {
-      if( geno1( iloc, i) == AAO) {
+      if( genoi[ iloc] == AAO) {
         which_AAOs1_i[ n_AAOs1_i] = iloc;
         n_AAOs1_i += 1;
-      } else if( geno1( iloc, i) == BBO) {
+      } else if( genoi[ iloc] == BBO) {
         which_BBOs1_i[ n_BBOs1_i] = iloc;
         n_BBOs1_i += 1;
       }
@@ -636,16 +637,17 @@ SEXP POP_wt_paircomps_lots(
 
     j_max = symmo ? i : n_samps2;
     for( j = 0; j < j_max; j++) {
+      RawVector genoj = geno2( _, j);
       this_wpsex = 0;
       for( iiloc = 0; iiloc < n_AAOs1_i; iiloc++) {
         iloc = which_AAOs1_i[ iiloc];
-        g2 = geno2( which_AAOs1_i[ iiloc], j);
+        g2 = genoj[ which_AAOs1_i[ iiloc]];
         this_wpsex += w[ iloc-1] * (int)( g2 == BBO);
       };
 
       for( iiloc = 0; iiloc < n_BBOs1_i; iiloc++) {
         iloc = which_AAOs1_i[ iiloc];
-        this_wpsex += w[ iloc-1] * (int)( geno2( which_BBOs1_i[ iiloc], j) == AAO);
+        this_wpsex += w[ iloc-1] * (int)( genoj[ which_BBOs1_i[ iiloc]] == AAO);
       };
 
       if( this_wpsex > eta) { // common; predictable branch
@@ -735,13 +737,14 @@ SEXP DUP_paircomps_lots(
   bool symmo, // should be true iff geno1==geno2
   double max_diff_loci, // max discrepant 4way genos to be retained
   int keep_n, // max number of pairs to return (anti-blowout)
-  int nbins, // SB insertion; MVB checks nbins=0
-  double binterval // SB insertion
+  int nbins, //  MVB checks nbins=0
+  double binterval,
+  double maxbin  // overridden if nbins>0
 ) {
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_samps1;
@@ -753,9 +756,11 @@ SEXP DUP_paircomps_lots(
   int j_max;
   int iloc;
   int this_ndiff;
-  int which_bin; // SB insertion
-  IntegerVector n_ndiff_in_bin( nbins); //SB addition
-  double ibinterval = 1/binterval; // MVB add
+  int which_bin;
+  int earlycheck_interval = 20;
+  int next_earlycheck;
+  IntegerVector n_ndiff_in_bin( nbins);
+  double ibinterval = 1/binterval;
   double minbin = 0; // MVB, but could omit.
 
   n_loci = geno1.nrow();
@@ -793,38 +798,61 @@ SEXP DUP_paircomps_lots(
 
   n_kept = 0;
   IntegerVector known_dup( n_samps2, 0);
+  if( nbins>0){
+    // Next might be "out-by-one" but only used for early abort check
+    maxbin = minbin + nbins * binterval;
+  }
+
+  // Could be *radically* speeded up by
+  // 1. splitting each geno into bits, so 8 loci per byte for the i-th bit
+  // (the bitness becomes R's 3rd dimension) only 2 or 3 bits required for biallelic
+  // 2. loading uint64 (ie 8 bytes ie 64 loci!) and using XOR (and OR)
+  // ctr64= 0; FOR( ibit,2,nbits){ ctr64 |= xor( genoil[ ibits]m genojl[ibits]);};
+  // diffcount += bitset::count( ctr64);
+  // Also, multicore (prolly best handled from R)
+  // Also, cache-sensitive code a la matrix-multiply (hard, kinda geekishly interesting tho...)
 
   for( i = 0; i < n_samps1; i++){
-    // "Fuzzy hashing" would really speed this up...
-    // preprocess each genotype into a much smaller hash that is guaranteed to differ
-    // by "a lot" if genos are very different; only check detailed genos
-    // when hashes of i and j are "close".
-
+    // 2023: seems a bit quicker to make separate vectors
+    // ... which avoids matrix lookup of sequential elements
+    // ... cos we only need eg genoi[ iloc] not 2D geno1[ i, iloc]
+    RawVector genoi = geno1( _, i);
     j_max = symmo ? i : n_samps2;
     for( j = 0; j < j_max; j++) {
       if( !symmo || !known_dup[ j]) {
+        RawVector genoj = geno2( _, j);
 
         this_ndiff = 0;
-        for( iloc = 0; iloc < n_loci; iloc++) {
+        next_earlycheck = (nbins==0) ? earlycheck_interval : 0;
+        
+        // Maybe possible to speed this up by operating 8-bytes-at-a-time
+        for( iloc = 0; iloc < n_loci; iloc++){
           // Faster version could "unroll" this a bit and only do the if-check every 10 loci or so
-          this_ndiff += (int)( geno2( iloc, j) != geno1( iloc, i));
+          // this_ndiff += (int)( geno2( iloc, j) != geno1( iloc, i));
+          this_ndiff += (int)( genoj[ iloc] != genoi[ iloc]);
 
           // If not binning, then abort locus-specific checks whenever a comp hits max_diff_loci--
-          // saves a lot of time1. MVB tweak post SB
-          if( !nbins && (this_ndiff > max_diff_loci)) { // deffo not a dup
+          // saves a lot of time1.
+          // 2023: extra code to only check every bincheck'th locus
+          // predictable if's are fast, unpredictable if's are slow.
+          next_earlycheck -= 1;
+          if( !next_earlycheck){
+            if( this_ndiff > maxbin){ // deffo not a dup
     break;
-          };
+            };
+            next_earlycheck = earlycheck_interval; // reset counter
+          }; // if time for bincheck
         }; // for loci
 
         if( nbins) { // MVB
-          which_bin = floor((this_ndiff - minbin) * ibinterval); // SB/MVB addition
+          which_bin = floor((this_ndiff - minbin) * ibinterval); 
           which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
-          n_ndiff_in_bin[ which_bin] += 1; // SB addition
+          n_ndiff_in_bin[ which_bin] += 1;
         };
 
         if( this_ndiff > max_diff_loci) {
       continue;
-        } else {
+        } else { // add to keepers
           known_dup[ j] = 1;
           //big_similar. push_back( this_ndiff);
           //big_i. push_back( i+1); // Effing 0-base...
@@ -835,7 +863,7 @@ SEXP DUP_paircomps_lots(
           // I hate pedantic C++ sizery bloody horrible sodding language it is
           if( similaring_along.size() < (size_t)keep_n){
             similaring_along.push(new_similar_on_the_block);
-          }else{
+          } else {
             // uh oh we filled-up! check to see if we really need to add
             // this one (is it better than what's in there?), then exile
             // the last element to the garbage and induct our new best friend
@@ -928,9 +956,11 @@ SEXP DUP_paircomps_incomplete_lots(
   n_kept = 0;
 
   for( i = 0; i < n_samps1; i++){
+    RawVector genoi = geno1( _, i);    
 
     j_max = symmo ? i : n_samps2;
     for( j = 0; j < j_max; j++) {
+      RawVector genoj = geno2( _, j);      
       tot_ncomp = 0;
       tot_ndiff = 0;
       nremloci = n_loci+1;
@@ -940,8 +970,8 @@ SEXP DUP_paircomps_incomplete_lots(
         // ... do the if-check every 10 loci or so
         // ... and pre-compute a mini-vec of g1's
 
-        g1 = geno1( iloc, i);
-        g2 = geno2( iloc, j);
+        g1 = genoi[ iloc];
+        g2 = genoj[ iloc];
         is_a_comp = (int)( g1 * g2 > 0);
         tot_ncomp += is_a_comp;
         tot_ndiff += is_a_comp * (int)( g1 != g2);
@@ -988,7 +1018,7 @@ SEXP indiv_lglk_geno(
   BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_samps;
@@ -1035,7 +1065,7 @@ SEXP K_indiv(
 BEGIN_RCPP
     // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
-#include <../genobasics-vistu/r_int_defs_debug.h>
+#include <r_int_defs_debug.h>
 #endif
 
   int n_samps;

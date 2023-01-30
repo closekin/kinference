@@ -9,11 +9,10 @@ Tries to split Full-Sibling Pairs from Parent-Offspring Pairs, using 6-way genot
 \usage{find_FSPs_from_POPs_6way(snpg, candiPOPs, SDwt_POP = 0.5)
 }
 \arguments{
-\item{ snpg}{a \code{snpgeno} object}
-\item{ candiPOPs}{a 2-column matrix of of row-numbers in \code{snpg}, for pairs known to be either POPs or FSPs (eg from \code{find_POPs}).}
-\item{ SDwt_POP}{scalar for determining "prior weighting" of POPs and FSPs. 0.5 (the default) is probably OK.}
+\item{  snpg}{a \code{snpgeno} object}
+\item{  candiPOPs}{a 2-column matrix of of row-numbers in \code{snpg}, for pairs known to be either POPs or FSPs (eg from \code{find_POPs}).}
+\item{  SDwt_POP}{scalar for determining "prior weighting" of POPs and FSPs. 0.5 (the default) is probably OK.}
 }
 \seealso{simcheck_FSP_POP
 }
-\keyword{internal
-}
+\keyword{misc}

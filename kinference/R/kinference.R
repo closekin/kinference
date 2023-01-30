@@ -1,4 +1,4 @@
-# This is package kinference
+# This is package kinference 
 
 ".onLoad" <-
 function( libname, pkgname) {
@@ -18,99 +18,6 @@ function( libname, pkgname) {
   # This should always happen; defines R wrappers for dot-calls
   # The function is defined by Cloaders_kinference.R
   run_Cloaders_kinference()
-}
-
-
-#' subset SPAgeno
-#'
-#' @return \code{NULL}
-#'
-#' @keywords internal
-#' @method [ SPAgeno
-#' @export
-
-"[.SPAgeno" <-
-function( x, i, j, ..., drop=FALSE){
-    x <- NextMethod( '[')
-    x <- prepare_PLOD_SPA( x)
-    ## should only call PREPARE_PLOD_SPA if loci have changed
-return( x)
-}
-
-#' subset-replace SPAgeno
-#'
-#' @return \code{NULL}
-#'
-#' @keywords internal
-#' @method [<- SPAgeno
-#' @export
-
-"[<-.SPAgeno" <-
-function( x, i, j, value) {
-
-    x <- NextMethod( '[<-')
-    x <- prepare_PLOD_SPA( x)
-    ## should only call PREPARE_PLOD_SPA if loci have changed
-return( x)
-
-}
-
-#' calc_g6probs
-#'
-#' Calculate genotype probabilities, 6-way.
-#'
-#' @keywords internal
-#'
-#' @param pA pbonzer A
-#' @param pB pbonzer B
-#' @param pC pconzer C
-#' @param snerr the single null error rate
-#' @return your six-way genotype probabilities
-#' @noRd
-#' @export
-
-"calc_g6probs" <-
-function( pA, pB, pC, snerr) {
-  # snerr = P( misclassifying true XX as XO, and vice versa)
-  define_genotypes()
-  p0really <- 1 - (pA+pB+pC)
-  pO <- p0really + pC
-
-  pAA <- pA^2
-  pAB <- 2*pA*pB
-  pBB <- pB^2
-  pAC <- 2*pA*pC
-  pBC <- 2*pB*pC
-
-  pA0 <- 2*pA*p0really # really true null called 0
-  pB0 <- 2*pB*p0really
-  pOO <- pO^2
-
-  # Calcs assume matrix (ie Xtuple loci); coerce if not, then undim later
-  if( no_dim <- is.null( dim( snerr))) {
-    snerr <- matrix( snerr, 1, ncol=length( snerr), dimnames=list( NULL, names( snerr)))
-  }
-
-  # Error possible iff (i) true AA or (ii) A present C not
-
-  pAO <- pAC + pA0 * (1-snerr[,'AO2AA']) + pAA * snerr[,'AA2AO']
-  pAA <- pAA * (1-snerr[,'AA2AO']) + pA0 * snerr[,'AO2AA']
-
-  pBO <- pBC + pB0 * (1-snerr[,'BO2BB']) + pBB * snerr[,'BB2BO']
-  pBB <- pBB * (1-snerr[,'BB2BO']) + pB0 * snerr[,'BO2BB']
-
-  p6 <- do.call( 'cbind', FOR( genotypes6, get( 'p' %&% .)))
-  perr <- cbind(
-      AAO=pA0 * snerr[,'AO2AA'] + pAA * snerr[,'AA2AO'],
-      BBO=pB0 * snerr[,'BO2BB'] + pBB * snerr[,'BB2BO'])
-  colnames( p6) <- genotypes6
-  if( no_dim) {
-    p6 <- p6[1,]
-    perr <- perr[1,]
-  }
-
-  p6@perr <- perr
-return( p6)
 }
 
 
@@ -187,6 +94,51 @@ function( nlocal=sys.parent()) mlocal({
 
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
+
+
+"calc_g6probs" <-
+function( pA, pB, pC, snerr) {
+  # snerr = P( misclassifying true XX as XO, and vice versa)
+  define_genotypes()
+  p0really <- 1 - (pA+pB+pC)
+  pO <- p0really + pC
+
+  pAA <- pA^2
+  pAB <- 2*pA*pB
+  pBB <- pB^2
+  pAC <- 2*pA*pC
+  pBC <- 2*pB*pC
+
+  pA0 <- 2*pA*p0really # really true null called 0
+  pB0 <- 2*pB*p0really
+  pOO <- pO^2
+
+  # Calcs assume matrix (ie Xtuple loci); coerce if not, then undim later
+  if( no_dim <- is.null( dim( snerr))) {
+    snerr <- matrix( snerr, 1, ncol=length( snerr), dimnames=list( NULL, names( snerr)))
+  }
+
+  # Error possible iff (i) true AA or (ii) A present C not
+
+  pAO <- pAC + pA0 * (1-snerr[,'AO2AA']) + pAA * snerr[,'AA2AO']
+  pAA <- pAA * (1-snerr[,'AA2AO']) + pA0 * snerr[,'AO2AA']
+
+  pBO <- pBC + pB0 * (1-snerr[,'BO2BB']) + pBB * snerr[,'BB2BO']
+  pBB <- pBB * (1-snerr[,'BB2BO']) + pB0 * snerr[,'BO2BB']
+
+  p6 <- do.call( 'cbind', FOR( genotypes6, get( 'p' %&% .)))
+  perr <- cbind(
+      AAO=pA0 * snerr[,'AO2AA'] + pAA * snerr[,'AA2AO'],
+      BBO=pB0 * snerr[,'BO2BB'] + pBB * snerr[,'BB2BO'])
+  colnames( p6) <- genotypes6
+  if( no_dim) {
+    p6 <- p6[1,]
+    perr <- perr[1,]
+  }
+
+  p6@perr <- perr
+return( p6)
+}
 
 
 "calc_g6probs_IBD0_scalar" <-
@@ -338,6 +290,26 @@ return( pp6_err)
 }
 
 
+"calc_hspPower_checksum" <-
+function( li){
+  Nseq <- 1 %upto% nrow( li)
+return(  with( li, round( sum(
+    Nseq %**% cbind( pbonzer[,1], snerr, useN) ),
+    digits=10)
+  ))
+}
+
+
+"calc_PLODSPA_checksum" <-
+function( li){
+  Nseq <- 1 %upto% nrow( li)
+return(  with( li, round( sum(
+    Nseq %**% cbind( useN, LOD6, LOD4, PUP6, PUP4, LOD3, PUP3)),
+    digits=10)
+  ))
+}
+
+
 "calculate_IBD" <-
 function(lociar){
 
@@ -426,7 +398,7 @@ return( retval)
 
 
 #' Find chains in HSPs; summarize sib-groups
-#'
+#' 
 #' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
 #' \code{chain_pairwise} organizes them into chains within which each sample
 #' can be linked to another by a succession of direct pairwise links. The
@@ -438,9 +410,9 @@ return( retval)
 #' used) within a particular suspect range, so each chain may have
 #' false-negatives (i.e. missing direct links), but the general idea should be
 #' clear.
-#'
+#' 
 #' \code{get_chain} finds the chain for one specific sample.
-#'
+#' 
 #' @aliases chain_pairwise get_chain
 #' @param thing output from \code{find_HSPs} or \code{find_POPs} etc, or some
 #' subset thereof
@@ -499,7 +471,7 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 
 
 #' QC for kin-finding; private for now
-#'
+#' 
 #' Incomplete! Suppose to return predicted mean & variance of CLODs for each
 #' sample, ie how prone is that sample's particular genotype to yielding
 #' unusually high/low PLODs when compared with a random unrelated sample. Then
@@ -511,26 +483,25 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 #' cause..!) The document
 #' "d:/docs/genetics/Dart/sbt-baits-v3/too-many-plods.lyx" has more info in
 #' section 4.1 on "rat CLODs".
-#'
+#' 
 #' There is a bunch of code in the function connected with simulations and more
 #' elaborate calculations, currently commented out. So I'm "internalling" this
 #' for now. Let's hope you're not able to see this in the documentation...
-#'
-#'
+#' 
 #' @param snpg a \code{snpgeno} object.
 #' @param nsim currently inactive. A simulation option exists in the code to
 #' check the null distro (not much use for far tails, of course).
 #' @return Dataframe with columns "ECLOD" and "VCLOD". See examples format.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' ## Rough chance of yielding a PLOD>5, say
 #' # cloddo <- check_FPosity( snpg = snpg)
 #' # Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
 #' # hist( Pr_Fpos_5, nc=50)
 #' ## highlight some known suspects
 #' # abline( v=Pr_Fpos_5[ suspects], col='red')
-#'
+#' 
 #' @export check_FPosity
 "check_FPosity" <-
 function( snpg, nsim=0){
@@ -698,12 +669,12 @@ return( result)
 
 
 #' Locus QC check
-#'
+#' 
 #' Checks 6-way and 4-way genotype frequencies against HWE expectations, and
 #' generates plots of observed / expected frequencies. Recently moved into
 #' kinference from genocalldart.
-#'
-#'
+#' 
+#' 
 #' @param geno6 a \code{snpgeno} object with 4-way and 6-way genocalls
 #' @param thresh_pchisq_6and4 thresholds for \code{bad} and \code{really bad}
 #' p-values
@@ -763,11 +734,11 @@ return( returnList( pval6, pval4))
 
 
 #' Check observed genotypes against HWE expectations
-#'
+#' 
 #' Checks observed genotype frequencies against expected frequencies,
 #' presumably with expectation defined by HWE.
-#'
-#'
+#' 
+#' 
 #' @param lociar a snpgeno object
 #' @param gpred predicted allele frequencies
 #' @param gobs observed allele frequencies
@@ -867,19 +838,18 @@ return( lociar)
 
 
 #' Grouping pairwise duplicates
-#'
+#' 
 #' Constructs equivalence classes to show from pairwise equivalences, and
 #' returns the "surplus" elements; if you then drop those elements, only one
 #' element from each eq-class will be retained.
-#'
+#' 
 #' Input should be row numbers in a \code{snpgeno} objects of duplicates, as a
 #' two-column data.frame or matrix with each row being a pair of duplicates, or
 #' the output from \code{find_duplicates()} (a 3-col matrix). Identifies
 #' \code{groups} of equivalent observations (e.g., if i and j are duplicates,
 #' and j and k are duplicates, then i, j, and k are all equivalent). Outputs a
 #' vector of the row numbers for all-but-one of each group.
-#'
-#'
+#' 
 #' @param ij 2-column matrix or data.frame; probably "row numbers" in a
 #' dataset, though might work with character strings too
 #' @param want_groups if \code{TRUE}, also return the equivalence-classes
@@ -889,7 +859,7 @@ return( lociar)
 #' elements are being retained (one "representative" from each equiv class).
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' pairs <- matrix( c(
 #' 294, 289,
 #' 328, 294,
@@ -904,7 +874,7 @@ return( lociar)
 #' #
 #' #attr(,"groups")$`6`
 #' #[1] 904 905 857
-#'
+#' 
 #' @export drop_dups_pairwise_equiv
 "drop_dups_pairwise_equiv" <-
 function( ij, want_groups=FALSE) {
@@ -969,17 +939,29 @@ return( drops)
 }
 
 
+"DUP_paircomps_incomplete_lots" <-
+function(geno1, geno2, symmo, max_diff_ppn, limit) {
+    .Call(`_kinference_DUP_paircomps_incomplete_lots`, geno1, geno2, symmo, max_diff_ppn, limit)
+}
+
+
+"DUP_paircomps_lots" <-
+function(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval) {
+    .Call(`_kinference_DUP_paircomps_lots`, geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval)
+}
+
+
 
 
 #' Estimate ALFs from 6-way genotypes and snerr
-#'
+#' 
 #' Performs "straight" estimation of ALFs, given 6-way genotypes and snerr.
 #' Won't allow for changes in C-allele frequency from one population to the
 #' next. In principle, should just use
 #' \code{genocalldart::choose_geno6_thresholds} but fix the count-related
 #' thresholds and re-estimate ALFs. (What??)
-#'
-#'
+#' 
+#' 
 #' @param snpg a \code{snpgeno} object with \code{snerr} included
 #' @param control as per \code{nlminb}
 #' @keywords misc
@@ -1050,14 +1032,14 @@ return( snpg)
 
 
 #' Estimate allele frequencies, including nulls
-#'
+#' 
 #' Uses "ABCO" genotypes, ie up to 3 scorable alleles plus possible nulls, eg
 #' from \code{geno_deambig_ABC} (qv). NALF (null allele frequency) is estimated
 #' from HWE deviations, so this requires a decent sample size. But, it doesn't
 #' require the elaborate 6-way genotyping and the massive read-depths needed
 #' for that.
-#'
-#'
+#' 
+#' 
 #' @param lociar a \code{loc.ar} object with the @geno_amb attribute.
 #' @return Returns the input, adding a 4-column matrix \code{pambig} to the
 #' "locinfo" attribute, plus attributes \code{gobs} and \code{gpred} showing
@@ -1182,7 +1164,7 @@ return( lociar)
 
 
 #' Kin-finders for loads-of-SNPs datasets
-#'
+#' 
 #' These take a \code{snpgeno} dataset that has been processed as far as
 #' \code{\link{check6and4}} (and for HSPs, \code{\link{prepare_PLOD_SPA}}) and
 #' find various relations between the samples. Relationships include duplicates
@@ -1190,25 +1172,23 @@ return( lociar)
 #' plus of course unrelated pairs (UPs). You can specify the same or different
 #' subsets of the \code{snpgeno} for comparison: e.g., first subset for the
 #' adults, second for the juveniles.
-#'
+#' 
 #' Some categories will "catch" others (eg \code{find_HSPs} will certainly
-#' include find POPs too), so you may need the splitter routines such as
-#' \code{split_POPs_from_HSPs} afterwards. The safest general-purpose
-#' strategy--- but often not the most sensible, if your data is nicely
-#' organized and you know what you want--- would be:
-#'
+#' include any POPs too), so you may need the splitter routines such as
+#' \code{split_POPs_from_HSPs} afterwards. The safest general-purpose strategy-
+#' but often \emph{not} the most sensible, if your data is nicely organized and
+#' you know what you want- would be:
+#' 
 #' \code{find_duplicates} and then get rid of them
-#'
+#' 
 #' \code{find_HSPs} to get \emph{all} kin (though you will usually have to
 #' sacrifice some HSPs to false-neg because you'll need a threshold)
-#'
-#' \code{find_POPs_from_HSPs} to split HSPs from POPs/FSPs
-#'
-#' \code{split_POPs_from_FSPs} to split the latter--- though current version
-#' (Dec 2020) doesn't work particularly well, so maybe rather use age if you
-#' can. A new algorithm is being developed.
-#'
-#' These functions (the non-splitters, ie \code{find_XXX}) might be run on huge
+#' 
+#' \code{split_POPs_from_HSPs} to split HSPs from POPs/FSPs
+#' 
+#' \code{split_POPs_from_FSPs} to split the latter.
+#' 
+#' The non-splitter functions, i.e. \code{find_XXX}, might be run on huge
 #' numbers of samples, entailing a huge^2 number of comparisons. You don't want
 #' all those individual comparison results, and your computer certainly
 #' wouldn't enjoy trying to keep them! So the general idea is to set a
@@ -1217,7 +1197,7 @@ return( lociar)
 #' plus some dross), and then to retain just binned counts of the relevant comp
 #' statistic for all comps (usually, the vast majority) which don't make your
 #' threshold.
-#'
+#' 
 #' In addition, the \code{limit_pairs} argument is there to prevent your
 #' computer locking out with bazillions of unwanted pairs (in case you guess
 #' the bin limit inapproriately); the comparisons will be stopped if
@@ -1225,7 +1205,7 @@ return( lociar)
 #' to change a threshold, or re-run with larger \code{limit_pairs}. The default
 #' isn't meant to correspond to any biomathematical logic, it's just to stop
 #' blue smoke coming out your USB ports.
-#'
+#' 
 #' For \code{find_duplicates}, there are at least two different use-cases.
 #' First, you might want an initial run on a non-too-large subset of your data,
 #' to check that dups \emph{can} be clearly distinguished and to look at
@@ -1246,19 +1226,29 @@ return( lociar)
 #' duplicates and to find entire equivalence-classes of duplicates, e.g. from a
 #' control specimen included in numerous plates, see
 #' \code{drop_dup_pairwise_equiv}.
-#'
-#'
-#' @aliases find_duplicates find_HSPs find_POPs
+#' 
+#' @aliases find_duplicates find_HSPs find_POPs %upto%
 #' @param snpg a \code{snpgeno} object
 #' @param subset1,subset2 numeric vectors of which samples to use (not logical,
 #' not negative). Defaults to all of them. Iff \code{subset1} and
 #' \code{subset2} are identical, only half the comparisons are done (i.e., not
 #' \emph{i} with \emph{j} then \emph{j} with \emph{i}). Some sanity checks are
 #' made.
+#' @param gerr (\code{find_POPs_lglk}) Genotyping error rate (apart from any
+#' AA/AO-type errors)--- which had better be a small number. You have to pick
+#' it yourself, but it is only used to "robustify" the lglk-based (PO)PLOD for
+#' testing POPs vs UPs, and thus can be a rough guesstimate. FWIW we have used
+#' 0.01 (i.e. 1\%) for some datasets, which is rather higher than replicate
+#' analysis suggests, but is "safe" while still being small enough not to muck
+#' up overall statistical performance. You should really do the same thing
+#' yourself, and if you are very paranoid then try sensitivity analyses; but in
+#' practice, the results of \code{find_POPs_lglk} are liable to be so clear-cut
+#' that you may not feel it necessary to try more than one small value...
 #' @param max_diff_loci (\code{find_duplicates}) max number of discrepant 4-way
-#' genotypes to tolerate in "identical" fish. Try increasing this from say 10
-#' upwards, and hopefully nothing much will change (though at some point things
-#' will change a lot, as you get into the non-duplicate bit of the
+#' genotypes to tolerate in "identical" fish. Only the pairs with fewer than
+#' \code{max_diff_loci} discrepancies will be retained. Try increasing this
+#' from say 10 upwards, and hopefully nothing much will change (though at some
+#' point things will change a lot, as you get into the non-duplicate bit of the
 #' distribution). See \bold{Duplicates} for how to remove duplicates from the
 #' data.
 #' @param limit_pairs Integer. Defines the \emph{maximum} number of candidate
@@ -1274,28 +1264,28 @@ return( lociar)
 #' \code{minbin} is not used for duplicates or (at present) for POPs, since the
 #' statistics there are defined so that the lowest possible value is 0. The
 #' defaults for \code{minbin} and/or \code{maxbin} may not be what you need in
-#' all cases, so be prepared to select manually and then re-run.
-#' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which
-#' is proportional to (difference in probability of pseudo-exclusion between UP
-#' and POP) / (variance of indicator of pseudo-exclusion). But, should this be
-#' variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance;
-#' bigger values make it more UPpity, so placing more emphasis on avoiding
-#' false-positives (which is probably the Right Thing To Do). 0.99 could be
-#' completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect
-#' the result much anyway.)
+#' all cases, so be prepared to select manually and then re-run. For
+#' duplicates, where calculations can be slow for big datasets, you can set
+#' \code{nbins=0} to disable binning and focus instead on just finding the
+#' pairs with fewer than \code{max_diff_loci} discrepancies. Each pairwise
+#' calculation normally loops over all the loci, but is aborted when the
+#' running total of discrepant loci reaches \code{maxbin} (or, if
+#' \code{nbins=0}, when it reaches \code{max_diff_loci}), thus saving
+#' considerable time. It is therefore not sensible to have
+#' \code{maxbin<max_diff_loci} (think about it!).
 #' @param keep_thresh (\code{find_HSPs} and \code{find_POPs}) is the analog of
 #' \code{max_diff_loci} for \code{find_duplicates}. It determines which pairs
 #' to retain for individual inspection. For \code{find_HSPs}, this is the
 #' lowest retained PLOD; for \code{find_POPs} (currently), it's the highest
 #' retained \code{wpsex}. Set it with the aim of including "anything
 #' interesting" (ie not \emph{missing} any interesting pairs) and expect false
-#' positives--- ie be willing to have some weaker kin in there, and to
+#' positives- ie be willing to have some weaker kin in there, and to
 #' subsequently filter those out yourself "manually", as per vignette. For
 #' HSPs, values like 0 (near the HTP mean) or -5 are a good start. For POPs,
 #' experiment (at a total guess, try 0.1). You may have to re-run the function
-#' a coupla times if you have been too brutal or too generous here--- though
-#' "too generous" can be fixed post hoc just by filtering the result, as long
-#' as you haven't generated tooooo many pairs (see \code{limit_pairs}).
+#' a coupla times if you have been too brutal or too generous here- though "too
+#' generous" can be fixed post hoc just by filtering the result, as long as you
+#' haven't generated tooooo many pairs (see \code{limit_pairs}).
 #' @param eta (\code{find_HSPs} and \code{find_POPs}) Not essential; limit for
 #' calculating empirical mean and var PLOD, to compare with theoretical
 #' \code{mean_UP} and \code{var_UP}. If you care about this (and you might not,
@@ -1309,12 +1299,22 @@ return( lociar)
 #' large sparsely-sampled datasets, so "contaminating" the empirical UP
 #' statistics with a few weakish kin at the top end shouldn't mess up mean and
 #' variance too much.
+#' @param WPSEX_UP_POP_balance (\code{find_POPs}) loci receive a weight which
+#' is proportional to (difference in probability of pseudo-exclusion between UP
+#' and POP) / (variance of indicator of pseudo-exclusion). But, should this be
+#' variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance;
+#' bigger values make it more UPpity, so placing more emphasis on avoiding
+#' false-positives (which is probably the Right Thing To Do). 0.99 could be
+#' completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect
+#' the result much anyway.)
+#' @param show_plot whether to plot log histogram. Regardless, plot will not be
+#' shown if other arguments would lead to stupid result (e.g. no bins...).
 #' @return A \code{data.frame} with extra attributes (see below) and at least 3
 #' columns: statistic (\code{PLOD} or \code{wpsex} or \code{ndiff} number of
 #' mismatching genotypes), then \code{i} and \code{j} (index in \code{subset1}
 #' and \code{subset2} respectively of the first pair-member). Note that
 #' \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the
-#' original \code{snpg}--- so if you are comparing subsets within the same
+#' original \code{snpg}- so if you are comparing subsets within the same
 #' overall \code{snpg}, then you have to adjust accordingly. The attributes in
 #' all cases include \code{bins} (upper boundaries), some kind of count
 #' statistic for number of comparisons in each bin (names vary),
@@ -1339,15 +1339,15 @@ return( lociar)
 #' the same, and i & k are the same, then j & k must also be the same), only
 #' the necessary ones are recorded to allow you to filter out yourself
 #' afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get
-#' this: \item{ # without "ndiff" column:}{} \item{ i j:}{} \item{ 3 1:}{}
-#' \item{ 4 3:}{} \item{ 6 4:}{} but you won't see the pairings for 1/4, 1/6,
+#' this: \item{ # without "ndiff" column::}{} \item{ i j::}{} \item{ 3 1::}{}
+#' \item{ 4 3::}{} \item{ 6 4:}{but you won't see the pairings for 1/4, 1/6,
 #' 3/6. If you just want to strip out all duplicates bar one in each group (and
 #' you don't care which one is kept), then you can use the function
-#' \code{\link{drop_dups_pairwise_equiv}} - see \bold{Examples}. For POPs and
-#' HSPs, the following are also returned as attributes (that can be accessed by
+#' \code{drop_dups_pairwise_equiv} - see \bold{Examples}. For POPs and HSPs,
+#' the following are also returned as attributes (that can be accessed by
 #' \code{@} if \code{atease} is loaded). The main point is that the "boring"
 #' below-threshold pairs get put into bins and are not kept individually. The
-#' names sometimes change depending on which statistic is being used. \item{
+#' names sometimes change depending on which statistic is being used.} \item{
 #' eta}{false-positive cutoff to be applied to the statistic in question
 #' (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if
 #' not). Variance of the stat will only be calculated from values to the "UP
@@ -1355,8 +1355,8 @@ return( lociar)
 #' actually controlled by...} \item{ keep_thresh}{the cutoff used to retain
 #' "interesting" pairs. Usually obvious from the range of statistic values.}
 #' \item{ mean_sub_<stat>, var_sub_<stat>}{empirical values for the statistic
-#' when it is below \code{eta} (ie nearly always).} \item{ mean_theory,
-#' var_theory}{of the statistic, to compare to previous.} \item{
+#' when it is below \code{eta} (ie nearly always).} \item{
+#' mean_theory,}{var_theory:of the statistic, to compare to previous.} \item{
 #' n_<stat>_in_bin}{number of pairs whose statstic fell within the range of
 #' each bin} \item{ bins}{cutpoints for the bins. These should be quantiles,
 #' according to the SPA; so if practice matches theory, the numbers-per-bin
@@ -1376,7 +1376,7 @@ return( lociar)
 #' there will be zillions of statistics from UPs- enough to blow out computer
 #' memory- and they are not individually interesting. Specifically, the main
 #' things returned are:
-#'
+#' 
 #' \itemize{ \item mean and variance of stats. Computation is restricted to
 #' those on the UP-side of \code{eta} (which is nearly all of them, usually) in
 #' order to avoid distortion from non-UP cases. The latter will often be so
@@ -1387,7 +1387,7 @@ return( lociar)
 #' UP-pairs should fall into each bin. \item cases where the stat is
 #' "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a
 #' \code{data.frame}. See \bold{Value} for details }
-#'
+#' 
 #' The process is controlled by three numbers: \code{nbins} for number of bins,
 #' \code{eta} itself, and some nearby threshold \code{keep_thresh} on the
 #' UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise)
@@ -1401,7 +1401,7 @@ return( lociar)
 #' actual kin-decisions yourself after the event (by subsetting the
 #' "interesting" pairs, comparing the statistic for each pair to \code{eta})-
 #' assuming that observed does match expected.
-#'
+#' 
 #' But, sometimes it doesn't. In that case, the predicted values of \code{eta}
 #' and \code{keep_thresh} may be way off the mark, and lead to retaining faaar
 #' too few or too many pairs. If so, then look at the histogram of retained
@@ -1410,7 +1410,7 @@ return( lociar)
 #' parameters until you get what you were after.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' \dontrun{
 #' ## And out-of-date!
 #' ## duplicate checking. ckmini2 has 6 fish where 1,3,4,6 are all identical (zero differing loci).
@@ -1428,7 +1428,7 @@ return( lociar)
 #' #ckmini2_nodups <- ckmini2[ -droppies, ]
 #' ## Two-stage
 #' #first_half <- 1:3
-#' #second_half <- (1:nrow( ckmini2)) \%except\% first_half
+#' #second_half <- (1:nrow( ckmini2)) \
 #' #test1 <- find_duplicates( ckmini2, subset1=first_half, subset2=first_half, max=0)
 #' #test1
 #' ##  ndiff i j
@@ -1438,11 +1438,11 @@ return( lociar)
 #' #droppies2 <- second_half[ drop_dups_pairwise_equiv( test2[,2:3])] # 4
 #' ## Now check 2nd half vs 1st
 #' #test2_1 <- find_duplicates( ckmini2,
-#' #    subset1=first_half \%except\% droppies1,
-#' #    subset2=second_half \%except\% droppies2,
+#' #    subset1=first_half \
+#' #    subset2=second_half \
 #' #    max=0)
 #' ## Simpler since no internal checks. Just remove 2nd-halfers that match something in the 1st-half
-#' #droppies2_1 <- (second_half \%except\% droppies2)[ test2_1[,'j']) # 6
+#' #droppies2_1 <- (second_half \
 #' #droppies <- c( droppies1, droppies2, droppies2_1)
 #' #ckmini2_nodups2 <- ckmini2[ -droppies,]
 #' ## HSPs: comparing everything with itself (not sensible for real data, should take out adults first)
@@ -1452,8 +1452,8 @@ return( lociar)
 #' #test <- find_POPs( ckdata, subset1=adults, subset2=juves,
 #' #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
 #' }
-#'
-#' @export
+#' 
+#' @export find_duplicates
 "find_duplicates" <-
 function(
   snpg,
@@ -1463,12 +1463,19 @@ function(
   limit_pairs= 0.5*nrow(snpg),
   nbins= 50,
   maxbin= ncol( snpg)/2,
-  showPlot = TRUE
+  show_plot = TRUE
 ){
   # Sanity...
-stopifnot( is.numeric( subset1) && is.numeric( subset2))
-stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
-stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
+stopifnot(
+    is.numeric( subset1),
+    is.numeric( subset2),
+    all( !duplicated( subset1)),
+    all( !duplicated( subset2)),
+    my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)),
+    !missing( max_diff_loci),
+    max_diff_loci <= maxbin,
+    nbins >= 0 # 0 is OK; just return actual pairs below max_diff_loci
+  )
 
   # Count #loci with different 4way genos. Errors in 4ways should be low.
   define_genotypes()
@@ -1499,13 +1506,9 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 
   # MVB: I don't trust SB's code here because rounding error may mean that the number of bins would not match nbins
   # SB had: bins <- seq(minbin+binterval, (minbin + (nbins*binterval)), binterval)
-  bins <- seq( from=0, to=maxbin, length=nbins)
-  if( nbins<2) {
-    warning( 'nbins<2 is senseless; gonna use 2')
-    nbins <- 2
-  }
-  binterval <- maxbin / (nbins-1) # bin *starting* at maxbin counts all bigger
-  bins <- seq( from= 0, to= maxbin, length=nbins-1)[-1]
+  # nbins=0 is OK cos it saves heaps of time, but obvs you don't get binned results
+  binterval <- maxbin / max( nbins-1, 1) # bin *starting* at maxbin counts all bigger
+  bins <- seq( from= 0, to= maxbin, length= max( 1, nbins-1))[-1] # avoid woe when nbins=0
   # binprobs not set
 
   # Trying special-cases here to minimize copying
@@ -1518,11 +1521,12 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         geno1= temp_snpg,
         geno2= temp_snpg,
         symmo= TRUE,
-        max_diff_loci = max_diff_loci,
-        keep_n = limit_pairs,
-        nbins = nbins,
-        binterval = binterval
-      ) ## DLM version, 24/9/18
+        max_diff_loci= max_diff_loci,
+        keep_n= limit_pairs,
+        nbins= nbins,
+        binterval= binterval,
+        maxbin = maxbin
+      )
   } else { # different subsets
     result <- DUP_paircomps_lots(
         geno1= temp_snpg[ , subset1],
@@ -1531,7 +1535,8 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
         max_diff_loci = max_diff_loci,
         keep_n = limit_pairs,
         nbins = nbins,
-        binterval = binterval
+        binterval = binterval,
+        maxbin= maxbin
       )
   }
 
@@ -1545,17 +1550,23 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   result@n_ndiff_in_bin <- n_ndiff_in_bin
 
   # warning if we're running up against storage constraints
-    if(length(result$ndiff) == limit_pairs){
-        message("Returning the ", limit_pairs, " most similar pairs, increase limit_pairs if more are required")
+  if(length(result$ndiff) == limit_pairs){
+    message("Returning the ", limit_pairs, " most similar pairs, increase limit_pairs if more are required")
 ## warning("Number of returned duplicates equals limit_pairs. There may be more than limit_pairs duplicates. Increase limit_pairs to make sure you have them all!")
-    }
+  }
 
-    if( showPlot) {
-        plot(c(result@bins), log(result@n_ndiff_in_bin[1:(length(result@n_ndiff_in_bin)-2)]),
-             type = "S", xlab = "n different genos", ylab = "log(Frequency)")
-             ## plot( result@bins,log(result@n_ndiff_in_bin),type='S', xlab="n different genos",
-             ## ylab="log(Frequency)")
+  if( show_plot && (length( n_ndiff_in_bin) > 2)) {
+    loggo <- log( n_ndiff_in_bin[1:(length( n_ndiff_in_bin)-2)] + 0.001,
+        base=10)
+    if( all( loggo < 0)){
+      warning( "No pair below 'maxbin'--- nothing to plot")
+    } else {
+      plot(c(result@bins), loggo,
+          ylim= c( 0, max( loggo) + 1),
+          type = "S",
+          xlab = "n different genos", ylab = "log10(#pairs)")
     }
+  }
 
 return( result)
 }
@@ -1564,7 +1575,7 @@ return( result)
 
 
 #' Dup-finding with some missing genotypes
-#'
+#' 
 #' This documentation seems to have disappeared... though I \emph{think} this
 #' is the function Paige relies on in GT for detecting recaptures! So it's
 #' quite important... The basic point is that GT data \emph{does} sometimes
@@ -1572,8 +1583,8 @@ return( result)
 #' pairwise comparisons will be done willy-nilly (ie regardless of the precise
 #' missingness pattern for the pair), so subset your data beforehand to remove
 #' Bad Eggs.
-#'
-#'
+#' 
+#' 
 #' @param snpg a \code{snpgeno} object
 #' @param subset1,subset2 numeric vectors of which samples to use (not logical,
 #' not negative). Defaults to all of them. Iff \code{subset1} and
@@ -1590,7 +1601,7 @@ return( result)
 #' (index in \code{subset1} and \code{subset2} respectively of the first
 #' pair-member), then \code{ndiff} and \code{ncomp} (numbers of loci differing
 #' and actually compared for that pair). Note that \code{i} and \code{j} refer
-#' to the \emph{subsets}, not to the rows of the original \code{snpg}--- so if
+#' to the \emph{subsets}, not to the rows of the original \code{snpg}- so if
 #' you are comparing subsets within the same overall \code{snpg}, then you have
 #' to adjust accordingly.
 #' @keywords misc
@@ -1682,8 +1693,7 @@ stop( sprintf( 'Hit limit=%i dups by %i-th sample; aborting', limit, result))
 return( result)
 }
 
-#' @rdname find_duplicates
-#' @export
+
 "find_HSPs" <-
 function(
     snpg,
@@ -1705,15 +1715,12 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
   # SB has:
-  hspPower_change <- round(snpg@hspPower_checksum) != round(with(snpg@locinfo,
-                                                                 sum(pbonzer, snerr, useN)))
+  hspPower_change <- snpg@hspPower_checksum != calc_hspPower_checksum( snpg$locinfo)
   # MVB: though that's not the best sum to check! pbonzer should sum to 1 per row... ditto PUP<X> below
-  PLODSPA_change <- round(snpg@PLODSPA_checksum) != round(with(snpg@locinfo,
-                                                               sum(useN, LOD6, LOD4, LOD3,
-                                                                   PUP6, PUP4, PUP3)))
+  PLODSPA_change <- snpg@PLODSPA_checksum != calc_PLODSPA_checksum( snpg$locinfo)
 
   if(hspPower_change | PLODSPA_change) {
-      warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+      warning("snpg$locinfo appears to have been modified after hsp_power() and/or prepare_PLOD_SPA() were last called. I sure hope you know what you're doing...")
   }
 
   define_genotypes()
@@ -1823,8 +1830,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 return( result)
 }
 
-#' @rdname find_duplicates
-#' @export
+
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     limit_pairs=0.5*nrow(snpg),
@@ -1834,6 +1840,1383 @@ function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     maxbin = NULL,
     WPSEX_UP_POP_balance=0.99) {
 ###################
+  # Sanity...
+define_genotypes()
+stopifnot(
+    is.numeric( subset1),
+    is.numeric( subset2),
+    all( !duplicated( subset1)),
+    all( !duplicated( subset2)),
+    my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)),
+    snpg %is.a% 'snpgeno',
+    my.all.equal( snpg@diplos, genotypes6) || my.all.equal( snpg@diplos, genotypes4_ambig)
+  )
+
+  ## # SB checks--- but NB rowSums( pbonzer==1) !
+  ## hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+  ## PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
+  ##                                                 PUP6, PUP4, PUP3))
+  ## if(hspPower_change | PLODSPA_change) {
+  ##   warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+  ## }
+
+  # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
+  # ... it's really AAO/BBO so not a true exclu but
+  # ... close among pop-loci
+  # Sticking with 4way genos so that genotyping errors are low
+
+  # Instead of Nexclu, uses a wted sum of "exclus" in 4way genos to max expected diff between POP and UP
+  # This version doesn't allow for geno errors, but does realize that AO/BO could happen
+  # Doesn't bother with OO-AB
+
+  extract.named( snpg@locinfo[ cq( useN, PUP4, pbonzer)])
+  p0 <- pbonzer[,'O'] + pbonzer[,'C']
+  pA <- pbonzer[,'A']
+  pB <- pbonzer[,'B']
+
+  # "Exclusion" whenever AAO & BBO, but this *could* be AO/BO
+  # I'm calling them "ex" for now anyway, hence pex_BLAH
+  pex <- cbind(
+      POP= 2 * p0 * pA * pB,
+      UP= 2 * (2*pA*p0 + pA*pA) * (2*pB*p0 + pB*pB)
+    )
+
+  # Want to keep the POP and UP means as far apart as possible on the scale of SDs...
+  # but, which SD? Make it WPSEX_UP_POP_balance * SD[UP] + (1-WPSEX_UP_POP_balance) * SD[POP]
+
+  # Optimal wt would depend on p0 and to some extent on pA
+  # wt should be 1 if p0==0 and 0 if p0==1
+  delta <- pex[,'UP'] - pex[,'POP'] # mathematically I think this *can't* be -ve
+  SD <- sqrt( pex * (1-pex))
+  SD_combo <- WPSEX_UP_POP_balance * SD[,'UP'] + (1-WPSEX_UP_POP_balance) * SD[,'POP'] # %*% c( WPSEX_UP_POP_balance, 1-WPSEX_UP_POP_balance)
+  V_combo <- sqr( SD_combo)
+  ww <- delta / V_combo # considerable algebra appears to show this is optimal
+  ww <- c( ww / sum( ww) ) # else get 1-col matrix
+stopifnot( all( ww>0))
+
+  pop_loci <- which( ww > 0) # all of them, for now
+  # pop_loci <- which( pbonzer[,'O'] + pbonzer[,'C'] < pOC_max)
+
+  # Algo should work either with 4way or 6way genotypes (no C allele though)
+  # C code gets told, via AAish and BBish, which codes are really AAO and BBO
+  # For 6way, remap AO->AA, BO->BB, and tell C just to check for AA and BB
+  temp_snpg <- snpg[ , pop_loci]
+  if( my.all.equal( snpg@diplos, genotypes6)) {
+    recode_6_as_pseudo4 <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
+    temp_snpg <- recode_6_as_pseudo4( temp_snpg)
+    AAish <- match( 'AA', snpg@diplos)
+    BBish <- match( 'BB', snpg@diplos)
+  } else { # 4way
+    AAish <- match( 'AAO', snpg@diplos)
+    BBish <- match( 'BBO', snpg@diplos)
+  } # else NYI, which would have been picked up in sanity checks
+
+  # Remove extranea
+  attributes( temp_snpg) <- attributes( temp_snpg)[ 'dim']
+  temp_snpg <- t( temp_snpg)
+
+  n_loci <- ncol( snpg)
+
+  # Prepare for diagnostics of #excl
+    ## Defaults to two-sigma above *UP* mean... which will cover almost all
+
+    # Distro of #excl loci for UPs
+    opphetz <- c( 'AAO/BBO', 'BBO/AAO') %that.are.in% colnames( PUP4)
+    pex_up <- PUP4[ pop_loci, opphetz]
+    rr <- pex_up / (1-pex_up)
+    log1m_pexup <- log1p( -pex_up)
+
+    K <- function( tt) {
+        # vecless2 notation could 1-step this via SUM
+        KK[ l, j]:= log1m_pexup[ l] + log1p( rr[ l] * exp( tt[ j] * ww[ l]))
+        K[ j] := KK[ +., j]
+      return( c( K)) # without the c(), you get a scalar xtensor, and trouble...
+      }
+
+    dK <- function( tt) {
+        retw[l,j] := rr[ l] * exp( tt[ j] * ww[ l])
+        dKK[ l, j] := ww[ l] * retw[ l, j] / (1+retw[ l, j]) # guessing this is more accurate tahn 1-1/1+x
+        dK[ j] := dKK[ +., j]
+      return( c( dK))
+      }
+
+    ddK <- function( tt) {
+       retw[l,j] := rr[ l] * exp( tt[ j] * ww[ l])
+        ddKK[ l, j] := sqr( ww[ l]) * retw[ l, j] / sqr( 1+retw[ l, j]) # guessing this is more accurate tahn 1-1/1+x
+        ddK[ j] := ddKK[ +., j]
+     return( c( ddK))
+     }
+
+    K <- compile_vecless( K(0))
+    dK <- compile_vecless( dK(0)) ## dK(0) should be the mean of wpsex for true UPs
+    ddK <- compile_vecless( ddK(0)) ## should be the var of ditto
+
+    #  n_sim_check <- 1000
+    #  Ktest <- function( tt) {
+    #    x <- matrix( runif( n_sim_check * n_loci) < pex_up, n_loci, n_sim_check)
+    #    ewx <- exp( x*ww*tt)
+    #    colSums( log( ewx))
+    #  }
+    #
+
+    # Could do now predict binprobs *for UPs) via renorm_SPA_cumul
+    # Let's not
+    # What we need, is...
+  if( is.null( maxbin)) {
+      maxbin  <-  dK(0)+2*sqrt(ddK(0))
+  }
+
+  if(is.null(eta) ) {
+      eta <- dK(0)-3*sqrt(ddK(0))
+  }
+
+  if( nbins<2) {
+    warning( 'nbins<2 is senseless; gonna use 2')
+    nbins <- 2
+  }
+  bins <- seq( from= 0, to= maxbin, length=nbins)
+  ## binterval <- maxbin / (nbins-1) # bin *starting* at maxbin counts all bigger
+                                        # binprobs not set
+  binterval <- bins[2] - bins[1]
+
+  # Trying special-cases here to minimize copying
+  symmo <- my.all.equal( subset1, subset2)
+  if( symmo){
+    if( !my.all.equal( subset1, 1 %upto% ncol( temp_snpg))) {
+      temp_snpg <- temp_snpg[, subset1]
+    }
+    result <- POP_wt_paircomps_lots(
+        geno1= temp_snpg,
+        geno2= temp_snpg,
+        w= ww,
+        symmo= TRUE,
+        eta= eta,
+        max_keep_wpsex= keep_thresh,
+        keep_n = limit_pairs,
+        AAO= AAish,
+        BBO= BBish,
+        nbins = nbins,
+        binterval = binterval
+      )
+  } else { # different subsets
+    result <- POP_wt_paircomps_lots(
+        geno1= temp_snpg[ ,subset1],
+        geno2= temp_snpg[ ,subset2],
+        w= ww,
+        symmo= FALSE,
+        eta= eta,
+        max_keep_wpsex= keep_thresh,
+        keep_n = limit_pairs,
+        AAO= AAish,
+        BBO= BBish,
+        nbins = nbins,
+        binterval = binterval
+      )
+  }
+
+  # warning if we're running up against storage constraints
+  if(length(result$big_wpsex) == limit_pairs){
+    message("Returning just the ", limit_pairs, " pairs with the most POP-like wpsex scores, increase 'limit_pairs' if more are required")
+  }
+
+  n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB tweak; the 'below zero' bin must be empty
+  # bins <- seq(0+binterval, 0+(nbins*binterval), binterval)
+  ## SB addition. Bloody zero-base.
+
+  # construct the result
+  result <- with( result, data.frame( wpsex=big_wpsex, i=big_i, j=big_j))
+
+  # calculate nABOO, only for interesting pairs
+  snpg_i <- snpg[ subset1[ result$i], pop_loci]
+  snpg_j <- snpg[ subset2[ result$j], pop_loci]
+  isABOO <- ((snpg_i==OO) & (snpg_j==AB)) + ((snpg_i==AB) & (snpg_j==OO))
+  result$nABOO <- rowSums( isABOO)
+
+  # probably uneccessary ?
+  result <- result %without.name% cq( big_wpsex, big_i, big_j)
+
+  # add extra info
+  attributes( result) <- c( attributes( result), returnList(
+      bins, n_wpsex_in_bin, eta, keep_thresh))
+
+  result@n_loci <- length( pop_loci)
+  result@mean_UP <- dK( 0)
+  result@var_UP <- ddK( 0)
+  result@call <- sys.call()
+
+return( result)
+}
+
+
+"find_POPs_lglk" <-
+function(
+    snpg,
+    subset1= 1 %upto% nrow( snpg),
+    subset2= subset1,
+    gerr,
+    limit_pairs= 0.5*nrow(snpg),
+    keep_thresh,
+    eta= NULL,
+    nbins= 50,
+    minbin= NULL,
+    maxbin= NULL
+    # WPSEX_UP_POP_balance=0.99
+){
+###################
+  define_genotypes()
+
+  # Sanity...
+stopifnot(
+    !missing( gerr),
+    is.numeric( subset1), is.numeric( subset2),
+    all( !duplicated( subset1)), all( !duplicated( subset2)),
+    my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)),
+    snpg %is.a% 'snpgeno',
+    my.all.equal( snpg@diplos, genotypes6) || my.all.equal( snpg@diplos, genotypes4_ambig)
+  )
+
+  # A POP is "just like" an HSP where the ppn coin is 1.0 not 0.5
+  # but we add a little bit of geno error for statistical lubrication
+  # Call 'hsp_power' to get LODs manually for this case
+  # then 'prepare_PLOD_SPA' to handle useN stuff
+  # then use HSP machinery.
+
+  snpg <- hsp_power( snpg, k= 1-gerr) # !! Captain Sneakypants !!
+  snpg <- prepare_PLOD_SPA( snpg, n_pts_SPA_renorm=201)
+
+  mc <- match.call()
+  mc$gerr <- NULL
+  mc[[1]] <- quote( find_HSPs)
+  # Kinda "delayed assign" for snpg, to look here; avoids putting whole object into result@call
+  mc$snpg <- substitute( sys.frame( n)$snpg, list( n=sys.nframe()))
+  result <- eval.parent( mc)
+
+  atts <- attributes( result) %without.name% 'call'
+  atts <- atts[ names( atts) %that.dont.match% 'FSP']
+  names( atts) <- sub( 'HSP', 'POP', names( atts))
+  attributes( result) <- atts
+
+  # assign extra info as attributes
+  result@mean_UP <- snpg@Kenv$dK( 0)   # was called mean_theory
+  result@var_UP <- snpg@Kenv$ddK( 0)
+  result@mean_POP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff)
+  result@call <- sys.call()
+
+return( result)
+}
+
+
+
+
+#' Plot for splitting FSPs from POPs
+#' 
+#' Plots an absolute-frequency histogram for the output of
+#' \code{find_FSPs_from_POPs_v2()}.
+#' 
+#' 
+#' @param fsps2 the output of a call to \code{find_FSPs_from_POPs_v2()}
+#' @param bin hist bin width. Used to define \code{breaks} (along with
+#' \code{xlim}, if given), so you can't manually pass in \code{breaks}.
+#' @param FSPmean plot the expected mean FP stat for FSPs? Default TRUE
+#' @param POPmean plot the expected mean FP stat for POPs? Default TRUE
+#' @param ... additional pars, passed to \code{hist()} (?should we force naming
+#' them in a list?)
+#' @seealso PLOD_loghisto
+#' @keywords misc
+#' @export FSP_POP_histo
+"FSP_POP_histo" <-
+function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
+
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+        if(exists("xlim")) {
+            lb <- min(xlim)
+            ub <- max(xlim)
+        } else {
+            lb <- min(fsps2$FPstat)
+            ub <- max(fsps2$FPstat)+bin
+        }
+
+        hist.plod=hist(fsps2$FPstat, breaks=seq(lb, ub, bin),
+                       col="lightgrey",xlab="FPstat", ...)
+        if( POPmean) { abline(v = fsps2@E_FPstat[1], col = 1, lwd = 2) }
+        if( FSPmean) { abline(v = fsps2@E_FPstat[2], col = 9, lwd = 2) }
+
+        legendBits <- data.frame(allNames = c("POP","FSP"), allNumbers = c(1,9))
+        if(!POPmean) {
+            legendBits <- legendBits[legendBits$allNames != "POP",]
+        }
+        if(!FSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "FSP",]
+        }
+
+        legend("topright", legend = legendBits$allNames,
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
+    }
+
+
+"get_chain" <-
+function( thing, seed) {
+
+# if length(unique(seed)) == length(seed) ???
+
+  extract.named( thing)
+
+  oset <- integer()
+  set <- seed
+  while( length( set) != length( oset)) {
+    newj <- j[ i %in% set]
+    newi <- i[ j %in% set]
+    oset <- set
+    set <- unique( c( set, newi, newj))
+  }
+
+  thing %where% (i %in% set | j %in% set)
+}
+
+
+"gtab6to4" <-
+function( gt6) {
+######### Condense 6way-genotype counts to 4way (AAO instead of AA, AO)
+  define_genotypes()
+  gt4 <- matrix( 0, nrow( gt6), 4, dimnames=list( dimnames( gt6)[[1]], genotypes4_ambig))
+  gt4[,AB] <- gt6[,AB]
+  gt4[,OO] <- gt6[,OO]
+  gt4[,AAO] <- gt6[,AA] + gt6[,AO]
+  gt4[,BBO] <- gt6[,BB] + gt6[,BO]
+return( gt4)
+}
+
+
+
+
+#' QC checks on
+#' 
+#' This test looks at whether the allele frequencies in a given fish seem
+#' right, or if there are discrepancies due to (i) degraded DNA or (ii) sample
+#' contamination. Useful both for finding outlier samples, and for checking
+#' whether the loci are collectively working as they should (and as is assumed
+#' by all the calculations in \code{kinference}). The histogram should coincide
+#' nicely with its predicted line.
+#' 
+#' 
+#' @param snpg a \code{snpgeno} object
+#' @param target which weighting should be used. \code{"rich"} is meant to be
+#' more sensitive for detecting contaminated data (too many heterozygotes) and
+#' \code{"poor"} for detecting DNA degredation (too few). In practice, there is
+#' often little difference.
+#' @param hist_pars list of parameters to pass to \code{hist}. If you are very
+#' sneaky, you can pass in an \code{expression} to be evaluated inline instead
+#' (ie fly-hacking).
+#' @param showPlot show the plot? Default TRUE
+#' @keywords misc
+#' @export hetzminoo_fancy
+"hetzminoo_fancy" <-
+function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), showPlot = TRUE) {
+###################
+  define_genotypes()
+  extract.named( snpg@locinfo[ cq(  PUP4, pbonzer)]) ## used to also call use6; not used
+  p0 <- pbonzer[,'O'] + pbonzer[,'C']
+  pA <- pbonzer[,'A']
+  pB <- pbonzer[,'B']
+
+  v <- 2*pA*pB + sqr( p0) - sqr( 2*pA*pB-sqr( p0)) ## Pr(AB) + Pr(OO) - (Pr(AB) - Pr(OO))^2
+  target <- match.arg( target)
+  edash <- if( target=='rich') {
+     (2*pA*p0+sqr(pA)) *   ## Pr(AA|AO)
+     (1-sqr(1-pB)) +       ## original; Pr(BB|AB|BO)
+     (2*pB*p0+sqr( pB)) *  ## Pr(BO|BB)
+     (1-sqr(1-pA)) +       ## modified; Pr(AA|AB|AO)
+     sqr( p0) *            ## Pr(OO)
+     (1-sqr( p0))          ## Pr(!OO)
+    } else {
+      2*(pA*pB + pA*p0 + pB*p0) # Equals Pr(heterozygote) under 3-way HWE
+    }
+
+  # Numericals have led to single loci getting all the weight when edash and v are both tiny!
+  # So, shrink v a tiny bit...
+  msqrt_v <- median( sqrt( v))
+  v <- sqr( sqrt( v) * 0.99 + msqrt_v * 0.01)
+
+  ww <- edash / v
+  ww <- c( ww / sum( ww) ) # else get 1-col matrix
+  stopifnot( all( ww>0))
+
+  use_loci <- which( ww > 0) # all of them, for now
+  temp_snpg <- snpg[ , use_loci]
+
+  # MVB Dec 2020: I don't this recoding is required cos we only need AB and OO
+  # ... anyway, version below won't work for genotypes4_ambig
+  # recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
+  # temp_snpg <- recode4to6temp( temp_snpg) # (AA,AO) -> AA; (BB,BO) -> BB
+
+  delta <- (temp_snpg==AB) - (temp_snpg==OO)
+  whmo[ f]:= delta[ f, l] %[l]% ww[ l]
+
+  # Null distro: P[S==1] = pAB; P[S==-1] = pOO; P[S==0] = 1-pAB - pOO
+  # E[ exp( tt*S)] = (e(tt)+1) * pAB + 1 + (e(-tt) -1)* pOO
+
+  pAB <- 2*pA*pB
+  pOO <- sqr( p0)
+  four_pab_poo <- 4*pAB*pOO
+  compaboo <- 1 - pAB - pOO
+
+  # now setup the functions for the SPA
+  # use the above as shortcuts
+
+  K <- function( tt) {
+      # here a *1 inside exp omitted
+      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
+      # here a *-1 inside exp omitted
+      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
+      # compaboo computed above, P(not AB & not OO)*exp(0)
+      KK[ j]:= SUM_ %[l]% log( compaboo[l] + etwab[ l, j] + etwoo[ l, j])
+    return( c( KK)) # without the c(), you get a scalar xtensor, and trouble...
+    }
+
+  # derivative of K
+  dK <- function( tt) {
+      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
+      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
+      denom[ l, j] := compaboo[l] + etwab[l,j] + etwoo[l,j]
+      dKK[ j] := ww[l] %[l]% ((etwab[l,j]-etwoo[l,j])/denom[l,j])
+    return( c( dKK))
+    }
+
+  # 2nd derivative of K
+  ddK <- function( tt) {
+      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
+      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
+      denom[ l, j] := compaboo[l] + etwab[l,j] + etwoo[l,j]
+      ddKK[ j] := sqr( ww[l]) %[l]% ( (compaboo[l] * (etwab[ l, j] + etwoo[l,j]) + four_pab_poo[ l]) / sqr( denom[l, j]) )
+    return( c( ddKK))
+    }
+
+  K <- compile_vecless( K(0))
+  dK <- compile_vecless( dK(0))
+  ddK <- compile_vecless( ddK(0))
+
+  dens_SPA <- renorm_SPA( K, dK, ddK, return_what='func', already_vectorized=TRUE)
+
+  # optional graphics and/or user-specified outputs
+  switch( mode( hist_pars),
+    list = {
+        hist_pars <- add_list_defaults( hist_pars,
+            main=target,
+            xlim= range( whmo), # so cutoff lines show
+            xlab='', nclass=50)
+        if (showPlot) {
+            lv <- do.call( 'hist', c( list( x=whmo), hist_pars))
+            with( lv, lines( mids, diff( breaks) * dens_SPA( mids) * sum( counts), col='green'))
+        }
+        # abline( v=ncuts, col='red')
+      },
+    expression = eval( hist_pars),
+    NULL = NULL
+  )
+
+return( c( whmo))
+}
+
+
+
+
+#' PLOD histogram
+#' 
+#' Plots an absolute-frequency histogram for the output of
+#' \code{\link{find_HSPs}}, with the lower bound set by the user. Lower bounds
+#' should be set to exclude (as much as possible) the UP bump, as this will
+#' otherwise swamp the signal from the HSP bump. Users must manually set a
+#' lower bound for full-sibling PLODs (\code{fullsib_cut}) on order to exclude
+#' full-siblings from the variance estimate for HSP PLODs.
+#' 
+#' 
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
+#' @param ub PLOD upper bound for plot extent. Defaults to maximum PLOD score
+#' plus a little padding
+#' @param fullsib_cut PLOD score above which there are only full-sibs
+#' @param bin hist bin width. Default 5. lb, ub, and bin together define
+#' \code{breaks}, so you can't pass \code{breaks} via \code{...}
+#' @param HSPmean plot the mean PLOD for HSPs? Default TRUE
+#' @param HSPdist plot the distribution of PLOD for HSPs? Default TRUE
+#' @param POPmean plot the mean PLOD for POPs? Default TRUE
+#' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
+#' @param main graph title, passed straight to \code{hist()}
+#' @param ... additional pars, passed to \code{hist()}
+#' @seealso PLOD_loghisto
+#' @keywords misc
+#' @export HSP_histo
+"HSP_histo" <-
+function(hsps, lb, ub = max(hsps$PLOD)+bin, fullsib_cut, bin = 5,
+             HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
+
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+        hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
+                       col="lightgrey",xlab="PLOD", main = main, ...)
+        if( HSPmean) {
+            E.hsp = hsps@mean_HSP
+            abline(v=E.hsp,lwd=2,col=8)
+        }
+        if( POPmean) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
+        if( FSPmean) { abline(v = hsps@mean_FSP, col = 9, lwd = 2) }
+        if( HSPdist) {
+            V.hsp=mean(sqr(hsps$PLOD[hsps$PLOD>E.hsp & hsps$PLOD < fullsib_cut]-E.hsp))
+            obs.num <- hist.plod$counts
+            exp.num <- 2*sum(hsps$PLOD>E.hsp & hsps$PLOD<fullsib_cut)*
+                (pnorm(hist.plod$breaks[-1],E.hsp,sqrt(V.hsp))-
+                 pnorm(hist.plod$breaks[-length(hist.plod$breaks)],E.hsp,sqrt(V.hsp)))
+            points(hist.plod$mids,exp.num,pch=16,col=8,type='b')
+        }
+        legendBits <- data.frame(allNames = c("POP","HSP","FSP"), allNumbers = c(1,8,9))
+        if(!POPmean) {
+            legendBits <- legendBits[legendBits$allNames != "POP",]
+        }
+        if(!HSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "HSP",]
+        }
+        if(!FSPmean) {
+            legendBits <- legendBits[legendBits$allNames != "FSP",]
+        }
+
+        legend("topright", legend = legendBits$allNames,
+               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
+    }
+
+
+
+
+#' Oddness metrics over an HSP histo
+#' 
+#' Plots an absolute-frequency histogram for the output of
+#' \code{\link{find_HSPs}} (qv), with additional coloured regions showing
+#' individuals with odd-looking CLOD scores (see \code{check_FPosity()} ),
+#' ilglk stat (see \code{\link{ilglk_geno}}), or hetz stat (see
+#' \code{\link{hetzminoo_fancy}}). You should choose a PLOD range for plotting
+#' that excludes the UP bump, since UPs can swamp the signal from HSPs and
+#' HTPs. \code{HSP_oddness_oneway} shows cases where at least one member of the
+#' pair has an unusual score in the oddness metric, whereas
+#' \code{HSP_oddness_twoway} shows cases where both members do.
+#' 
+#' 
+#' @aliases HSP_oddness_oneway HSP_oddness_twoway
+#' @param hsps the output of a call to \code{find_HSPs()}
+#' @param snpg the \code{snpgeno} object from which \code{hsps} was built
+#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
+#' @param ub PLOD upper bound for plot extent. Defaults to the maximum PLOD
+#' score plus a little padding
+#' @param bin hist bin width. Default 5. lb, ub, and bin together define
+#' \code{breaks}, so you can't pass \code{breaks} via \code{...}
+#' @param CLOD_prop the quantile of CLOD below which animals are highlighted.
+#' Default 0.001
+#' @param ilglk_prop the quantile of ilglk stat below which animals are
+#' highlighted. Default 0.001
+#' @param hetz_prop the quantile of hetz stat below which animals are
+#' highlighted. Default 0.001
+#' @param ... additional pars, passed to \code{hist()}
+#' @seealso PLOD_oddness_oneway
+#' @keywords misc
+#' @export HSP_oddness_oneway
+"HSP_oddness_oneway" <-
+function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
+             ...) {
+
+        palette("default")
+
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
+
+        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
+                   main="HSP PLOD",xlab="PLOD", ...)
+        for(i in 1:3) {
+            if(i==1) {
+                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
+                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+                colour <- rgb(1,0,0,alpha = 0.5)
+            }
+            if(i==2) {
+                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
+                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+                colour = rgb(0,1,0, alpha = 0.5)
+            }
+            if(i==3) {
+                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
+                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+                colour = rgb(0,0,1, alpha = 0.5)
+            }
+            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
+                       border = colour, col = colour)
+        }
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='ONE member of the pair has:',
+               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
+    }
+
+
+"HSP_oddness_twoway" <-
+function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
+             ...) {
+
+        palette("default")
+
+        cloddo <- check_FPosity(snpg)
+        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
+        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
+        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
+
+        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
+                   main="HSP PLOD",xlab="PLOD", ...)
+        for(i in 1:3) {
+            if(i==1) {
+                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
+                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
+                colour <- rgb(1,0,0,alpha = 0.5)
+            }
+            if(i==2) {
+                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
+                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
+                colour = rgb(0,1,0, alpha = 0.5)
+            }
+            if(i==3) {
+                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
+                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
+                colour = rgb(0,0,1, alpha = 0.5)
+            }
+            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
+                       border = colour, col = colour)
+        }
+        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
+               title='BOTH members of the pair have:',
+               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
+    }
+
+
+"HSP_paircomps_lots" <-
+function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins) {
+    .Call(`_kinference_HSP_paircomps_lots`, pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
+}
+
+
+
+
+#' Locus selection for kin-finding
+#' 
+#' \code{hsp_power} can be used to predict how well a set of loci will work for
+#' HSP-finding, and to prepare for some QC and kinference steps on serious
+#' data. It returns the input \code{snpgeno} object with extra columns added to
+#' the \code{locinfo} attribute, related to the per-locus mean and variance of
+#' LOD (presumably an HSP/UP PLOD, though not inevitably) for different true
+#' kin-types. It respects the per-locus decision about how precisely to
+#' genotype (\code{useN=6/4/3}).
+#' 
+#' E.UP, V.UP mean & variance for UPs
+#' 
+#' E.HSP, E.POP,E.FSP as you would expect
+#' 
+#' Ediff E.HSP - E.POP ie the "absolute" power of that locus
+#' 
+#' sdiff (E.HSP-E.POP)/sqrt(V.UP) which is arguably better than \code{Ediff}
+#' for ranking loci
+#' 
+#' It also attaches \code{LOD} and \code{PUP} columns (actually matrices) to
+#' the \code{locinfo}, which do make the latter hard to read if you just print
+#' it willy-nilly, so don't.
+#' 
+#' @param lociar \code{snpgeno} objects with the necessary ingredients
+#' @param want_LOD_table can't think why you'd set this to FALSE
+#' @param k target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.
+#' @return \code{snpgeno} object with augmented columns in "locinfo" attr.
+#' @section Notes: \code{hsp_power} needs tidy-up. It's daft to store LODs for
+#' only one specific kin; it'd be better to always calculate P1share and
+#' P2share as well as P0share (which is PUP), and then compute
+#' whatever-is-needed later on-the-fly.
+#' @keywords misc
+#' @examples
+#' 
+#' ## Need some examples!
+#' # See vignette for now
+#' 
+#' @export hsp_power
+"hsp_power" <-
+function( lociar,
+    want_LOD_table=TRUE, # T/F
+    k # 0.5 for HSPs
+){
+############
+  define_genotypes()
+  li <- lociar$locinfo
+  li1 <- li[1,]
+
+`%without.names%` <- function( x, what) {
+    new.names <- names( x) %except% what
+    if( identical( new.names, names( x))) {
+      return( x)   # also works if names(x) is NULL!
+    }
+
+    oatts <- attributes( x)
+    # oatts must exist, since nameless-x returns earlier
+    x <- x[ new.names]
+    oatts$names <- new.names
+    attributes( x) <- oatts
+    return( x)
+}
+
+  temp0 <- with( li1, calc_g6probs_IBD0_scalar( pbonzer, snerr, record=TRUE))
+  cg6p0 <- make_playback( calc_g6probs_IBD0_scalar, temp0)
+
+  temp1 <- with( li1, calc_g6probs_IBD1_scalar( pbonzer, snerr, record=TRUE))
+  cg6p1 <- make_playback( calc_g6probs_IBD1_scalar, temp1)
+
+  temp2 <- with( li1, calc_g6probs_IBD2_scalar( pbonzer, snerr, record=TRUE))
+  cg6p2 <- make_playback( calc_g6probs_IBD2_scalar, temp2)
+
+  g6p0 <- with( li, cg6p0( pbonzer, snerr))
+  g6p1 <- with( li, cg6p1( pbonzer, snerr))
+  g6p2 <- with( li, cg6p2( pbonzer, snerr))
+
+  s6 <- predict_hsp_util( g6p0, g6p1, g6p2, want_LOD_table, k=k)
+
+  # For the 4-ways, must condense g6p's
+  if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
+    extract.named( map6to4( g6p0, g6p1, g6p2))
+    s4 <- predict_hsp_util( g4p0, g4p1, g4p2, want_LOD_table, k=k) %without.names% "matto"
+
+    ### 3way too:
+    extract.named( map6to3( g6p0, g6p1, g6p2))
+    s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k) %without.names% "matto"
+
+    if( want_LOD_table) { # overrides predict_hsp_util's version of want_LOD_table
+      li$LOD6 <- s6@LOD # matrix
+      li$PUP6 <- s6@PUP
+      li$LOD4 <- s4@LOD
+      li$PUP4 <- s4@PUP
+      li$LOD3 <- s3@LOD
+      li$PUP3 <- s3@PUP
+      s6@LOD <- s6@PUP <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+
+      # This sure looks like SB code to me (MVB)... ;)
+      li$e0_6way <- s6$e0
+      li$v0_6way <- s6$v0
+      li$e1_6way <- s6$e1
+      li$v1_6way <- s6$v1
+
+      li$e0_4way <- s4$e0
+      li$v0_4way <- s4$v0
+      li$e1_4way <- s4$e1
+      li$v1_4way <- s4$v1
+
+      li$e0_3way <- s3$e0
+      li$v0_3way <- s3$v0
+      li$e1_3way <- s3$e1
+      li$v1_3way <- s3$v1
+
+      s6$e0 <- s6$v0 <- s6$e1 <- s6$v1 <- NULL
+      s4$e0 <- s4$v0 <- s4$e1 <- s4$v1 <- NULL
+      s3$e0 <- s3$v0 <- s3$e1 <- s3$v1 <- NULL
+
+      # MVB: something like (but is this really better?! not sure...)
+      # li <- list2env( li)
+      # for( iway in c( 3,4,6) {
+      #  for( thing in cq( e0, v0, e1, v1)) {
+      #    assign( sprintf( '%s_%iway', thing, iway), get( 's' %&% iway)[[thing]]
+      #   } }
+      # li <- as.list( li)
+    }
+
+    # li <- cbind( li, s6, s4)
+    li[ names( s6)] <- s6 # instead of cbind--- this will overwrite not add
+    # Replace the ones that shouldn't be 6way:
+    li[ li$useN == 4, names( s4)] <- s4[ li$useN == 4,] ## subs in 4-ways where useN == 4
+    li[ li$useN == 3, names( s3)] <- s3[ li$useN == 3,] ## subs in 3-ways where useN == 3
+
+  } else { # ... sneaky override, for non-ABCO systems
+    # shouldn't really be called "...6" obvs
+    s6$useN <- 6
+    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
+  }
+
+    lociar@locinfo <- li
+    lociar@hspPower_checksum <- calc_hspPower_checksum( li)
+return( lociar)
+}
+
+
+
+
+#' Kin-finding power for microhaplotyped loci
+#' 
+#' This is a short-term fudge for checking HSP-finding power of a bunch of loci
+#' that (i) can have as many haplotypes as you like, but (ii) have no errors or
+#' nulls. See \bold{Examples} for how you might use it.
+#' 
+#' If you want to explore the impact of missing genotypes (so that e.g. only
+#' 90\% of loci are co-scored in some pairs) you'll have to do so manually. A
+#' reasonable and very easy option is to multiply \code{Ediff} and \code{V.UP}
+#' both by 0.9, then go thru the steps. If you choose the 0.9 conservatively-
+#' ie it's highly likely that >0.9 of loci get co-scored- then the above calc
+#' avoids any need to do much more complicated stuff (which I leave to you...).
+#' 
+#' At some point in future, \code{kinference} might be changed so that it can
+#' handle >2 non-null alleles gracefully (ie microhaplotypes). But not yet. So
+#' for now this version does some ghastly "live-hacking" of existing code for
+#' \code{\link{hsp_power}} to implement no-errors no-nulls multi-allelic case.
+#' It will be hard to follow, so use \code{mtrace} if you really want to see
+#' what's going on. The guts of the code is in \code{\link{hsp_power}} and
+#' \code{predict_hsp_util}.
+#' 
+#' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles).
+#' Locus names are set from the rownames, or "L1", "L2" etc if there are no
+#' rownames. Allele names will be set to "A", "B", "C", etc, regardless of
+#' colnames; you do not have a choice there. Will be renormalized so rows sum
+#' to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected
+#' for \code{hsp_power}. If so, then the allele freqs are assumed to live in
+#' \code{lociar$locinfo$pbonzer}, and \bold{no} nulls or genotyping errors are
+#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{hsp_power} and
+#' \code{hsp_power2} will give \emph{different} answers.
+#' @return If \code{lociar} is an allele-frequency matrix, then you get a
+#' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
+#' "Ediff" is "E[LOD|HSP] - E[LOD|UP]"; "V.UP" is "V[LOD|UP]"; "sdiff" is
+#' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \bold{Examples}
+#' for use.
+#' @seealso \code{\link{hsp_power}}
+#' @keywords misc
+#' @examples
+#' 
+#' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+#' POW <- hsp_power2( ALF)
+#' # look at the contents of each...
+#' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
+#' # find anything like that in practice for lots'n'lots of loci
+#' lots <- 500
+#' ALF <- matrix( runif( lots*5), lots, 5)
+#' POW <- hsp_power2( ALF)
+#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+#' V <- sum( POW$V.UP)  # V[PLOD|UP]
+#' E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+#' E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+#' # ... more stringent than "typical"--- and, NB weaker kin
+#' bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+#' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+#' # ... so that's probably OK...
+#' 
+#' @export hsp_power2
+"hsp_power2" <-
+function( lociar,
+    want_LOD_table=TRUE, # T/F
+    k # 0.5 for HSPs
+){
+############
+  # Uses the code of hsp_power, but sneakily redefining a few core functions...
+  # ... hsp_power originally intended for 6way null-heavy ABCO-format Dartcap
+
+  just_matrix <- lociar %is.not.a% 'snpgeno'
+  if( just_matrix) {
+    if( lociar %is.not.a% 'matrix') {
+stop( "'lociar' must be 'snpgeno' or matrix of allele freqs (Locus X Alleles)")
+    }
+    # Turn lociar into a snpgeno with .$locinfo$pbonzer==lociar
+
+    locnames <- rownames( lociar)
+    if( is.null( locnames)) {
+      locnames <- 'L' %&% seq.int( nrow( lociar))
+    }
+
+    lociar[ l, a] := lociar[ l, a] / (SUM_ %[a]% lociar[ l, a]) # normalize
+    lociar <- as.array( lociar) # vecless xtensor legacy removal
+    dimnames( lociar) <- NULL
+    colnames( lociar) <- LETTERS[ seq.int( ncol( lociar))]
+
+    data.frame <- data.frame
+    formals( data.frame)$stringsAsFactors <- FALSE
+    li <- data.frame( Locus=locnames, pbonzer=I( lociar)) # needs 2-step otherwise R messes up matrix
+
+    genos <- expand.grid( colnames( lociar), colnames( lociar),
+        stringsAsFactors=FALSE) %where% (Var1 <= Var2)
+    diplos <- genos$Var1 %&% genos$Var2
+
+    lociar <- snpgeno( 1, nrow( lociar), diplos, info=data.frame( Our_sample='THE_THING'),
+        locinfo=li)
+  }
+
+  e <- new.env( parent=asNamespace( 'kinference'))
+  e$lociar <- lociar
+
+  result <- evalq( envir=e, {
+    lociar$locinfo$snerr <- 0 # various things expect 'snerr' to exist
+
+    define_genotypes <- eval( substitute( function( nlocal=sys.parent(), eg) mlocal({
+        # Fakes various "genotypes_blah" categories that are expected by subsequent routines
+
+        ALLeles <- THE_ALLELES # colnames( pbonzer) # eg A,B,C,D,E; use named() if we need to write A for "A"
+
+        # need stringsAsFactors... FFS WTF were they (R) thinking ????
+        eg <- expand.grid( ALLeles, ALLeles, stringsAsFactors=FALSE) %where% (Var1 <= Var2)
+        genotypes_C <- eg$Var1 %&% eg$Var2
+        genotypes6 <- genotypes_C
+        ABCO <- named( ALLeles)
+      }), list( THE_ALLELES=colnames( lociar$locinfo$pbonzer))))
+
+    add_pairprob_error <- function( nlocal=sys.parent()) mlocal({
+      pp_err <- pp_true                ? 0
+      pp6_err <- pp_true               ? 0
+    })
+
+    # Make sure subsidiary functions pick up these versions
+    environment( hsp_power) <-
+        environment( calc_g6probs_IBD0_scalar) <-
+        environment( calc_g6probs_IBD1_scalar) <-
+        environment( calc_g6probs_IBD2_scalar) <-
+        environment( add_pairprob_error) <-
+        environment( predict_hsp_util) <-
+        environment()
+    # mtrace( hsp_power) # automate the debugging a bit
+  return( hsp_power( lociar, want_LOD_table=TRUE, k=0.5))
+  })
+
+  result$locinfo <- result$locinfo %without.name% cq( snerr, use6)
+  if( just_matrix){
+    result <- result$locinfo[ cq( Ediff, V.UP, sdiff)]
+  }
+
+return( result)
+
+
+
+  lociar@locinfo <- li
+return( lociar)
+}
+
+
+
+
+#' Check individual multilocus genotypes for typicality
+#' 
+#' \code{ilglk_geno} computes log-likelihood of entire 4-way (not 6-way)
+#' genotype of each individual, i.e., sum log Pr[ g(i,l)]; and compares the
+#' distribution across individuals to theoretical distro given allele
+#' frequencies. Significant mismatch is bad. Can also detect outlier
+#' individuals, usually with lglks that are much too low (ie rather than too
+#' high- I'm not sure what could generate "too typical a genome" at the
+#' individual level).
+#' 
+#' You can use \code{locator(1)} to click the histogram to figure out where to
+#' adjust the \code{xlim}/'ylim' values to change the range of the data to
+#' inspect more closely- ie you then re-run the function with its
+#' \code{...hist_par} argument set accordingly.
+#' 
+#' Currently, the SPA calcs are a wee bit slow because of heavy use of
+#' \code{vecless} which in version 1.0 is sluggish. The lglks themselves are
+#' computed in C and are blisteringly fast. If the SPA line (expected distro)
+#' doesn't appear, let us know- needs fixing! There might e.g. be too many
+#' loci, so that the calculation is falling over.
+#' 
+#' Haven't added any formal uh-oh criteria yet; that could be done via the SPA,
+#' as in \code{dump_badhetz_fish}. But, reading off from the graph is probably
+#' fine...
+#' 
+#' @param snpg a \code{snpgeno} (6-way genotype)
+#' @param hist_pars \code{list()} passed to \code{hist} for controlling
+#' histogram, eg \code{hist_pars=list(xlim=c(-12000, -6000))}, or use
+#' \code{FALSE} to not plot.
+#' @param showPlot show the histogram? Defaults to TRUE, but overrideen by
+#' \code{hist_pars=FALSE}.
+#' @return Vector of log-likelihood for each individual; also usually (but
+#' optionally), a histogram of log-likelihood values across individuals.
+#' @keywords misc
+#' @examples
+#' 
+#' ## Need an example!
+#' 
+#' @export ilglk_geno
+"ilglk_geno" <-
+function(snpg, hist_pars=list(), showPlot = TRUE) {
+  define_genotypes()
+  extract.named( snpg@locinfo[ cq( pbonzer)])
+
+  p0 <- pbonzer[,'O'] + pbonzer[,'C']
+  pA <- pbonzer[,'A']
+  pB <- pbonzer[,'B']
+
+  n_samps <- nrow( snpg)
+  n_loci <- ncol( snpg)
+  minfo_fields <- cq( Our_plate, Our_sample) %that.are.in% names( snpg$info)
+  snpg4 <- snpgeno(
+      NULL,
+      diplos=genotypes4_ambig,
+      info= snpg@info[, minfo_fields],
+      locinfo= snpg@locinfo[, 'Locus', drop=FALSE]
+    )
+  snpg4[ snpg==OO] <- OO
+  snpg4[ snpg==AB] <- AB
+  snpg4[ snpg==AA] <- AAO
+  snpg4[ snpg==AO] <- AAO
+  snpg4[ snpg==BB] <- BBO
+  snpg4[ snpg==BO] <- BBO
+
+  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
+  pgeno[ , OO] <- sqr( p0)
+  pgeno[ , AB] <- 2*pA*pB
+  pgeno[ , AAO] <- 2*pA*p0 + pA*pA
+  pgeno[ , BBO] <- 2*pB*p0 + pB*pB
+  lpgeno <- log( pgeno) # lambda in doco
+
+
+  # These are slowish in vecless 1.0
+  # ... but less error-prone to write
+  K <- function( tt) {
+      ttp1 <- tt+1
+      KK[ j] := SUM_ %[l]% log( SUM_ %[g]% exp( ttp1[ j] * lpgeno[ l, g]))
+    return( c( KK))
+    }
+
+  dK <- function( tt) {
+      ttp1 <- tt+1
+      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
+      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
+      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
+      dKK[ j] := SUM_ %[l]% (num[ j, l] / denom[ j, l])
+    return( c( dKK))
+    }
+
+  ddK <- function( tt) {
+      ttp1 <- tt+1
+      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
+      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
+      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
+      num2[ j, l] := sqr( lpgeno[ l, g]) %[g]% etp1l[ j, l, g]
+      dKK[ j] := SUM_ %[l]% ( num2[ j, l] / denom[ j, l] -  sqr( num[ j, l] / denom[ j, l]))
+    return( c( dKK))
+    }
+
+  quick <- TRUE # used to be param
+  if( quick) {
+    K <- compile_vecless( K( -1))
+    dK <- compile_vecless( dK( -1))
+    ddK <- compile_vecless( ddK( -1))
+  }
+
+  if( FALSE) { # Checks: do manually in mtrace
+    ntest <- 1000
+    Ktest <- function( tt) { # scalar
+      Ksim <- meansim <- rep( 0, ntest)
+      for( l in 1:n_loci) {
+        # Can't directly sample from genotypes4_ambig since can't matrix-subscript mixed int and char
+        genos <- rsample( ntest, seq_along( genotypes4_ambig), prob=pgeno[l,], replace=TRUE)
+        lp <- lpgeno[ cbind( l, genos)]
+        Ksim <- Ksim + ( tt * lp) # actually log( exp( t*lp))
+        meansim <- meansim + lp # though see below for better way to check!
+      }
+      returnList( Ksim, meansim)
+    }
+
+    dK( 0)
+    sum( pgeno * lpgeno) # should be the same
+  }
+
+  ilglk <- indiv_lglk_geno(
+      lpgeno= lpgeno,
+      geno= snpg4)
+
+  if( FALSE) { # "manual" check on calcs
+    lp <- lpgeno[ cbind( rep( 1 %upto% n_loci, n_samps), snpg)]
+    dim( lp) <- c( n_loci, n_samps)
+    ilglk_manual <- colSums( lp)
+  }
+
+  dens_SPA <- renorm_SPA( K, dK, ddK, return='func', already_vectorized=TRUE)
+
+  if( isFALSE( hist_pars)) {
+    showPlot <- FALSE
+  } else {
+    hist_pars <- add_list_defaults( hist_pars,
+        main   = 'Geno lglk by specimen',
+        xlim   = range( ilglk),
+        col    = "grey",
+        border = NA,
+        xlab   = '',
+        nclass = 50)
+  }
+
+  if( showPlot) {
+      lv <- do.call( 'hist', c( list( x=ilglk), hist_pars))
+
+      # some dens_SPA can fail -- do lapply and then weed out baddies
+      mids_SPA <- lapply(lv$mids, function(x) try(dens_SPA( x), silent=TRUE))
+      good_ind <- unlist(lapply(mids_SPA, class) != "try-error")
+      mids_SPA <- unlist(mids_SPA[good_ind])
+      # plot predicted density. Slowish with vecless 1.0
+      lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
+            col='green')
+  }
+
+return( ilglk)
+}
+
+
+"indiv_lglk_geno" <-
+function(lpgeno, geno) {
+    .Call(`_kinference_indiv_lglk_geno`, lpgeno, geno)
+}
+
+
+"K_indiv" <-
+function(tt, geno, vec_LOD, Pg) {
+    .Call(`_kinference_K_indiv`, tt, geno, vec_LOD, Pg)
+}
+
+
+
+
+#' add a kin-type legend with the default colour scheme
+#' 
+#' Package kinference uses a constant colour scheme for kin types, designed to
+#' be colourblind-friendly and to allow clear visual distinction between kin
+#' classes that share similar relatedness levels. We recommend that users
+#' maintain this colour scheme in any custom plots they create. This utility
+#' function adds a legend with kinship acronyms and their colours. By default,
+#' it will display only the "top four" kin classes (UP, FSP, POP, and HSP)
+#' 
+#' 
+#' @param position passed to \code{legend}. Must be one of "topleft", "top",
+#' "topright", etc.
+#' @param include a character vector of kin-classes to include. Limited to
+#' "POP", "GGP", "HCP", "FCP", "UP", "HTP", "FTP", "HSP", and "FSP". Will
+#' automatically include "UP", "POP", "FSP", and "HSP" unless these are
+#' specifically \emph{excluded}. Will trigger a warning if any values are also
+#' in \code{exclude}, as those values will be excluded.
+#' @param exclude a character vector of kin-classes to exclude. Limited to
+#' "POP", "GGP", "HCP", "FCP", "UP", "HTP", "FTP", "HSP", and "FSP". Will
+#' trigger a warning if any values are also in \code{include}.
+#' @param ... additional args, passed to legend()
+#' @return adds a legend to the current plot
+#' @keywords misc
+#' @export kinlegend
+"kinlegend" <-
+function(position = "topright", include = character(), exclude = character(), ...) {
+
+    palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+              "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+    if(sum(include %in% exclude) > 0) {
+        stop(paste("kin class(es) '",
+                   paste(include[include %in% exclude], collapse = ", "),
+                   "' is/are in both 'include' and 'exclude'", sep = "")
+             )
+    }
+
+    if(!all(include %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
+        warning("some unrecognised kin classes in 'include'")
+    }
+    if(!all(exclude %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
+        warning("unrecognised kin classes in 'exclude'")
+    }
+
+    ## the default set
+    allNames <- c("UP","POP","HSP","FSP")
+
+    ## add any extras from 'include'
+    allNames <- unique(c(include, allNames))
+
+    ## remove those in 'exclude'
+    allNames <- allNames[!allNames %in% exclude]
+
+    ## find their palette numbers
+    allNumbers <- match(allNames, c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))
+
+    legend(position, legend = allNames,
+               lwd = 2, lty = 1, col = allNumbers, bg = "white", ...)
+}
+
+
+"lglk_loci" <-
+function( snpg) {
+# Obsolete / not useful ?
+# When loci are presumably misbehaving, in that ilglk_geno looks
+# ... OK on a "trusted subset" but not on all--- this may help
+
+#% 'lglk_loci' compares, for each locus, the average (across individuals) observed lglk with the theoretical mean and variance. The idea is to help figure out when some loci
+#are going wrongish (e.g. you can get decent fits from a subset of loci). Of course, 'check6and4' pvals should be the main guide here; 'lglk_loci' can show an overall deviation
+#, as well as any remaining locus-specific misbehaviour (but shouldn't be much locus-specific stuff thx2 'check6and4'). Overall too-good-to-be-true-ism (as seen for 'Glyphis
+#garricki') _might_ come when ALF is estimated from very small datasets.
+
+  define_genotypes()
+  extract.named( snpg@locinfo[ cq( pbonzer)])
+
+  p0 <- pbonzer[,'O'] + pbonzer[,'C']
+  pA <- pbonzer[,'A']
+  pB <- pbonzer[,'B']
+
+  n_samps <- nrow( snpg)
+  n_loci <- ncol( snpg)
+  snpg4 <- snpgeno( n_samps, n_loci, genotypes4_ambig,
+                   info=snpg@info[,cq( Our_plate, Our_sample)],
+                   locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
+  snpg4[ snpg==OO] <- OO
+  snpg4[ snpg==AB] <- AB
+  snpg4[ snpg==AA] <- AAO
+  snpg4[ snpg==AO] <- AAO
+  snpg4[ snpg==BB] <- BBO
+  snpg4[ snpg==BO] <- BBO
+
+  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
+  pgeno[ , OO] <- sqr( p0)
+  pgeno[ , AB] <- 2*pA*pB
+  pgeno[ , AAO] <- 2*pA*p0 + pA*pA
+  pgeno[ , BBO] <- 2*pB*p0 + pB*pB
+  lpgeno <- log( pgeno) # lambda in doco
+
+  # elg <- rowSums( pgeno * lpgeno)
+  # elg2 <- rowSums( pgeno * sqr( lpgeno))
+  # Or:
+  elg[ l] := lpgeno[ l, g] %[g]% pgeno[ l, g]
+  elg2[ l] := sqr( lpgeno[ l, g]) %[g]% pgeno[ l, g]
+  sdelg <- sqrt( elg2 - sqr( elg))  # per individual
+
+  s4 <- as.integer( unclass(snpg4))
+  dim( s4) <- dim( snpg4)
+  # olg_fl[ f, l] := lpgeno[ l, s4[ f, l]]    # NYI in vecless 1.0
+
+  GG <- 1:4
+  # olg_fl[ f, l] := lpgeno[ l, g] %[g]% (s4[f,l]==GG[g])
+  # olg[ l] := ( SUM_ %[f]% olg_fl[ f, l]) / {n_f}
+  n_f <- nrow( snpg4)
+  olg[ l] := ( SUM_ %[f]% ( lpgeno[ l, g] %[g]% (s4[f,l]==GG[g]))) / {n_f}
+
+
+return( returnList( elg, sdelg, olg, sdiff=sqrt( n_f) * (olg-elg) / sdelg))
+}
+
+
+"make_pgeno" <-
+function( pA, pB, pC, which_genotypes) {
+###
+# which_genotypes eg genotypes_ambig. If no C-genos requested then pC is forced to 0 so new O includes C
+  if( !any( grepl( 'C', which_genotypes))) {
+    pC <- 0
+  }
+
+  pO <- pmax( 0, 1 - pA - pB - pC) # rounding error guard
+  pAO <- 2*pA*pO
+  pAA <- sqr( pA)
+  pAAO  <- pAA + pAO
+  pAB  <- 2*pA*pB
+  pBO <- 2*pB*pO
+  pBB <- sqr( pB)
+  pBBO  <- pBB + pBO
+  pAC <- 2*pA*pC
+  pCO <- 2*pC*pO
+  pCC <- sqr( pC)
+  pCCO <- pCC + pCO
+  pBC <- 2*pB*pC
+  pOO  <- pO^2
+  pBBOO <- pBBO + pOO
+
+  # Could be scalar or vector: c or cbind
+  funco <- if( length( pO) > 1) cbind else c
+  phat <- do.call( funco, FOR( which_genotypes, get( 'p' %&% .)))
+  names( phat) <- sub( '[.].*', '', names( phat)) # loco R name-extrusion habit FFS
+return( phat)
+}
+
+
+"map6to3" <-
+function(g6p0, g6p1, g6p2){
+  define_genotypes()
+
+  map6to3 <- matrix( 0, 6, 3, dimnames=list( genotypes6, genotypes3))
+  # AB & OO are OK; AAO should receive both AA and AO; etc
+  mm <- match( genotypes6, substring( genotypes3, 1, 2), 0) # the "AA" bit of "AAO"...
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+  mm <- match( genotypes6, substring( genotypes3, 2, 3), 0) # ... and the "AO" bit
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+  mm <- match( genotypes6, substring( genotypes3, 3, 4), 0) # ... and the "OO" bit
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to3[ yup] <- 1
+
+  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+  # ... but vecless can't presently handle multi-stages
+
+  A[l,i,k] := g6p0[l,i,j] %[j]% map6to3[j,k]
+  g3p0[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+  A[l,i,k] := g6p1[l,i,j] %[j]% map6to3[j,k]
+  g3p1[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+  A[l,i,k] := g6p2[l,i,j] %[j]% map6to3[j,k]
+  g3p2[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
+
+
+returnList( g3p0, g3p1, g3p2)
+}
+
+
+"map6to4" <-
+function(g6p0, g6p1, g6p2){
+  define_genotypes()
+
+  # For the 4-ways, must condense g6p's
+
+  map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
+  # AB & OO are OK; AAO should receive both AA and AO; etc
+  mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to4[ yup] <- 1
+  mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
+  yup <- cbind( which(mm>0), mm[ mm>0])
+  map6to4[ yup] <- 1
+
+  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
+  # ... but vecless can't presently handle multi-stages
+
+  A[l,i,k] := g6p0[l,i,j] %[j]% map6to4[j,k]
+  g4p0[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+  A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
+  g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+  A[l,i,k] := g6p2[l,i,j] %[j]% map6to4[j,k]
+  g4p2[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
+
+returnList( g4p0, g4p1, g4p2)
+}
+
+
+"old.onLoad" <-
+function( libname, pkgname) {
+  cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
+  if( !exists( 'onload_autowrap', asNamespace( pkgname), inherits=FALSE, mode='function')) {
+    # then source() the R script and create it here...
+    my_dll <- getOption( sprintf( '%s_debug_C', FALSE))
+    oa <- system.file( 'R/onload_autowrap.R', package=pkgname, lib.loc=libname)
+    eval( substitute( source( oa, local=TRUE), list( oa=oa)), asNamespace( pkgname))
+  }
+
+  onload_autowrap( pkgname, libname)
+}
+
+
+"OLD_find_POPs" <-
+function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
+    limit_pairs=0.5*nrow(snpg),
+    keep_thresh,
+    eta= NULL,
+    nbins= 50,
+    maxbin = NULL,
+    WPSEX_UP_POP_balance=0.99) {
+###################
+## This is the non-lglk WPSEX/NABOO version
+
   # Sanity...
 define_genotypes()
 stopifnot( is.numeric( subset1) && is.numeric( subset2))
@@ -2038,1072 +3421,129 @@ return( result)
 }
 
 
+"OLD_split_FSPs_from_POPs" <-
+function( snpg, candiPOPs) {
+## Don't need full pairwise screening for FSPs (do post hoc on a few hundred
+## candidate POPs), hence all in R.
 
-
-#' Plot for splitting FSPs from POPs
-#'
-#' Plots an absolute-frequency histogram for the output of
-#' \code{find_FSPs_from_POPs_v2()}.
-#'
-#'
-#' @param fsps2 the output of a call to \code{find_FSPs_from_POPs_v2()}
-#' @param bin hist bin width. Used to define \code{breaks} (along with
-#' \code{xlim}, if given), so you can't manually pass in \code{breaks}.
-#' @param FSPmean plot the expected mean FP stat for FSPs? Default TRUE
-#' @param POPmean plot the expected mean FP stat for POPs? Default TRUE
-#' @param ... additional pars, passed to \code{hist()} (?should we force naming
-#' them in a list?)
-#' @seealso PLOD_loghisto
-#' @keywords misc
-#' @export FSP_POP_histo
-"FSP_POP_histo" <-
-function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
-
-        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
-
-        if(exists("xlim")) {
-            lb <- min(xlim)
-            ub <- max(xlim)
-        } else {
-            lb <- min(fsps2$FPstat)
-            ub <- max(fsps2$FPstat)+bin
-        }
-
-        hist.plod=hist(fsps2$FPstat, breaks=seq(lb, ub, bin),
-                       col="lightgrey",xlab="FPstat", ...)
-        if( POPmean) { abline(v = fsps2@E_FPstat[1], col = 1, lwd = 2) }
-        if( FSPmean) { abline(v = fsps2@E_FPstat[2], col = 9, lwd = 2) }
-
-        legendBits <- data.frame(allNames = c("POP","FSP"), allNumbers = c(1,9))
-        if(!POPmean) {
-            legendBits <- legendBits[legendBits$allNames != "POP",]
-        }
-        if(!FSPmean) {
-            legendBits <- legendBits[legendBits$allNames != "FSP",]
-        }
-
-        legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
-    }
-
-#' @rdname chain_pairwise
-#' @export
-"get_chain" <-
-function( thing, seed) {
-
-# if length(unique(seed)) == length(seed) ???
-
-  extract.named( thing)
-
-  oset <- integer()
-  set <- seed
-  while( length( set) != length( oset)) {
-    newj <- j[ i %in% set]
-    newi <- i[ j %in% set]
-    oset <- set
-    set <- unique( c( set, newi, newj))
-  }
-
-  thing %where% (i %in% set | j %in% set)
-}
-
-
-"gtab6to4" <-
-function( gt6) {
-######### Condense 6way-genotype counts to 4way (AAO instead of AA, AO)
   define_genotypes()
-  gt4 <- matrix( 0, nrow( gt6), 4, dimnames=list( dimnames( gt6)[[1]], genotypes4_ambig))
-  gt4[,AB] <- gt6[,AB]
-  gt4[,OO] <- gt6[,OO]
-  gt4[,AAO] <- gt6[,AA] + gt6[,AO]
-  gt4[,BBO] <- gt6[,BB] + gt6[,BO]
-return( gt4)
-}
 
+  # 'candiPOPs' normally from 'find_POPs'; or can be M*2 matrix of rows in snpg that are poss POPs
+  # if former, make latter
 
-
-
-#' QC checks on
-#'
-#' This test looks at whether the allele frequencies in a given fish seem
-#' right, or if there are discrepancies due to (i) degraded DNA or (ii) sample
-#' contamination. Useful both for finding outlier samples, and for checking
-#' whether the loci are collectively working as they should (and as is assumed
-#' by all the calculations in \code{\link{kinference}}). The histogram should
-#' coincide nicely with its predicted line.
-#'
-#'
-#' @param snpg a \code{snpgeno} object
-#' @param target which weighting should be used. \code{"rich"} is meant to be
-#' more sensitive for detecting contaminated data (too many heterozygotes) and
-#' \code{"poor"} for detecting DNA degredation (too few). In practice, there is
-#' often little difference.
-#' @param hist_pars list of parameters to pass to \code{hist}. If you are very
-#' sneaky, you can pass in an \code{expression} to be evaluated inline instead
-#' (ie fly-hacking).
-#' @param showPlot show the plot? Default TRUE
-#' @keywords misc
-#' @export hetzminoo_fancy
-"hetzminoo_fancy" <-
-function( snpg, target=c( 'rich', 'poor'), hist_pars=list(), showPlot = TRUE) {
-###################
-  define_genotypes()
-  extract.named( snpg@locinfo[ cq(  PUP4, pbonzer)]) ## used to also call use6; not used
-  p0 <- pbonzer[,'O'] + pbonzer[,'C']
-  pA <- pbonzer[,'A']
-  pB <- pbonzer[,'B']
-
-  v <- 2*pA*pB + sqr( p0) - sqr( 2*pA*pB-sqr( p0)) ## Pr(AB) + Pr(OO) - (Pr(AB) - Pr(OO))^2
-  target <- match.arg( target)
-  edash <- if( target=='rich') {
-     (2*pA*p0+sqr(pA)) *   ## Pr(AA|AO)
-     (1-sqr(1-pB)) +       ## original; Pr(BB|AB|BO)
-     (2*pB*p0+sqr( pB)) *  ## Pr(BO|BB)
-     (1-sqr(1-pA)) +       ## modified; Pr(AA|AB|AO)
-     sqr( p0) *            ## Pr(OO)
-     (1-sqr( p0))          ## Pr(!OO)
-    } else {
-      2*(pA*pB + pA*p0 + pB*p0) # Equals Pr(heterozygote) under 3-way HWE
-    }
-
-  # Numericals have led to single loci getting all the weight when edash and v are both tiny!
-  # So, shrink v a tiny bit...
-  msqrt_v <- median( sqrt( v))
-  v <- sqr( sqrt( v) * 0.99 + msqrt_v * 0.01)
-
-  ww <- edash / v
-  ww <- c( ww / sum( ww) ) # else get 1-col matrix
-  stopifnot( all( ww>0))
-
-  use_loci <- which( ww > 0) # all of them, for now
-  temp_snpg <- snpg[ , use_loci]
-
-  # MVB Dec 2020: I don't this recoding is required cos we only need AB and OO
-  # ... anyway, version below won't work for genotypes4_ambig
-  # recode4to6temp <- function( x) { x[ x=='AO'] <- AA; x[ x=='BO'] <- BB; x}
-  # temp_snpg <- recode4to6temp( temp_snpg) # (AA,AO) -> AA; (BB,BO) -> BB
-
-  delta <- (temp_snpg==AB) - (temp_snpg==OO)
-  whmo[ f]:= delta[ f, l] %[l]% ww[ l]
-
-  # Null distro: P[S==1] = pAB; P[S==-1] = pOO; P[S==0] = 1-pAB - pOO
-  # E[ exp( tt*S)] = (e(tt)+1) * pAB + 1 + (e(-tt) -1)* pOO
-
-  pAB <- 2*pA*pB
-  pOO <- sqr( p0)
-  four_pab_poo <- 4*pAB*pOO
-  compaboo <- 1 - pAB - pOO
-
-  # now setup the functions for the SPA
-  # use the above as shortcuts
-
-  K <- function( tt) {
-      # here a *1 inside exp omitted
-      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
-      # here a *-1 inside exp omitted
-      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
-      # compaboo computed above, P(not AB & not OO)*exp(0)
-      KK[ j]:= SUM_ %[l]% log( compaboo[l] + etwab[ l, j] + etwoo[ l, j])
-    return( c( KK)) # without the c(), you get a scalar xtensor, and trouble...
-    }
-
-  # derivative of K
-  dK <- function( tt) {
-      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
-      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
-      denom[ l, j] := compaboo[l] + etwab[l,j] + etwoo[l,j]
-      dKK[ j] := ww[l] %[l]% ((etwab[l,j]-etwoo[l,j])/denom[l,j])
-    return( c( dKK))
-    }
-
-  # 2nd derivative of K
-  ddK <- function( tt) {
-      etwab[ l, j] := pAB[l] * exp( tt[j] * ww[ l])
-      etwoo[ l, j] := pOO[l] * exp( -tt[j] * ww[ l])
-      denom[ l, j] := compaboo[l] + etwab[l,j] + etwoo[l,j]
-      ddKK[ j] := sqr( ww[l]) %[l]% ( (compaboo[l] * (etwab[ l, j] + etwoo[l,j]) + four_pab_poo[ l]) / sqr( denom[l, j]) )
-    return( c( ddKK))
-    }
-
-  K <- compile_vecless( K(0))
-  dK <- compile_vecless( dK(0))
-  ddK <- compile_vecless( ddK(0))
-
-  dens_SPA <- renorm_SPA( K, dK, ddK, return_what='func', already_vectorized=TRUE)
-
-  # optional graphics and/or user-specified outputs
-  switch( mode( hist_pars),
-    list = {
-        hist_pars <- add_list_defaults( hist_pars,
-            main=target,
-            xlim= range( whmo), # so cutoff lines show
-            xlab='', nclass=50)
-        if (showPlot) {
-            lv <- do.call( 'hist', c( list( x=whmo), hist_pars))
-            with( lv, lines( mids, diff( breaks) * dens_SPA( mids) * sum( counts), col='green'))
-        }
-        # abline( v=ncuts, col='red')
-      },
-    expression = eval( hist_pars),
-    NULL = NULL
-  )
-
-return( c( whmo))
-}
-
-
-
-
-#' PLOD histogram
-#'
-#' Plots an absolute-frequency histogram for the output of
-#' \code{\link{find_HSPs}}, with the lower bound set by the user. Lower bounds
-#' should be set to exclude (as much as possible) the UP bump, as this will
-#' otherwise swamp the signal from the HSP bump. Users must manually set a
-#' lower bound for full-sibling PLODs (\code{fullsib_cut}) on order to exclude
-#' full-siblings from the variance estimate for HSP PLODs.
-#'
-#'
-#' @param hsps the output of a call to \code{find_HSPs()}
-#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
-#' @param ub PLOD upper bound for plot extent. Defaults to maximum PLOD score
-#' plus a little padding
-#' @param fullsib_cut PLOD score above which there are only full-sibs
-#' @param bin hist bin width. Default 5. lb, ub, and bin together define
-#' \code{breaks}, so you can't pass \code{breaks} via \code{...}
-#' @param HSPmean plot the mean PLOD for HSPs? Default TRUE
-#' @param HSPdist plot the distribution of PLOD for HSPs? Default TRUE
-#' @param POPmean plot the mean PLOD for POPs? Default TRUE
-#' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
-#' @param main graph title, passed straight to \code{hist()}
-#' @param ... additional pars, passed to \code{hist()}
-#' @seealso PLOD_loghisto
-#' @keywords misc
-#' @export HSP_histo
-"HSP_histo" <-
-function(hsps, lb, ub = max(hsps$PLOD)+bin, fullsib_cut, bin = 5,
-             HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
-
-        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
-
-        hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
-                       col="lightgrey",xlab="PLOD", main = main, ...)
-        if( HSPmean) {
-            E.hsp = hsps@mean_HSP
-            abline(v=E.hsp,lwd=2,col=8)
-        }
-        if( POPmean) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
-        if( FSPmean) { abline(v = hsps@mean_FSP, col = 9, lwd = 2) }
-        if( HSPdist) {
-            V.hsp=mean(sqr(hsps$PLOD[hsps$PLOD>E.hsp & hsps$PLOD < fullsib_cut]-E.hsp))
-            obs.num <- hist.plod$counts
-            exp.num <- 2*sum(hsps$PLOD>E.hsp & hsps$PLOD<fullsib_cut)*
-                (pnorm(hist.plod$breaks[-1],E.hsp,sqrt(V.hsp))-
-                 pnorm(hist.plod$breaks[-length(hist.plod$breaks)],E.hsp,sqrt(V.hsp)))
-            points(hist.plod$mids,exp.num,pch=16,col=8,type='b')
-        }
-        legendBits <- data.frame(allNames = c("POP","HSP","FSP"), allNumbers = c(1,8,9))
-        if(!POPmean) {
-            legendBits <- legendBits[legendBits$allNames != "POP",]
-        }
-        if(!HSPmean) {
-            legendBits <- legendBits[legendBits$allNames != "HSP",]
-        }
-        if(!FSPmean) {
-            legendBits <- legendBits[legendBits$allNames != "FSP",]
-        }
-
-        legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
-    }
-
-
-
-
-#' Oddness metrics over an HSP histo
-#'
-#' Plots an absolute-frequency histogram for the output of
-#' \code{\link{find_HSPs}} (qv), with additional coloured regions showing
-#' individuals with odd-looking CLOD scores (see \code{check_FPosity()} ),
-#' ilglk stat (see \code{\link{ilglk_geno}}), or hetz stat (see
-#' \code{\link{hetzminoo_fancy}}). You should choose a PLOD range for plotting
-#' that excludes the UP bump, since UPs can swamp the signal from HSPs and
-#' HTPs. \code{HSP_oddness_oneway} shows cases where at least one member of the
-#' pair has an unusual score in the oddness metric, whereas
-#' \code{HSP_oddness_twoway} shows cases where both members do.
-#'
-#'
-#' @aliases HSP_oddness_oneway HSP_oddness_twoway
-#' @param hsps the output of a call to \code{find_HSPs()}
-#' @param snpg the \code{snpgeno} or \code{SPAgeno} object from which
-#' \code{hsps} was built
-#' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
-#' @param ub PLOD upper bound for plot extent. Defaults to the maximum PLOD
-#' score plus a little padding
-#' @param bin hist bin width. Default 5. lb, ub, and bin together define
-#' \code{breaks}, so you can't pass \code{breaks} via \code{...}
-#' @param CLOD_prop the quantile of CLOD below which animals are highlighted.
-#' Default 0.001
-#' @param ilglk_prop the quantile of ilglk stat below which animals are
-#' highlighted. Default 0.001
-#' @param hetz_prop the quantile of hetz stat below which animals are
-#' highlighted. Default 0.001
-#' @param ... additional pars, passed to \code{hist()}
-#' @seealso PLOD_oddness_oneway
-#' @keywords misc
-#' @export HSP_oddness_oneway
-"HSP_oddness_oneway" <-
-function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
-             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
-             ...) {
-
-        palette("default")
-
-        cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
-        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
-
-        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
-                   main="HSP PLOD",xlab="PLOD", ...)
-        for(i in 1:3) {
-            if(i==1) {
-                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) |
-                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
-                colour <- rgb(1,0,0,alpha = 0.5)
-            }
-            if(i==2) {
-                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) |
-                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
-                colour = rgb(0,1,0, alpha = 0.5)
-            }
-            if(i==3) {
-                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) |
-                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
-                colour = rgb(0,0,1, alpha = 0.5)
-            }
-            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
-                       border = colour, col = colour)
-        }
-        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
-               title='ONE member of the pair has:',
-               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
-    }
-
-#' @rdname HSP_oddness_oneway
-#' @export
-"HSP_oddness_twoway" <-
-function(hsps, snpg, lb, ub = max(hsps$PLOD)+10, bin = 5,
-             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001,
-             ...) {
-
-        palette("default")
-
-        cloddo <- check_FPosity(snpg)
-        clod.stat <- log(pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$VCLOD), lower.tail=FALSE))
-        hetz.poor<- hetzminoo_fancy(snpg, 'poor', showPlot = FALSE)
-        ilglk<- ilglk_geno(snpg, showPlot = FALSE)
-
-        hist1=hist(hsps$PLOD[ hsps$PLOD > lb], breaks = seq( lb, ub, bin),
-                   main="HSP PLOD",xlab="PLOD", ...)
-        for(i in 1:3) {
-            if(i==1) {
-                tf<- clod.stat[hsps$i] < quantile(clod.stat, CLOD_prop) &
-                    clod.stat[hsps$j] < quantile(clod.stat, CLOD_prop)
-                colour <- rgb(1,0,0,alpha = 0.5)
-            }
-            if(i==2) {
-                tf<- ilglk[hsps$i]< quantile(ilglk, ilglk_prop) &
-                    ilglk[hsps$j] < quantile(ilglk, ilglk_prop)
-                colour = rgb(0,1,0, alpha = 0.5)
-            }
-            if(i==3) {
-                tf<- hetz.poor[hsps$i] < quantile(hetz.poor, hetz_prop) &
-                    hetz.poor[hsps$j]< quantile(hetz.poor, hetz_prop)
-                colour = rgb(0,0,1, alpha = 0.5)
-            }
-            hist2=hist( hsps$PLOD[ hsps$PLOD > lb & tf],breaks=seq( lb,ub,bin), add=T,
-                       border = colour, col = colour)
-        }
-        legend('topright',c('low CLOD stat','low ilglk stat','low hetz stat'),
-               title='BOTH members of the pair have:',
-               fill = c(rgb(1,0,0, 0.5), rgb(0,1,0, 0.5), rgb(0,0,1, 0.5)))
-    }
-
-
-
-
-#' Locus selection for kin-finding
-#'
-#' \code{hsp_power} can be used to predict how well a set of loci will work for
-#' HSP-finding, and to prepare for some QC and kinference steps on serious
-#' data. It returns the input \code{snpgeno} object with extra columns added to
-#' the \code{locinfo} attribute, related to the per-locus mean and variance of
-#' LOD (presumably an HSP/UP PLOD, though not inevitably) for different true
-#' kin-types. It respects the per-locus decision about how precisely to
-#' genotype (\code{useN=6/4/3}).
-#'
-#' \describe{ \item{E.UP, V.UP}{mean & variance for UPs} \item{E.HSP, E.POP,
-#' E.FSP}{as you would expect} \item{Ediff}{E.HSP - E.POP ie the "absolute"
-#' power of that locus} \item{sdiff}{(E.HSP-E.POP)/sqrt(V.UP) which is arguably
-#' better than \code{Ediff} for ranking loci} }
-#'
-#' It also attaches \code{LOD} and \code{PUP} columns (actually matrices) to
-#' the \code{locinfo}, which do make the latter hard to read if you just print
-#' it willy-nilly, so don't.
-#'
-#'
-#' @param lociar \code{snpgeno} objects with the necessary ingredients
-#' @param want_LOD_table can't think why you'd set this to FALSE
-#' @param k target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.
-#' @return \code{snpgeno} object with augmented columns in "locinfo" attr.
-#' @section Notes: \code{hsp_power} needs tidy-up. It's daft to store LODs for
-#' only one specific kin; it'd be better to always calculate P1share and
-#' P2share as well as P0share (which is PUP), and then compute
-#' whatever-is-needed later on-the-fly.
-#' @keywords misc
-#' @examples
-#'
-#' ## Need some examples!
-#' # See vignette for now
-#'
-#' @export hsp_power
-"hsp_power" <-
-function( lociar,
-    want_LOD_table=TRUE, # T/F
-    k # 0.5 for HSPs
-){
-############
-  define_genotypes()
-  li <- lociar$locinfo
-  li1 <- li[1,]
-
-`%without.names%` <- function( x, what) {
-    new.names <- names( x) %except% what
-    if( identical( new.names, names( x))) {
-      return( x)   # also works if names(x) is NULL!
-    }
-
-    oatts <- attributes( x)
-    # oatts must exist, since nameless-x returns earlier
-    x <- x[ new.names]
-    oatts$names <- new.names
-    attributes( x) <- oatts
-    return( x)
-}
-
-  temp0 <- with( li1, calc_g6probs_IBD0_scalar( pbonzer, snerr, record=TRUE))
-  cg6p0 <- make_playback( calc_g6probs_IBD0_scalar, temp0)
-
-  temp1 <- with( li1, calc_g6probs_IBD1_scalar( pbonzer, snerr, record=TRUE))
-  cg6p1 <- make_playback( calc_g6probs_IBD1_scalar, temp1)
-
-  temp2 <- with( li1, calc_g6probs_IBD2_scalar( pbonzer, snerr, record=TRUE))
-  cg6p2 <- make_playback( calc_g6probs_IBD2_scalar, temp2)
-
-  g6p0 <- with( li, cg6p0( pbonzer, snerr))
-  g6p1 <- with( li, cg6p1( pbonzer, snerr))
-  g6p2 <- with( li, cg6p2( pbonzer, snerr))
-
-  s6 <- predict_hsp_util( g6p0, g6p1, g6p2, want_LOD_table, k=k)
-
-  # For the 4-ways, must condense g6p's
-  if( exists( 'genotypes4_ambig', inherits=FALSE)) { # TRUE unless overridden sneakily...
-    extract.named( map6to4( g6p0, g6p1, g6p2))
-    s4 <- predict_hsp_util( g4p0, g4p1, g4p2, want_LOD_table, k=k) %without.names% "matto"
-
-    ### 3way too:
-    extract.named( map6to3( g6p0, g6p1, g6p2))
-    s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k) %without.names% "matto"
-
-    if( want_LOD_table) { # overrides predict_hsp_util's version of want_LOD_table
-      li$LOD6 <- s6@LOD # matrix
-      li$PUP6 <- s6@PUP
-      li$LOD4 <- s4@LOD
-      li$PUP4 <- s4@PUP
-      li$LOD3 <- s3@LOD
-      li$PUP3 <- s3@PUP
-      s6@LOD <- s6@PUP <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
-
-      # This sure looks like SB code to me (MVB)... ;)
-      li$e0_6way <- s6$e0
-      li$v0_6way <- s6$v0
-      li$e1_6way <- s6$e1
-      li$v1_6way <- s6$v1
-
-      li$e0_4way <- s4$e0
-      li$v0_4way <- s4$v0
-      li$e1_4way <- s4$e1
-      li$v1_4way <- s4$v1
-
-      li$e0_3way <- s3$e0
-      li$v0_3way <- s3$v0
-      li$e1_3way <- s3$e1
-      li$v1_3way <- s3$v1
-
-      s6$e0 <- s6$v0 <- s6$e1 <- s6$v1 <- NULL
-      s4$e0 <- s4$v0 <- s4$e1 <- s4$v1 <- NULL
-      s3$e0 <- s3$v0 <- s3$e1 <- s3$v1 <- NULL
-
-      # MVB: something like (but is this really better?! not sure...)
-      # li <- list2env( li)
-      # for( iway in c( 3,4,6) {
-      #  for( thing in cq( e0, v0, e1, v1)) {
-      #    assign( sprintf( '%s_%iway', thing, iway), get( 's' %&% iway)[[thing]]
-      #   } }
-      # li <- as.list( li)
-    }
-
-    # li <- cbind( li, s6, s4)
-    li[ names( s6)] <- s6 # instead of cbind--- this will overwrite not add
-    # Replace the ones that shouldn't be 6way:
-    li[ li$useN == 4, names( s4)] <- s4[ li$useN == 4,] ## subs in 4-ways where useN == 4
-    li[ li$useN == 3, names( s3)] <- s3[ li$useN == 3,] ## subs in 3-ways where useN == 3
-
-  } else { # ... sneaky override, for non-ABCO systems
-    # shouldn't really be called "...6" obvs
-    s6$useN <- 6
-    li[ names( s6)] <- s6 # instead of cbind--- this overwrites
+  if( candiPOPs %is.a% 'data.frame') {
+    candiPOPs <- as.matrix( candiPOPs[ cq( i, j)])
   }
+  snpg <- snpg[ c( candiPOPs),]
 
-    lociar@locinfo <- li
-    lociar@hspPower_checksum <- sum( li$pbonzer, li$snerr, li$useN)
-return( lociar)
-}
-
-
+  # Transform to 4way genotypes
+  # based on code in find_duplicates
+  # careful, since "factor level" of AB and OO is different in 4way vs 6way
 
 
-#' Kin-finding power for microhaplotyped loci
-#'
-#' This is a short-term fudge for checking HSP-finding power of a bunch of loci
-#' that (i) can have as many haplotypes as you like, but (ii) have no errors or
-#' nulls. See \bold{Examples} for how you might use it.
-#'
-#' If you want to explore the impact of missing genotypes (so that e.g. only
-#' 90\% of loci are co-scored in some pairs) you'll have to do so manually. A
-#' reasonable and very easy option is to multiply \code{Ediff} and \code{V.UP}
-#' both by 0.9, then go thru the steps. If you choose the 0.9 conservatively---
-#' ie it's highly likely that >0.9 of loci get co-scored--- then the above calc
-#' avoids any need to do much more complicated stuff (which I leave to you...).
-#'
-#' At some point in future, \code{\link{kinference}} might be changed so that
-#' it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not
-#' yet. So for now this version does some ghastly "live-hacking" of existing
-#' code for \code{\link{hsp_power}} to implement no-errors no-nulls
-#' multi-allelic case. It will be hard to follow, so use \code{mtrace} if you
-#' really want to see what's going on. The guts of the code is in
-#' \code{\link{hsp_power}} and \code{predict_hsp_util}.
-#'
-#'
-#' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles).
-#' Locus names are set from the rownames, or "L1", "L2" etc if there are no
-#' rownames. Allele names will be set to "A", "B", "C", etc, regardless of
-#' colnames; you do not have a choice there. Will be renormalized so rows sum
-#' to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected
-#' for \code{hsp_power}. If so, then the allele freqs are assumed to live in
-#' \code{lociar$locinfo$pbonzer}, and \bold{no} nulls or genotyping errors are
-#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{hsp_power} and
-#' \code{hsp_power2} will give \emph{different} answers.
-#' @return If \code{lociar} is an allele-frequency matrix, then you get a
-#' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
-#' "Ediff" is "E[LOD|HSP] - E[LOD|UP]"; "V.UP" is "V[LOD|UP]"; "sdiff" is
-#' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \bold{Examples}
-#' for use.
-#' @seealso \code{\link{hsp_power}}
-#' @keywords misc
-#' @examples
-#'
-#' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
-#' POW <- hsp_power2( ALF)
-#' # look at the contents of each...
-#' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
-#' # find anything like that in practice for lots'n'lots of loci
-#' lots <- 500
-#' ALF <- matrix( runif( lots*5), lots, 5)
-#' POW <- hsp_power2( ALF)
-#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
-#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
-#' V <- sum( POW$V.UP)  # V[PLOD|UP]
-#' E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
-#' E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
-#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
-#' # ... more stringent than "typical"--- and, NB weaker kin
-#' bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
-#' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
-#' # ... so that's probably OK...
-#'
-#' @export hsp_power2
-"hsp_power2" <-
-function( lociar,
-    want_LOD_table=TRUE, # T/F
-    k # 0.5 for HSPs
-){
-############
-  # Uses the code of hsp_power, but sneakily redefining a few core functions...
-  # ... hsp_power originally intended for 6way null-heavy ABCO-format Dartcap
+  # Yet to write 'recode_geno'...
+  just_snpg <- snpg
 
-  just_matrix <- lociar %is.not.a% 'snpgeno'
-  if( just_matrix) {
-    if( lociar %is.not.a% 'matrix') {
-stop( "'lociar' must be 'snpgeno' or matrix of allele freqs (Locus X Alleles)")
-    }
-    # Turn lociar into a snpgeno with .$locinfo$pbonzer==lociar
+  snpg@diplos <- genotypes4_ambig
+  snpg[ just_snpg==AO] <- AAO
+  snpg[ just_snpg==AA] <- AAO
+  snpg[ just_snpg==BO] <- BBO
+  snpg[ just_snpg==BB] <- BBO
+  snpg[ just_snpg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
+  snpg[ just_snpg==AB] <- AB
 
-    locnames <- rownames( lociar)
-    if( is.null( locnames)) {
-      locnames <- 'L' %&% seq.int( nrow( lociar))
-    }
+  n_pairs <- nrow( candiPOPs)
+  g1 <- snpg[ 1 %upto% n_pairs,]
+  g2 <- snpg[ n_pairs + (1 %upto% n_pairs),]
 
-    lociar[ l, a] := lociar[ l, a] / (SUM_ %[a]% lociar[ l, a]) # normalize
-    lociar <- as.array( lociar) # vecless xtensor legacy removal
-    dimnames( lociar) <- NULL
-    colnames( lociar) <- LETTERS[ seq.int( ncol( lociar))]
-
-    data.frame <- data.frame
-    formals( data.frame)$stringsAsFactors <- FALSE
-    li <- data.frame( Locus=locnames, pbonzer=I( lociar)) # needs 2-step otherwise R messes up matrix
-
-    genos <- expand.grid( colnames( lociar), colnames( lociar),
-        stringsAsFactors=FALSE) %where% (Var1 <= Var2)
-    diplos <- genos$Var1 %&% genos$Var2
-
-    lociar <- snpgeno( 1, nrow( lociar), diplos, info=data.frame( Our_sample='THE_THING'),
-        locinfo=li)
-  }
-
-  e <- new.env( parent=asNamespace( 'kinference'))
-  e$lociar <- lociar
-
-  result <- evalq( envir=e, {
-    lociar$locinfo$snerr <- 0 # various things expect 'snerr' to exist
-
-    define_genotypes <- eval( substitute( function( nlocal=sys.parent(), eg) mlocal({
-        # Fakes various "genotypes_blah" categories that are expected by subsequent routines
-
-        ALLeles <- THE_ALLELES # colnames( pbonzer) # eg A,B,C,D,E; use named() if we need to write A for "A"
-
-        # need stringsAsFactors... FFS WTF were they (R) thinking ????
-        eg <- expand.grid( ALLeles, ALLeles, stringsAsFactors=FALSE) %where% (Var1 <= Var2)
-        genotypes_C <- eg$Var1 %&% eg$Var2
-        genotypes6 <- genotypes_C
-        ABCO <- named( ALLeles)
-      }), list( THE_ALLELES=colnames( lociar$locinfo$pbonzer))))
-
-    add_pairprob_error <- function( nlocal=sys.parent()) mlocal({
-      pp_err <- pp_true                ? 0
-      pp6_err <- pp_true               ? 0
-    })
-
-    # Make sure subsidiary functions pick up these versions
-    environment( hsp_power) <-
-        environment( calc_g6probs_IBD0_scalar) <-
-        environment( calc_g6probs_IBD1_scalar) <-
-        environment( calc_g6probs_IBD2_scalar) <-
-        environment( add_pairprob_error) <-
-        environment( predict_hsp_util) <-
-        environment()
-    # mtrace( hsp_power) # automate the debugging a bit
-  return( hsp_power( lociar, want_LOD_table=TRUE, k=0.5))
-  })
-
-  result$locinfo <- result$locinfo %without.name% cq( snerr, use6)
-  if( just_matrix){
-    result <- result$locinfo[ cq( Ediff, V.UP, sdiff)]
-  }
-
-return( result)
-
-
-
-  lociar@locinfo <- li
-return( lociar)
-}
-
-
-
-
-#' Check individual multilocus genotypes for typicality
-#'
-#' \code{ilglk_geno} computes log-likelihood of entire 4-way (not 6-way)
-#' genotype of each individual, i.e., sum log Pr[ g(i,l)]; and compares the
-#' distribution across individuals to theoretical distro given allele
-#' frequencies. Significant mismatch is bad. Can also detect outlier
-#' individuals, usually with lglks that are much too low (ie rather than too
-#' high--- I'm not sure what could generate "too typical a genome" at the
-#' individual level).
-#'
-#' You can use \code{locator(1)} to click the histogram to figure out where to
-#' adjust the \code{xlim}/'ylim' values to change the range of the data to
-#' inspect more closely--- ie you then re-run the function with its
-#' \code{...hist_par} argument set accordingly.
-#'
-#' Currently, the SPA calcs are a wee bit slow because of heavy use of
-#' \code{vecless} which in version 1.0 is sluggish. The lglks themselves are
-#' computed in C and are blisteringly fast. If the SPA line (expected distro)
-#' doesn't appear, let us know--- needs fixing! There might e.g. be too many
-#' loci, so that the calculation is falling over.
-#'
-#' Haven't added any formal uh-oh criteria yet; that could be done via the SPA,
-#' as in \code{dump_badhetz_fish}. But, reading off from the graph is probably
-#' fine...
-#'
-#' @param snpg a \code{snpgeno} (6-way genotype)
-#' @param hist_pars \code{list()} passed to \code{hist} for controlling
-#' histogram, eg \code{hist_pars=list(xlim=c(-12000, -6000))}, or use
-#' \code{FALSE} to not plot.
-#' @param showPlot show the histogram? Defaults to TRUE, but overrideen by
-#' \code{hist_pars=FALSE}.
-#' @return Vector of log-likelihood for each individual; also usually (but
-#' optionally), a histogram of log-likelihood values across individuals.
-#' @keywords misc
-#' @examples
-#'
-#' ## Need an example!
-#'
-#' @export ilglk_geno
-"ilglk_geno" <-
-function(snpg, hist_pars=list(), showPlot = TRUE) {
-  define_genotypes()
-  extract.named( snpg@locinfo[ cq( pbonzer)])
-
-  p0 <- pbonzer[,'O'] + pbonzer[,'C']
-  pA <- pbonzer[,'A']
-  pB <- pbonzer[,'B']
-
-  n_samps <- nrow( snpg)
-  n_loci <- ncol( snpg)
-  snpg4 <- snpgeno( n_samps, n_loci, genotypes4_ambig,
-                   info=snpg@info[,cq( Our_plate, Our_sample)],
-                   locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
-  snpg4[ snpg==OO] <- OO
-  snpg4[ snpg==AB] <- AB
-  snpg4[ snpg==AA] <- AAO
-  snpg4[ snpg==AO] <- AAO
-  snpg4[ snpg==BB] <- BBO
-  snpg4[ snpg==BO] <- BBO
+  # Yet to write 'make_prgeno'...
+  # extract.named( make_prgeno( snpg, genotypes4_ambig)) # pA pB pO pgeno[,'AB'] pgeno[,'AAO'] etc
+  pA <- snpg@locinfo$pbonzer[,'A']
+  pB <- snpg@locinfo$pbonzer[,'B']
+  pO <- 1-pA-pB
+  n_loci <- length( pA)
 
   pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
-  pgeno[ , OO] <- sqr( p0)
-  pgeno[ , AB] <- 2*pA*pB
-  pgeno[ , AAO] <- 2*pA*p0 + pA*pA
-  pgeno[ , BBO] <- 2*pB*p0 + pB*pB
-  lpgeno <- log( pgeno) # lambda in doco
+  pgeno[,AB] <- 2*pA*pB
+  pgeno[,OO] <- sqr( pO)
+  pgeno[,AAO] <- sqr( pA) + 2*pA*pO
+  pgeno[,BBO] <- sqr( pB) + 2*pB*pO
 
+  off <- 1 # until vecless has arbitrary-base arrays
+  Pr_same_given_k <- array( 0, c( n_loci, 3))
 
-  # These are slowish in vecless 1.0
-  # ... but less error-prone to write
-  K <- function( tt) {
-      ttp1 <- tt+1
-      KK[ j] := SUM_ %[l]% log( SUM_ %[g]% exp( ttp1[ j] * lpgeno[ l, g]))
-    return( c( KK))
-    }
+  # Exactly the same as version below, but this one seems less clear
+  # Pr_same_given_k[,{off+1}] <- pA * (1-2*pB*(pA+pO)) +
+  #    pB * (1-2*pA*(pB+pO)) +
+  #    pO * ( pA*pA + pB*pB + pO*pO)
 
-  dK <- function( tt) {
-      ttp1 <- tt+1
-      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
-      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
-      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
-      dKK[ j] := SUM_ %[l]% (num[ j, l] / denom[ j, l])
-    return( c( dKK))
-    }
+  Pr_same_given_k[,{off+1}] <- pA * (sqr(pB) + sqr(1-pB)) +
+      pB * (sqr(pA) + sqr(1-pA)) +
+      pO * ( pA*pA + pB*pB + pO*pO)
 
-  ddK <- function( tt) {
-      ttp1 <- tt+1
-      etp1l[ j, l, g] := exp( ttp1[ j] * lpgeno[ l, g])
-      num[ j, l] := lpgeno[ l, g] %[g]% etp1l[ j, l, g]
-      denom[ j, l] := SUM_ %[g]% etp1l[ j, l, g]
-      num2[ j, l] := sqr( lpgeno[ l, g]) %[g]% etp1l[ j, l, g]
-      dKK[ j] := SUM_ %[l]% ( num2[ j, l] / denom[ j, l] -  sqr( num[ j, l] / denom[ j, l]))
-    return( c( dKK))
-    }
+  Pr_same_given_k[,{off+2}] <- 1
+  Pr_same_given_k[ l, {off+0}] := pgeno[l,g] %[g]% pgeno[l,g]
 
-  quick <- TRUE # used to be param
-  if( quick) {
-    K <- compile_vecless( K( -1))
-    dK <- compile_vecless( dK( -1))
-    ddK <- compile_vecless( ddK( -1))
-  }
+  Pr_nsame_FSP <- c( 1/4, 1/2, 1/4)
+  Pr_same_FSP[ l]:= Pr_nsame_FSP[ k] %[k]% Pr_same_given_k[ l, k]
+  Pr_same_POP[ l]:= Pr_same_given_k[ l, {off+1}]
 
-  if( FALSE) { # Checks: do manually in mtrace
-    ntest <- 1000
-    Ktest <- function( tt) { # scalar
-      Ksim <- meansim <- rep( 0, ntest)
-      for( l in 1:n_loci) {
-        # Can't directly sample from genotypes4_ambig since can't matrix-subscript mixed int and char
-        genos <- rsample( ntest, seq_along( genotypes4_ambig), prob=pgeno[l,], replace=TRUE)
-        lp <- lpgeno[ cbind( l, genos)]
-        Ksim <- Ksim + ( tt * lp) # actually log( exp( t*lp))
-        meansim <- meansim + lp # though see below for better way to check!
-      }
-      returnList( Ksim, meansim)
-    }
+  Pr_nsame_HSP <- c( 1/2, 1/2, 0) # might as well...
+  Pr_same_HSP[ l]:= Pr_nsame_HSP[ k] %[k]% Pr_same_given_k[ l, k]
 
-    dK( 0)
-    sum( pgeno * lpgeno) # should be the same
-  }
+  SD_FSP <- sqrt( Pr_same_FSP * (1-Pr_same_FSP))
+  SD_POP <- sqrt( Pr_same_POP * (1-Pr_same_POP))
+  SDwt_POP <- 0.5 # hard-wire for "prior" of POPs and FSPs equally likely. Doesn't matter.
+  SD_denom <- SDwt_POP * SD_POP + (1-SDwt_POP) * SD_FSP
+  wt <- (Pr_same_FSP - Pr_same_POP) / sqr( SD_denom)
 
-  ilglk <- indiv_lglk_geno(
-      lpgeno= lpgeno,
-      geno= snpg4)
+#  ig1 <- g1
+#  storage.mode( ig1) <- 'integer' # otherwise attributes get lost
+#  ig1[] <- match( g1@diplos, rownames( mg))
+#
+#  ig2 <- g2
+#  storage.mode( ig2) <- 'integer'
+#  ig2[] <- match( g2@diplos, rownames( mg))
 
-  if( FALSE) { # "manual" check on calcs
-    lp <- lpgeno[ cbind( rep( 1 %upto% n_loci, n_samps), snpg)]
-    dim( lp) <- c( n_loci, n_samps)
-    ilglk_manual <- colSums( lp)
-  }
+  wtsame[i]:= wt[l] %[l]% (g1[i,l]==g2[i,l])
 
-  dens_SPA <- renorm_SPA( K, dK, ddK, return='func', already_vectorized=TRUE)
+  ret <- data.frame(wtsame = wtsame,
+                    i       = candiPOPs[,1],
+                    j       = candiPOPs[,2])
 
-  if( isFALSE( hist_pars)) {
-    showPlot <- FALSE
-  } else {
-    hist_pars <- add_list_defaults( hist_pars,
-        main   = 'Geno lglk by specimen',
-        xlim   = range( ilglk),
-        col    = "grey",
-        border = NA,
-        xlab   = '',
-        nclass = 50)
-  }
+  ret@E_FSP <- wt %*% Pr_same_FSP
+  ret@E_POP <- wt %*% Pr_same_POP
+  ret@E_HSP <- wt %*% Pr_same_HSP
+  ret@E_UP <- wt %*% Pr_same_given_k[,off]
 
-  if( showPlot) {
-      lv <- do.call( 'hist', c( list( x=ilglk), hist_pars))
-
-      # some dens_SPA can fail -- do lapply and then weed out baddies
-      mids_SPA <- lapply(lv$mids, function(x) try(dens_SPA( x), silent=TRUE))
-      good_ind <- unlist(lapply(mids_SPA, class) != "try-error")
-      mids_SPA <- unlist(mids_SPA[good_ind])
-      # plot predicted density. Slowish with vecless 1.0
-      lines( lv$mids[good_ind], diff( lv$breaks)[good_ind] * mids_SPA * n_samps,
-            col='green')
-  }
-
-return( ilglk)
+return( ret)
 }
 
 
-"lglk_loci" <-
-function( snpg) {
-# Obsolete / not useful ?
-# When loci are presumably misbehaving, in that ilglk_geno looks
-# ... OK on a "trusted subset" but not on all--- this may help
-
-#% 'lglk_loci' compares, for each locus, the average (across individuals) observed lglk with the theoretical mean and variance. The idea is to help figure out when some loci
-#are going wrongish (e.g. you can get decent fits from a subset of loci). Of course, 'check6and4' pvals should be the main guide here; 'lglk_loci' can show an overall deviation
-#, as well as any remaining locus-specific misbehaviour (but shouldn't be much locus-specific stuff thx2 'check6and4'). Overall too-good-to-be-true-ism (as seen for 'Glyphis
-#garricki') _might_ come when ALF is estimated from very small datasets.
-
-  define_genotypes()
-  extract.named( snpg@locinfo[ cq( pbonzer)])
-
-  p0 <- pbonzer[,'O'] + pbonzer[,'C']
-  pA <- pbonzer[,'A']
-  pB <- pbonzer[,'B']
-
-  n_samps <- nrow( snpg)
-  n_loci <- ncol( snpg)
-  snpg4 <- snpgeno( n_samps, n_loci, genotypes4_ambig,
-                   info=snpg@info[,cq( Our_plate, Our_sample)],
-                   locinfo=snpg@locinfo[,cq( Locus), drop=FALSE])
-  snpg4[ snpg==OO] <- OO
-  snpg4[ snpg==AB] <- AB
-  snpg4[ snpg==AA] <- AAO
-  snpg4[ snpg==AO] <- AAO
-  snpg4[ snpg==BB] <- BBO
-  snpg4[ snpg==BO] <- BBO
-
-  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
-  pgeno[ , OO] <- sqr( p0)
-  pgeno[ , AB] <- 2*pA*pB
-  pgeno[ , AAO] <- 2*pA*p0 + pA*pA
-  pgeno[ , BBO] <- 2*pB*p0 + pB*pB
-  lpgeno <- log( pgeno) # lambda in doco
-
-  # elg <- rowSums( pgeno * lpgeno)
-  # elg2 <- rowSums( pgeno * sqr( lpgeno))
-  # Or:
-  elg[ l] := lpgeno[ l, g] %[g]% pgeno[ l, g]
-  elg2[ l] := sqr( lpgeno[ l, g]) %[g]% pgeno[ l, g]
-  sdelg <- sqrt( elg2 - sqr( elg))  # per individual
-
-  s4 <- as.integer( unclass(snpg4))
-  dim( s4) <- dim( snpg4)
-  # olg_fl[ f, l] := lpgeno[ l, s4[ f, l]]    # NYI in vecless 1.0
-
-  GG <- 1:4
-  # olg_fl[ f, l] := lpgeno[ l, g] %[g]% (s4[f,l]==GG[g])
-  # olg[ l] := ( SUM_ %[f]% olg_fl[ f, l]) / {n_f}
-  n_f <- nrow( snpg4)
-  olg[ l] := ( SUM_ %[f]% ( lpgeno[ l, g] %[g]% (s4[f,l]==GG[g]))) / {n_f}
-
-
-return( returnList( elg, sdelg, olg, sdiff=sqrt( n_f) * (olg-elg) / sdelg))
-}
-
-#' make a pgeno object
-#'
-#' @keywords internal
-#'
-#' @param gA pbonzer A
-#' @param pB pbonzer B
-#' @param pC pbonzer C
-#' @param which_genotypes one of the options from define_genotypes
-#' @return a pgeno
-#' @noRd
-#' @export
-
-"make_pgeno" <-
-function( pA, pB, pC, which_genotypes) {
-###
-# which_genotypes eg genotypes_ambig. If no C-genos requested then pC is forced to 0 so new O includes C
-  if( !any( grepl( 'C', which_genotypes))) {
-    pC <- 0
-  }
-
-  pO <- pmax( 0, 1 - pA - pB - pC) # rounding error guard
-  pAO <- 2*pA*pO
-  pAA <- sqr( pA)
-  pAAO  <- pAA + pAO
-  pAB  <- 2*pA*pB
-  pBO <- 2*pB*pO
-  pBB <- sqr( pB)
-  pBBO  <- pBB + pBO
-  pAC <- 2*pA*pC
-  pCO <- 2*pC*pO
-  pCC <- sqr( pC)
-  pCCO <- pCC + pCO
-  pBC <- 2*pB*pC
-  pOO  <- pO^2
-  pBBOO <- pBBO + pOO
-
-  # Could be scalar or vector: c or cbind
-  funco <- if( length( pO) > 1) cbind else c
-  phat <- do.call( funco, FOR( which_genotypes, get( 'p' %&% .)))
-  names( phat) <- sub( '[.].*', '', names( phat)) # loco R name-extrusion habit FFS
-return( phat)
-}
-
-
-#' Translate six-way to four-way genotypes
-#'
-#' @keywords internal
-#'
-#' @param g6p0 six-way genotypes of something
-#' @param p6p1 six-way genotypes of something else
-#' @param p6p2 six-way genotypes of yet another thing
-#' @return an equivalent to thing, but as three-way genotypes
-#' @noRd
-#' @export
-
-"map6to3" <-
-function(g6p0, g6p1, g6p2){
-  define_genotypes()
-
-  map6to3 <- matrix( 0, 6, 3, dimnames=list( genotypes6, genotypes3))
-  # AB & OO are OK; AAO should receive both AA and AO; etc
-  mm <- match( genotypes6, substring( genotypes3, 1, 2), 0) # the "AA" bit of "AAO"...
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to3[ yup] <- 1
-  mm <- match( genotypes6, substring( genotypes3, 2, 3), 0) # ... and the "AO" bit
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to3[ yup] <- 1
-  mm <- match( genotypes6, substring( genotypes3, 3, 4), 0) # ... and the "OO" bit
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to3[ yup] <- 1
-
-  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
-  # ... but vecless can't presently handle multi-stages
-
-  A[l,i,k] := g6p0[l,i,j] %[j]% map6to3[j,k]
-  g3p0[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
-
-  A[l,i,k] := g6p1[l,i,j] %[j]% map6to3[j,k]
-  g3p1[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
-
-  A[l,i,k] := g6p2[l,i,j] %[j]% map6to3[j,k]
-  g3p2[l,i,j] := map6to3[ k,i] %[k]% A[l,k,j]
-
-
-returnList( g3p0, g3p1, g3p2)
-}
-
-#' Translate six-way to four-way genotypes
-#'
-#' @keywords internal
-#'
-#' @param g6p0 six-way genotypes of something
-#' @param p6p1 six-way genotypes of something else
-#' @param p6p2 six-way genotypes of yet another thing
-#' @return an equivalent to thing, but as three-way genotypes
-#' @noRd
-#' @export
-
-"map6to4" <-
-function(g6p0, g6p1, g6p2){
-  define_genotypes()
-
-  # For the 4-ways, must condense g6p's
-
-  map6to4 <- matrix( 0, 6, 4, dimnames=list( genotypes6, genotypes4_ambig))
-  # AB & OO are OK; AAO should receive both AA and AO; etc
-  mm <- match( genotypes6, substring( genotypes4_ambig, 1, 2), 0) # the "AA" bit of "AAO"...
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to4[ yup] <- 1
-  mm <- match( genotypes6, substring( genotypes4_ambig, 2, 3), 0) # ... and the "AO" bit
-  yup <- cbind( which(mm>0), mm[ mm>0])
-  map6to4[ yup] <- 1
-
-  # Really want g4p0[l,i,j] := map6to4[i,k6] %[k6]% g6p0[l,k6,m6] %[m6]% map6to4[m6,j]
-  # ... but vecless can't presently handle multi-stages
-
-  A[l,i,k] := g6p0[l,i,j] %[j]% map6to4[j,k]
-  g4p0[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
-
-  A[l,i,k] := g6p1[l,i,j] %[j]% map6to4[j,k]
-  g4p1[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
-
-  A[l,i,k] := g6p2[l,i,j] %[j]% map6to4[j,k]
-  g4p2[l,i,j] := map6to4[ k,i] %[k]% A[l,k,j]
-
-returnList( g4p0, g4p1, g4p2)
-}
-
-
-"old.onLoad" <-
-function( libname, pkgname) {
-  cat( 'Am I loaded?', pkgname %in% loadedNamespaces(), '\n')
-  if( !exists( 'onload_autowrap', asNamespace( pkgname), inherits=FALSE, mode='function')) {
-    # then source() the R script and create it here...
-    my_dll <- getOption( sprintf( '%s_debug_C', FALSE))
-    oa <- system.file( 'R/onload_autowrap.R', package=pkgname, lib.loc=libname)
-    eval( substitute( source( oa, local=TRUE), list( oa=oa)), asNamespace( pkgname))
-  }
-
-  onload_autowrap( pkgname, libname)
+"paircomps" <-
+function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
+    .Call(`_kinference_paircomps`, pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci)
 }
 
 
 
 
 #' PLOD histogram on log-scale
-#'
+#' 
 #' Plots a log-frequency histogram for the output of \code{find_HSPs()}, with
 #' the expected mean PLOD for unrelated pairs, the expected distribution of
 #' unrelated pairs, and the expected mean PLOD for HSPs. Expectations are
 #' coloured according to the table below
-#'
+#' 
 #' Colour scheme for all kin-finding markers: Shamelessly cropped from package
 #' \pkg{viridis}; defined as a one-off palette to avoid adding dependencies.
 #' Apparently quite colourblind-friendly.
-#'
+#' 
 #' Kin class Hex Colour Number Colour UP #BF3984FF 5 Magenta (light) POP
 #' #0D0887FF 1 Navy blue GGP #48039FFF 2 Violet HSP #FBA238FF 8 Orange FSP
 #' #FCCE25FF 9 Yellow HCP #7401A8FF 3 Purple FCP #9D189DFF 4 Magenta (dark) HTP
 #' #DA596AFF 6 Rose FTP #EE7B51FF 7 Coral
-#'
+#' 
 #' @param hsps the output of a call to \code{find_HSPs()}
 #' @param UP plot the mean PLOD for unrelated pairs? Default TRUE
 #' @param HSP plot the mean PLOD for HSPs? Default TRUE
@@ -3164,18 +3604,17 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
 
 
 #' Oddness metrics
-#'
+#' 
 #' Plots the percentage of all pairs in each bin with an \code{unusually} low
 #' CLOD score, ilglk stat, or hetz stat, across the range of PLOD.
 #' \code{PLOD_oddness_oneway()} shows the percentage of cases where one member
 #' has a low score, and \code{PLOD_oddness_twoway()} shows the percentage of
 #' cases where both members of the pair have a low score.
-#'
-#'
+#' 
+#' 
 #' @aliases PLOD_oddness_oneway PLOD_oddness_twoway
 #' @param hsps the output of a call to \code{find_HSPs()}
-#' @param snpg the \code{snpgeno} or \code{SPAgeno} object from which
-#' \code{hsps} was built
+#' @param snpg the \code{snpgeno} object from which \code{hsps} was built
 #' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
 #' @param ub PLOD upper bound for plot extent. Defaults to the maximum PLOD
 #' score plus a little padding
@@ -3228,8 +3667,6 @@ function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
     }
 
 
-#' @rdname PLOD_oddness_oneway
-#' @export
 "PLOD_oddness_twoway" <-
 function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
              CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
@@ -3266,8 +3703,92 @@ function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
                title='BOTH members of the pair have:', pch=15:17,col=2:4)
     }
 
-#' @rdname simcheck_FSP_POP
-#' @export
+
+"POP_paircomps_lots" <-
+function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
+    .Call(`_kinference_POP_paircomps_lots`, geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO)
+}
+
+
+"POP_wt_paircomps_lots" <-
+function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval) {
+    .Call(`_kinference_POP_wt_paircomps_lots`, geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval)
+}
+
+
+
+
+#' Check POP/FSP splitter; private.
+#' 
+#' This doco shouldn't be visible in the package! (KEYWORDS internal)
+#' 
+#' \code{simcheck_FSP_POP} simulates POPs and FSPs based on a known set of
+#' loci, ready for checking \code{find_FSPs_from_POPs} or variants. Quick.
+#' 
+#' \code{postprocess_simcheck_FSP_POP} can be used to graphically confirm that
+#' the analytical probabilities of samenames and pseudoexclusion actually match
+#' the simulated values- it is amazingly difficult to get the formulae right.
+#' You wouldn't generally need \code{postprocess...} if you are working with a
+#' real set of loci.
+#' 
+#' @aliases postprocess_simcheck_FSP_POP simcheck_FSP_POP
+#' @param forp_sim result of previous call to \code{simcheck_FSP_POP}
+#' @param findings result of previous call to \code{find_FSPs_from_POPs_v2(
+#' forp_sim, ..., keep_indiv=TRUE)}- which generates the \code{is_same} and
+#' \code{is_psex} matrices for (pairs * loci), and the by-locus vectors
+#' \code{Pr_same_FSP}, \code{Pr_psex_FSP}, \code{Pr_same_POP},
+#' \code{Pr_psex_POP}.
+#' @param plot. whether to plot. Can't see why this would ever be false...
+#' @param snpg a \code{snpgeno} object with known allele freqs and error rates
+#' (i.e. \code{pbonzer} and \code{snerr} must exist in \code{snpg$locinfo})
+#' @param chromos Controls the extent of linkage:how many "chromosomes" should
+#' the loci be split between? There's no crossover within these "chromosomes",
+#' but they inherit independently of each other. Loci are allocated to
+#' chromosomes in sequence, so that if there are 3 chromosomes, the first locus
+#' goes to "C1", the second to "C2", third to "C3", fourth to "C1", etc.
+#' Returned object will have an extra field \code{$locinfo$chromosim}.
+#' @param N number of pairs of each type (ie this many FSPs, and this many
+#' POPs).
+#' @return \code{simcheck_FSP_POP} returns a \code{snpgeno} object with
+#' \code{4*N} rows, and an attribute "callo" recording the call. The
+#' \code{$info} contains just one column, "Our_sample", with names like "F17_A"
+#' and "P6_B"; those would respectively indicate the first (A) member of the
+#' 17th FSP, and the second (B) member of the 6th POP. The \code{locinfo} field
+#' is unchanged, except as noted under "chromos" above.
+#' \code{postprocess_simcheck_FSP_POP} just plots.
+#' @seealso \code{find_FSPs_from_POPs}
+#' @keywords misc
+#' @examples
+#' 
+#' ForP <- simcheck_FSP_POP( my_snpg, 10, 1000)
+#' ForP$locinfo$useN[] <- 3 # minimal but most robust genotype
+#' test3 <- find_FSPs_from_POPs_v2( ForP,
+#'     cbind( seq( 1, by=2, length=1000),
+#'       seq( 1, by=2, length=1000)),
+#'     keep_indiv=TRUE) # need keep_indiv=T for postprocess...() to work
+#' postprocess_simcheck_FSP_POP( ForP, test3)
+#' hist( test3, nc=50)
+#' abline( v=test$E_FPstat, col='blue') # POP and FSP means
+#' \dontrun{
+#' # Sim from real loci--- in this case, with 'useN==4' for all loci since 6 looked a bit iffy
+#' library( atease)
+#' s11nodup_all4 <- s11nodup
+#' s11nodup_all4$locinfo$use6 <- NULL
+#' s11nodup_all4$locinfo$useN <- 4L
+#' simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
+#' simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
+#' kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
+#' hist( simbo4_next$FPstat, nc=50)
+#' abline( v=simbo4_next@E_FPstat, col='green') # theory means
+#' # 95% of all POPs should be Left of the line drawn next:
+#' abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
+#' # Can't say for FSPs, becoz linkage
+#' # Real data:
+#' testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
+#' abline( v=testo4$FPstat, col='red')
+#' }
+#' 
+#' @export postprocess_simcheck_FSP_POP
 "postprocess_simcheck_FSP_POP" <-
 function( forp_sim, findings, plot.=TRUE) {
   # Are the names what we expect from simcheck_FSP_POP ..?
@@ -3315,10 +3836,7 @@ function( forp_sim, findings, plot.=TRUE) {
 return( NULL)
 }
 
-#' a utility for predicting HSP powers
-#'
-#' @keywords internal
-#' @noRd
+
 "predict_hsp_util" <-
 function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
   # This version ignores the possibility of errors involving AB or OO...
@@ -3403,19 +3921,20 @@ return( retval)
 
 
 #' Prepare for kin-finding
-#'
+#' 
 #' \code{prepare_PLOD_SPA} is something you have to run before using some
 #' kin-finding/QC tools, to set up your \code{snpgeno} object for fancy maths
 #' woooo (saddlepoint approximations). There are no meaningful options, you
 #' just have to run this. It can be \emph{slightly} slow which is why it's a
 #' separate step.
-#'
-#'
+#' 
+#' 
 #' @param geno6 a \code{snpgeno} object that has been thru \code{hsp_power}
 #' @param n_pts_SPA_renorm how accurate to make the approximation. Default
 #' should be fine.
-#' @return A \code{SPAgeno} object, which has extra stuff allowing "null
-#' distributions" (eg PLODs for true UPs) to be calculated. Various sanity
+#' @return Another \code{sngeno} object with an environment \code{Kenv}, which
+#' contains functions (with their own preloaded data) allowing null
+#' distributions (eg PLODs for true UPs) to be calculated. Various sanity
 #' checks are incorporated to try to stop you from stuffing up with
 #' out-of-synch loci etc later.
 #' @keywords misc
@@ -3551,10 +4070,10 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
   Kenv <- make_K( PUP, LOD)
     geno6@Kenv <- Kenv
 
-    class(geno6) <- c("SPAgeno", "snpgeno")  ## new SPAgeno class to auto-update SPA
+    oldClass( geno6) <- 'snpgeno' # no special SPA class now
     ## after subset operations.
 
-    geno6@PLODSPA_checksum <- sum( useN, LOD6, LOD4, PUP6, PUP4, LOD3, PUP3)
+    geno6@PLODSPA_checksum <- calc_PLODSPA_checksum( geno6$locinfo)
 
   # PUP and LOD are in Kenv now, so don't duplicate them in locinfo
   # They are really the "workhorse" versions, and are a bit cheaty, so don't want
@@ -3567,10 +4086,10 @@ return( geno6)
 
 
 #' Re-estimate allele frequencies after read-in with load_whopper.
-#'
+#' 
 #' Returns locus-specific allele frequency estimates.
-#'
-#'
+#' 
+#' 
 #' @param snpg an snpg object
 #' @keywords misc
 #' @export re_est_ALF
@@ -3595,15 +4114,7 @@ function( snpg) {
 return( new_ALFs)
 }
 
-#' an obsolete tool for internal use in keep_thresh
-#'
-#' @keywords internal
-#'
-#' @param keeping a set of something that we're keeping
-#' @param nlocal some dark magick that manipulates scoping
-#' @return something, in the frame of the parent
-#' @noRd
-#' @export
+
 "set_thresholds" <-
 function( keeping, nlocal=sys.parent()) mlocal({
 ## Used to exist to auto-set keep_thresh based on one_in_X_eta
@@ -3644,81 +4155,6 @@ stopifnot( keeping %in% cq( hi, lo))
 })
 
 
-
-
-#' Check POP/FSP splitter; private.
-#'
-#' This doco shouldn't be visible in the package! (KEYWORDS internal)
-#'
-#' \code{simcheck_FSP_POP} simulates POPs and FSPs based on a known set of
-#' loci, ready for checking \code{\link{find_FSPs_from_POPs}} or variants.
-#' Quick.
-#'
-#' \code{postprocess_simcheck_FSP_POP} can be used to graphically confirm that
-#' the analytical probabilities of samenames and pseudoexclusion actually match
-#' the simulated values--- it is amazingly difficult to get the formulae right.
-#' You wouldn't generally need \code{postprocess...} if you are working with a
-#' real set of loci.
-#'
-#'
-#' @aliases simcheck_FSP_POP postprocess_simcheck_FSP_POP
-#' @param snpg a \code{snpgeno} object with known allele freqs and error rates
-#' (i.e. \code{pbonzer} and \code{snerr} must exist in \code{snpg$locinfo})
-#' @param chromos Controls the extent of linkage:how many "chromosomes" should
-#' the loci be split between? There's no crossover within these "chromosomes",
-#' but they inherit independently of each other. Loci are allocated to
-#' chromosomes in sequence, so that if there are 3 chromosomes, the first locus
-#' goes to "C1", the second to "C2", third to "C3", fourth to "C1", etc.
-#' Returned object will have an extra field \code{$locinfo$chromosim}.
-#' @param N number of pairs of each type (ie this many FSPs, and this many
-#' POPs).
-#' @param forp_sim result of previous call to \code{simcheck_FSP_POP}
-#' @param findings result of previous call to \code{find_FSPs_from_POPs_v2(
-#' forp_sim, ..., keep_indiv=TRUE)}--- which generates the \code{is_same} and
-#' \code{is_psex} matrices for (pairs * loci), and the by-locus vectors
-#' \code{Pr_same_FSP}, \code{Pr_psex_FSP}, \code{Pr_same_POP},
-#' \code{Pr_psex_POP}.
-#' @param plot. whether to plot. Can't see why this would ever be false...
-#' @return \code{simcheck_FSP_POP} returns a \code{snpgeno} object with
-#' \code{4*N} rows, and an attribute "callo" recording the call. The
-#' \code{$info} contains just one column, "Our_sample", with names like "F17_A"
-#' and "P6_B"; those would respectively indicate the first (A) member of the
-#' 17th FSP, and the second (B) member of the 6th POP. The \code{locinfo} field
-#' is unchanged, except as noted under "chromos" above.
-#' \code{postprocess_simcheck_FSP_POP} just plots.
-#' @seealso \code{\link{find_FSPs_from_POPs}}
-#' @keywords internal
-#' @export
-#' @examples
-#'
-#' ForP <- simcheck_FSP_POP( my_snpg, 10, 1000)
-#' ForP$locinfo$useN[] <- 3 # minimal but most robust genotype
-#' test3 <- find_FSPs_from_POPs_v2( ForP,
-#'     cbind( seq( 1, by=2, length=1000),
-#'       seq( 1, by=2, length=1000)),
-#'     keep_indiv=TRUE) # need keep_indiv=T for postprocess...() to work
-#' postprocess_simcheck_FSP_POP( ForP, test3)
-#' hist( test3, nc=50)
-#' abline( v=test$E_FPstat, col='blue') # POP and FSP means
-#' \dontrun{
-#' # Sim from real loci--- in this case, with 'useN==4' for all loci since 6 looked a bit iffy
-#' library( atease)
-#' s11nodup_all4 <- s11nodup
-#' s11nodup_all4$locinfo$use6 <- NULL
-#' s11nodup_all4$locinfo$useN <- 4L
-#' simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
-#' simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
-#' kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
-#' hist( simbo4_next$FPstat, nc=50)
-#' abline( v=simbo4_next@E_FPstat, col='green') # theory means
-#' # 95% of all POPs should be Left of the line drawn next:
-#' abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
-#' # Can't say for FSPs, becoz linkage
-#' # Real data:
-#' testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
-#' abline( v=testo4$FPstat, col='red')
-#' }
-#'
 "simcheck_FSP_POP" <-
 function( snpg, chromos, N, check_genofreq=FALSE) {
   # Simulate N FSPs and N POPs using loci in snpg
@@ -3842,16 +4278,7 @@ function( snpg, chromos, N, check_genofreq=FALSE) {
 return( thrub)
 }
 
-#' a simulation tester for checking stuff in K
-#'
-#' @keywords internal
-#'
-#' @param ck a snpgeno or similar object. Needs locinfo$LOD
-#' @param n the sim size
-#' @param nq something
-#' @return simulated PLODs
-#' @noRd
-#' @export
+
 "simtest_Kstuff" <-
 function( ck, n, nq=20) {
   # ck needs locinfo$LOD
@@ -3898,77 +4325,77 @@ return( invisible( PLOD))
 
 
 #' Find full-sib pairs among parent-offspring pairs or among half-sib pairs
-#'
+#' 
 #' For pairs already picked as likely parent-offspring pairs (POPs), i.e.,
 #' those with a weighted pseudo-exclusion (WPSEX) statistic less than some
 #' threshold, they might be full sibling pairs (FSPs). This function checks
 #' potential POPs with very low WPSEX values for their potential to be FSPs.
-#'
-#' The original idea of \code{split_FSPs_from_POPs}--- but not necessarily the
-#' only workflow--- is that pairs which are \emph{either} POPs \emph{or} FSPs
-#' should stand out very clearly from everything else, via
+#' 
+#' The idea of \code{split_FSPs_from_POPs}--- though this is not the only
+#' possible workflow--- is that pairs which are \emph{either} POPs \emph{or}
+#' FSPs should stand out very clearly from everything else, via
 #' \code{\link{find_POPs}}. Then the job is to pick between those
 #' possibilities. The workflow is supposed to be:
-#'
+#' 
 #' \itemize{ \item nail POPs/FSPs first with \code{\link{find_POPs}} \item pick
 #' between them with \code{split_FSPs_from_POPs} (update: this doesn't work
 #' very well yet... use age info if you can) \item look for HSPs and filter out
 #' already-known POPs and FSPs }
-#'
+#' 
 #' Hence the other function, \code{split_FSPs_from_HSPs}, is theoretically
 #' unnecessary in that you have already run \code{\link{find_POPs}} and
 #' \code{split_FSPs_from_POPs} so you should know which of your "HSPs" are
-#' really something else. But, nevertheless it's handy to have. Also,
-#' \code{split_FSPs_from_POPs} is a work-in-progress... though in practice, for
-#' sensible datasets, you should be able to figure out which-is-which based on
-#' birth-year gaps, even roughly.
-#'
+#' really something else. But, nevertheless it's handy to have.
+#' 
 #' However, an equally reasonable workflow might be:
-#'
+#' 
 #' \itemize{ \item nail HSPs and everything stronger with
 #' \code{\link{find_HSPs}} \item split HSPs from POPs/FSPs with
-#' \code{split_FSPs_from_HSPs} \item \code{split_FSPs_from_HSPs} }
-#'
+#' \code{split_FSPs_from_HSPs} \item \code{split_FSPs_from_POPs} }
+#' 
 #' All \code{split_} functions return expected values under different possible
 #' kin-types (not variances, since these cannot be predicted for all
-#' kin-types).
-#'
-#' The statistic for \code{split_FSPs_from_POPs}--- _which isn't as powerful as
-#' I'd hoped; I'm going to redo it--- is based on the weighted sum of the
-#' number of exactly-matching 4-way genotypes, with weights chosen to have high
-#' power for this particular discrimination. Weighting is optimized for the
-#' unlikely scenario that POPs and FSPs are equally likely a priori, but in
-#' practice the weights are not sensitive to this. The test is deliberately
-#' crude and robust- e.g. it avoids exclusion-based checks- on the assumption
-#' that you have enough loci to pick HSPs, so the more-related kin-types should
-#' be slam-dunks. \bold{But} it doesn't seem powerful enough. More worked
+#' kin-types). \subsection{Obsolete note The statistic for
+#' \code{split_FSPs_from_POPs}- _which isn't as powerful as I'd hoped; I'm
+#' going to redo it- is based on the weighted sum of the number of
+#' exactly-matching 4-way genotypes, with weights chosen to have high power for
+#' this particular discrimination. Weighting is optimized for the unlikely
+#' scenario that POPs and FSPs are equally likely a priori, but in practice the
+#' weights are not sensitive to this. The test is deliberately crude and
+#' robust- e.g. it avoids exclusion-based checks- on the assumption that you
+#' have enough loci to pick HSPs, so the more-related kin-types should be
+#' slam-dunks. \bold{But} it doesn't seem powerful enough. More worked
 #' needed...
-#'
+#' 
 #' \code{split_FSPs_from_HSPs} again uses 4-way genotypes only (to avoid having
 #' to worry about errors) but in a properly optimal PLOD designed for FSP/HSP
 #' discrimination- its expectation is positive for FSPs and negative for HSPs.
 #' Theoretical means for those are returned as attributes (variances cannot be
 #' predicted). Haven't added means for POPs or UPs since you're not "supposed"
 #' to have those in the mix by the time you run \code{split_FSPs_from_HSPs},
-#' but maybe I should fix that at some point.
-#'
+#' but maybe I should fix that at some point. }
+#' 
 #' @aliases split_FSPs_from_HSPs split_FSPs_from_POPs split_FSPs_from_candiHSPs
-#' split_FSPs_from_POPs_v2
 #' @param snpg a \code{snpgeno} object
-#' @param candiHSPs candidate kin-pairs- normally, a dataframe with rows being
-#' pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from
-#' find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again
-#' one pair).
-#' @param candiPOPs candidate kin-pairs- normally, a dataframe with rows being
-#' pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from
-#' find_POPs() or find_HSPs(). Can also be a 2-column matrix (each row again
-#' one pair).
+#' @param candiHSPs,candiPOPs candidate kin-pairs- normally, a dataframe with
+#' rows being pairs and columns \emph{i} and \emph{j} (and possibly others)
+#' e.g. from find_POPs() or find_HSPs(). Can also be a 2-column matrix (each
+#' row again one pair).
+#' @param gerr genotyping error rate:0.01 would mean 1\%. There's no default so
+#' it's up to you; e.g., looking at replicate samples is a good way to estimate
+#' it. Results of \code{split_FSP_from_POPs} should not be very sensitive to
+#' the value, however.
+#' @param use_obsolete_version the original code for POPs-vs-FSPs was based on
+#' a different non-likelihood-based statistic; see \bold{Obsolete note}. It
+#' turned out to have low statistical power, but did not require specifying a
+#' \code{gerr}. For replicability purposes, you can still run it by setting
+#' this parameter to \code{TRUE}.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # pops_or_fsps <- find_POPs( mysnpg, ...)
 #' ## do histograms etc to find likely ones
-#' # discro <- split_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042))
+#' # discro <- split_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042), gerr=0.01)
 #' # hist( discro, nc=30, col='grey')
 #' # abline( v=discro@E_POP, col='red')
 #' # text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
@@ -3985,7 +4412,7 @@ return( invisible( PLOD))
 #' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
 #' # abline( v=discro2@E_FSP, col='lightblue')
 #' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#'
+#' 
 #' @export split_FSPs_from_HSPs
 "split_FSPs_from_HSPs" <-
 function( snpg, candiHSPs) {
@@ -4121,102 +4548,159 @@ function( snpg, candiHSPs) {
   return(ret)
 }
 
-#' @rdname split_FSPs_from_HSPs
-#' @export
+
 "split_FSPs_from_POPs" <-
-function( snpg, candiPOPs) {
-## Don't need full pairwise screening for FSPs (do post hoc on a few hundred
-## candidate POPs), hence all in R.
+function( 
+    snpg, 
+    candiPOPs, 
+    gerr, 
+    use_obsolete_version=FALSE
+){
+## For pairs already picked as first-order kin (fsp or pops), eg via plod(hsp,up) > eta
+## don't need full pairwise screening (do post hoc on a few hundred candidates), hence all in r.
+## Based almost entirely on code from split_fsps_from_hsps(), just changed at the end...
+## Do.in.envir() stuff is cos this belongs in 'kinference' pkg, but I've not put it there yet
+
+  if( use_obsolete_version){
+    # Non-lglk, based on ppn IBS *genotypes*
+return( OLD_split_FSPs_from_POPs( snpg, candiPOPs))
+  }
+
+  if( missing( gerr) || 
+    !is.numeric( gerr) || 
+    length( gerr) != 1 || 
+    !is.finite( gerr) || 
+    gerr < 0 || 
+    gerr >= 1
+  ){
+stop( "must define a geno error rate (gerr). Shouldn't need to be accurate...")
+  }
 
   define_genotypes()
 
-  # 'candiPOPs' normally from 'find_POPs'; or can be M*2 matrix of rows in snpg that are poss POPs
+  # candidates normally from 'find_HSPs'; or can be M*2 matrix of rows in snpg that are poss HSPs
   # if former, make latter
 
   if( candiPOPs %is.a% 'data.frame') {
     candiPOPs <- as.matrix( candiPOPs[ cq( i, j)])
   }
-  snpg <- snpg[ c( candiPOPs),]
+  sibg <- just_sibg <- snpg[ c( candiPOPs),]
 
   # Transform to 4way genotypes
   # based on code in find_duplicates
   # careful, since "factor level" of AB and OO is different in 4way vs 6way
+  sibg@diplos <- genotypes4_ambig
+  sibg[ just_sibg==AO] <- AAO
+  sibg[ just_sibg==AA] <- AAO
+  sibg[ just_sibg==BO] <- BBO
+  sibg[ just_sibg==BB] <- BBO
+  sibg[ just_sibg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
+  sibg[ just_sibg==AB] <- AB
+
+  extract.named( snpg@locinfo[ cq( PUP4, LOD4)])
+
+  # what is happening here? Is this magick?! Need to parcel up somewhere else.
+  OLOD <- LOD4
+  OPUP <- PUP4
+  # Need lookups into the compressed matrix LOD4 (which should really be 3D array but Rcpp can't cope poor baby)
+  # mg <- OLOD@mg # doesn't exist; lost when LOD4 gets plonked into locinfo data.frame
+
+  mg <- make_genopairer( genotypes4_ambig)
+
+  # Can't quite do this with vecless!
+  OLOD[ is.na( OLOD)] <- 0 # set to NA for 4way loci
+  n_loci <- nrow( OPUP)
+  PUP4 <- LOD4 <- array( 0, c( n_loci, 4, 4))
+  for( ig in 1:4) {
+    gjseq <- mg[ , ig]
+    XXi[ l, gj] := OPUP[ l, gj=gjseq] # Shouldn't work with new vecless syntax... but does !?
+    PUP4[ l, {ig}, gj] := XXi[ l, gj]
+    # NPUP[,ig,] <- OPUP[ , mg[,ig]]
+
+    XXi[ l, gj] := OLOD[ l, gj=gjseq]
+    LOD4[ l, {ig}, gj] := XXi[ l, gj]
+  }
+
+  # recover the column/row/etc names
+  dimnames(PUP4) <- dimnames(LOD4) <- list(NULL, rownames(mg), rownames(mg))
+
+  # These DO NOT sum to 1 by locus, because G1G2 and G2G1 are doubled-up
+  # They would, if g1 & g2 were sorted
+  # It doesn't matter for calculating *observed* PLODs, but care is needed with the expectations below...
+
+  ## calculate the P[g1, g2 | k shared alleles]
+  # since we save the LOD (for HSP vs UP) and the P[UP] calculate
+  # P[g1 g2 | HSP] from that
+  PHSP4 <- exp( LOD4) * PUP4 # Pr[gg|HSP] <- 0.5 * PUP4 + 0.5 * Pr[gg|kappa=1]
+  P_k0 <- PUP4
+  P_k1 <- 2*PHSP4 - PUP4
+  P_k1[ P_k1 < 0] <- 0 # rounding error
+  # P_k2 <- sqrt(diag(P_k0)) <- we are doing this-ish
+  P_k2 <- 0 * P_k0 # get the shape right
+  P_k2[l, i, i] := sqrt(P_k0[l, i, i])
 
 
-  # Yet to write 'recode_geno'...
-  just_snpg <- snpg
+  nsib <- nrow( candiPOPs)
+  nloci <- ncol(sibg)
 
-  snpg@diplos <- genotypes4_ambig
-  snpg[ just_snpg==AO] <- AAO
-  snpg[ just_snpg==AA] <- AAO
-  snpg[ just_snpg==BO] <- BBO
-  snpg[ just_snpg==BB] <- BBO
-  snpg[ just_snpg==OO] <- OO # need to do OO & AB too, since codes are different in 4way vs 6way
-  snpg[ just_snpg==AB] <- AB
+  # if only R were zero-indexed...
+  kappa_fsp <- c(1/4, 1/2, 1/4)
+  # kappa_hsp <- c(1/2, 1/2, 0)
+  kappa_pop <- c( gerr, 1-gerr, 0)
 
-  n_pairs <- nrow( candiPOPs)
-  g1 <- snpg[ 1 %upto% n_pairs,]
-  g2 <- snpg[ n_pairs + (1 %upto% n_pairs),]
+  p12fsp <- p12pop <- matrix(NA, nloci, nsib)
 
-  # Yet to write 'make_prgeno'...
-  # extract.named( make_prgeno( snpg, genotypes4_ambig)) # pA pB pO pgeno[,'AB'] pgeno[,'AAO'] etc
-  pA <- snpg@locinfo$pbonzer[,'A']
-  pB <- snpg@locinfo$pbonzer[,'B']
-  pO <- 1-pA-pB
-  n_loci <- length( pA)
 
-  pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
-  pgeno[,AB] <- 2*pA*pB
-  pgeno[,OO] <- sqr( pO)
-  pgeno[,AAO] <- sqr( pA) + 2*pA*pO
-  pgeno[,BBO] <- sqr( pB) + 2*pB*pO
+  # split sibg into g1 and g2 for the two parts of the pairs
+  g1 <- sibg[1:nsib, ]
+  g2 <- sibg[(nsib+1):(2*nsib), ]
 
-  off <- 1 # until vecless has arbitrary-base arrays
-  Pr_same_given_k <- array( 0, c( n_loci, 3))
+  # for loop version of the code
+  g1 <- as.character(g1)
+  g2 <- as.character(g2)
+  evalq(for(i in 1:nsib){
+    for(l in 1:nloci){
+      # P[g_1l g_2l | FSP]
+      p12fsp[l, i] <- kappa_fsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_fsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_fsp[3] * P_k2[l, g1[i, l], g2[i, l]]
+      # P[g_1l g_2l | POP]
+      p12pop[l, i] <- kappa_pop[1] * P_k0[l, g1[i, l], g2[i, l]] +
+                      kappa_pop[2] * P_k1[l, g1[i, l], g2[i, l]] +
+                      kappa_pop[3] * P_k2[l, g1[i, l], g2[i, l]]
+    }
+  })
+  OD_FP <- p12fsp/p12pop
+  LOD_FP <- log(OD_FP)
+  PLOD_FP <- colSums(LOD_FP)
 
-  # Exactly the same as version below, but this one seems less clear
-  # Pr_same_given_k[,{off+1}] <- pA * (1-2*pB*(pA+pO)) +
-  #    pB * (1-2*pA*(pB+pO)) +
-  #    pO * ( pA*pA + pB*pB + pO*pO)
+  # Expectations
+  # Need sum-to-1 here, so either rewrite when vecless2 appears, or work with compressed forms...
+  OPHSP <- exp( OLOD) * OPUP # Pr[gg|HSP] <- 0.5 * PUP4 + 0.5 * Pr[gg|kappa=1]
+  P_k0 <- OPUP
+  P_k1 <- 2*OPHSP - OPUP
+  P_k1[ P_k1 < 0] <- 0 # rounding error
+  P_k2 <- 0 * P_k0 # get the shape right
+  P_k2[ , diag( mg)] <- sqrt( P_k0[ , diag( mg)]) # only the cases where g1==g2
 
-  Pr_same_given_k[,{off+1}] <- pA * (sqr(pB) + sqr(1-pB)) +
-      pB * (sqr(pA) + sqr(1-pA)) +
-      pO * ( pA*pA + pB*pB + pO*pO)
+  p12fspa <- kappa_fsp[1] * P_k0 +  kappa_fsp[2] * P_k1 + kappa_fsp[3] * P_k2
+  p12popa <- kappa_pop[1] * P_k0 + kappa_pop[2] * P_k1 + kappa_pop[3] * P_k2
 
-  Pr_same_given_k[,{off+2}] <- 1
-  Pr_same_given_k[ l, {off+0}] := pgeno[l,g] %[g]% pgeno[l,g]
+  EPLOD_FP_F <- sum(log(p12fspa/p12popa) * p12fspa)
+  EPLOD_FP_P <- sum(log(p12fspa/p12popa) * p12popa)
 
-  Pr_nsame_FSP <- c( 1/4, 1/2, 1/4)
-  Pr_same_FSP[ l]:= Pr_nsame_FSP[ k] %[k]% Pr_same_given_k[ l, k]
-  Pr_same_POP[ l]:= Pr_same_given_k[ l, {off+1}]
-
-  Pr_nsame_HSP <- c( 1/2, 1/2, 0) # might as well...
-  Pr_same_HSP[ l]:= Pr_nsame_HSP[ k] %[k]% Pr_same_given_k[ l, k]
-
-  SD_FSP <- sqrt( Pr_same_FSP * (1-Pr_same_FSP))
-  SD_POP <- sqrt( Pr_same_POP * (1-Pr_same_POP))
-  SDwt_POP <- 0.5 # hard-wire for "prior" of POPs and FSPs equally likely. Doesn't matter.
-  SD_denom <- SDwt_POP * SD_POP + (1-SDwt_POP) * SD_FSP
-  wt <- (Pr_same_FSP - Pr_same_POP) / sqr( SD_denom)
-
-#  ig1 <- g1
-#  storage.mode( ig1) <- 'integer' # otherwise attributes get lost
-#  ig1[] <- match( g1@diplos, rownames( mg))
-#
-#  ig2 <- g2
-#  storage.mode( ig2) <- 'integer'
-#  ig2[] <- match( g2@diplos, rownames( mg))
-
-  wtsame[i]:= wt[l] %[l]% (g1[i,l]==g2[i,l])
-
-  ret <- data.frame(wtsame = wtsame,
+  # format a return object
+  ret <- data.frame(PLOD_FP = PLOD_FP,
                     i       = candiPOPs[,1],
                     j       = candiPOPs[,2])
 
-  ret@E_FSP <- wt %*% Pr_same_FSP
-  ret@E_POP <- wt %*% Pr_same_POP
-  ret@E_HSP <- wt %*% Pr_same_HSP
-  ret@E_UP <- wt %*% Pr_same_given_k[,off]
+## Comment from FSP/HSP version was: Next 2 are COMPLETELY WRONG !!!
+## ??? Is that true..??? They look OK to me!
+
+  ret@E_FSP <- EPLOD_FP_F
+  ret@E_POP <- EPLOD_FP_P
+
+  ret@call <- mvb.sys.call(1) # don't ask, just works
 
 return( ret)
 }
@@ -4269,8 +4753,7 @@ function( snpg, candiPOPs, SDwt_POP=0.5) { # shouldn't have default--- hardwire 
 
 }
 
-#' @rdname split_FSPs_from_HSPs
-#' @export
+
 "split_FSPs_from_POPs_v2" <-
 function( snpg, candiPOPs, keep_indiv=FALSE) {
 ###### ADD ALIAS TO DOCO for find_FSPs_from_POPs and ensure this is exported
@@ -4566,8 +5049,7 @@ return( ret)
 
 }
 
-#' @rdname split_FSPs_from_HSPs
-#' @export
+
 "split_HSPs_from_HTPs" <-
 function( snpg, candiHTPs) {
   # For pairs already picked as possible HSPs, they might be HTPs
@@ -4708,7 +5190,7 @@ function( snpg, candiHTPs) {
 
 
 #' Predict variance of PLOD for HCPs and HTPs
-#'
+#' 
 #' Aim is to work out how much your putative half-sibling pairs (HSPs) might be
 #' contaminated by half-cousin pairs (HCPs) or half-thiatic pairs (HTPs).
 #' HSP-selection is presumably based on the pairwise PLODs for HSP:UP, taking
@@ -4727,15 +5209,15 @@ function( snpg, candiHTPs) {
 #' therefore calculates two versions, one assuming the genome is entirely made
 #' up of equal-sized chromosome with zero crossover, and the other assuming the
 #' genome is a single chromosomes with crossover according to a random process.
-#'
+#' 
 #' It's assumed that lots of loci are being used, so that the mix of loci on
 #' each "chromo", or the splatter of loci along the single "megachromo", always
 #' matches the overall population, on law-of-large-numbers grounds.
-#'
+#' 
 #' Stuff like uncertainly in allele frequencies, and in the PLOD variance for
 #' HSPs, needs to be accounted for externally, by repeatedly drawing from the
 #' posteriors and re-calculating the PLODs and re-running this function.
-#'
+#' 
 #' If the variance estimates show really good separation between the kin-pair
 #' types, then one could refine the "preliminary variance" step by reducing the
 #' super-high threshold (and assuming a truncated-Normal distribution). This
@@ -4750,39 +5232,35 @@ function( snpg, candiHTPs) {
 #' avoid PLODs altogether and instead go for inferences about the actual ppn of
 #' co-inherited loci, from which estimates-of-co-inherited-variance and
 #' inferences about kin-ppns can be made.
-#'
-#' @param linfo either a 'snpgeno' object, or its "locinfo" attribute
-#'     (or a fake one). The "locinfo" should be a \code{data.frame}
-#'     with columns \code{e0}, \code{e1}, \code{v0}, \code{v1},
-#'     \code{count}. Each row is one "type" of locus, i.e., with
-#'     roughly the same values of e/v 0/1, and \code{count} says how
-#'     many such loci there are. e/v 0/1 are means and variances of
-#'     the per-locus LOD (note no P) when the locus is or isn't
-#'     co-inherited.
-#' @param emp_V_HSP empirical variance of PLOD for deffo HSPs. You're
-#'     supposed to be running this on real data, so that
-#'     \code{emp.V.HSP} is an actual number; however, for testing
-#'     purposes, you can set up an artificial version via
-#'     \code{C.equiv} below.
-#' @param kin_true Var[PLOD|kin.true]. The default, \code{"HCP"},
-#'     corresponds to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"}
-#'     to 2; the latter is only for debugging, since it should
-#'     reproduce the original empirical variance!
+#' 
+#' @param linfo either a \code{snpgeno} object, or its "locinfo" attribute (or
+#' a fake one). The "locinfo" should be a \code{data.frame} with columns
+#' \code{e0}, \code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one
+#' "type" of locus, i.e., with roughly the same values of e/v 0/1, and
+#' \code{count} says how many such loci there are. e/v 0/1 are means and
+#' variances of the per-locus LOD (note no P) when the locus is or isn't
+#' co-inherited.
+#' @param emp_V_HSP empirical variance of PLOD for deffo HSPs. You're supposed
+#' to be running this on real data, so that \code{emp.V.HSP} is an actual
+#' number; however, for testing purposes, you can set up an artificial version
+#' via \code{C.equiv} below.
+#' @param kin_true Var[PLOD|kin.true]. The default, \code{"HCP"}, corresponds
+#' to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"} to 2; the latter is only
+#' for debugging, since it should reproduce the original empirical variance!
 #' @param debug Logical flag. Defaults to FALSE.
-#' @param C_equiv for artificial test, with \code{emp.V.HSP} set to
-#'     the no-crossover variance from \code{C.equiv} chromos (need not
-#'     be integer).  Ignored if \code{emp.V.HSP} is set.
+#' @param C_equiv for artificial test, with \code{emp.V.HSP} set to the
+#' no-crossover variance from \code{C.equiv} chromos (need not be integer).
+#' Ignored if \code{emp.V.HSP} is set.
 #' @return Vector with names \code{V0}, \code{Vx}, \code{C.hat},
-#'     \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances
-#'     under the no- and all-crossover scenarios; \code{C.hat} is
-#'     estimated equivalent number of chromosomes, and \code{rho.hat}
-#'     is per-locus crossover rate, under the same
-#'     scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
-#'     \code{kin.true}) shows how many meioses are involved; yes, a
-#'     perverse way to return that piece of info.
+#' \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances under the no-
+#' and all-crossover scenarios; \code{C.hat} is estimated equivalent number of
+#' chromosomes, and \code{rho.hat} is per-locus crossover rate, under the same
+#' scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
+#' \code{kin.true}) shows how many meioses are involved; yes, a perverse way to
+#' return that piece of info.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' \dontrun{
 #' # H1CPs, for "simulation" equiv to 22 no-Xover chromos
 #' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
@@ -4797,7 +5275,7 @@ function( snpg, candiHTPs) {
 #' #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
 #' #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
 #' }
-#'
+#' 
 #' @export var_PLOD_kin
 "var_PLOD_kin" <-
 function(
@@ -4922,797 +5400,4 @@ function(
 
 return( unlist( returnList( VUP=L*v0, V.HSP=emp_V_HSP, V0, Vx, C.hat, rho.hat, n.meio)))
 }
-
-
-#' add a kin-type legend with the default colour scheme
-#'
-#' Package kinference uses a constant colour scheme for kin types,
-#' designed to be colourblind-friendly and to allow clear visual
-#' distinction between kin classes that share similar relatedness
-#' levels. We recommend that users maintain this colour scheme in any
-#' custom plots they create. This utility function adds a legend with
-#' kinship acronyms and their colours. By default, it will display
-#' only the "top four" kin classes (UP, FSP, POP, and HSP)
-#'
-#' @param position passed to 'legend'. Must be one of "topleft",
-#'     "top", "topright", etc.
-#' @param include a character vector of kin-classes to
-#'     include. Limited to "POP", "GGP", "HCP", "FCP", "UP", "HTP",
-#'     "FTP", "HSP", and "FSP".  Will automatically include "UP",
-#'     "POP", "FSP", and "HSP" unless these are specifically
-#'     _excluded_. Will trigger a warning if any values are also in
-#'     'exclude', as those values will be excluded.
-#' @param exclude a character vector of kin-classes to
-#'     exclude. Limited to "POP", "GGP", "HCP", "FCP", "UP", "HTP",
-#'     "FTP", "HSP", and "FSP". Will trigger a warning if any values
-#'     are also in 'include'.
-#' @param ... additional args, passed to legend()
-#' @return adds a legend to the current plot
-#' @keywords misc
-#' @export
-
-kinlegend <- function(position = "topright", include = character(), exclude = character(), ...) {
-
-    palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-              "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
-
-    if(sum(include %in% exclude) > 0) {
-        stop(paste("kin class(es) '",
-                   paste(include[include %in% exclude], collapse = ", "),
-                   "' is/are in both 'include' and 'exclude'", sep = "")
-             )
-    }
-
-    if(!all(include %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
-        warning("some unrecognised kin classes in 'include'")
-    }
-    if(!all(exclude %in% c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))) {
-        warning("unrecognised kin classes in 'exclude'")
-    }
-
-    ## the default set
-    allNames <- c("UP","POP","HSP","FSP")
-
-    ## add any extras from 'include'
-    allNames <- unique(c(include, allNames))
-
-    ## remove those in 'exclude'
-    allNames <- allNames[!allNames %in% exclude]
-
-    ## find their palette numbers
-    allNumbers <- match(allNames, c("POP","GGP","HCP","FCP","UP","HTP","FTP","HSP","FSP"))
-
-    legend(position, legend = allNames,
-               lwd = 2, lty = 1, col = allNumbers, bg = "white", ...)
-}
-
-
-
-# MVB's workaround for futile CRAN 'no visible blah' check:
-globalVariables( package="kinference",
-  names=c( ".Traceback"
-    ,"oa"
-    ,"pkgname"
-    ,"libname"
-    ,"run_Cloaders_kinference"
-    ,"x"
-    ,"g_err"
-    ,"genotypes_C"
-    ,"perr"
-    ,"g_1"
-    ,"g_2"
-    ,"AA_BB"
-    ,"A"
-    ,"B"
-    ,"snerr"
-    ,"AO_BO"
-    ,"O"
-    ,"pp_err"
-    ,"gg"
-    ,"g1_err"
-    ,"g1"
-    ,"g2_err"
-    ,"g2"
-    ,"pp_true"
-    ,"add_up"
-    ,"result"
-    ,"dimor"
-    ,"i"
-    ,"other"
-    ,"..."
-    ,"."
-    ,"OO"
-    ,"CC"
-    ,"CO"
-    ,"AO"
-    ,"AC"
-    ,"BO"
-    ,"BC"
-    ,"pp6_err"
-    ,"genotypes6"
-    ,"P"
-    ,"pr2"
-    ,"record"
-    ,"ABCO"
-    ,"is_het"
-    ,"gp1"
-    ,"gp2"
-    ,"pp3"
-    ,"su1u2"
-    ,"implied"
-    ,"swap12"
-    ,"swap34"
-    ,"cimplied"
-    ,"implstr"
-    ,"has_impl2"
-    ,"first_impl"
-    ,"second_impl"
-    ,"cimpl2"
-    ,"li"
-    ,"lociar"
-    ,"locinfo"
-    ,"li1"
-    ,"temp0"
-    ,"pbonzer"
-    ,"cg6p0"
-    ,"temp1"
-    ,"cg6p1"
-    ,"temp2"
-    ,"cg6p2"
-    ,"pIBD0"
-    ,"pIBD1"
-    ,"pIBD2"
-    ,"LODs"
-    ,"nl"
-    ,"Phsp"
-    ,"k"
-    ,"Pup"
-    ,"LOD"
-    ,"mg"
-    ,"ngp"
-    ,"wanted"
-    ,"gpLOD"
-    ,"gpPUP"
-    ,"LOD_as_2D"
-    ,"PUP_as_2D"
-    ,"omg"
-    ,"double_wanted"
-    ,"what"
-    ,"E.HSP"
-    ,"l"
-    ,"%[i,j]%"
-    ,"j"
-    ,"E.UP"
-    ,"E2.UP"
-    ,"V.UP"
-    ,"Ediff"
-    ,"sdiff"
-    ,"retval"
-    ,"PUP"
-    ,"thing"
-    ,"ij"
-    ,"ijpairs"
-    ,"is_pair"
-    ,"test"
-    ,"y"
-    ,"xtest"
-    ,"to.do"
-    ,"chains"
-    ,"pairmats"
-    ,"this_chain"
-    ,"this_pairs"
-    ,"o"
-    ,"snpg"
-    ,"og"
-    ,"iwhat"
-    ,"PUPLOD"
-    ,"PUPLOD2"
-    ,"Kenv"
-    ,"OLOD"
-    ,"useN"
-    ,"temp_snpg"
-    ,"recode4to6temp"
-    ,"AA"
-    ,"BB"
-    ,"recode3to6temp"
-    ,"n_loci"
-    ,"OPUP"
-    ,"NPUP"
-    ,"ig"
-    ,"gjseq"
-    ,"XXi"
-    ,"gj"
-    ,"Pg"
-    ,"gi"
-    ,"e_CLOD"
-    ,"%[gj]%"
-    ,"e2_CLOD"
-    ,"geno"
-    ,"g1seq"
-    ,"my_e_CLOD"
-    ,"%[g1]%"
-    ,"my_e2_CLOD"
-    ,"my_v_CLOD"
-    ,"my_rat_CLOD"
-    ,"%[l]%"
-    ,"SUM_"
-    ,"nsim"
-    ,"gsim"
-    ,"il"
-    ,"sim_e_CLOD"
-    ,"sim_e2_CLOD"
-    ,"sim_v_CLOD"
-    ,"sim_rat_CLOD"
-    ,"K"
-    ,"ETT"
-    ,"it"
-    ,"g"
-    ,"tt"
-    ,"log_S"
-    ,"%[g]%"
-    ,"dK"
-    ,"g12"
-    ,"LODOK"
-    ,"S"
-    ,"%[g12]%"
-    ,"SL"
-    ,"ddK"
-    ,"SLL"
-    ,"gbasics"
-    ,"bins"
-    ,"qq"
-    ,"nq"
-    ,"mean_theory"
-    ,"var_theory"
-    ,"symmo"
-    ,"subset1"
-    ,"big_PLOD"
-    ,"big_i"
-    ,"big_j"
-    ,"binprobs"
-    ,"eta"
-    ,"keep_thresh"
-    ,"n_fish"
-    ,"geno6"
-    ,"diplos"
-    ,"p6"
-    ,"calc_g6probs"
-    ,"g6pred"
-    ,"g6obs"
-    ,"pval6"
-    ,"thresh_pchisq_6and4"
-    ,"extra_title"
-    ,"pval"
-    ,"g4obs"
-    ,"g4pred"
-    ,"pval4"
-    ,"return_what"
-    ,"gobs"
-    ,"gpred"
-    ,"chistat"
-    ,"DoF"
-    ,"pchisq"
-    ,"liffies"
-    ,"thresh_pchisq_loci"
-    ,"keep_loci"
-    ,"iffy_loci"
-    ,"par"
-    ,"hist"
-    ,"seq_paxis"
-    ,"mtext"
-    ,"abline"
-    ,"opar"
-    ,"gtypes"
-    ,"points"
-    ,"legend"
-    ,"trim"
-    ,"uij"
-    ,"n"
-    ,"m"
-    ,"nf"
-    ,"groups"
-    ,"keeps"
-    ,"drops"
-    ,"want_groups"
-    ,"pobs"
-    ,"lglk_l"
-    ,"ppar"
-    ,"pAO"
-    ,"pAA"
-    ,"pBO"
-    ,"pBB"
-    ,"pAB"
-    ,"pOO"
-    ,"AA2AO"
-    ,"AO2AA"
-    ,"AB"
-    ,"BB2BO"
-    ,"BO2BB"
-    ,"n_l"
-    ,"Nlglk"
-    ,"flush.console"
-    ,"pstart"
-    ,"fitto"
-    ,"nlminb"
-    ,"control"
-    ,"geno_amb"
-    ,"genotypes_ambig"
-    ,"plogis"
-    ,"expected"
-    ,"lglk"
-    ,"has_C"
-    ,"params"
-    ,"pA"
-    ,"pB"
-    ,"pC"
-    ,"pO"
-    ,"phat"
-    ,"nobs"
-    ,"pen"
-    ,"penscale"
-    ,"start_par"
-    ,"pambig_est"
-    ,"C"
-    ,"conv"
-    ,"tiny"
-    ,"ll"
-    ,"CCO"
-    ,"AAO"
-    ,"BBO"
-    ,"duhhh"
-    ,"qlogis"
-    ,"p"
-    ,"testo"
-    ,"fit"
-    ,"convergence"
-    ,"besto"
-    ,"pambig"
-    ,"subset_like_loci"
-    ,"subset2"
-    ,"genotypes4_ambig"
-    ,"gtab"
-    ,"pid"
-    ,"maxbin"
-    ,"nbins"
-    ,"binterval"
-    ,"DUP_paircomps_lots"
-    ,"max_diff_loci"
-    ,"limit_pairs"
-    ,"n_ndiff_in_bin"
-    ,"big_similar"
-    ,"ndiff"
-    ,"showPlot"
-    ,"max_diff_ppn"
-    ,"OO_code"
-    ,"NA_geno"
-    ,"DUP_paircomps_incomplete_lots"
-    ,"limit"
-    ,"big_ndiff"
-    ,"big_ncomp"
-    ,"hspPower_change"
-    ,"hspPower_checksum"
-    ,"PLODSPA_change"
-    ,"PLODSPA_checksum"
-    ,"LOD6"
-    ,"LOD4"
-    ,"LOD3"
-    ,"PUP6"
-    ,"PUP4"
-    ,"PUP3"
-    ,"temp_LOD"
-    ,"EHSP"
-    ,"minbin"
-    ,"VUP"
-    ,"EUP"
-    ,"EPOP"
-    ,"E.POP"
-    ,"CDF"
-    ,"xresult"
-    ,"HSP_paircomps_lots"
-    ,"keep_thresh_set"
-    ,"mean_UP"
-    ,"var_UP"
-    ,"mean_HSP"
-    ,"mean_POP"
-    ,"mean_FSP"
-    ,"E.FSP"
-    ,"sngp"
-    ,"p0"
-    ,"pex"
-    ,"delta"
-    ,"SD"
-    ,"SD_combo"
-    ,"WPSEX_UP_POP_balance"
-    ,"V_combo"
-    ,"ww"
-    ,"pop_loci"
-    ,"recode_6_as_pseudo4"
-    ,"AAish"
-    ,"BBish"
-    ,"opphetz"
-    ,"pex_up"
-    ,"rr"
-    ,"log1m_pexup"
-    ,"KK"
-    ,"retw"
-    ,"dKK"
-    ,"ddKK"
-    ,"POP_wt_paircomps_lots"
-    ,"big_wpsex"
-    ,"n_wpsex_in_bin"
-    ,"snpg_i"
-    ,"snpg_j"
-    ,"isABOO"
-    ,"nABOO"
-    ,"palette"
-    ,"lb"
-    ,"xlim"
-    ,"ub"
-    ,"fsps2"
-    ,"FPstat"
-    ,"bin"
-    ,"hist.plod"
-    ,"POPmean"
-    ,"E_FPstat"
-    ,"FSPmean"
-    ,"legendBits"
-    ,"allNames"
-    ,"allNumbers"
-    ,"oset"
-    ,"set"
-    ,"seed"
-    ,"newj"
-    ,"newi"
-    ,"gt4"
-    ,"gt6"
-    ,"v"
-    ,"target"
-    ,"edash"
-    ,"msqrt_v"
-    ,"median"
-    ,"use_loci"
-    ,"whmo"
-    ,"f"
-    ,"four_pab_poo"
-    ,"compaboo"
-    ,"etwab"
-    ,"etwoo"
-    ,"denom"
-    ,"dens_SPA"
-    ,"hist_pars"
-    ,"lv"
-    ,"lines"
-    ,"mids"
-    ,"breaks"
-    ,"counts"
-    ,"hsps"
-    ,"PLOD"
-    ,"main"
-    ,"HSPmean"
-    ,"E.hsp"
-    ,"HSPdist"
-    ,"V.hsp"
-    ,"fullsib_cut"
-    ,"obs.num"
-    ,"exp.num"
-    ,"pnorm"
-    ,"cloddo"
-    ,"clod.stat"
-    ,"ECLOD"
-    ,"VCLOD"
-    ,"hetz.poor"
-    ,"ilglk"
-    ,"hist1"
-    ,"tf"
-    ,"quantile"
-    ,"CLOD_prop"
-    ,"colour"
-    ,"rgb"
-    ,"ilglk_prop"
-    ,"hetz_prop"
-    ,"hist2"
-    ,"g6p0"
-    ,"g6p1"
-    ,"g6p2"
-    ,"s6"
-    ,"want_LOD_table"
-    ,"s4"
-    ,"g4p0"
-    ,"g4p1"
-    ,"g4p2"
-    ,"s3"
-    ,"g3p0"
-    ,"g3p1"
-    ,"g3p2"
-    ,"e0_6way"
-    ,"e0"
-    ,"v0_6way"
-    ,"v0"
-    ,"e1_6way"
-    ,"e1"
-    ,"v1_6way"
-    ,"v1"
-    ,"e0_4way"
-    ,"v0_4way"
-    ,"e1_4way"
-    ,"v1_4way"
-    ,"e0_3way"
-    ,"v0_3way"
-    ,"e1_3way"
-    ,"v1_3way"
-    ,"just_matrix"
-    ,"locnames"
-    ,"a"
-    ,"%[a]%"
-    ,"stringsAsFactors"
-    ,"genos"
-    ,"Var1"
-    ,"Var2"
-    ,"e"
-    ,"ALLeles"
-    ,"THE_ALLELES"
-    ,"eg"
-    ,"use6"
-    ,"n_samps"
-    ,"snpg4"
-    ,"info"
-    ,"Our_plate"
-    ,"Our_sample"
-    ,"Locus"
-    ,"pgeno"
-    ,"lpgeno"
-    ,"ttp1"
-    ,"etp1l"
-    ,"num"
-    ,"num2"
-    ,"quick"
-    ,"ntest"
-    ,"Ktest"
-    ,"Ksim"
-    ,"meansim"
-    ,"lp"
-    ,"indiv_lglk_geno"
-    ,"ilglk_manual"
-    ,"mids_SPA"
-    ,"good_ind"
-    ,"elg"
-    ,"elg2"
-    ,"sdelg"
-    ,"GG"
-    ,"n_f"
-    ,"olg"
-    ,"%[f]%"
-    ,"which_genotypes"
-    ,"pAAO"
-    ,"pBBO"
-    ,"pAC"
-    ,"pCO"
-    ,"pCC"
-    ,"pCCO"
-    ,"pBC"
-    ,"pBBOO"
-    ,"funco"
-    ,"genotypes3"
-    ,"mm"
-    ,"yup"
-    ,"%[j]%"
-    ,"%[k]%"
-    ,"my_dll"
-    ,"onload_autowrap"
-    ,"n_PLODs_in_bin"
-    ,"UP"
-    ,"HSP"
-    ,"POP"
-    ,"FSP"
-    ,"showUP"
-    ,"tfA"
-    ,"histA"
-    ,"tfB"
-    ,"histB"
-    ,"tfC"
-    ,"histC"
-    ,"na.omit"
-    ,"forp_sim"
-    ,"findings"
-    ,"atts"
-    ,"N"
-    ,"is_same"
-    ,"FSPs"
-    ,"POPs"
-    ,"plot."
-    ,"ucols"
-    ,"kinno"
-    ,"compo"
-    ,"same"
-    ,"psex"
-    ,"emp"
-    ,"ana"
-    ,"title"
-    ,"Ppop"
-    ,"Pfsp"
-    ,"P1"
-    ,"e2.1"
-    ,"matto"
-    ,"cn6"
-    ,"cn4"
-    ,"cn3"
-    ,"ichangio"
-    ,"was1"
-    ,"was2"
-    ,"now1"
-    ,"now2"
-    ,"iget4"
-    ,"iget3"
-    ,"hasO_4way"
-    ,"hasO_3way"
-    ,"make_K"
-    ,"n_pts_SPA_renorm"
-    ,"inv_CDF"
-    ,"n_samp"
-    ,"gamb"
-    ,"new_ALFs"
-    ,"keeping"
-    ,"hi"
-    ,"lo"
-    ,"probinverts"
-    ,"one_in_X_eta"
-    ,"keep_n"
-    ,"XX"
-    ,"reppo"
-    ,"chromos"
-    ,"mychro"
-    ,"thrub"
-    ,"chromosim"
-    ,"ForP"
-    ,"pairnum"
-    ,"get_one_copy"
-    ,"g_A"
-    ,"runif"
-    ,"g_B_if_not_A"
-    ,"FSPstart"
-    ,"ibd_chromo1"
-    ,"ibd1"
-    ,"ibd_chromo2"
-    ,"ibd2"
-    ,"POPstart"
-    ,"swappo"
-    ,"g3"
-    ,"miscall"
-    ,"which_snerr"
-    ,"isAA"
-    ,"isAO"
-    ,"isBB"
-    ,"isBO"
-    ,"check_genofreq"
-    ,"nam"
-    ,"diffo"
-    ,"revnam"
-    ,"PUP6_alt"
-    ,"sum1"
-    ,"sum2"
-    ,"callo"
-    ,"ck"
-    ,"g12_code"
-    ,"this_g12"
-    ,"LOD_obs"
-    ,"var"
-    ,"pciles"
-    ,"candiHSPs"
-    ,"sibg"
-    ,"just_sibg"
-    ,"PHSP4"
-    ,"P_k0"
-    ,"P_k1"
-    ,"P_k2"
-    ,"nsib"
-    ,"nloci"
-    ,"kappa_fsp"
-    ,"kappa_hsp"
-    ,"p12fsp"
-    ,"p12hsp"
-    ,"OD_FH"
-    ,"LOD_FH"
-    ,"PLOD_FH"
-    ,"OPHSP"
-    ,"p12fspa"
-    ,"p12hspa"
-    ,"EPLOD_FH_F"
-    ,"EPLOD_FH_H"
-    ,"ret"
-    ,"E_FSP"
-    ,"E_HSP"
-    ,"candiPOPs"
-    ,"just_snpg"
-    ,"n_pairs"
-    ,"off"
-    ,"Pr_same_given_k"
-    ,"Pr_nsame_FSP"
-    ,"Pr_same_FSP"
-    ,"Pr_same_POP"
-    ,"Pr_nsame_HSP"
-    ,"Pr_same_HSP"
-    ,"SD_FSP"
-    ,"SD_POP"
-    ,"SDwt_POP"
-    ,"SD_denom"
-    ,"wt"
-    ,"wtsame"
-    ,"E_POP"
-    ,"E_UP"
-    ,"P6"
-    ,"same6"
-    ,"Pr_nibd_FSP"
-    ,"Pr_nibd_POP"
-    ,"Pr_psex_given_k"
-    ,"Pr_psex_FSP"
-    ,"Pr_psex_POP"
-    ,"px"
-    ,"ps"
-    ,"inv_DET"
-    ,"Dx"
-    ,"Ds"
-    ,"ws"
-    ,"wx"
-    ,"V_FSP"
-    ,"rescalor"
-    ,"V_FSP_nolink"
-    ,"V_POP"
-    ,"snpg6"
-    ,"snpg3"
-    ,"BBOO"
-    ,"g1_6"
-    ,"g2_6"
-    ,"g1_4"
-    ,"g2_4"
-    ,"g1_3"
-    ,"g2_3"
-    ,"is_psex"
-    ,"stat"
-    ,"V_FPstat"
-    ,"keep_indiv"
-    ,"kin_true"
-    ,"n.meio"
-    ,"linfo"
-    ,"L"
-    ,"count.l"
-    ,"e0.l"
-    ,"e1.l"
-    ,"v0.l"
-    ,"v1.l"
-    ,"V.noX"
-    ,"meioses"
-    ,"EofV"
-    ,"VofE"
-    ,"C_equiv"
-    ,"C.hat"
-    ,"emp_V_HSP"
-    ,"V0"
-    ,"ell"
-    ,"e2.0"
-    ,"e1.0"
-    ,"e1.1"
-    ,"phi"
-    ,"s"
-    ,"mul"
-    ,"r"
-    ,"PSstar"
-    ,"P0star"
-    ,"si2"
-    ,"si3"
-    ,"si4"
-    ,"V.allX"
-    ,"rho"
-    ,"p11.8"
-    ,"p01.8"
-    ,"p00.8"
-    ,"p11"
-    ,"p01.10"
-    ,"p00"
-    ,"EL"
-    ,"EL2"
-    ,"VL"
-    ,"mtrace"
-    ,"rho.hat"
-    ,"Vx"
-))
 
