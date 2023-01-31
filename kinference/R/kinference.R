@@ -3125,10 +3125,10 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
         binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
 
         ## c++ gives bins that are out in a different direction for bins and n_in_bin
-        plot(hsps@bins[-1], log(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
-         ..., type = "S", xlab = "PLOD", ylab = "log(Frequency)")
+        plot(hsps@bins[-1], log10(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
+         ..., type = "S", xlab = "PLOD", ylab = "log10(Frequency)")
         ## plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
-        ##      ylab="log(Frequency)")
+        ##      ylab="log10(Frequency)")
         if( UP) { abline(v = hsps@mean_UP, col = 5, lwd = 2) }
         if( HSP) { abline(v = hsps@mean_HSP, col = 8, lwd = 2) }
         if( POP) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
@@ -3138,7 +3138,7 @@ function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = T
                   lwd=2,col=5)
         }
         if( showUP["Normal"]) {
-            lines(hsps@bins,log(diff(c(0,pnorm(binmids, mean = hsps@mean_UP,
+            lines(hsps@bins,log10(diff(c(0,pnorm(binmids, mean = hsps@mean_UP,
                                       sd = sqrt(hsps@var_UP)) *
                                       sum(hsps@n_PLODs_in_bin[binmids<0])))),
                   lwd = 2, col = 5) ## Normal approx

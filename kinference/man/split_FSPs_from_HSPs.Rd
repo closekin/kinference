@@ -5,6 +5,7 @@
 \alias{split_FSPs_from_POPs}
 \alias{split_FSPs_from_candiHSPs}
 \alias{split_FSPs_from_POPs_v2}
+\alias{split_HSPs_from_HTPs}
 \title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
 \usage{
 split_FSPs_from_HSPs(snpg, candiHSPs)
@@ -12,6 +13,8 @@ split_FSPs_from_HSPs(snpg, candiHSPs)
 split_FSPs_from_POPs(snpg, candiPOPs)
 
 split_FSPs_from_POPs_v2(snpg, candiPOPs, keep_indiv = FALSE)
+
+split_HSPs_from_HTPs(snpg, candiHTPs)
 }
 \arguments{
 \item{snpg}{a \code{snpgeno} object}
