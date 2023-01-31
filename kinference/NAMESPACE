@@ -83,8 +83,6 @@ importFrom( vecless, ":=")
 importFrom( vecless, compile_vecless)
 importFrom( vecless, make_playback)
 importFrom( vecless, set_recording)
-
-<<<<<<< HEAD
 S3method("[",SPAgeno)
 S3method("[<-",SPAgeno)
 export(FSP_POP_histo)
@@ -180,5 +178,3 @@ importFrom(vecless,compile_vecless)
 importFrom(vecless,make_playback)
 importFrom(vecless,set_recording)
 useDynLib(kinference, .registration=TRUE)
-=======
->>>>>>> 061e7d0a4a2f6fbe821bad3cc0c30e36feab8d00

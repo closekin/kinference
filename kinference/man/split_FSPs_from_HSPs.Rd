@@ -2,16 +2,12 @@
 \alias{split_FSPs_from_HSPs}
 \alias{split_FSPs_from_POPs}
 \alias{split_FSPs_from_candiHSPs}
-<<<<<<< HEAD
 \alias{split_FSPs_from_POPs_v2}
 \alias{split_HSPs_from_HTPs}
-=======
->>>>>>> 061e7d0a4a2f6fbe821bad3cc0c30e36feab8d00
 \title{Find full-sib pairs among parent-offspring pairs or among half-sib pairs}
 \description{For pairs already picked as likely parent-offspring pairs (POPs), i.e., those with a weighted pseudo-exclusion (WPSEX) statistic less than some threshold, they might be full sibling pairs (FSPs). This function checks potential POPs with very low WPSEX values for their potential to be FSPs.
 }
 \usage{
-<<<<<<< HEAD
 split_FSPs_from_HSPs(snpg, candiHSPs)
 
 split_FSPs_from_POPs(snpg, candiPOPs)
@@ -19,10 +15,8 @@ split_FSPs_from_POPs(snpg, candiPOPs)
 split_FSPs_from_POPs_v2(snpg, candiPOPs, keep_indiv = FALSE)
 
 split_HSPs_from_HTPs(snpg, candiHTPs)
-=======
 split_FSPs_from_HSPs( snpg, candiHSPs)
 split_FSPs_from_POPs( snpg, candiPOPs, gerr=NULL, use_obsolete_version=TRUE)
->>>>>>> 061e7d0a4a2f6fbe821bad3cc0c30e36feab8d00
 }
 \arguments{
 \item{  snpg}{a \code{snpgeno} object}

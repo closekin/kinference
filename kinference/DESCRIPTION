@@ -13,5 +13,5 @@ SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
 KeepSource: TRUE
-Collate: kinference.R Cloaders_kinference.R kinference-package.R
+Collate: kinference.R Cloaders_kinference.R kinference-package.R RcppExports.R
 Version: 0.0.155
