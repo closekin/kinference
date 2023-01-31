@@ -1,24 +1,26 @@
-chain_pairwise                                Find chains in HSPs; summarize sib-groups
-check_FPosity                                 QC for kin-finding; private for now
-check6and4                                    Locus QC check
-chisq_genofreq_check                          Check observed genotypes against HWE expectations
-drop_dups_pairwise_equiv                      Grouping pairwise duplicates
-est_ALF_6way                                  Estimate ALFs from 6-way genotypes and snerr
-est_ALF_ABCO                                  Estimate allele frequencies, including nulls
-find_duplicates                               Kin-finders for loads-of-SNPs datasets
-find_dups_with_missing                        Dup-finding with some missing genotypes
-FSP_POP_histo                                 Plot for splitting FSPs from POPs
-hetzminoo_fancy                               QC checks on
-HSP_histo                                     PLOD histogram
-HSP_oddness_oneway                            Oddness metrics over an HSP histo
-hsp_power                                     Locus selection for kin-finding
-hsp_power2                                    Kin-finding power for microhaplotyped loci
-ilglk_geno                                    Check individual multilocus genotypes for typicality
-Internals                                     Don't call these yourself
-kinference                                    Info about this package
-PLOD_loghisto                                 PLOD histogram on log-scale
-PLOD_oddness_oneway                           Oddness metrics
-prepare_PLOD_SPA                              Prepare for kin-finding
-re_est_ALF                                    Re-estimate allele frequencies after read-in with load_whopper.
-split_FSPs_from_HSPs                          Find full-sib pairs among parent-offspring pairs or among half-sib pairs
-var_PLOD_kin                                  Predict variance of PLOD for HCPs and HTPs
+kinference-package                         The kinference package: data prep for close-kin mark-recapture
+chain_pairwise                             Find chains in HSPs; summarize sib-groups
+check_FPosity                              QC for kin-finding; private for now
+check6and4                                 Locus QC check
+chisq_genofreq_check                       Check observed genotypes against HWE expectations
+drop_dups_pairwise_equiv                   Grouping pairwise duplicates
+est_ALF_6way                               Estimate ALFs from 6-way genotypes and snerr
+est_ALF_ABCO                               Estimate allele frequencies, including nulls
+find_duplicates                            Kin-finders for loads-of-SNPs datasets
+find_dups_with_missing                     Dup-finding with some missing genotypes
+find_FSPs_from_POPs_6way                   Split FSPs from POPS; experimental, obsolete, and private!
+FSP_POP_histo                              Plot for splitting FSPs from POPs
+hetzminoo_fancy                            QC checks on
+HSP_histo                                  PLOD histogram
+HSP_oddness_oneway                         Oddness metrics over an HSP histo
+hsp_power                                  Locus selection for kin-finding
+hsp_power2                                 Kin-finding power for microhaplotyped loci
+ilglk_geno                                 Check individual multilocus genotypes for typicality
+kinlegend                                  add a kin-type legend with the default colour scheme
+PLOD_loghisto                              PLOD histogram on log-scale
+PLOD_oddness_oneway                        Oddness metrics
+postprocess_simcheck_FSP_POP               Check POP/FSP splitter; private.
+prepare_PLOD_SPA                           Prepare for kin-finding
+re_est_ALF                                 Re-estimate allele frequencies after read-in with load_whopper.
+split_FSPs_from_HSPs                       Find full-sib pairs among parent-offspring pairs or among half-sib pairs
+var_PLOD_kin                               Predict variance of PLOD for HCPs and HTPs
