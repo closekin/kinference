@@ -6,20 +6,17 @@
 \usage{
 PLOD_loghisto(
   hsps,
-  UP = TRUE,
-  HSP = TRUE,
-  POP = TRUE,
-  FSP = TRUE,
-  showUP = c(SPA = TRUE, Normal = FALSE),
+  UP= TRUE,
+  HSP= TRUE,
+  POP= TRUE,
+  FSP= TRUE,
+  showUP= c(SPA= TRUE, Normal= FALSE),
   ...
 )
 }
 \arguments{
 \item{  hsps}{the output of a call to \code{find_HSPs()}}
-\item{  UP}{plot the mean PLOD for unrelated pairs? Default TRUE}
-\item{  HSP}{plot the mean PLOD for HSPs? Default TRUE}
-\item{  POP}{plot the mean PLOD for POPs? Default TRUE}
-\item{  FSP}{plot the mean PLOD for FSPs? Default TRUE}
+\item{  UP, HSP, POP, FSP}{whether plot the expected (mean) PLOD for pairs of that type? Defaults TRUE}
 \item{  showUP}{plot the expected density curve for unrelated pairs using the SPA approximation (default TRUE), Normal approximation (default FALSE), both, or neither. Either approximation will plot in colour 5, a light magenta.}
 \item{  ...}{additional pars, passed to \code{plot}}
 }

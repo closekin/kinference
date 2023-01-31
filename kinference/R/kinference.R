@@ -1161,6 +1161,162 @@ return( lociar)
 }
 
 
+"est_ALF_ABO_quick" <-
+function( x=NULL, AB, AAO, BBO, OO, tol=1e-7, EMtol=1e-3, quietly=FALSE){
+## Multilocus A/B/O freq estimation from 4way genotypes, 
+## with nulls obvs but assuming neglig geno _error_.
+## Either from a 'snpgeno' or similar (currently must be 4-way), 
+## in which case 'pbonzer' gets added to 'locinfo';
+## or as direct entries of totals.
+## EM algo is very simple here, allowing vectorization
+## To speed up the notorious EM, an outer iteration of Aitken accel
+## Vectorizing makes it look ugly (in R anyway) but it is bloody fast...
+
+  if( !is.null( x)){ 
+stopifnot( missing( AB), missing( AAO), missing( BBO), missing( OO))  
+    gbasics::define_genotypes()
+stopifnot( my.all.equal( x@diplos, genotypes4_ambig))
+    AB <- colSums( x=='AB')
+    AAO <- colSums( x=='AAO')
+    BBO <- colSums( x=='BBO')
+    OO <- colSums( x=='OO')
+  }
+  
+  n <- AB + AAO + BBO + OO
+  LLL <- length( AB)
+
+  # Need some starting values...
+  omega <- 0.05 + 0.95 * sqrt( OO/n) # just tame it a bit
+  # alpha/beta we will do as if no nulls... then scale to non-null total
+  # Terrible, but bounded!
+  gamma <- (2*AAO + AB) / (2*BBO + AB)
+  beta <- (1-omega) / (1+gamma)
+  alpha <- 1 - beta - omega
+
+  # Scale the lot...
+  i2n <- 1/(2*n)
+  AB <- AB * i2n
+  AAO <- AAO * i2n
+  BBO <- BBO * i2n
+  OO <- OO * i2n
+
+  nitsi <- AO <- AA <- BO <- BB <- 0*AB
+  
+  # only iterate unconverged ones. tRickeRy..!
+  prev_prev_omega <- prev_omega <- 0*AB -1 # two converged iterations in case lucky start
+
+  # Next 2 not used in convergence checks: just for Aitken accel below
+  prev_prev_alpha <- prev_alpha <- alpha
+  prev_prev_beta <- prev_beta <- beta
+  Aitken <- function( x0, x1, x2){
+      d0 <- x1 - x0
+      d1 <- x2 - x1
+      dd0 <- d1 - d0
+
+      res <- x0 - sqr( d0) / dd0
+      res[ !is.finite( res)] <- x0[ !is.finite( res)]
+    return( res)
+    }
+
+  iAit <- seq_along( AB)
+  nits <- 0
+  n_super_its <- 0 # for Aitkening
+  MAX_AITKEN <- 20 # few will take more than 10
+  while( n_super_its < MAX_AITKEN){
+    aitA <- alpha
+    aitB <- beta
+    aitO <- omega # ... for superconvergence
+
+    # Which elements will be worked on?
+    i <- iAit # to start with
+    i <- i[ ((AB+AAO)[iAit]>0) & ((AB+BBO)[iAit]>0)] # other cases have no alleles for A and/or B!
+  
+    repeat{
+      nits <- nits+1
+      nitsi[ i] <- nitsi[ i] + 1
+      AA[ i] <- AAO[ i] * sqr( alpha[ i]) / (sqr( alpha[ i]) + 2*alpha[ i]*omega[ i])
+      AO[ i] <- AAO[ i] - AA[ i]
+
+      BB[ i] <- BBO[ i] * sqr( beta[ i]) / (sqr( beta[ i]) + 2*beta[ i]*omega[ i])
+      BO[ i] <- BBO[ i] - BB[ i]
+
+      alpha[ i] <- AB[ i] + 2*AA[ i] + AO[ i]
+      beta[ i] <- AB[ i] + 2*BB[ i] + BO[ i]
+      omega[ i] <- AO[ i] + BO[ i] + 2*OO[ i]
+
+      # Check 1 step AND 2 steps back... in case of bouncing!
+      is_dun <- EMtol > pmax( 
+          abs( omega[ i] - prev_omega[ i]),
+          abs( omega[ i] - prev_prev_omega[ i])
+        )
+      if( (nits>3) && all( is_dun)){
+    break
+      }
+
+      i <- i[ !is_dun]
+      prev_prev_omega[ i] <- prev_omega[ i]
+      prev_omega[ i] <- omega[ i]
+      prev_prev_alpha[ i] <- prev_alpha[ i]
+      prev_alpha[ i] <- alpha[ i]
+      prev_prev_beta[ i] <- prev_beta[ i]
+      prev_beta[ i] <- beta[ i]    
+    } # normal EM iteration
+
+    # Not gonna over-subscript here; these are so quick
+    ACC_alpha <- Aitken( alpha, prev_alpha, prev_prev_alpha)[ iAit]
+    ACC_beta <- Aitken( beta, prev_beta, prev_prev_beta)[ iAit]
+    ACC_omega <- Aitken( omega, prev_omega, prev_prev_omega)[ iAit]
+    
+    # Force a few regular EM steps in next superit
+    prev_omega[] <- (-1)
+    prev_prev_omega[] <- (-2) 
+    
+    # That accelerates the terms *individually*, but scaling is crucial, so...
+    OK <- (ACC_alpha>=0) & (ACC_beta>=0) & (ACC_omega>=0)
+    iACC_sum <- 1/(ACC_alpha + ACC_beta + ACC_omega)
+    # scatn( 'Nits: %i, Nsuper: %i', nits, n_super_its)
+    oa <- alpha
+    alpha[ iAit[ OK]] <- (ACC_alpha * iACC_sum)[OK]
+    # scatn( 'Alpha change')
+    # print( (oa-alpha)[ iAit])
+    
+    beta[ iAit[OK]] <- (ACC_beta * iACC_sum)[OK]
+    omega[ iAit[OK]] <- (ACC_omega * iACC_sum)[OK]
+    
+    # Next will not check OK during update; but that's OK :) cos then it relies entirely on EM...
+    # ... if EM itself has converged, then we are done
+    iAit <- which( abs( alpha - aitA) + abs( beta - aitB) + abs( omega - aitO) > tol)
+    
+    if( !length( iAit)){
+  break
+    }
+    
+    n_super_its <- n_super_its + 1
+  } # Aitken iteration...
+
+  if( !quietly){
+    scatn( "Summary of iterations:")
+    print( summary( nitsi))
+  }
+
+
+  if( length( iAit)){
+warning( sprintf( "Still %i not-fully-converged loci after maximum [%i] Aitken superloops",
+      length( iAit), MAX_AITKEN))
+  }
+
+  if( missing( x)){
+    mat <- cbind( alpha, beta, omega)
+    mat@nits <- nits
+return( mat)
+  } else {
+    x@locinfo$pbonzer <- matrix( c( alpha, beta, 0*beta, omega), ncol=4, 
+        dimnames=list( NULL, cq( A, B, C, O)))
+return( x)
+  }
+}
+
+
 
 
 #' Kin-finders for loads-of-SNPs datasets
@@ -3545,10 +3701,8 @@ function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
 #' #DA596AFF 6 Rose FTP #EE7B51FF 7 Coral
 #' 
 #' @param hsps the output of a call to \code{find_HSPs()}
-#' @param UP plot the mean PLOD for unrelated pairs? Default TRUE
-#' @param HSP plot the mean PLOD for HSPs? Default TRUE
-#' @param POP plot the mean PLOD for POPs? Default TRUE
-#' @param FSP plot the mean PLOD for FSPs? Default TRUE
+#' @param UP,HSP,POP,FSP whether plot the expected (mean) PLOD for pairs of
+#' that type? Defaults TRUE
 #' @param showUP plot the expected density curve for unrelated pairs using the
 #' SPA approximation (default TRUE), Normal approximation (default FALSE),
 #' both, or neither. Either approximation will plot in colour 5, a light
@@ -3557,48 +3711,84 @@ function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
 #' @keywords misc
 #' @export PLOD_loghisto
 "PLOD_loghisto" <-
-function(hsps, UP = TRUE, HSP = TRUE, POP = TRUE, FSP = TRUE, showUP = c(SPA = TRUE, Normal = FALSE), ...) {
+function(
+  hsps,
+  UP= TRUE,
+  HSP= TRUE,
+  POP= TRUE,
+  FSP= TRUE,
+  showUP= c(SPA= TRUE, Normal= FALSE),
+  ...
+){
+  palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+            "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
-        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+  binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
 
-        binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
+  ## c++ gives bins that are out in a different direction for bins and n_in_bin
+  x <- hsps@bins
+  y <- hsps@n_PLODs_in_bin
 
-        ## c++ gives bins that are out in a different direction for bins and n_in_bin
-        plot(hsps@bins[-1], log(hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
-         ..., type = "S", xlab = "PLOD", ylab = "log(Frequency)")
-        ## plot( hsps@bins,log(hsps@n_PLODs_in_bin),type='S', ...,  xlab="PLOD",
-        ##      ylab="log(Frequency)")
-        if( UP) { abline(v = hsps@mean_UP, col = 5, lwd = 2) }
-        if( HSP) { abline(v = hsps@mean_HSP, col = 8, lwd = 2) }
-        if( POP) { abline(v = hsps@mean_POP, col = 1, lwd = 2) }
-        if( FSP) { abline(v = hsps@mean_FSP, col = 9, lwd = 2) }
-        if( showUP["SPA"]) {
-            lines(binmids,log(diff(hsps@binprobs)*sum(hsps@n_PLODs_in_bin[binmids<0])),
-                  lwd=2,col=5)
-        }
-        if( showUP["Normal"]) {
-            lines(hsps@bins,log(diff(c(0,pnorm(binmids, mean = hsps@mean_UP,
-                                      sd = sqrt(hsps@var_UP)) *
-                                      sum(hsps@n_PLODs_in_bin[binmids<0])))),
-                  lwd = 2, col = 5) ## Normal approx
-        }
-        legendBits <- data.frame(allNames = c("UP","POP","HSP","FSP"), allNumbers = c(5,1,8,9))
-        if(!UP) {
-            legendBits <- legendBits[legendBits$allNames != "UP",]
-        }
-        if(!POP) {
-            legendBits <- legendBits[legendBits$allNames != "POP",]
-        }
-        if(!HSP) {
-            legendBits <- legendBits[legendBits$allNames != "HSP",]
-        }
-        if(!FSP) {
-            legendBits <- legendBits[legendBits$allNames != "FSP",]
-        }
-        legend("topright", legend = legendBits$allNames,
-               lwd = 2, lty = 1, col = legendBits$allNumbers, bg = "white")
+  l <- list( ...)
+  ylim <- l$ylim
+  ylim <- if( is.null( ylim)) c( 0, NA) else c( 0, ylim[ 2])
+
+  plot( x[-1], log10( head( pmax( y, 0.1), -1)),
+     ...,
+     ylim= ylim,
+     type= "S", xlab= "PLOD", ylab= "log10(Frequency)")
+  # was: hsps@bins[-1], log10( hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
+
+  # Pass thru _some_ graphical pars
+  # linargs <- list( ...)[ cq( lty, lwd, col)]
+  # linargs <- linargs %SUCH.THAT% length(.) # eliminate pure NULLs
+  # ... which makes the lines() call look confusing...
+  # do.call( 'lines', c( list(
+  #     tail( x, -1), log10( y[-1]), type='s'),
+  #    linargs))
+
+
+  if( UP) { abline(v= hsps@mean_UP, col= 5, lwd= 2) }
+  if( HSP) { abline(v= hsps@mean_HSP, col= 8, lwd= 2) }
+  if( POP) { abline(v= hsps@mean_POP, col= 1, lwd= 2) }
+  if( FSP) { abline(v= hsps@mean_FSP, col= 9, lwd= 2) }
+  if( showUP["SPA"]) {
+      lines( binmids,log10( diff( hsps@binprobs)*sum( y[ binmids<0])),
+            lwd=2,col=5)
+  }
+  if( showUP["Normal"]) {
+    lines( x, log( diff( c( 0,
+        pnorm( binmids, mean= hsps@mean_UP, sd= sqrt( hsps@var_UP)) *
+        sum( y[ binmids<0])))),
+        lwd= 2, col= 5) ## Normal approx
+  }
+
+  # MVB pu-R-ist recode here ;) to avoid heavvvy data.frame
+  legendBits <- c( UP=5, POP=1, HSP=8, FSP=9)
+  legendBits <- legendBits[ unlist( mget( names( legendBits)))] # T or F for each
+  legend("topright",
+      legend= names( legendBits),
+      col= legendBits,
+      lwd= 2, lty= 1, bg= "white")
+
+  if( FALSE){ # old code
+    legendBits <- data.frame(allNames= c("UP","POP","HSP","FSP"), allNumbers= c(5,1,8,9))
+    if(!UP) {
+        legendBits <- legendBits[legendBits$allNames != "UP",]
     }
+    if(!POP) {
+        legendBits <- legendBits[legendBits$allNames != "POP",]
+    }
+    if(!HSP) {
+        legendBits <- legendBits[legendBits$allNames != "HSP",]
+    }
+    if(!FSP) {
+        legendBits <- legendBits[legendBits$allNames != "FSP",]
+    }
+    legend("topright", legend= legendBits$allNames,
+           lwd= 2, lty= 1, col= legendBits$allNumbers, bg= "white")
+  }
+}
 
 
 
@@ -4157,8 +4347,13 @@ stopifnot( keeping %in% cq( hi, lo))
 
 "simcheck_FSP_POP" <-
 function( snpg, chromos, N, check_genofreq=FALSE) {
-  # Simulate N FSPs and N POPs using loci in snpg
-  # Check whether find_FSPs_from_POPs works OK
+## For internal checks only AFAICR
+## For now, we should leave the function in the package, but not exported.
+## "internal" keyword in doco _should_ enforce that, but...
+## Anyway, Rd doc is now included at the end of the code here, for future ref
+
+## Simulate N FSPs and N POPs using loci in snpg
+## Check whether find_FSPs_from_POPs works OK
 
   extract.named( snpg$locinfo[ cq( pbonzer, perr, snerr)])
   n_loci <- nrow( perr)
@@ -4276,6 +4471,105 @@ function( snpg, chromos, N, check_genofreq=FALSE) {
   callo <- sys.call()
   thrub@call <- callo
 return( thrub)
+
+Rd_doc <- r"---{
+% Generated by roxygen2: do not edit by hand
+% Please edit documentation in R/kinference.R
+\name{postprocess_simcheck_FSP_POP}
+\alias{postprocess_simcheck_FSP_POP}
+\alias{simcheck_FSP_POP}
+\title{Check POP/FSP splitter; private.}
+\usage{
+postprocess_simcheck_FSP_POP(forp_sim, findings, plot. = TRUE)
+
+simcheck_FSP_POP(snpg, chromos, N, check_genofreq = FALSE)
+}
+\arguments{
+\item{forp_sim}{result of previous call to \code{simcheck_FSP_POP}}
+
+\item{findings}{result of previous call to \code{find_FSPs_from_POPs_v2(
+forp_sim, ..., keep_indiv=TRUE)}--- which generates the \code{is_same} and
+\code{is_psex} matrices for (pairs * loci), and the by-locus vectors
+\code{Pr_same_FSP}, \code{Pr_psex_FSP}, \code{Pr_same_POP},
+\code{Pr_psex_POP}.}
+
+\item{plot.}{whether to plot. Can't see why this would ever be false...}
+
+\item{snpg}{a \code{snpgeno} object with known allele freqs and error rates
+(i.e. \code{pbonzer} and \code{snerr} must exist in \code{snpg$locinfo})}
+
+\item{chromos}{Controls the extent of linkage:how many "chromosomes" should
+the loci be split between? There's no crossover within these "chromosomes",
+but they inherit independently of each other. Loci are allocated to
+chromosomes in sequence, so that if there are 3 chromosomes, the first locus
+goes to "C1", the second to "C2", third to "C3", fourth to "C1", etc.
+Returned object will have an extra field \code{$locinfo$chromosim}.}
+
+\item{N}{number of pairs of each type (ie this many FSPs, and this many
+POPs).}
+}
+\value{
+\code{simcheck_FSP_POP} returns a \code{snpgeno} object with
+\code{4*N} rows, and an attribute "callo" recording the call. The
+\code{$info} contains just one column, "Our_sample", with names like "F17_A"
+and "P6_B"; those would respectively indicate the first (A) member of the
+17th FSP, and the second (B) member of the 6th POP. The \code{locinfo} field
+is unchanged, except as noted under "chromos" above.
+\code{postprocess_simcheck_FSP_POP} just plots.
+}
+\description{
+This doco shouldn't be visible in the package! (KEYWORDS internal)
+}
+\details{
+\code{simcheck_FSP_POP} simulates POPs and FSPs based on a known set of
+loci, ready for checking \code{\link{find_FSPs_from_POPs}} or variants.
+Quick.
+
+\code{postprocess_simcheck_FSP_POP} can be used to graphically confirm that
+the analytical probabilities of samenames and pseudoexclusion actually match
+the simulated values--- it is amazingly difficult to get the formulae right.
+You wouldn't generally need \code{postprocess...} if you are working with a
+real set of loci.
+}
+\examples{
+
+ForP <- simcheck_FSP_POP( my_snpg, 10, 1000)
+ForP$locinfo$useN[] <- 3 # minimal but most robust genotype
+test3 <- find_FSPs_from_POPs_v2( ForP,
+    cbind( seq( 1, by=2, length=1000),
+      seq( 1, by=2, length=1000)),
+    keep_indiv=TRUE) # need keep_indiv=T for postprocess...() to work
+postprocess_simcheck_FSP_POP( ForP, test3)
+hist( test3, nc=50)
+abline( v=test$E_FPstat, col='blue') # POP and FSP means
+\dontrun{
+# Sim from real loci--- in this case, with 'useN==4' for all loci since 6 looked a bit iffy
+library( atease)
+s11nodup_all4 <- s11nodup
+s11nodup_all4$locinfo$use6 <- NULL
+s11nodup_all4$locinfo$useN <- 4L
+simbo4 <- simcheck_FSP_POP( s11nodup_all4, N=1000, chromo=20)
+simbo4_next <- find_FSPs_from_POPs_v2( simbo4, cbind( seq( 1, 3999, by=2), seq( 2, 4000, by=2)), keep=T)
+kinference:::postprocess_simcheck_FSP_POP( simbo4, simbo4_next) # looks OK; not needed by "user"
+hist( simbo4_next$FPstat, nc=50)
+abline( v=simbo4_next@E_FPstat, col='green') # theory means
+# 95\% of all POPs should be Left of the line drawn next:
+abline( v=simbo4_next@E_FPstat['POP']+2*sqrt( simbo4_next@V_FPstat), col='blue', lty=1)
+# Can't say for FSPs, becoz linkage
+# Real data:
+testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
+abline( v=testo4$FPstat, col='red')
+}
+
+}
+\seealso{
+\code{\link{find_FSPs_from_POPs}}
+}
+\keyword{internal}
+
+
+}---"
+
 }
 
 
@@ -5198,13 +5492,13 @@ function( snpg, candiHTPs) {
 #' the mean PLOD is predictable when the truth is UP, HCP, HTP, or HSP. The
 #' variance is only predictable for UPs, because linkage makes loci
 #' non-independent for kin. However, an empirical variance can be estimated for
-#' HSPs based on the observed PLODs above some super-high threshold, e.g., the
+#' HSPs based on the observed PLODs above some super-high threshold, e_g., the
 #' mean PLOD when truth=HSP (this preliminary variance step could be iterated
 #' using different super-high thresholds). Based on the empirical variance for
 #' HSPs and the analytical variance for UPs, we basically know how much linkage
 #' there might be, so we can predict the PLOD variances for the other kin-pair
 #' types. The wrinkle is that it also depends somewhat on the finer-scale
-#' organization of the genome, i.e. whether it's lots of chromosomes with no
+#' organization of the genome, i_e. whether it's lots of chromosomes with no
 #' crossover, or a few chromosomes with lots of crossover. \code{var_PLOD_kin}
 #' therefore calculates two versions, one assuming the genome is entirely made
 #' up of equal-sized chromosome with zero crossover, and the other assuming the
@@ -5234,45 +5528,45 @@ function( snpg, candiHTPs) {
 #' inferences about kin-ppns can be made.
 #' 
 #' @param linfo either a \code{snpgeno} object, or its "locinfo" attribute (or
-#' a fake one). The "locinfo" should be a \code{data.frame} with columns
+#' a fake one). The "locinfo" should be a \code{data_frame} with columns
 #' \code{e0}, \code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one
-#' "type" of locus, i.e., with roughly the same values of e/v 0/1, and
+#' "type" of locus, i_e., with roughly the same values of e/v 0/1, and
 #' \code{count} says how many such loci there are. e/v 0/1 are means and
 #' variances of the per-locus LOD (note no P) when the locus is or isn't
 #' co-inherited.
 #' @param emp_V_HSP empirical variance of PLOD for deffo HSPs. You're supposed
-#' to be running this on real data, so that \code{emp.V.HSP} is an actual
+#' to be running this on real data, so that \code{emp_V_HSP} is an actual
 #' number; however, for testing purposes, you can set up an artificial version
-#' via \code{C.equiv} below.
-#' @param kin_true Var[PLOD|kin.true]. The default, \code{"HCP"}, corresponds
+#' via \code{C_equiv} below.
+#' @param kin_true Var[PLOD|kin_true]. The default, \code{"HCP"}, corresponds
 #' to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"} to 2; the latter is only
 #' for debugging, since it should reproduce the original empirical variance!
 #' @param debug Logical flag. Defaults to FALSE.
-#' @param C_equiv for artificial test, with \code{emp.V.HSP} set to the
-#' no-crossover variance from \code{C.equiv} chromos (need not be integer).
-#' Ignored if \code{emp.V.HSP} is set.
-#' @return Vector with names \code{V0}, \code{Vx}, \code{C.hat},
-#' \code{rho.hat}, \code{n.meio.<XXX>}. First two are variances under the no-
-#' and all-crossover scenarios; \code{C.hat} is estimated equivalent number of
-#' chromosomes, and \code{rho.hat} is per-locus crossover rate, under the same
-#' scenarios. \code{n.meio.<XXX>} (where \code{"XXX"} is set to
-#' \code{kin.true}) shows how many meioses are involved; yes, a perverse way to
+#' @param C_equiv for artificial test, with \code{emp_V_HSP} set to the
+#' no-crossover variance from \code{C_equiv} chromos (need not be integer).
+#' Ignored if \code{emp_V_HSP} is set.
+#' @return Vector with names \code{V0}, \code{Vx}, \code{C_hat},
+#' \code{rho_hat}, \code{n_meio_<XXX>}. First two are variances under the no-
+#' and all-crossover scenarios; \code{C_hat} is estimated equivalent number of
+#' chromosomes, and \code{rho_hat} is per-locus crossover rate, under the same
+#' scenarios. \code{n_meio_<XXX>} (where \code{"XXX"} is set to
+#' \code{kin_true}) shows how many meioses are involved; yes, a perverse way to
 #' return that piece of info.
 #' @keywords misc
 #' @examples
 #' 
 #' \dontrun{
 #' # H1CPs, for "simulation" equiv to 22 no-Xover chromos
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
-#' #        VUP       V.HSP          V0          Vx       C.hat     rho.hat n.meio.HCP
+#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
+#' #        VUP       V_HSP          V0          Vx       C_hat     rho_hat n_meio_HCP
 #' #     1.3500    208.2273     91.9010    101.8270     22.0000      0.2616      4.0000
 #' # HTPs
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
-#' #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
+#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
+#' #       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
 #' #    1.3500   208.2273   156.5642   186.1779    22.0000     0.2616     3.0000
 #' # Vars would go up with fewer equiv chromos
-#' var_PLOD_kin( data.frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
-#' #       VUP      V.HSP         V0         Vx      C.hat    rho.hat n.meio.HTP
+#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
+#' #       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
 #' #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
 #' }
 #' 
@@ -5280,49 +5574,57 @@ function( snpg, candiHTPs) {
 "var_PLOD_kin" <-
 function(
     linfo,
-    emp_V_HSP= V.noX( C.equiv, 2),
+    emp_V_HSP= V_noX( C_equiv, 2),
+    n_meio, # 2 to 4
     kin_true=c( 'HCP', 'HTP', 'HSP'),
     debug=FALSE,
     C_equiv=NULL
 ){
 #########
-  if( linfo %is.a% 'snpgeno') {
+stop( "UNDER (RE)CONSTRUCTION...")
+
+  if( linfo %is_a% 'snpgeno') {
     linfo <- linfo@locinfo
   }
-  kin_true <- match.arg( kin_true)
-  n.meio <- c( HCP=4, HTP=3, HSP=2)[ kin_true]
+  kin_true <- match_arg( kin_true)
+  typical_kin_meio <- c( HCP=4, HTP=3, HSP=2)
+  if( missing( n_meio)){
+    n_meio <- typical_kin_meio[ kin_true]
+  }
 
 # linfo should be a DF with cols e0, e1, v0, v1, count
-#  names( linfo) <- names( linfo) %&% '.l'
-# extract.named( linfo)
+#  names( linfo) <- names( linfo) %&% '_l'
+# extract_named( linfo)
 
-  count.l <- linfo$count # only present if linfo is simulated eg 100 loci like this one, 100 like the next...
-  if( is.null( count.l)){
-    count.l <- rep( 1, nrow( linfo))
+  count_l <- linfo$count # only present if linfo is simulated eg 100 loci like this one, 100 like the next...
+  if( is_null( count_l)){
+    count_l <- rep( 1, nrow( linfo))
   }
 
-  L <- sum( count.l)
-  pi <- count.l / L
+  L <- sum( count_l)
+  pi <- count_l / L
 
   for( thing in cq(e0, e1, v0, v1) ) {
-    this <- c(rep(NaN, nrow(linfo)))
+    this <- numeric( nrow(linfo))
     for( way in unique(linfo$useN)) {
-        this[linfo$useN == way] <- with(linfo, get(sprintf("%s_%iway", thing, way)))[linfo$useN == way]
+      this[linfo$useN == way] <- with(linfo,
+          get(sprintf("%s_%iway", thing, way))[useN == way]
+        )
     }
-    assign(thing %&% ".l", this)
+    assign(thing %&% "_l", this)
   }
 
-  #for( thing in cq( e0, e1, v0, v1)) { ## R4.1 refuses to parse a row-wise get; replaced by above
+  #for( thing in cq( e0, e1, v0, v1)) { ## R4_1 refuses to parse a row-wise get; replaced by above
   #  assign( thing %&% '.l', with( linfo, get( sprintf( '%s_%iway', thing, useN))))
   #}
 
-  e0 <- c( pi %*% e0.l) ## c() to squish length-one arrays for R4.0 compliance
-  e1 <- c( pi %*% e1.l)
-  v0 <- c( pi %*% v0.l)
-  v1 <- c( pi %*% v1.l)
+  e0 <- c( pi %*% e0_l) ## c() to squish length-one arrays for R4_0 compliance
+  e1 <- c( pi %*% e1_l)
+  v0 <- c( pi %*% v0_l)
+  v1 <- c( pi %*% v1_l)
 
-  # noX = no crossover, i.e. all in separate equal chromos
-  V.noX <- function( C, meioses) {
+  # noX = no crossover, i_e. all in separate equal chromos
+  V_noX <- function( C, meioses) {
       p <- 2 ^ (1-meioses) # Marginal prob of coinheritance = 1/2 for HSPs, 1/8 for HCPs
       EofV <- L * v0 + L * p *(v1-v0)
       VofE <- sqr( L * (e1-e0)) * p * (1-p) / C
@@ -5330,74 +5632,74 @@ function(
   }
 
   # MoM for HSPs:
-  if( !is.null( C_equiv)) {
-    C.hat <- C_equiv <- min( L, C_equiv)
+  if( !is_null( C_equiv)) {
+    C_hat <- C_equiv <- min( L, C_equiv)
   } else {
-    C.hat <- if( V.noX( 1, 2) < emp_V_HSP) 1 else
-        if( V.noX( L, 2) > emp_V_HSP) L else
-        find.root( V.noX, target=emp_V_HSP, start=1, step=1, fdirection='decreasing',
-            min.x=1, max.x=L, meioses=2)
+    C_hat <- if( V_noX( 1, 2) < emp_V_HSP) 1 else
+        if( V_noX( L, 2) > emp_V_HSP) L else
+        find_root( V_noX, target=emp_V_HSP, start=1, step=1, fdirection='decreasing',
+            min_x=1, max_x=L, meioses=2)
   }
-  V0 <- V.noX( C.hat, meioses=n.meio)
+  V0 <- V_noX( C_hat, meioses=n_meio)
 
   # Entirely Xover on one single chromo
   # Should these be done separately by locus type, then averaged??
   ell <- 1 %upto% (L-1)
-  e2.1 <- c(pi %*% (sqr( e1.l) + v1.l) ) ## length-one arrays are out for R4.0
-  e2.0 <- c(pi %*% (sqr( e0.l) + v0.l) ) ## length-one arrays are out for R4.0
-  e1.0 <- e0 # pi %*% e0.l
-  e1.1 <- e1
+  e2_1 <- c(pi %*% (sqr( e1_l) + v1_l) ) ## length-one arrays are out for R4_0
+  e2_0 <- c(pi %*% (sqr( e0_l) + v0_l) ) ## length-one arrays are out for R4_0
+  e1_0 <- e0 # pi %*% e0_l
+  e1_1 <- e1
 
   phi <- function( r, mul, s) 0.5 * (1 + s*exp( -mul*r*ell))
   PSstar <- P0star <- array( 0, c( L-1, 2, 2, 2))
-  si2 <- slice.index( PSstar, 2)
-  si3 <- slice.index( PSstar, 3)
-  si4 <- slice.index( PSstar, 4)
+  si2 <- slice_index( PSstar, 2)
+  si3 <- slice_index( PSstar, 3)
+  si4 <- slice_index( PSstar, 4)
 
-  V.allX <- function( rho, meioses) {
+  V_allX <- function( rho, meioses) {
     # PSstar[ L,i,j,k] is Pr[ composite state @ L = 1 | starting states @ 0 are i, j, k]
     # j & k series irrel for HSP
-    # slice.index() == 1 or 2
-    # so 3 - 2*s.i. == -1 or +1
-    # and 2-s.i. == 1 or 0
+    # slice_index() == 1 or 2
+    # so 3 - 2*s_i. == -1 or +1
+    # and 2-s_i. == 1 or 0
 
     # This code could be much more efficient; pre-compute P0star, and much reduce the phi-calcs
     PSstar[] <<- phi( c(rho), 4, 3 - 2*si2) *
         (if( meioses>2) phi( c(rho), 2, 3 - 2*si3) else 1) *
         (if( meioses>3) phi( c(rho), 2, 3 - 2*si4) else 1) ## SB( c(rho) instead of length-one
-      ## array because R4.0 compliance
+      ## array because R4_0 compliance
 
     P0star[] <<-  (2-si2) *
         (if( meioses>2) 2-si3 else 1) *
         (if( meioses>3) 2-si4 else 1)
 
-    p11.8 <- apply( PSstar * P0star, 1, sum)
-    p01.8 <- apply( PSstar * (1-P0star), 1, sum)
-    p00.8 <- apply( (1-PSstar) * (1-P0star), 1, sum)
+    p11_8 <- apply( PSstar * P0star, 1, sum)
+    p01_8 <- apply( PSstar * (1-P0star), 1, sum)
+    p00_8 <- apply( (1-PSstar) * (1-P0star), 1, sum)
 
-    p11 <- p11.8 / 8
-    p01.10 <- p01.8 / 4 # both ways
-    p00 <- p00.8 / 8
+    p11 <- p11_8 / 8
+    p01_10 <- p01_8 / 4 # both ways
+    p00 <- p00_8 / 8
 
     p <- 2 ^ (1-meioses) # Marginal prob of coinheritance = 1/2 for HSPs, 1/8 for HCPs
 
-    EL <- L * ( e1.1*p + e1.0*(1-p))
-    EL2 <- L * ( e2.1*p + e2.0*(1-p)) +
-        2 * (L-ell) %*% ( sqr( e1.1)*p11 + e1.1*e1.0*p01.10 +  sqr( e1.0)*p00)
+    EL <- L * ( e1_1*p + e1_0*(1-p))
+    EL2 <- L * ( e2_1*p + e2_0*(1-p)) +
+        2 * (L-ell) %*% ( sqr( e1_1)*p11 + e1_1*e1_0*p01_10 +  sqr( e1_0)*p00)
     VL <- EL2 - sqr( EL)
   }
 
   if( debug) {
-    mtrace( V.allX) # surely wanna
+    mtrace( V_allX) # surely wanna
     0 # help debugging...
   }
 
-  # If no Odis (e.g. with very few loci!) then no point in going further
-  rho.hat <- if( C.hat > L-1) 100 else
-      find.root( V.allX, target=emp_V_HSP, start=1/L, step=0.2/L,
-          fdirection='decreasing', min.x=0, meioses=2)
-  Vx <- V.allX( rho.hat, meioses=n.meio)
+  # If no Odis (e_g. with very few loci!) then no point in going further
+  rho_hat <- if( C_hat > L-1) 100 else
+      find_root( V_allX, target=emp_V_HSP, start=1/L, step=0.2/L,
+          fdirection='decreasing', min_x=0, meioses=2)
+  Vx <- V_allX( rho_hat, meioses=n_meio)
 
-return( unlist( returnList( VUP=L*v0, V.HSP=emp_V_HSP, V0, Vx, C.hat, rho.hat, n.meio)))
+return( unlist( returnList( VUP=L*v0, V_HSP=emp_V_HSP, V0, Vx, C_hat, rho_hat, n_meio)))
 }
 
