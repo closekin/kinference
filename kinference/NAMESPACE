@@ -1,5 +1,6 @@
 useDynLib( kinference, .registration=TRUE)
-export( "chain_pairwise",
+export( "autopick_threshold",
+"chain_pairwise",
 "check_FPosity",
 "check6and4",
 "chisq_genofreq_check",
