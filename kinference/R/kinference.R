@@ -1,4 +1,9 @@
 # This is package kinference 
+#' @rawNamespace import( Rcpp)
+#' @rawNamespace import( atease)
+#' @rawNamespace import( mvbutils)
+#' @rawNamespace import( gbasics)
+#' @rawNamespace import( vecless)
 
 ".onLoad" <-
 function( libname, pkgname) {
