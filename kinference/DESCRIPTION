@@ -8,6 +8,7 @@ Imports: Rcpp (>= 0.12.11), atease, mvbutils, gbasics, vecless
 Suggests: knitr, rmarkdown, tinytest
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
 SystemRequirements: C++11
 NeedsCompilation: YES
@@ -15,3 +16,4 @@ Encoding: UTF-8
 KeepSource: TRUE
 Collate: kinference.R Cloaders_kinference.R kinference-package.R RcppExports.R
 Version: 0.0.155
+LazyData: true

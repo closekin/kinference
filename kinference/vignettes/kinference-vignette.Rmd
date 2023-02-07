@@ -1,0 +1,24 @@
+---
+title: "Inferring kin relationships with kinference"
+author: S M Baylis
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{inferring kin relationships with kinference}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+Package `kinference` allows users to use SNP genotype data from
+biological samples to infer kin relationships between pairs of
+samples. In this vignette, we demonstrate how to use the core
+functions of package `kinference` to perform kin-finding and the
+necessary data-cleaning steps that lead up to kin-finding (section 1),
+and show a handful of canned examples of the sorts of things that can
+go wrong (section 2).
+
+# Section 1: data-cleaning and kin-finding
+
+
+
+# Section 2: examples of things that can go wrong
+
