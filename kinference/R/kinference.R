@@ -1,4 +1,9 @@
 # This is package kinference
+#' @rawNamespace import( Rcpp)
+#' @rawNamespace import( atease)
+#' @rawNamespace import( mvbutils)
+#' @rawNamespace import( gbasics)
+#' @rawNamespace import( vecless)
 
 ".onLoad" <-
 function( libname, pkgname) {
@@ -94,6 +99,336 @@ function( nlocal=sys.parent()) mlocal({
 
   pp6_err <- pp_err[ genotypes6, genotypes6] ? 0
 })
+
+
+
+
+#' PLOD threshold for HSPs
+#'
+#' This function proposes a PLOD threshold for excluding almost all 3rd-order
+#' kin, and computes the associated False-Negative Probability (i.e., that a
+#' true HSP will have a PLOD below that threshold).
+#'
+#' The rationale comes from fitting a mixture distribution to observed PLODs
+#' within some range that is expected to contain only 2nd, 3rd, and
+#' _perhaps_ a few 4th order kin. The threshold is then "chosen" (or
+#' proposed; it's really up to you) so that the expected number of
+#' false-positives from 3rd-order kin-pairs (i.e., with PLODs above the
+#' threshold) matches whatever you decide. A histogram with expected values is
+#' plotted (unless you tell it not to).
+#'
+#' Means and variances of the mixture components are automatically set in
+#' advance, so the mixture-fit only has to estimate the proportion of kin-pairs
+#' of each type. The means are easily calculated from kinship coefficients,
+#' based on allele frequencies. Variances, however, also depend strongly on the
+#' degree of linkage between loci, and to some extent on the _nature_ of
+#' the linkage (more chromosomes, or more crossovers?). This is handled
+#' internally by the function [var_PLOD_kin()] (qv), which uses the
+#' observed "overdispersion" of PLODs for a subset of _definite_ 2nd-order
+#' kin to place bounds on the variances of 3rd and 4th order kin (based on two
+#' extreme assumptions about the _nature_ of linkage). The code of
+#' `autopick_threshold` then explores different variances within those
+#' bounds and
+#'
+#' Despite the name, _you_ still have to supply sensible values for a
+#' couple of parameters, based on looking at your data and understanding what
+#' you are trying to do. So it's not _completely_ automated--- and never
+#' will be! Choosing a threshold is _not_ an "optimization process" with
+#' explicit bias/variance tradeoffs; rather, it's about ensuring that you have
+#' adequate "engineering tolerance" in the next stage of CKMR. The
+#' False-Negative Probability will, to a great extent, compensate for the
+#' choice of threshold (i.e. removing any bias in the fitted CKMR model)
+#' _unless_ you set the threshold too low, and thus qend up with some
+#' 3rd-order kin-pairs in your set of "definite 2nd-orders".
+#'
+#' ## Fitrange and use4th
+#'
+#' If you are using an HSP-oriented PLOD, then
+#' the range of PLODs you fit to should extend from somewhere above 0 (which is
+#' verrry close to the expected PLOD for 3rd-order kin), up to the RHS of the
+#' HSP bump, but clearly not so far as to include any FSPs and POPs. If you set
+#' the lower limit high enough, then you don't need to worry about 4th-order
+#' kin intruding (their contribution would be negligible), so you can get away
+#' with fitting a 2-component mixture (simpler, less to go wrong...) by setting
+#' `use4th=FALSE`. But if you push the lower range closer to 0 (which does
+#' give you a larger sample size for fitting), then you might need to set
+#' `use4th=TRUE`. The (substantial) downside of doing that, is that there
+#' are often more PLODs close to 0 than near the HSP mean, so the mixture-fit
+#' (which has make more assumptions when also using 4th-orders--- and those
+#' assumptions may not be perfect) will "concentrate its efforts" on getting a
+#' good fit near 0, rather than near the 2nd-order mean which is what we really
+#' need. It is worth experimenting.
+#'
+#'
+#' @param x a [snpgeno()] or its `locinfo` attribute. Must
+#' already have been prepared by running `hsp_power` (qv) and
+#' `prepare_PLOD_SPA` (qv).
+#' @param kin a dataframe of "close-ish" kin-pairs and their PLODs, presumably
+#' from running `find_HSPs` (qv); must have a column "PLOD".
+#' @param fitrange_PLOD two numbers, specifying the range of PLODs from
+#' `kin` to use in _fitting_ (though all are _plotted_, by
+#' default)
+#' @param FPtol_pairs how many expected False-Positive 3rd-order kin should the
+#' threshold exclude?
+#' @param use4th whether to allow for 4th-order kin when fitting.
+#' @param selecto whether to choose the threshold based on the best mixture fit
+#' ("ML"), or the most conservative ("paranoid").
+#' @param NVAR how many variances to try, between the limits set by
+#' `var_PLOD_kin`
+#' @param plot_bins bin-width for histogram plotting. Default NULL means no
+#' plot.
+#' @param shading_density By default, all PLODs in `kin` will be included
+#' in the histogram, even though only a subset are used in fitting. The
+#' histogram bars _not_ used in fitting (i.e., below
+#' `fitrange_PLOD[1]`) will be lightened in colour, according to this
+#' parameter. Results are graphics-device-dependent, so you may need to
+#' experiment away from the default; larger numbers usually mean lighter
+#' shading. Setting `shading_density=NA` should result in a light
+#' transparent rectangle covering the entire LHS of the graph, which you might
+#' prefer. You can also set `xlim` as usual, to remove those left-hand
+#' bars altogether.
+#' @param want_all_results if TRUE, return dataframe(s) containing results for
+#' each variance explored. This lets you examine "sensitivity".
+#' @param ... other parameters passed to `hist`, eg `xlim`,
+#' `ylim`, `col`. Many others will be ignored, and some will cause
+#' problems.
+#' @return The proposed threshold, with lots of attributes. You can use those
+#' to calculate False-Neg Probabilities for _other_ possible thresholds,
+#' as per *Examples*; you _don't_ have to accept the one that is
+#' proposed here. Threshold choice is *up to you* (and not the fault of
+#' [kinference])!
+#' @seealso [hsp_power()], [var_PLOD_kin()]
+#' @keywords misc
+#' @examples
+#'
+#' # Better have one...
+#'
+#' @export autopick_threshold
+"autopick_threshold" <-
+function(
+  x,
+  kin,
+  fitrange_PLOD,
+  FPtol_pairs,
+  use4th,
+  selecto= c( 'ML', 'paranoid'),
+  NVAR= 10,
+  plot_bins= NULL,
+  shading_density= 10,
+  want_all_results= FALSE,
+  ... # for plot
+){
+stopifnot(
+    length( fitrange_PLOD)==2,
+    all( is.finite( fitrange_PLOD))
+  )
+  fitrange_PLOD <- sort( fitrange_PLOD)
+  min_PLOD <- fitrange_PLOD[ 1]
+  max_PLOD <- fitrange_PLOD[ 2]
+
+  li <- if( x %is.a% 'snpgeno') x$locinfo else x
+  E_HSP <- sum( li$E.HSP)
+  E_UP <- sum( li$E.UP)
+
+  E2 <- E_HSP
+  E3 <- (E_UP + E_HSP) / 2 # 0 is good-enuf approx *IF* stat...
+  # ...is actually HSP::UP PLOD, but it _might_ be something else eg HSP::HTP
+  E4 <- (3*E_UP + 1*E_HSP) / 4
+
+  if( E3 > min_PLOD){
+    warning( sprintf( 'fitrange_PLOD goes below 3rd-order mean, which is %5.2f; ' %&%
+        'probably a bad idea', E3))
+  }
+  if( E2 > max_PLOD){
+stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f; noooo!', E2))
+  }
+
+  kin_PLOD <- kin$PLOD %such.that% (. %in.range% fitrange_PLOD)
+  overmean <- kin_PLOD %such.that% (. > E2)
+  emp_V_HSP <- mean( sqr( overmean-E2))
+
+  vpk <- var_PLOD_kin( x, emp_V_HSP, n_meio=c( 3, 4))
+
+  CDF <- function( plod, P234, SD234){
+      P234[1] * pnorm( plod, mean=E2, sd=SD234[1]) +
+      P234[2] * pnorm( plod, mean=E3, sd=SD234[2]) +
+      P234[3] * pnorm( plod, mean=E4, sd=SD234[3])
+    }
+  mixlglk3 <- function( P3, SD234){
+      P234 <- c( 1-P3, P3, 0)
+      pdf <<- (1-P3) * pdf2 +  P3 * pdf3
+      Pr_in_range <<- diff( CDF( fitrange_PLOD, P234, SD234))
+      pdf <- pdf / Pr_in_range
+    return( sum( log( pdf)))
+    }
+
+  mixlglk4 <- function( Ppar, SD234){
+    P3 <<- Ppar[1]
+    P4 <<- (1-P3) * Ppar[2] # Ppar[2] is ppn of not-3s that are 4s
+    P2 <<- 1 - P3 - P4
+    pdf <<- P2*pdf2 + P3*pdf3 + P4*pdf4
+    Pr_in_range <<- diff( CDF( fitrange_PLOD, c( P2, P3, P4), SD234))
+    pdf <- pdf / Pr_in_range
+  return( sum( log( pdf)))
+  }
+
+  set_stuff <- function( nlocal=sys.parent()) mlocal({
+    # NB Evaluated directly in caller
+
+    # We observe Nobs kin that are either 2nd or 3rd order
+    # but iff they're within fitrange_PLOD. So the total number of 2nd+3rd(+4th) would be...
+    Nall <- Nobs / Pr_in_range
+    N3 <- Nall * P3 # just 3rds
+
+    # Threshold is where "FPtol_pairs" of 3rds would be expected above it; 4ths irrel
+    thresh <- qnorm( FPtol_pairs / N3, mean=E3, sd=SD3, lower.tail=FALSE)
+    Pr_FNeg <- pnorm( thresh, mean=E2, sd=SD2)
+  })
+
+  Nobs <- length( kin_PLOD)
+  SD2 <- sqrt( emp_V_HSP)
+  pdf2 <- dnorm( kin_PLOD, mean=E2, sd=SD2)
+  pdf <- 0*pdf2 # placeholder
+  Pr_in_range <- P2 <- P3 <- P4 <- (-999) # placeholder
+
+  V3_range <- sort( vpk[ ,'M3'])
+  SD3i <- seq( from=sqrt( V3_range[1]), to=sqrt( V3_range[2]), length=NVAR)
+
+  # We may not use 4th-order, but prior to loop the compus are cheap
+  V4_range <- sort( vpk[ ,'M4'])
+  SD4i <- seq( from=sqrt( V4_range[1]), to=sqrt( V4_range[2]), length=NVAR)
+
+  allvals3 <- allvals4 <- NULL
+
+  for( ivar in seq_along( SD3i)){
+    SD3 <- SD3i[ ivar]
+    SD4 <- SD4i[ ivar]
+    this_SD234 <- c( SD2, SD3, SD4)
+
+    pdf3 <- dnorm( kin_PLOD, mean=E3, sd=SD3)
+    pdf4 <- dnorm( kin_PLOD, mean=E4, sd=SD4)
+
+    silly <- c( 0.01, 1-0.01)
+    # If we hit either of these, it's not sensible...
+    # min_silly means it's ALL HSPs, NO HTPs--- in which case, do by eye...
+    # max_silly means NO HSPs
+    bestio <- optimize( mixlglk3, silly, maximum=TRUE, SD234=this_SD234)
+    P3 <- bestio$maximum
+    if( min( abs( P3 - silly)) < 0.01){
+      warning( sprintf( 'Silly "best" fit for SD3=%5.1f', SD3))
+    }
+    lglk <- mixlglk3( P3, this_SD234) # sets Pr_in_range and pdf
+    set_stuff() # N3, thresh, etc
+
+    # Add spurious (and silly) SD4: won't matter cos P4==0, but lets CDF calc work OK
+    newvals3 <- returnList( SD2, SD3, SD4=0.1, P2=1-P3, P3, P4=0, Nall, lglk, thresh, Pr_FNeg)
+    allvals3 <- if( is.null( allvals3)) data.frame( newvals3) else
+        rbind( allvals3, newvals3)
+
+    if( use4th){
+      startio <- c( 0.1, 0.7)
+      # 4ths likely 2--4X 2nds
+      bestio <- nlminb( startio, NEG( mixlglk4),
+          lower=c( 0, 1.5/(1+1.5)), upper=c( 1, 5/(1+5)),
+          SD234= this_SD234)
+      lglk <- mixlglk4( bestio$par, this_SD234)
+      set_stuff()
+      newvals4 <- returnList( SD2, SD3, SD4, P2, P3, P4, N3, Nall, lglk, thresh, Pr_FNeg)
+      allvals4 <- if( is.null( allvals4)) data.frame( newvals4) else
+          rbind( allvals4, newvals4)
+    }
+  }
+
+  selecto <- match.arg( selecto)
+
+  allvals <- if( use4th) allvals4 else allvals3
+
+  i_highest <- which.max( allvals$thresh)
+  i_fittest <- which.max( allvals$lglk)
+  picki <- if( selecto=='paranoid') i_highest else i_fittest
+
+  # Graph?
+  if( !is.null( plot_bins)){
+    # Taken from HSP_histo (before its renaming)
+    # X-range goes from lowest *observed* PLOD (in kin), to *chosen* max_PLOD
+    # CDF
+    histo <- hist( kin$PLOD %such.that% (. < max_PLOD),
+        breaks=seq( from= min( kin$PLOD), to= max_PLOD, by= plot_bins),
+        col="lightgrey",xlab="PLOD",
+        main = sprintf( 'Autothresh: %s, #FP=%5.1f', selecto, FPtol_pairs),
+        ...)
+
+    # Too confusing to have >1 fit on same plot, so...
+    # with() next allows direct use of that row of vals
+    with( as.list( allvals[ picki,]), {
+      # Composite distro
+      abline( v=thresh, lty=2, col='blue')
+      probblies <- Nall * diff( CDF( histo$breaks, c( P2, P3, P4), c( SD2, SD3, SD4)))
+      lines( histo$mids, probblies, col='violet', lty=1)
+
+      # Might as well see the components...
+      for( ord in c( 2, 3, if( use4th) 4 else NULL)){
+        Eo <- get( 'E' %&% ord)
+        SDo <- get( 'SD' %&% ord)
+        Po <- get( 'P' %&% ord)
+
+        probbly <- diff( pnorm( histo$breaks, mean=Eo, sd=SDo)) * Nall * Po
+        lines( histo$mids, probbly, col='violet', lty=2)
+      } # for ord
+    }) # with picki
+
+    # Shade out region _not_ used in fitting.
+    if( dev.capabilities( 'semiTransparency')[[1]] && is.na( shading_density)){
+      DENSITY <- NA
+      COL <- gray( 0.9, alpha=0.8) # almost white
+    } else {
+      DENSITY <- shading_density * par( 'pin')[1]
+      COL <- 'white'
+    }
+    rect( par( 'usr')[1], 0, min_PLOD, par( 'usr')[4], density=DENSITY, border=NA,
+        col= COL)
+
+    # Means: show them last, so not covered by shading
+    abline( v=c( E2, E3, E4), col='black', lwd=3) # E4 *shouldn't* appear; should be off LHS!
+
+    legend("topright", legend = c( 'Theory means HSP & HTP', 'Overall', 'Component'),
+      lwd= c( 3, 1, 1), lty= c( 1, 1, 2),
+      col= c( 'black', 'violet', 'violet'), bg='white')
+  }
+
+  flatto <- function( matto){
+      # Add row & col names to matrix that is getting vectorized
+      m <- c( matto)
+      names( m) <- outer( rownames( matto), colnames( matto),
+          function( x, y) sprintf( '%s_%s', x, y))
+    return( m)
+    }
+
+  threshold <- allvals$thresh[ picki]
+  attributes( threshold) <-  c(
+      returnList( fitrange_PLOD, selecto, use4th, FPtol_pairs),
+      info=list( c(
+         flatto( vpk[,-1]),
+         vpk@info %without.name% "n_meio",
+         unlist( returnList( E2, E3, E4)),
+         unlist( allvals[ picki, ] %without.name% 'lglk'))
+        )
+    )
+  if( want_all_results){
+    # Express lglks relto best
+    MAX_lglk <- max( allvals$lglk)
+    allvals$lglk <- allvals$lglk - MAX_lglk
+    allvals3$lglk <- allvals3$lglk - MAX_lglk
+    if( use4th){
+      allvals4$lglk <- allvals4$lglk - MAX_lglk
+    }
+
+    threshold@allvals3 <- allvals3
+    threshold@allvals4 <- allvals4
+  }
+
+return( threshold)
+}
 
 
 "calc_g6probs" <-
@@ -1935,7 +2270,14 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   if( is.null( minbin)) {
     VUP <- sum( li$V.UP)
     EUP <- sum( li$E.UP)
-    minbin <- EUP - sqrt( VUP) * 1.645 # 5% of UPs below that
+
+    ncomps <- length( subset1) * length( subset2) # might be out be 2 if s1==s2...
+    # ... which is irrel on log scale
+
+    # Bins start at 2SD below lowest expected PLOD
+    # usually should be enuf to show weird stuff below min
+    nSD <- abs( qnorm( 1/ncomps)) + 2
+    minbin <- EUP - nSD * sqrt( VUP) # 0.003% of UPs below that
   }
 
   if( is.null( maxbin)) {
@@ -2700,18 +3042,25 @@ function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin
 #'   * sdiff (E.HSP-E.POP)/sqrt(V.UP) which is arguably better than `Ediff`
 #' for ranking loci
 #'
-#' It also attaches `LOD` and `PUP` columns (actually matrices) to
-#' the `locinfo`, which do make the latter hard to read if you just print
-#' it willy-nilly, so don't.
+#' It also attaches `LOD`, `PUP`, and `ev01` elements (each a
+#' matrix) to the `locinfo`. They have been made dull (see
+#' `make_dull`) to improve your viewing experience, but they work fine for
+#' all normal purposes (and you can always `unclass` them to remove the S3
+#' class `dull`).
+#'
+#' ## Notes
+#'
+#' `hsp_power` (and downstream) should get a refactor. It's daft to store LODs for
+#' only one specific kin; it'd be better to always calculate P1share and
+#' P2share as well as P0share (which is PUP), and then compute
+#' whatever-is-needed later on-the-fly. As-is, we are re-computing P1
+#' and P2 based on LOD and PUP OTF instead (which is also unsafe, because LOD
+#' could have been calculated with k != 0.5).
 #'
 #' @param lociar `snpgeno` objects with the necessary ingredients
 #' @param want_LOD_table can't think why you'd set this to FALSE
 #' @param k target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.
 #' @return `snpgeno` object with augmented columns in "locinfo" attr.
-#' @section Notes: `hsp_power` needs tidy-up. It's daft to store LODs for
-#' only one specific kin; it'd be better to always calculate P1share and
-#' P2share as well as P0share (which is PUP), and then compute
-#' whatever-is-needed later on-the-fly.
 #' @keywords misc
 #' @examples
 #'
@@ -2768,57 +3117,47 @@ function( lociar,
     s3 <- predict_hsp_util( g3p0, g3p1, g3p2, want_LOD_table, k=k) %without.names% "matto"
 
     if( want_LOD_table) { # overrides predict_hsp_util's version of want_LOD_table
-      li$LOD6 <- s6@LOD # matrix
-      li$PUP6 <- s6@PUP
-      li$LOD4 <- s4@LOD
-      li$PUP4 <- s4@PUP
-      li$LOD3 <- s3@LOD
-      li$PUP3 <- s3@PUP
-      s6@LOD <- s6@PUP <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+      # We want LOD6, PUP4, etc (matrices with cols "AB/AA" etc)
+      # and ev01_6, ev01_4, etc (matrices with cols as per 'things' next)
 
-      # This sure looks like SB code to me (MVB)... ;)
-      li$e0_6way <- s6$e0
-      li$v0_6way <- s6$v0
-      li$e1_6way <- s6$e1
-      li$v1_6way <- s6$v1
+      things <- cq( e0, e1, v0, v1)
 
-      li$e0_4way <- s4$e0
-      li$v0_4way <- s4$v0
-      li$e1_4way <- s4$e1
-      li$v1_4way <- s4$v1
+      for( usy in cq( 3, 4, 6)){ # NB character!
+        s <- get( 's' %&% usy) # s6 etc
+        ev01 <- s[ things]
+        names( ev01) <- things
+        li[[ 'ev01_' %&% usy]] <- s$ev01 <- do.call( 'cbind', ev01)
+        # eg li$ev01_4 will be a 4-col matrix
 
-      li$e0_3way <- s3$e0
-      li$v0_3way <- s3$v0
-      li$e1_3way <- s3$e1
-      li$v1_3way <- s3$v1
+        li[[ 'LOD' %&% usy]] <- s@LOD # matrix
+        li[[ 'PUP' %&% usy]] <- s@PUP # matrix
+         # li$PUP6 <- s6@PUP, li$LOD4 <- s4@LOD, etc
 
-      s6$e0 <- s6$v0 <- s6$e1 <- s6$v1 <- NULL
-      s4$e0 <- s4$v0 <- s4$e1 <- s4$v1 <- NULL
-      s3$e0 <- s3$v0 <- s3$e1 <- s3$v1 <- NULL
+        s@LOD <- s@PUP <- NULL
+        s <- s %without.name% things
+        assign( 's' %&% usy, s)
+      }
 
-      # MVB: something like (but is this really better?! not sure...)
-      # li <- list2env( li)
-      # for( iway in c( 3,4,6) {
-      #  for( thing in cq( e0, v0, e1, v1)) {
-      #    assign( sprintf( '%s_%iway', thing, iway), get( 's' %&% iway)[[thing]]
-      #   } }
-      # li <- as.list( li)
+      # s6@LOD <- s6@PUP <- s4@LOD <- s4@PUP <- s3@LOD <- s3@PUP <- NULL
+      # s6$e0 <- s6$v0 <- s6$e1 <- s6$v1 <- NULL
     }
 
-    # li <- cbind( li, s6, s4)
+    # Now make "master" variables LOD, PUP, ev01 that correspond to useN
     li[ names( s6)] <- s6 # instead of cbind--- this will overwrite not add
     # Replace the ones that shouldn't be 6way:
     li[ li$useN == 4, names( s4)] <- s4[ li$useN == 4,] ## subs in 4-ways where useN == 4
     li[ li$useN == 3, names( s3)] <- s3[ li$useN == 3,] ## subs in 3-ways where useN == 3
-
   } else { # ... sneaky override, for non-ABCO systems
     # shouldn't really be called "...6" obvs
     s6$useN <- 6
     li[ names( s6)] <- s6 # instead of cbind--- this overwrites
   }
 
-    lociar@locinfo <- li
-    lociar@hspPower_checksum <- calc_hspPower_checksum( li)
+  li <- make_dull( li, names( li) %that.match% '^ev01')
+  li <- make_dull( li, names( li) %that.match% '^(LOD|PUP)[0-9]') # you'll thank make for this :)
+
+  lociar@locinfo <- li
+  lociar@hspPower_checksum <- calc_hspPower_checksum( li)
 return( lociar)
 }
 
@@ -4053,8 +4392,8 @@ function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5) {
   nl <- nrow( pIBD1)
   Phsp <- pIBD1 * k + pIBD0 * (1-k)
   Pup <- pIBD0
-    Ppop <- pIBD1
-    Pfsp <- pIBD0*0.25 + pIBD1*0.5 + pIBD2*0.25
+  Ppop <- pIBD1
+  Pfsp <- pIBD0*0.25 + pIBD1*0.5 + pIBD2*0.25
 
   LOD <- log( Phsp / Pup)
   LOD[ Pup==0] <- 0 # if Pup=0 then p*log(p) = 0; only happens when r=0
@@ -4227,8 +4566,7 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
       # vecless **should** work just exporting := BUT doesn't seem to
       e <- new.env( parent=asNamespace( 'vecless'))
       # add sqr to the environment so that vecless can see it...
-#      e$sqr <- gbasics::sqr
-      e$sqr <- function( x) x*x # gbasics::sqr but it's not in gbasics!
+      e$sqr <- function( x) x*x
       e$renorm_SPA_cumul <- renorm_SPA_cumul
       e$PUP <- PUP
       e$LOD <- e$LODOK <- LOD
@@ -5407,23 +5745,41 @@ function( snpg, candiHTPs) {
 #' Predict variance of PLOD for HCPs and HTPs
 #'
 #' Aim is to work out how much your putative half-sibling pairs (HSPs) might be
-#' contaminated by half-cousin pairs (HCPs) or half-thiatic pairs (HTPs).
-#' HSP-selection is presumably based on the pairwise PLODs for HSP:UP, taking
-#' all pairs where that PLOD exceeds some threshold. Given the allele freqs,
-#' the mean PLOD is predictable when the truth is UP, HCP, HTP, or HSP. The
-#' variance is only predictable for UPs, because linkage makes loci
-#' non-independent for kin. However, an empirical variance can be estimated for
-#' HSPs based on the observed PLODs above some super-high threshold, e_g., the
-#' mean PLOD when truth=HSP (this preliminary variance step could be iterated
-#' using different super-high thresholds). Based on the empirical variance for
-#' HSPs and the analytical variance for UPs, we basically know how much linkage
-#' there might be, so we can predict the PLOD variances for the other kin-pair
-#' types. The wrinkle is that it also depends somewhat on the finer-scale
-#' organization of the genome, i.e. whether it's lots of chromosomes with no
-#' crossover, or a few chromosomes with lots of crossover. `var_PLOD_kin`
-#' therefore calculates two versions, one assuming the genome is entirely made
-#' up of equal-sized chromosome with zero crossover, and the other assuming the
-#' genome is a single chromosomes with crossover according to a random process.
+#' contaminated by half-thiatic pairs (HTPs) or half-cousin pairs (HCPs) (or,
+#' theoretically, by more remote kin). HSP-selection is presumably based on the
+#' pairwise PLODs for HSP:UP, taking all pairs where that PLOD exceeds some
+#' threshold. Given the allele freqs, the _mean_ PLOD is predictable when
+#' the truth is UP, HCP, HTP, or HSP. The variance is only predictable for UPs,
+#' though, because linkage makes loci non-independent for kin. However, an
+#' empirical variance can be estimated for HSPs based on the observed PLODs
+#' above some safe threshold (to exclude weaker kin), typically the mean PLOD
+#' when truth is HSP. Based on the empirical variance for HSPs and the
+#' analytical variance for UPs, we basically know how much linkage there might
+#' be, so we can predict the PLOD variances for the other kin-pair types. The
+#' wrinkle is that those more-remote variances also depend somewhat on the
+#' finer-scale organization of the genome, i.e. whether it's lots of
+#' chromosomes with no crossover, or a few chromosomes with lots of crossover.
+#' `var_PLOD_kin` therefore calculates two versions, one assuming the
+#' genome is entirely made up of equal-sized chromosome with zero crossover,
+#' and the other assuming the genome is a single chromosomes with crossover
+#' according to a memoryless random process. The output (basically, two
+#' variance estimates which ought to bound the true variance for the
+#' "contaminating" kin-type of interest--- subject to statistical noise) can be
+#' fed into `autopick_HSP_threshold` (qv) to do what it says.
+#'
+#' The "per-locus LOD" (whose properties are stored in the columns `e0`,
+#' `e1`, `v0`, `v1` in `linfo`) is created by calling
+#' [hsp_power()] (qv). The normal use-case would be that you've done
+#' so with `k=0.5`, so that the (P)LOD pertains to HSP::UP comparisons.
+#' However, if you called it with `k=0.25` then the (P)LOD would be
+#' designed for HTP::UP comparisons, and so on. In fact, you could even
+#' hand-tweak the calculations to contain LODs for HTP::HSP comparisons, which
+#' _might_ in principle improve the resolution (but you'd have to fiddle
+#' manually; you could actually do it based on two calls to
+#' [hsp_power()], one with `k=0.5` and one with `k=0.25`,
+#' and manipulating the results). The other calculations in this function are
+#' "agnostic WRTO", ie not intrinsically dependendent on, the values of
+#' `e0/e1/v0/v1`, so the rest of the calcs should just work.
 #'
 #' It's assumed that lots of loci are being used, so that the mix of loci on
 #' each "chromo", or the splatter of loci along the single "megachromo", always
@@ -5448,46 +5804,65 @@ function( snpg, candiHTPs) {
 #' co-inherited loci, from which estimates-of-co-inherited-variance and
 #' inferences about kin-ppns can be made.
 #'
+#' ## Subtypes of kin
+#'
+#' Given the loci and the crossover rates, the PLOD variance for different kin-types is
+#' mainly determined by the number of meioses. However, at least for the
+#' with-crossover version, there is also _some_ effect of the _type_
+#' of kin within a given order: GGPs and HSPs would have _slightly_
+#' different variances. For CKMR purposes, the commonest type of kin of given
+#' order are those born closest in time, so the algorithm always uses the type
+#' with _single_ shared ancestor and minimax number of generations since
+#' shared ancestor. This means HSPs for `n_meio=2` (FTPs have _two shared
+#' ancestors; GGPs entail 2 generations of gap whereas HSPs have only 1), HTPs
+#' for `n_meio=3`, HC1Ps for `n_meio=4`, etc. If you really wanted to
+#' look at that, you could use the `V_allX` code inside this function,
+#' which takes two arguments `short` and `long` for the length of
+#' chains since the shared ancestor: for HSP, these are both 1, but for GGPs,
+#' one is 0 and the other is 2. But since the single-chromo
+#' equal-linkage-distance model is highly approximate anyway, do you really
+#' care?
+#'
 #' @param linfo either a `snpgeno` object, or its "locinfo" attribute (or
-#' a fake one). The "locinfo" should be a `data_frame` with columns
+#' a fake one). The "locinfo" should be a dataframe with columns
 #' `e0`, `e1`, `v0`, `v1`, `count`. Each row is one
 #' "type" of locus, i.e., with roughly the same values of e/v 0/1, and
 #' `count` says how many such loci there are. e/v 0/1 are means and
 #' variances of the per-locus LOD (note no P) when the locus is or isn't
-#' co-inherited.
+#' co-inherited. See *Details*
+#'
 #' @param emp_V_HSP empirical variance of PLOD for deffo HSPs. You're supposed
 #' to be running this on real data, so that `emp_V_HSP` is an actual
 #' number; however, for testing purposes, you can set up an artificial version
 #' via `C_equiv` below.
-#' @param kin_true `Var(PLOD|kin_true)`. The default, `"HCP"`, corresponds
-#' to 4 meioses, `"HTP"` to 3, and `"HSP"` to 2; the latter is only
-#' for debugging, since it should reproduce the original empirical variance!
+#' @param n_meio Target number of meioses:2 for 2nd-order kin (e.g. HSPs; also
+#' GGPs and FTPs), 3 for 3rd-order (e.g. HTPs), etc. This is by far the main
+#' driver of variance, but technically the only one; see *Subtypes of kin*.
 #' @param debug Logical flag. Defaults to FALSE.
 #' @param C_equiv for artificial test, with `emp_V_HSP` set to the
 #' no-crossover variance from `C_equiv` chromos (need not be integer).
 #' Ignored if `emp_V_HSP` is set.
-#' @return Vector with names `V0`, `Vx`, `C_hat`, `rho_hat`, `n_meio_XXX`. First two are variances under the no-
-#' and all-crossover scenarios; `C_hat` is estimated equivalent number of
-#' chromosomes, and `rho_hat` is per-locus crossover rate, under the same
-#' scenarios. `n_meio_XXX` (where `"XXX"` is set to `kin_true`) shows how many meioses are involved; yes, a perverse way to
-#' return that piece of info.
+#' @return Matrix with two rows `V0` and `Vx`, and one column for
+#' each element of `n_meio` (which is always augmented to include 2),
+#' named "M2" etc. The two rows pertain respectively to the no-crossover
+#' multiple-chromosome scenario, and the single-chromosome multiple-crossover
+#' scenario. The matrix also has an attribute `info`, which is a numeric
+#' vector of elements named `V_UP`, `V_HSP`, `C_hat`, and
+#' `rho_hat` (note that `V_HSP` should duplicate the first column of
+#' the matrix) `C_hat` is estimated equivalent number of
+#' chromosomes for the no-crossover scenario, and `rho_hat` is per-locus
+#' crossover rate for the all-crossover scenario.
 #' @keywords misc
 #' @examples
 #'
-#' \dontrun{
-#' # H1CPs, for "simulation" equiv to 22 no-Xover chromos
-#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
-#' #        VUP       V_HSP          V0          Vx       C_hat     rho_hat n_meio_HCP
-#' #     1.3500    208.2273     91.9010    101.8270     22.0000      0.2616      4.0000
-#' # HTPs
-#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
-#' #       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
-#' #    1.3500   208.2273   156.5642   186.1779    22.0000     0.2616     3.0000
-#' # Vars would go up with fewer equiv chromos
-#' var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
-#' #       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
-#' #   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
-#' }
+#' # COMPLETELY MADE-UP e/v values! Nothing to do with genetics :)
+#' var_PLOD_kin( data.frame( count=45, ev01= I( cbind( e0=-1, e1=2, v0=0.03, v1=0.02))), C_equiv=22, n_meio=3:4)
+#' #        M2    M3    M4
+#' #  V0 208.2 156.6  91.9
+#' #  Vx 208.2 186.2 101.8
+#' #  attr(,"info")
+#' #      V_UP    V_HSP    C_hat  rho_hat
+#' #    1.3500 208.2273  22.0000   0.2616
 #'
 #' @export var_PLOD_kin
 
@@ -5495,52 +5870,54 @@ function( snpg, candiHTPs) {
 function(
     linfo,
     emp_V_HSP= V_noX( C_equiv, 2),
-    n_meio, # 2 to 4
-    kin_true=c( 'HCP', 'HTP', 'HSP'),
+    n_meio,
     debug=FALSE,
     C_equiv=NULL ) {
 #########
-stop( "UNDER (RE)CONSTRUCTION...")
+stopifnot( # user != 'bozo',
+    n_meio==floor( n_meio),
+    all( n_meio >= 2)
+  )
 
-  if( linfo %is_a% 'snpgeno') {
+  n_meio <- as.integer( sort( unique( c( 2, n_meio))))
+
+  if( linfo %is.a% 'snpgeno') {
     linfo <- linfo@locinfo
   }
-  kin_true <- match_arg( kin_true)
-  typical_kin_meio <- c( HCP=4, HTP=3, HSP=2)
-  if( missing( n_meio)){
-    n_meio <- typical_kin_meio[ kin_true]
-  }
 
-# linfo should be a DF with cols e0, e1, v0, v1, count
-#  names( linfo) <- names( linfo) %&% '_l'
-# extract_named( linfo)
+  # linfo should be a DF with element ev01 having cols e0, e1, v0, v1
+  # as produced by hsp_power
+  # Becos of make_dull() [as of mvbutils 2.8.437] 'x %is.a% "matrix"' does NOT work
+  # after make_dull( x); the implicit c( 'matrix', 'array') for class( unclass( x)) disappears
+  # under make_dull() . Sigh. This is kind-of an R "feature" re implicit S3 classes...
+  # But, is.matrix() does work
+
+  THINGS <- cq(e0, e1, v0, v1)
+stopifnot(
+    is.matrix( linfo$ev01),
+    ncol( linfo$ev01)==4,
+    all( THINGS %in% colnames( linfo$ev01))
+  )
 
   count_l <- linfo$count # only present if linfo is simulated eg 100 loci like this one, 100 like the next...
-  if( is_null( count_l)){
+  if( is.null( count_l)){
     count_l <- rep( 1, nrow( linfo))
   }
 
   L <- sum( count_l)
-  pi <- count_l / L
+  pi <- count_l / L # sum(pi)==1
 
-  for( thing in cq(e0, e1, v0, v1) ) {
-    this <- numeric( nrow(linfo))
-    for( way in unique(linfo$useN)) {
-      this[linfo$useN == way] <- with(linfo,
-          get(sprintf("%s_%iway", thing, way))[useN == way]
-        )
-    }
-    assign(thing %&% "_l", this)
+  # Extract columns of ev01. Slightly odd code--- maybe don't need to bother
+  ev01 <- unclass( linfo$ev01) # get rid of "dull" attr
+  for( thing in THINGS ) {
+    assign(thing %&% "_l", linfo$ev01[,thing]) # the "_l" is a pseudo subscript...
   }
 
-  #for( thing in cq( e0, e1, v0, v1)) { ## R4_1 refuses to parse a row-wise get; replaced by above
-  #  assign( thing %&% '.l', with( linfo, get( sprintf( '%s_%iway', thing, useN))))
-  #}
-
-  e0 <- c( pi %*% e0_l) ## c() to squish length-one arrays for R4_0 compliance
-  e1 <- c( pi %*% e1_l)
-  v0 <- c( pi %*% v0_l)
-  v1 <- c( pi %*% v1_l)
+  # What are the "typical" properties of a locus?
+  e0 <- pi %**% e0_l
+  e1 <- pi %**% e1_l
+  v0 <- pi %**% v0_l
+  v1 <- pi %**% v1_l
 
   # noX = no crossover, i_e. all in separate equal chromos
   V_noX <- function( C, meioses) {
@@ -5551,60 +5928,43 @@ stop( "UNDER (RE)CONSTRUCTION...")
   }
 
   # MoM for HSPs:
-  if( !is_null( C_equiv)) {
+  if( !is.null( C_equiv)) {
     C_hat <- C_equiv <- min( L, C_equiv)
   } else {
-    C_hat <- if( V_noX( 1, 2) < emp_V_HSP) 1 else
-        if( V_noX( L, 2) > emp_V_HSP) L else
-        find_root( V_noX, target=emp_V_HSP, start=1, step=1, fdirection='decreasing',
-            min_x=1, max_x=L, meioses=2)
+    C_hat <- if( V_noX( 1, 2) < emp_V_HSP)
+        1
+      else if( V_noX( L, 2) > emp_V_HSP)
+        L
+      else
+        find.root( V_noX, target=emp_V_HSP, start=1, step=1, fdirection='decreasing',
+            min.x=1, max.x=L, meioses=2)
   }
-  V0 <- V_noX( C_hat, meioses=n_meio)
+  V0 <- do.on( n_meio, V_noX( C_hat, meioses=.))
 
   # Entirely Xover on one single chromo
   # Should these be done separately by locus type, then averaged??
-  ell <- 1 %upto% (L-1)
-  e2_1 <- c(pi %*% (sqr( e1_l) + v1_l) ) ## length-one arrays are out for R4_0
-  e2_0 <- c(pi %*% (sqr( e0_l) + v0_l) ) ## length-one arrays are out for R4_0
+  dee <- 1 %upto% (L-1)
+  e2_1 <- pi %**% (sqr( e1_l) + v1_l)
+  e2_0 <- pi %**% (sqr( e0_l) + v0_l)
   e1_0 <- e0 # pi %*% e0_l
   e1_1 <- e1
 
-  phi <- function( r, mul, s) 0.5 * (1 + s*exp( -mul*r*ell))
-  PSstar <- P0star <- array( 0, c( L-1, 2, 2, 2))
-  si2 <- slice_index( PSstar, 2)
-  si3 <- slice_index( PSstar, 3)
-  si4 <- slice_index( PSstar, 4)
-
   V_allX <- function( rho, meioses) {
-    # PSstar[ L,i,j,k] is Pr[ composite state @ L = 1 | starting states @ 0 are i, j, k]
-    # j & k series irrel for HSP
-    # slice_index() == 1 or 2
-    # so 3 - 2*s_i. == -1 or +1
-    # and 2-s_i. == 1 or 0
+    # Assumes we are HSP or descendent ie stepladder; not extension ladder a la GGP
 
-    # This code could be much more efficient; pre-compute P0star, and much reduce the phi-calcs
-    PSstar[] <<- phi( c(rho), 4, 3 - 2*si2) *
-        (if( meioses>2) phi( c(rho), 2, 3 - 2*si3) else 1) *
-        (if( meioses>3) phi( c(rho), 2, 3 - 2*si4) else 1) ## SB( c(rho) instead of length-one
-      ## array because R4_0 compliance
+    pHSP_11 <- (1/4) * (1+exp( -4*rho*dee))
 
-    P0star[] <<-  (2-si2) *
-        (if( meioses>2) 2-si3 else 1) *
-        (if( meioses>3) 2-si4 else 1)
+    # Extrapolate to number of meioses, m rather than HSP
+    pm_11 <- ((0.25 * (1 + exp( -2*rho*dee))) ^ (meioses-2L)) * pHSP_11
+    pm <- 2^(1L-meioses) # AKA pm_1: marginal prob of coin at a single locus
 
-    p11_8 <- apply( PSstar * P0star, 1, sum)
-    p01_8 <- apply( PSstar * (1-P0star), 1, sum)
-    p00_8 <- apply( (1-PSstar) * (1-P0star), 1, sum)
+    pm_10 <- pm - pm_11
+    # pm_01 <- pm_10 is just symmetry
+    pm_00 <- 1 - pm_11 - 2*pm_10
 
-    p11 <- p11_8 / 8
-    p01_10 <- p01_8 / 4 # both ways
-    p00 <- p00_8 / 8
-
-    p <- 2 ^ (1-meioses) # Marginal prob of coinheritance = 1/2 for HSPs, 1/8 for HCPs
-
-    EL <- L * ( e1_1*p + e1_0*(1-p))
-    EL2 <- L * ( e2_1*p + e2_0*(1-p)) +
-        2 * (L-ell) %*% ( sqr( e1_1)*p11 + e1_1*e1_0*p01_10 +  sqr( e1_0)*p00)
+    EL <- L * ( e1_1*pm + e1_0*(1-pm))
+    EL2 <- L * ( e2_1*pm + e2_0*(1-pm)) +
+        2 * (L-dee) %**% ( sqr( e1_1)*pm_11 + 2*e1_1*e1_0*pm_10 +  sqr( e1_0)*pm_00)
     VL <- EL2 - sqr( EL)
   }
 
@@ -5615,11 +5975,18 @@ stop( "UNDER (RE)CONSTRUCTION...")
 
   # If no Odis (e_g. with very few loci!) then no point in going further
   rho_hat <- if( C_hat > L-1) 100 else
-      find_root( V_allX, target=emp_V_HSP, start=1/L, step=0.2/L,
-          fdirection='decreasing', min_x=0, meioses=2)
-  Vx <- V_allX( rho_hat, meioses=n_meio)
+      find.root( V_allX, target= emp_V_HSP, start= 1/L, step= 0.2/L,
+          fdirection= 'decreasing', min.x= 0,
+          meioses= 2L) # for HSP case
+  Vx <- do.on( n_meio, V_allX( rho_hat, meioses= .)) # for target kinship
 
-return( unlist( returnList( VUP=L*v0, V_HSP=emp_V_HSP, V0, Vx, C_hat, rho_hat, n_meio)))
+  stuff <- rbind( V0, Vx)
+  colnames( stuff) <- sprintf( 'M%i', n_meio)
+
+  stuff@info <- unlist( returnList( V_UP=L*v0, V_HSP=emp_V_HSP, C_hat, rho_hat))
+  # ... though V_HSP will be in V0 & Vx anyway
+
+return( stuff)
 }
 
 

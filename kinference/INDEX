@@ -1,4 +1,5 @@
 kinference-package                         The kinference package: data prep for close-kin mark-recapture
+autopick_threshold                         PLOD threshold for HSPs
 chain_pairwise                             Find chains in HSPs; summarize sib-groups
 check_FPosity                              QC for kin-finding; private for now
 check6and4                                 Locus QC check

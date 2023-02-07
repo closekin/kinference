@@ -8,28 +8,27 @@ var_PLOD_kin(
   linfo,
   emp_V_HSP = V_noX(C_equiv, 2),
   n_meio,
-  kin_true = c("HCP", "HTP", "HSP"),
   debug = FALSE,
   C_equiv = NULL
 )
 }
 \arguments{
 \item{linfo}{either a \code{snpgeno} object, or its "locinfo" attribute (or
-a fake one). The "locinfo" should be a \code{data_frame} with columns
+a fake one). The "locinfo" should be a dataframe with columns
 \code{e0}, \code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one
 "type" of locus, i.e., with roughly the same values of e/v 0/1, and
 \code{count} says how many such loci there are. e/v 0/1 are means and
 variances of the per-locus LOD (note no P) when the locus is or isn't
-co-inherited.}
+co-inherited. See \emph{Details}}
 
 \item{emp_V_HSP}{empirical variance of PLOD for deffo HSPs. You're supposed
 to be running this on real data, so that \code{emp_V_HSP} is an actual
 number; however, for testing purposes, you can set up an artificial version
 via \code{C_equiv} below.}
 
-\item{kin_true}{\code{Var(PLOD|kin_true)}. The default, \code{"HCP"}, corresponds
-to 4 meioses, \code{"HTP"} to 3, and \code{"HSP"} to 2; the latter is only
-for debugging, since it should reproduce the original empirical variance!}
+\item{n_meio}{Target number of meioses:2 for 2nd-order kin (e.g. HSPs; also
+GGPs and FTPs), 3 for 3rd-order (e.g. HTPs), etc. This is by far the main
+driver of variance, but technically the only one; see \emph{Subtypes of kin}.}
 
 \item{debug}{Logical flag. Defaults to FALSE.}
 
@@ -38,33 +37,56 @@ no-crossover variance from \code{C_equiv} chromos (need not be integer).
 Ignored if \code{emp_V_HSP} is set.}
 }
 \value{
-Vector with names \code{V0}, \code{Vx}, \code{C_hat}, \code{rho_hat}, \code{n_meio_XXX}. First two are variances under the no-
-and all-crossover scenarios; \code{C_hat} is estimated equivalent number of
-chromosomes, and \code{rho_hat} is per-locus crossover rate, under the same
-scenarios. \code{n_meio_XXX} (where \code{"XXX"} is set to \code{kin_true}) shows how many meioses are involved; yes, a perverse way to
-return that piece of info.
+Matrix with two rows \code{V0} and \code{Vx}, and one column for
+each element of \code{n_meio} (which is always augmented to include 2),
+named "M2" etc. The two rows pertain respectively to the no-crossover
+multiple-chromosome scenario, and the single-chromosome multiple-crossover
+scenario. The matrix also has an attribute \code{info}, which is a numeric
+vector of elements named \code{V_UP}, \code{V_HSP}, \code{C_hat}, and
+\code{rho_hat} (note that \code{V_HSP} should duplicate the first column of
+the matrix) \code{C_hat} is estimated equivalent number of
+chromosomes for the no-crossover scenario, and \code{rho_hat} is per-locus
+crossover rate for the all-crossover scenario.
 }
 \description{
 Aim is to work out how much your putative half-sibling pairs (HSPs) might be
-contaminated by half-cousin pairs (HCPs) or half-thiatic pairs (HTPs).
-HSP-selection is presumably based on the pairwise PLODs for HSP:UP, taking
-all pairs where that PLOD exceeds some threshold. Given the allele freqs,
-the mean PLOD is predictable when the truth is UP, HCP, HTP, or HSP. The
-variance is only predictable for UPs, because linkage makes loci
-non-independent for kin. However, an empirical variance can be estimated for
-HSPs based on the observed PLODs above some super-high threshold, e_g., the
-mean PLOD when truth=HSP (this preliminary variance step could be iterated
-using different super-high thresholds). Based on the empirical variance for
-HSPs and the analytical variance for UPs, we basically know how much linkage
-there might be, so we can predict the PLOD variances for the other kin-pair
-types. The wrinkle is that it also depends somewhat on the finer-scale
-organization of the genome, i.e. whether it's lots of chromosomes with no
-crossover, or a few chromosomes with lots of crossover. \code{var_PLOD_kin}
-therefore calculates two versions, one assuming the genome is entirely made
-up of equal-sized chromosome with zero crossover, and the other assuming the
-genome is a single chromosomes with crossover according to a random process.
+contaminated by half-thiatic pairs (HTPs) or half-cousin pairs (HCPs) (or,
+theoretically, by more remote kin). HSP-selection is presumably based on the
+pairwise PLODs for HSP:UP, taking all pairs where that PLOD exceeds some
+threshold. Given the allele freqs, the \emph{mean} PLOD is predictable when
+the truth is UP, HCP, HTP, or HSP. The variance is only predictable for UPs,
+though, because linkage makes loci non-independent for kin. However, an
+empirical variance can be estimated for HSPs based on the observed PLODs
+above some safe threshold (to exclude weaker kin), typically the mean PLOD
+when truth is HSP. Based on the empirical variance for HSPs and the
+analytical variance for UPs, we basically know how much linkage there might
+be, so we can predict the PLOD variances for the other kin-pair types. The
+wrinkle is that those more-remote variances also depend somewhat on the
+finer-scale organization of the genome, i.e. whether it's lots of
+chromosomes with no crossover, or a few chromosomes with lots of crossover.
+\code{var_PLOD_kin} therefore calculates two versions, one assuming the
+genome is entirely made up of equal-sized chromosome with zero crossover,
+and the other assuming the genome is a single chromosomes with crossover
+according to a memoryless random process. The output (basically, two
+variance estimates which ought to bound the true variance for the
+"contaminating" kin-type of interest--- subject to statistical noise) can be
+fed into \code{autopick_HSP_threshold} (qv) to do what it says.
 }
 \details{
+The "per-locus LOD" (whose properties are stored in the columns \code{e0},
+\code{e1}, \code{v0}, \code{v1} in \code{linfo}) is created by calling
+\code{\link[=hsp_power]{hsp_power()}} (qv). The normal use-case would be that you've done
+so with \code{k=0.5}, so that the (P)LOD pertains to HSP::UP comparisons.
+However, if you called it with \code{k=0.25} then the (P)LOD would be
+designed for HTP::UP comparisons, and so on. In fact, you could even
+hand-tweak the calculations to contain LODs for HTP::HSP comparisons, which
+\emph{might} in principle improve the resolution (but you'd have to fiddle
+manually; you could actually do it based on two calls to
+\code{\link[=hsp_power]{hsp_power()}}, one with \code{k=0.5} and one with \code{k=0.25},
+and manipulating the results). The other calculations in this function are
+"agnostic WRTO", ie not intrinsically dependendent on, the values of
+\code{e0/e1/v0/v1}, so the rest of the calcs should just work.
+
 It's assumed that lots of loci are being used, so that the mix of loci on
 each "chromo", or the splatter of loci along the single "megachromo", always
 matches the overall population, on law-of-large-numbers grounds.
@@ -87,23 +109,36 @@ enough. Anyway, if we were taking that approach, it might well be better to
 avoid PLODs altogether and instead go for inferences about the actual ppn of
 co-inherited loci, from which estimates-of-co-inherited-variance and
 inferences about kin-ppns can be made.
+\subsection{Subtypes of kin}{
+
+Given the loci and the crossover rates, the PLOD variance for different kin-types is
+mainly determined by the number of meioses. However, at least for the
+with-crossover version, there is also \emph{some} effect of the \emph{type}
+of kin within a given order: GGPs and HSPs would have \emph{slightly}
+different variances. For CKMR purposes, the commonest type of kin of given
+order are those born closest in time, so the algorithm always uses the type
+with \emph{single} shared ancestor and minimax number of generations since
+shared ancestor. This means HSPs for \code{n_meio=2} (FTPs have _two shared
+ancestors; GGPs entail 2 generations of gap whereas HSPs have only 1), HTPs
+for \code{n_meio=3}, HC1Ps for \code{n_meio=4}, etc. If you really wanted to
+look at that, you could use the \code{V_allX} code inside this function,
+which takes two arguments \code{short} and \code{long} for the length of
+chains since the shared ancestor: for HSP, these are both 1, but for GGPs,
+one is 0 and the other is 2. But since the single-chromo
+equal-linkage-distance model is highly approximate anyway, do you really
+care?
+}
 }
 \examples{
 
-\dontrun{
-# H1CPs, for "simulation" equiv to 22 no-Xover chromos
-var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22)
-#        VUP       V_HSP          V0          Vx       C_hat     rho_hat n_meio_HCP
-#     1.3500    208.2273     91.9010    101.8270     22.0000      0.2616      4.0000
-# HTPs
-var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=22, kin='HTP')
-#       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
-#    1.3500   208.2273   156.5642   186.1779    22.0000     0.2616     3.0000
-# Vars would go up with fewer equiv chromos
-var_PLOD_kin( data_frame( count=45, e0=-1, e1=2, v0=0.03, v1=0.02), C_equiv=5, kin='HTP')
-#       VUP      V_HSP         V0         Vx      C_hat    rho_hat n_meio_HTP
-#   1.35000  912.37500  684.67500  786.47854    5.00000    0.04951    3.00000
-}
+# COMPLETELY MADE-UP e/v values! Nothing to do with genetics :)
+var_PLOD_kin( data.frame( count=45, ev01= I( cbind( e0=-1, e1=2, v0=0.03, v1=0.02))), C_equiv=22, n_meio=3:4)
+#        M2    M3    M4
+#  V0 208.2 156.6  91.9
+#  Vx 208.2 186.2 101.8
+#  attr(,"info")
+#      V_UP    V_HSP    C_hat  rho_hat
+#    1.3500 208.2273  22.0000   0.2616
 
 }
 \keyword{misc}

@@ -8,3 +8,5 @@ vignettes/fsps_for_dave.rda
 
 [.]/R/funs[.]rda
 
+^doc$
+^Meta$

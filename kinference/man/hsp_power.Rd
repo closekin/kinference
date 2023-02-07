@@ -34,17 +34,21 @@ genotype (\code{useN=6/4/3}).
 for ranking loci
 }
 
-It also attaches \code{LOD} and \code{PUP} columns (actually matrices) to
-the \code{locinfo}, which do make the latter hard to read if you just print
-it willy-nilly, so don't.
-}
-\section{Notes}{
- \code{hsp_power} needs tidy-up. It's daft to store LODs for
+It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a
+matrix) to the \code{locinfo}. They have been made dull (see
+\code{make_dull}) to improve your viewing experience, but they work fine for
+all normal purposes (and you can always \code{unclass} them to remove the S3
+class \code{dull}).
+\subsection{Notes}{
+
+\code{hsp_power} (and downstream) should get a refactor. It's daft to store LODs for
 only one specific kin; it'd be better to always calculate P1share and
 P2share as well as P0share (which is PUP), and then compute
-whatever-is-needed later on-the-fly.
+whatever-is-needed later on-the-fly. As-is, we are re-computing P1
+and P2 based on LOD and PUP OTF instead (which is also unsafe, because LOD
+could have been calculated with k != 0.5).
 }
-
+}
 \examples{
 
 ## Need some examples!
