@@ -2247,7 +2247,14 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   if( is.null( minbin)) {
     VUP <- sum( li$V.UP)
     EUP <- sum( li$E.UP)
-    minbin <- EUP - 4 * sqrt( VUP) # 0.003% of UPs below that
+
+    ncomps <- length( subset1) * length( subset2) # might be out be 2 if s1==s2...
+    # ... which is irrel on log scale
+
+    # Bins start at 2SD below lowest expected PLOD
+    # usually should be enuf to show weird stuff below min
+    nSD <- abs( qnorm( 1/ncomps)) + 2
+    minbin <- EUP - nSD * sqrt( VUP) # 0.003% of UPs below that
   }
 
   if( is.null( maxbin)) {
