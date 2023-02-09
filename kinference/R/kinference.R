@@ -5601,7 +5601,8 @@ return( ret)
 
 }
 
-
+#' @rdname
+#' @export
 "split_HSPs_from_HTPs" <-
 function( snpg, candiHTPs) {
   # For pairs already picked as possible HSPs, they might be HTPs

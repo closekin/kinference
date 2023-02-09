@@ -54,53 +54,6 @@
 #' @import mvbutils
 #' @import gbasics
 #' @import vecless
-#' @importFrom Rcpp evalCpp
-#' @importFrom Rcpp sourceCpp
-#' @importFrom atease "@"
-#' @importFrom atease "@<-"
-#' @importFrom gbasics inv.logit
-#' @importFrom gbasics logit
-#' @importFrom gbasics make_genopairer
-#' @importFrom gbasics rsample
-#' @importFrom gbasics snpgeno
-#' @importFrom gbasics sqr
-#' @importFrom gbasics define_genotypes
-#' @importFrom grDevices rgb
-#' @importFrom graphics legend
-#' @importFrom graphics mtext
-#' @importFrom graphics par
-#' @importFrom graphics plot
-#' @importFrom graphics points
-#' @importFrom mvbutils "%&%"
-#' @importFrom mvbutils "%except%"
-#' @importFrom mvbutils "%is.a%"
-#' @importFrom mvbutils "%is.not.a%"
-#' @importFrom mvbutils "%not.in%"
-#' @importFrom mvbutils "%that.are.in%"
-#' @importFrom mvbutils "%upto%"
-#' @importFrom mvbutils "%where%"
-#' @importFrom mvbutils "%without.name%"
-#' @importFrom mvbutils "?"
-#' @importFrom mvbutils FOR
-#' @importFrom mvbutils cq
-#' @importFrom mvbutils do.on
-#' @importFrom mvbutils extract.named
-#' @importFrom mvbutils mlocal
-#' @importFrom mvbutils my.all.equal
-#' @importFrom mvbutils named
-#' @importFrom mvbutils scatn
-#' @importFrom stats dnorm
-#' @importFrom stats na.omit
-#' @importFrom stats pchisq
-#' @importFrom stats pnorm
-#' @importFrom stats qnorm
-#' @importFrom stats quantile
-#' @importFrom stats runif
-#' @importFrom stats var
-#' @importFrom vecless ":="
-#' @importFrom vecless compile_vecless
-#' @importFrom vecless make_playback
-#' @importFrom vecless set_recording
 #' @keywords misc
 NULL
 
