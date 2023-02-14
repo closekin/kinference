@@ -3,7 +3,7 @@ title: "Inferring kin relationships with kinference"
 author: S M Baylis
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{inferring kin relationships with kinference}
+  %\VignetteIndexEntry{Inferring kin relationships with kinference}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -41,19 +41,22 @@ function `check6and4`.
 
 ```{r dropbear6and4}
 ## load the data
-data(dropbears)
 library(kinference)
+library(atease)
+data(dropbears)
 ## check loci for HWE proportions
-pvals <- check6and4(dropbears, thresh_pchisq_6and4 = c(0.01, 0.0001))
+pvals <- check6and4(dropbears, thresh_pchisq_6and4 = c(0.01, 0.0001), show6 = FALSE)
 ```
 
 `check6and4` calculates Chi-square P-values for each the observed
 genotypes at each locus across all samples under a null hypothesis of
 Hardy-Weinberg proportions, and plots the observed and expected counts
 of each genotype for each locus. Lower P-values are indicate
-worse-looking loci. Our P-values are mostly high, and there is a tight
-agreement between the expected and observed counts for every
-genocall. These loci are fine.
+worse-looking loci, but in a _perfect_ dataset, there would be a
+uniform density of P-values between zero and one. Our P-values are
+pretty close to uniformly-distributed over the range of zero to one,
+and there is a tight agreement between the expected and observed
+counts for every genocall. These loci are fine.
 
 ## Checking for duplicate samples
 

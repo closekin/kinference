@@ -97,18 +97,15 @@ snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
     expect_true("kinference" %in% sessionInfo()$otherPkgs$kinference)
 
     info <- data.frame(Our_sample = c("sample1", "sample2"), location = c("loc1", "loc2") )
-    locinfo <- data.frame(Locus = c("L1", "L2"), n_alleles = c(2,2))
-    minisnpg <- snpgeno(2, 2, diplos = c("AAO", "AB", "BBO", "OO"), info = info, locinfo = locinfo)
+locinfo <- data.frame(Locus = c("L1", "L2"), n_alleles = c(2,2))
+genos <- matrix(data = c(rep("AAO", 4)), nrow = 2, ncol = 2)
+    minisnpg <- snpgeno(genos, diplos = c("AAO", "AB", "BBO", "OO"), info = info, locinfo = locinfo)
     expect_equal(class(minisnpg), "snpgeno")
     expect_true(minisnpg[1,1] == "AAO")
     minisnpg[1,2] = "AB"
     minisnpg[2,1] = "BBO"
     minisnpg[2,2] = "OO"
-    as.raw(minisnpg[1,2])
 
-    minisnpg[1,2] = "AB"
-    minisnpg[2,1] = "BBO"
-    minisnpg[2,2] = "OO"
     expect_true(minisnpg[1,1] == "AAO")
     expect_true(minisnpg[1,2] == "AB")
     expect_true(minisnpg[2,1] == "BBO")
@@ -124,14 +121,26 @@ snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
 ## first, 4-way:
 set.seed(1111)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
-genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),dim = c(100, 30))
+genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),dim = c(30, 100))
 Locus <- paste("locus_", 1:100, sep = "")
-newLocusData <- data.frame(thingOne.l = runif(nrow(genos)), thingTwo.l = runif(nrow(genos)), thingThree.l = runif(nrow(genos)))
+newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)), thingThree.l = runif(ncol(genos)))
 Our_sample <- paste("sample_", 1:30, sep = "")
 
-newSampleData <- data.frame(thingOne.s = runif(ncol(genos)),thingTwo.s = runif(ncol(genos)))
-## smallsnpg4 <- snpgeno.snpgds(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData)
-smallsnpg4 <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData)
+newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
+smallsnpg4a <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData)
+smallsnpg4 <- snpgeno(x = genos+1, diplos = c("BB", "AB", "AA", "OO", "AO", "BO"), info = cbind(Our_sample, newSampleData),
+                       locinfo = cbind(Locus, newLocusData), allow_nonchar = TRUE)  ## can't make this work with char genos,
+## and it needs to be indexed from 1, and its 'diplos' must include all of genotypes6, even if not all of them are used.
+
+
+
+
+
+smallsnpg4@locinfo$pbonzer <- re_est_ALF(smallsnpg4)@locinfo$pambig
+snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
+snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
+smallsnpg4@locinfo$snerr <- snerr
+smallsnpg4@locinfo$useN <- 4
 ## just to prove it can be kinferred:
 smallsnpg4a <- hsp_power(smallsnpg4, k = 0.5)
 smallsnpg4b <- prepare_PLOD_SPA(smallsnpg4a)

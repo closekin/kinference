@@ -1026,7 +1026,8 @@ return( result)
 function( geno6,
     thresh_pchisq_6and4,
     return_what=c( 'just_pvals', 'all'),
-    extra_title = "") {
+    extra_title = "",
+    show6 = TRUE) {
 ##########
   n_fish <- nrow( geno6)
   n_loci <- ncol( geno6)
@@ -1047,8 +1048,13 @@ stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
     g6obs[,ig] <- colSums( geno6==match( ig, diplos))
   }
 
-  pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G',
-      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+    if(show6) {
+        pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = TRUE,
+                                      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+    } else {
+        pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = FALSE,
+                                      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+    }
 
   g4obs <- gtab6to4( g6obs)
   g4pred <- gtab6to4( g6pred)
@@ -1079,6 +1085,7 @@ return( returnList( pval6, pval4))
 #' @param gobs observed allele frequencies
 #' @param thresh_pchisq_loci a param. Presumably, a threshold p-val for
 #' flagging loci with suspicious-looking allele frequencies.
+#' @param showPlot show plots? TRUE or FALSE
 #' @param test a character string, either "Pearson" or "G"
 #' @param trim TRUE or FALSE. TRUE will keep only above max thresh_pchisq_loci.
 #' Arguably better as to be done post-hoc.
@@ -1093,6 +1100,7 @@ function( lociar,
     gpred= lociar@gpred,
     gobs= lociar@gobs,
     thresh_pchisq_loci,  # NULL to not worry; 1 value a threshold; 2 vals to inspect "iffy" ones
+    showPlot = TRUE,
     test,  # 'Pearson' or 'G'
     trim, # TRUE to keep only above max thresh_pchisq_loci. Arguably better done post hoc...
     seq_paxis=0.025,
@@ -1120,6 +1128,7 @@ stop( 'test must be "Pearson" or "G"')
   keep_loci <- if( liffies) pval > max( thresh_pchisq_loci) else rep( TRUE, n_loci)
   iffy_loci <- !keep_loci & (pval > min( thresh_pchisq_loci))
 
+    if(showPlot) {
   # Plot histogram of pvals - should be approximately uniformly distributed if the loci are behaving as we would like
   # [ should follow recordo paradigm as per geno_deambig ]
   par( mfrow=c(1,1)) # just one plot on first page
@@ -1129,7 +1138,9 @@ stop( 'test must be "Pearson" or "G"')
       breaks=seq(0,1,seq_paxis),
       xlim=c(0,1))
   mtext(extra_title, side = 1, adj = 1, padj = 5) ## SB
-  abline( v=thresh_pchisq_loci, col='red')
+    abline( v=thresh_pchisq_loci, col='red')
+
+ ##   plot.new() ## should help with knitr, which currently pushes 6and4 plots off the page
 
   # Locussy fits
   opar <- par(mfrow=c(2, ncol( gpred) %/% 2),
@@ -1150,18 +1161,21 @@ stop( 'test must be "Pearson" or "G"')
     # bad ones with X
     points( gpred[ !keep_loci, g], gobs[ !keep_loci, g], col='magenta', pch=16, cex=0.6)
     if( any( iffy_loci)) {
-      points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', pch=4, cex=1)
+        points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', pch=4, cex=1)
+        points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', pch=16, cex=0.6)
+        ## because otherwise we have a visible magenta shadow in the middle of each X
     }
   }
   mtext( 'Green = "good"', side=3, cex=1.5, outer=TRUE, line=1.5)
   mtext( 'Expected', side=1, cex=1.5, outer=TRUE)
   mtext( 'Observed', side=2, cex=1.5, outer=TRUE)
-  mtext(extra_title, side = 1, adj = 1, padj = 4) ## SB
+        mtext(extra_title, side = 1, adj = 1, padj = 4) ## SB
 
   if( liffies) {
     legend( 'bottomright', pch=c( 16, rep( 4, liffies)), col=c( 'magenta', if( liffies>1) 'orange', 'green'), pt.cex=c( 0.6, if( liffies>1) 1, 0.6),
-        legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 1]), if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[2]), '... < 1') )
+        legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 2]), if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[1]), '... < 1') )
   }
+    }
 
   if( trim) {
     lociar <- lociar[ , keep_loci, ,drop=FALSE]
