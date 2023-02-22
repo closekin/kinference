@@ -11,19 +11,20 @@ vignette: >
 Package `kinference` allows users to use SNP genotype data from
 biological samples to infer kin relationships between pairs of
 samples. In this vignette, we demonstrate how to use the core
-functions of package `kinference` to perform kin-finding and the
-necessary data-cleaning steps that lead up to kin-finding (section 1),
-and show a handful of canned examples of the sorts of things that can
-go wrong (section 2).
+functions of package `kinference` to perform kin-finding with a
+perfect dataset (section 1), kin-finding with a 'typical' dataset and
+the necessary cleaning to get it to work (section 2), and a handful of
+canned examples showing the warning signs of Things Going Wrong
+(section 3).
 
-# Section 1: data-cleaning and kin-finding
+# Section 1: kin-finding
 
 Here, we step through kin-finding with a well-behaved, well-cleaned
 dataset in `snpgeno` format. We will use the `dropbears` dataset,
-included with package `kinference`. We'll show the standard checks
-that should _always_ be done, but in this case the dataset is already clean
-and won't require any changes. To see a dataset in need of cleaning,
-see *section 2*.
+included with package `kinference`. Some standard checks should
+_always_ be done, but the `dropbears` dataset is already clean and
+won't require any changes. To see a dataset in need of cleaning (like
+yours!), see **Section 2**.
 
 A dataset for kinference will need all of its samples drawn from a
 single, well-mixed population, with no duplicate samples, samples from
@@ -33,104 +34,9 @@ in Hardy-Weinberg proportions, with no allele dropout, gene
 duplications, loci under (strong) selection, or mistakenly-identified
 loci from hard-to-align regions such as microsatellites.
 
-## checking loci for HWE proportions
-
-First, we check whether our loci look like they meet our expectations
-by testing each locus for HWE proportions across all samples, using
-function `check6and4`.
-
-```{r dropbear6and4}
-## load the data
-library(kinference)
-library(atease)
-data(dropbears)
-## check loci for HWE proportions
-pvals <- check6and4(dropbears, thresh_pchisq_6and4 = c(0.01, 0.0001), show6 = FALSE)
-```
-
-`check6and4` calculates Chi-square P-values for each the observed
-genotypes at each locus across all samples under a null hypothesis of
-Hardy-Weinberg proportions, and plots the observed and expected counts
-of each genotype for each locus. Lower P-values are indicate
-worse-looking loci, but in a _perfect_ dataset, there would be a
-uniform density of P-values between zero and one. Our P-values are
-pretty close to uniformly-distributed over the range of zero to one,
-and there is a tight agreement between the expected and observed
-counts for every genocall. These loci are fine.
-
-## Checking for duplicate samples
-
-Next, we should make sure we don't have any duplicate
-samples. Duplicate samples can be intentional, but surprisingly many
-datasets contain accidental duplicates. Even if you think your lab
-skills are immaculate, it's worth checking.
-
-```{r dropbearFindDups}
-## look for duplicates in 'dropbears' and keep any pairs with
-## less than 50 different genotypes:
-dups <- find_duplicates(dropbears, max_diff_loci = 50)
-```
-
-`find_duplicates` compares all pairs of samples, and records any pairs
-with fewer than a specified number of differences. You should specify
-that number yourself, based on the number of loci in your dataset and
-your expected genotype mis-call rate. `find_duplicates` also generates
-a plot showing the density of pairs with _n_ different genotypes. In
-this case, it doesn't look like we have any duplicates.
-
-## Checking for samples from another population or species
-
-Next, we should make sure we don't have any 'tourists' from another
-population (or species!) in our dataset, using function `ilglk_geno`.
-
-```{r dropbearIlglk}
-ilglk <- ilglk_geno(dropbears)
-```
-
-For each sample, `ilglk_geno` calculates the likelihood that its
-observed genotypes could be drawn at random from a population with
-allele frequencies estimated from all of the samples. It also plots an
-ideal density distribution for that likelihood statistic, if all
-allele frequencies were perfectly estimated from the data. Samples
-that are outlying to the left of the rest of the samples are probably
-tourists from another population, or maybe mis-identified to species,
-and should be removed. You may notice that the idealised density
-distribution doesn't _quite_ match our observed density - the observed
-density is slightly right-shifted compared to the idealised distribution. In
-practice this is pretty common, because of linkage and imperfect
-estimation of allele frequencies from the data. This is expected, and
-a small amount of mismatch (like here) is fine.
-
-## Checking for cross-contaminated or degraded samples
-
-Next, we should check for cross-contaminated samples, using function
-`hetzminoo_fancy`. Cross-contaminated samples tend to have high
-apparent heterozygosity, and so they look similar to each other, and
-can be wrongly interpreted as kin. We also need to run a boring
-book-keeping calculation using the function `hsp_power`.
-
-```{r dropbearHetzRich}
-## a boring book-keeping calculation that needs to happen before checking for contamination:
-dropbears <- hsp_power(dropbears, k = 0.5)
-## check for cross-contaminated samples
-hetzrich <- hetzminoo_fancy(dropbears, 'rich')
-## check for degraded samples
-hetzrich <- hetzminoo_fancy(dropbears, 'poor')
-```
-
-For each sample, `hetzminoo_fancy` looks at the distribution of
-heterozygotes and each type of homozygote across all loci, compared to
-the expected distributions of heterozygotes and homozygotes. It can
-compute two slightly-different statistics: with `taget = 'rich'` it is
-optimised to find cross-contaminated samples, and with `target =
-'poor'` it is optimised to find degraded samples. It also calculates
-an expected distribution for each statistic. In either case, outlying
-samples should be removed - but these samples all look fine.
-
 ## Finding and classifying kin
 
-Finally, we get to calculate our kin-finding statistics and classify
-kin. Our workflow goes something like:
+Our workflow for kin-finding goes something like:
 
   * find 'strong' kin, ideally first-order kin (i.e., parent-offspring
     or full-siblings), but excluding all unrelated pairs but
@@ -146,7 +52,7 @@ kin. Our workflow goes something like:
   kin, and use it to find a set of second-order kin and estimate the
   false-negative rate for that set.
 
-Let's start by identifying our first-order kin
+Let's start by identifying our first-order kin.
 
 ## Find Parent-offspring pairs
 
@@ -154,6 +60,13 @@ Let's start by identifying our first-order kin
 ## set the kin palette
 palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
           "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+library(kinference)
+library(atease)
+data(dropbears)
+
+## a couple of boring but necessary data-prep steps:
+dropbears <- hsp_power(dropbears, k = 0.5)
+dropbears <- prepare_PLOD_SPA(dropbears)
 
 ## find strong kin using find_POPs
 strongKin <- find_POPs(dropbears, keep_thresh = 0.6)
@@ -182,10 +95,10 @@ UPcut <- 0.055  ## keep only the clear kin from strongKin
 ## a safe default if you don't have a good estimate for your dataset -
 ## and if your true error rate is much higher than that, you probably
 ## won't be able to use your dataset for kin-finding anyway.
-splitPOPs_1 <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,], gerr = 0.01)
-hist(splitPOPs_1$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
+splitPOPs <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,], gerr = 0.01)
+hist(splitPOPs$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
 
-POPs <- splitPOPs_1[splitPOPs_1$PLOD_FP < 0,] ## our first set of definite kin pairs
+POPs <- splitPOPs[splitPOPs$PLOD_FP < 0,] ## our first set of definite kin pairs
 POPs$ij <- paste(POPs$i, POPs$j) ## a pair ID
 ```
 
@@ -196,8 +109,8 @@ first-order kin must be full-sibling pairs, so let's find them
 
 ```{r findHSPs}
 ## find HSPs-or-stronger using find_HSPs
-HSPs_1 <- find_HSPs(dropbears, keep_thresh = -10)
-PLOD_loghisto(HSPs_1)
+HSPs <- find_HSPs(dropbears, keep_thresh = -10)
+PLOD_loghisto(HSPs)
 ## note the distribution of the PLOD - there is a large bump of
 ## unrelated pairs, with mean and variance exactly where theory
 ## predicts them to be, and bumps for second-order (half-sibling) and
@@ -212,7 +125,7 @@ statistic, subset out the parent-offspring pairs, and be left with the
 full-siblings.
 
 ```{r assignFSPs}
-POPsOrFSPs <- HSPs_1[HSPs_1$PLOD > 110,]
+POPsOrFSPs <- HSPs[HSPs$PLOD > 110,]
 POPsOrFSPs$ij <- paste(POPsOrFSPs$i, POPsOrFSPs$j) ## a pair ID to match the one in POPs
 FSPs <- POPsOrFSPs[!POPsOrFSPs$ij %in% POPs$ij,] ## find our full-sibling pairs
 ```
@@ -228,75 +141,344 @@ half-siblings and thiatics that allows us to keep a large proportion
 of our sibling pairs, with a very low, known, rate of false positives.
 
 ```{r splitHSPsFromThiatics}
-HSPs_1$ij <- paste(HSPs_1$i, HSPs_1$j)
-HSPs_2 <- HSPs_1[!HSPs_1$ij %in% c(POPs$ij, FSPs$ij),] 
+HSPs$ij <- paste(HSPs$i, HSPs$j)
+HSPs_2 <- HSPs[!HSPs$ij %in% c(POPs$ij, FSPs$ij),] 
 ## plot the empirical PLOD scores with the expected distribution
 ## of the PLOD for half-sibling pairs
 HSP_histo(HSPs_2, lb = 0, fullsib_cut = 110, bin = 3)
 
 autopick_threshold(dropbears, kin = HSPs_2, fitrange_PLOD = c(0, 110),
-                   FPtol_pairs = 1, use4th = TRUE, selection = "ML")
+                   FPtol_pairs = 1, use4th = TRUE, selecto = "ML", plot_bins = 5)
+
+```
+
+# I need the new mixture composter here!
+
+
+# Section 2: cleaning the bluefin dataset
+
+Your data will almost certainly need cleaning before you can do the
+kin-finding in Section One. To show how (and, in section 3, _why_),
+we'll use the `bluefin` dataset included in package `kinference`.
+
+## checking for badly-behaved loci
+
+The `bluefin` dataset has 1510 loci, and in an abstract perfect
+dataset, we would expect their P-values to be uniformly distributed
+over the interval [0,1] - so we would _expect_ about 0.151 of them to
+have a P-value less than 1e-4. 
+
+```{r bluefin6and4}
+data(bluefin)
+pvals <- check6and4(bluefin, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
+```
+
+We can see that there are a few loci with P-values less than 1e-4, and
+even some with P-values less than 1e-6.
+
+In real datasets, it is wise to have a little wriggle-room: this
+dataset may still contain duplicate samples, fish from another
+population, or contaminated or degraded samples - and each of those
+can contribute to the _loci_ having lower-than-expected P-values. So
+for now, we will just remove loci with P < 1e-6. After the rest of the
+cleaning stages, we can (and will!) check again for any loci that
+might still be outlying.
+
+```{r bluefinBadLoci, fig.show = 'hide'}
+bluefin_1 <- bluefin[, pvals$pval4 > 1e-6]
+pvals_1 <- check6and4(bluefin_1, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
+## pvals_1 is storage so we can check back on the same scores later
+```
+
+## finding and removing duplicate samples
+
+Now, let's check for duplicate samples
+
+```{r bluefinFindDups}
+## look for duplicates in 'bluefin' and keep any pairs with less than 50
+## different genotypes:
+dups <- find_duplicates(bluefin_1, max_diff_loci = 50)
+nrow(dups) ## 24 pairs of animals with fewer than 50 different genotypes
+```
+
+We've got 24 pairs of animals with fewer than 50 different genotypes -
+they're almost certainly duplicates. When we have duplicate pairs, we
+only need to remove one from each pair. `kinference` contains a
+convenient function - `drop_dups_pairwise_equiv` - to help us do
+exactly that:
+
+```{r dropbluefindups}
+bluefin_2 <- bluefin_1[ -c( drop_dups_pairwise_equiv( dups[,2:3])),]
+```
+
+## finding and removing samples from another population or species
+
+Now, we need to find and remove any animals from another species or
+population that might have made it into our dataset.
+
+```{r bluefinIlglk}
+ilglk <- ilglk_geno(bluefin_2)
+abline(v = -1450) ## put our cutoff here
+```
+
+This pattern of `ilglk_geno` scores is pretty typical when most
+samples are correctly identified, but there are a handful of animals
+from a distantly-related stock or another species in the dataset:
+there is a large, approximately Normally-distributed, spike at the
+right-hand side of the plot, and a long tail strung out to the left,
+containing the animals from another stock or species. In our case, any
+animal with an ilglk score less than -1450 or so is not believable as
+a member of the same stock as the main spike. Let's remove them.
+
+```{r bluefinIlglk2}
+bluefin_3 <- bluefin_2[ilglk > -1450,]
+bluefin_3 <- hsp_power(bluefin_3, k = 0.5) ## important but boring internal calculation - just do it.
+```
+
+## finding and removing cross-contaminated and degraded samples
+
+Now, we need to find and remove cross-contaminated or degraded
+samples.
+
+```{r bluefinHetzes}
+hetzrich <- hetzminoo_fancy(bluefin_3, "rich") ## a couple of outlying low samples here
+hetzpoor <- hetzminoo_fancy(bluefin_3, "poor") ## also a couple here
+
+bluefin_4 <- bluefin_3[hetzrich > 0.17,] ## remove the outlying hetzrich scores
+
+hetzpoor <- hetzminoo_fancy(bluefin_4, "poor") ## Hey, the hetzpoor outliers are gone!
+## (They were the same couple of fish as in hetzrich. No need to remove them now)
+bluefin_5 <- prepare_PLOD_SPA(bluefin_4)
+```
+
+The tests for contaminated and degraded samples are both
+likelihood-based, optimised for one or the other problem. However, as
+in this case, there's often not much difference between these two test
+statistics - fish that look abnormal on one also often look abnormal
+on the other.
+
+## how has removing bad fish impacted our apparent locus quality?
+
+Remember how I mentioned that having bad _samples_ in the dataset can
+make _loci_ look bad? Let's take a look at the P values for individual
+loci we stored earlier, re-calculate them now that we've removed all
+the bad fish, and see whether the loci look any better.
+
+```{r bluefin6and4sMk2}
+pvals_2 <- check6and4(bluefin_5, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
+lociPvals <- data.frame(pvals = c(pvals_2$pval4, pvals_1$pval4),
+                        stage = c(rep("after", length(pvals_2$pval4)),
+                                  rep("before", length(pvals_1$pval4)))
+                        )
+lm1 <- lm(pvals ~ stage, data = lociPvals)
+summary(lm1)
+```
+
+Removing bad fish has caused a small, but highly
+statistically-significant, improvement in the apparent quality of our
+loci: the average locus in our dataset has seen its P-value increase
+by 0.016. This is why we didn't want to be _too_ harsh in trimming
+loci early in our cleaning pathway - we would have removed loci that
+were actually fine, but looked bad because of the bad fish, and that
+would have cost us power by reducing the number of good loci we use
+for kin-finding. If you _really_ want to refine your locus-selection
+to keep as many as possible, you might try a _very_ lenient cutoff for
+locus quality, then look for very bad samples, then tighten the locus
+quality cutoff, then look for bad samples again.
+
+## kinfer the bluefin dataset
+
+The `bluefin` dataset is now cleaned. We won't go through the full
+kin-finding routine again here - it would be the same as for
+`dropbears` (see **Section One**). I'll just show you the PLOD, so you
+can see that kin-finding would work for `bluefin`, cleaned as it is.
+
+```{r bluefinKinfer}
+HSPs <- find_HSPs(bluefin_5, keep_thresh = -10)
+PLOD_loghisto(HSPs)
+```
+
+This `PLOD_loghisto` shows a spike of unrelated pairs that is
+well-characterised by its expected distribution, a spike in density
+where we would expect to see half-siblings, and another spike in
+density where we would expect full siblings or parent-offspring
+pairs. From this, it should be clear that we can kinfer this dataset
+using the same approach as in Section One, albeit with slightly less
+power.
+
+# Section Three: do we _really_ need to do all that cleaning?
+
+```{r meanwhileOffscreen, include = FALSE}
+## identify the animals or loci removed by each process; stick 'em
+## in a data.frame; then subset bluefin by each.
+
+## bad loci are in bluefin but not in bluefin_1
+isBadLocus <- !bluefin@locinfo$Locus %in% bluefin_1@locinfo$Locus
+badLoci <- bluefin@locinfo$Locus[isBadLocus]
+## dups are in bluefin_1 but not bluefin_2
+isDup <- !bluefin_1@info$Our_sample %in% bluefin_2@info$Our_sample
+dups <- bluefin_1@info$Our_sample[isDup]
+## bad ilglks are in bluefin_2 but not bluefin_3
+isIlglk <- !bluefin_2@info$Our_sample %in% bluefin_3@info$Our_sample
+ilglks <- bluefin_2@info$Our_sample[isIlglk]
+## badhetz are in bluefin_3 but not in bluefin_4
+isBadhetz <- !bluefin_3@info$Our_sample %in% bluefin_4@info$Our_sample
+badhetz <- bluefin_3@info$Our_sample[isIlglk]
+
+## now, do the 'all but one' removals
+bluefin_exceptLoci <- bluefin[! bluefin@info$Our_sample %in% c(dups, ilglks, badhetz) ,]
+bluefin_exceptLoci <- hsp_power(bluefin_exceptLoci, k = 0.5)
+bluefin_exceptLoci <- prepare_PLOD_SPA(bluefin_exceptLoci)
+
+
+bluefin_exceptDups <- bluefin[! bluefin@info$Our_sample %in% c(ilglks, badhetz) ,
+                              ! bluefin@locinfo$Locus %in% badLoci]
+bluefin_exceptDups <- hsp_power(bluefin_exceptDups, k = 0.5)
+bluefin_exceptDups <- prepare_PLOD_SPA(bluefin_exceptDups)
+
+bluefin_exceptIlglks <- bluefin[! bluefin@info$Our_sample %in% c(dups, badhetz) ,
+                                ! bluefin@locinfo$Locus %in% badLoci]
+bluefin_exceptIlglks <- hsp_power(bluefin_exceptIlglks, k = 0.5)
+bluefin_exceptIlglks <- prepare_PLOD_SPA(bluefin_exceptIlglks)
+
+bluefin_exceptHetz <- bluefin[! bluefin@info$Our_sample %in% c(ilglks, dups) ,
+                              ! bluefin@locinfo$Locus %in% badLoci]
+bluefin_exceptHetz <- hsp_power(bluefin_exceptHetz, k = 0.5)
+bluefin_exceptHetz <- prepare_PLOD_SPA(bluefin_exceptHetz)
+```
+
+Offscreen, I've prepared versions of the `bluefin` dataset with
+all-but-one of the cleaning steps. For example, `bluefin_exceptIlglk`
+has had its loci checked, has had duplicates removed, had its
+contaminated and degraded samples removed - but I've kept all the
+samples that failed our check for animals from another population,
+using `ilglk_geno`. I've also built `bluefin_exceptDuplicates`,
+`bluefin_exceptHetzPoor`, `bluefin_exceptHetzRich`, and
+`bluefin_except6and4`, each of which has skipped the obvious cleaning
+step.  Here, we'll walk through the sorts of things you might see if
+your data aren't properly cleaned.
+
+## Duplicates
+
+_In principle_, there are two reasons we don't want duplicate samples
+in our kin-finding dataset: first, because our null distributions for
+our various kin-finding statistics are calculated under the assumption
+that each sample is an animal drawn independently and at random from
+the sampled population. Duplicate samples, especially if they account
+for a large proportion of the dataset, will make those null
+distributions and decisions based on them inaccurate. Second, if you
+follow the normal kin-finding pathway, and have duplicate samples in
+your dataset, those dups will be mistaken for parent-offspring pairs.
+
+Duplicate pairs are very easy to spot: they look more closely related
+than any true kin pair, so they appear far off to the right of the
+`PLOD_loghisto` or `HSP_histo` plots. The `bluefin` dataset doesn't
+have all that many duplicates, so the differences to the null
+distributions aren't pronounced.
+
+```{r keptDups}
+dupHSPs <- find_HSPs(bluefin_exceptDups, keep_thresh = -10)
+## PLOD_loghisto(dupHSPs) # use the PLOD_loghisto to pick the fullsib_cut
+HSP_histo(dupHSPs, lb = 20, fullsib_cut = 150)
+```
+
+## Samples from another population or species
+
+Samples from another population or species will look very unlike the
+bulk of the other samples, so pairs with one animal from population A
+(the intended population) and another from population B (the
+unintended population) will tend to have very un-kin-like kinship
+scores. On the other hand, pairs between two samples from population B
+_may_ have very high kinship scores, especially if some loci have
+alleles that are rare in population A but more common (or even fixed)
+in population B.
+
+```{r keptIlglks, fig.height = 11}
+# par(mfrow = c(2,1))
+ilglkHSPs <- find_HSPs(bluefin_exceptIlglks, keep_thresh = -10)
+PLOD_loghisto(ilglkHSPs) # there's a spike out to the left of the plotting area
+ilglkHSPs <- find_HSPs(bluefin_exceptIlglks, keep_thresh = -10, minbin = -250)
+PLOD_loghisto(ilglkHSPs) # extend the plotting area (requires re-running find_HSPs)
+```
+
+Note both the bump out to the left of the unrelated pairs, and the
+additional pairs scattered throughout the 'kin-like' regions of the
+PLOD distribution, but not closely matching the expected peak locations
+for any particular kin group except by accident.
+
+## Contaminated or degraded samples
+
+A few contaminated or degraded samples in a mostly-clean dataset
+behave very similarly to samples from another population or species:
+when paired with clean samples, they will look very dissimilar, but
+when paired with each other, they can look very much like
+kin.
+
+The `bluefin` dataset did not have many cross-contaminated or degraded
+samples, so we will demonstrate cross-contaminated and/or degraded
+samples using a dataset from Andersen et al. (2019), available on
+Dryad. We present the PLOD plots for this dataset with and without
+cleaning for cross-contamination.
+
+
+```{r tokelauOffscreen, include = FALSE}
+load("~/R/localPackages/kinference/kinference/data/yellowfin.rda") ## loads 'tokelau_snpgeno'
+load("~/Dropbox/CSIRO/contamStat/yellowfin_probablyContam.rda") ## use 'ttlc' as a sample ID
+tokelau_snpgeno@info$probablyContam <- info$probablyContam[match(tokelau_snpgeno@info$ttlc, info$ttlc)]
+tokelau_snpgeno@info$ttlcCheck <- info$ttlc[match(tokelau_snpgeno@info$ttlc, info$ttlc)]
+
+tokelau_clean <- tokelau_snpgeno[tokelau_snpgeno@info$probablyContam == FALSE,]
+tokelau_all <- tokelau_snpgeno
+
+## tokelau_all@locinfo$pbonzer <- re_est_ALF(tokelau_all)@locinfo$pambig
+
+## checking for badly-behaved loci
+pvals <- check6and4(tokelau_all, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
+## allelic dropout is a big problem with the ToK data: see
+## over-representation of OO, AAO and BBO, and under-representation of
+## AB
+
+tokelau_all_1 <- tokelau_all[, pvals$pval4 > 0.2]
+
+## finding and removing duplicate samples
+
+## look for duplicates in 'tokelau_all' and keep any pairs with less than 50
+## different genotypes:
+dups <- find_duplicates(tokelau_all_1, max_diff_loci = 500, show_plot = FALSE)
+nrow(dups) ## no duplicates
+tokelau_all_2 <- tokelau_all_1 ## nothing to remove
+
+## finding and removing samples from another population or species
+ilglk <- ilglk_geno(tokelau_all_2) ## doesn't align to priors _at all_. Maybe re-do later, for didactic reasons?
+
+tokelau_all_3 <- tokelau_all_2
+tokelau_all_3 <- hsp_power(tokelau_all_3, k = 0.5)
+
+## finding and removing cross-contaminated and degraded samples
+
+hetzrich <- hetzminoo_fancy(tokelau_all_3, "rich")
+hetzpoor <- hetzminoo_fancy(tokelau_all_3, "poor")
+
+tokelau_all_4 <- tokelau_all_3
+
+tokelau_all_5 <- prepare_PLOD_SPA(tokelau_all_4)
+
+contamHSPs <- find_HSPs(tokelau_all_5, keep_thresh = -10)
+PLOD_loghisto(contamHSPs) # wait, that looks like _cousins_ in the tokelau data
+## ok, the tokelau data aren't a great example to use - too much allelic dropout; not enough contamination
 ```
 
 
 
 
-```{r probablyNotKeepingThis}
-## ## HSP cutoff with few false negatives, some false positives
- ## HSPcut <- 10
- ## abline(v = HSPcut, col = "red", lwd = 2)
- ## HSPs_1 <- HSPs_1[HSPs_1$PLOD > HSPcut,]
- ## HSPs_1$ij <- paste(HSPs_1$i, HSPs_1$j)
- ## ## exclude the FSPs
- ## HSPs_1 <- HSPs_1[!HSPs_1$ij %in% FSPs_1$ij,]
- ## ## exclude the (empty) POPs
- ## HSPs_1 <- HSPs_1[!HSPs_1$ij %in% POPs_1$ij,]
- ## ### scrub the thiatics out of the HSPs
- ## ### first check: do we have an HSP bump, centred where it ought to be?
- ## ### _only_ do this for HSPs. No FSPs or POPs!
- ## HSP_histo(HSPs_1, lb = 10, fullsib_cut = 130)
- ## ### yes; we have an HSP bump, and its mean is where it ought to be
- ## PLODs_over_mean <- HSPs_1[HSPs_1$PLOD > HSPs_1@mean_HSP,]
- ## var_HSP <- mean((PLODs_over_mean$PLOD - HSPs_1@mean_HSP)^2)
- ## ## _eyeball_ a cutoff such that no more than one HTP should exceed it
- ## myEye <- 55
- ## ## what proportion are going to be below myEye if the mean and var are
- ## ## what we calculated?
- ## fneg_eye <- pnorm(myEye, mean = HSPs_1@mean_HSP, sd = sqrt(var_HSP))
- ## ## Or, if we want to be defensible and fancy about it...
- ## ## There is an 'objective' method.
- ## var_HTP <- var_PLOD_kin(SHS_g@locinfo, emp_V_HSP = var_HSP, kin_true = "HTP")
- ## ### the conservative approach is to pick the bigger of the possible
- ## ### variances from var_HTP for HTPs. We think there's a bug in Vx; but
- ## ## in principle, take the bigger one.
- ## bigVar <- max(var_HTP[cq(V0.HTP, Vx)])
- ## ## now, guess-timate how many HTPs there might be in the whole
- ## ## dataset.
- ## ### very conservative is 3x the number of HSPs (because the long-run
- ## ## truth is 2x). So use 6x the number of rows in PLODs_over_mean
- ## rough_n_HTPs <- 6*nrow(PLODs_over_mean)
- ## ## find a PLOD value above which there oughtn't to be more than one
- ## ## HTP.
- ## myBrain <- qnorm((1/rough_n_HTPs), mean = 0, sd = sqrt(bigVar), lower.tail = FALSE)
- ## ## given that cutoff, what's our false-negative rate for HSPs?
- ## fneg_brain <- pnorm(myBrain, mean = HSPs_1@mean_HSP, sd = sqrt(var_HSP))
- ## ### finally, trim HSPs to only those above your chosen cutoff
- ## HSPs_1 <- HSPs_1[HSPs_1$PLOD > myBrain,]
+
+
+
+
+```{r keptHetz, fig.height = 11}
+par(mfrow = c(2,1))
+hetzHSPs <- find_HSPs(bluefin_5, keep_thresh = -10)
+PLOD_loghisto(hetzHSPs, main = "bluefin") # there's a spike out to the left of the plotting area
+hetzHSPs <- find_HSPs(bluefin_exceptHetz, keep_thresh = -10)
+PLOD_loghisto(hetzHSPs, main = "bluefin_exceptHetz") # extend the plotting area (requires re-running find_HSPs)
 ```
-
-
-
-# Section 2: examples of things that can go wrong
-
-Go through early school shark for this?
-
-
-```{r}
-## data(dropbears)
-## pvals <- check6and4(dropbears, thresh_pchisq_6and4 = c(0.01, 0.0001))
-```
-
-The argument thresh_pchisq_6and4 sets two cutoffs
-for 'bad-ish' and 'really bad' loci. In this example, we have loci
-with ... . We have nnnn loci, so this is more than we would expect:
-we've got some bad loci here, and should remove them

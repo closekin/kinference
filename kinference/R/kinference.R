@@ -1016,6 +1016,7 @@ return( result)
 #' @param return_what one of `just_pvals` or `all`; see value
 #' @param extra_title a character string to be added to the bottom-right corner
 #' of all plots. Best if < 25 characters.
+#' @param show6 show plots for 6-way genocalls? TRUE or FALSE
 #' @return Creates per-locus vectors `pval6` and `pval4` for 6-way
 #' and 4-way genotypes respectively. If `return_what="just_pvals"`, these
 #' are returned in a list; if `return_what="all"`, they are added as
