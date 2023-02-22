@@ -3,6 +3,8 @@
 \name{chisq_genofreq_check}
 \alias{chisq_genofreq_check}
 \title{Check observed genotypes against HWE expectations}
+\description{Checks observed genotype frequencies against expected frequencies, presumably with expectation defined by HWE.
+}
 \usage{
 chisq_genofreq_check(
   lociar,
@@ -17,32 +19,15 @@ chisq_genofreq_check(
 )
 }
 \arguments{
-\item{lociar}{a snpgeno object}
-
-\item{gpred}{predicted allele frequencies}
-
-\item{gobs}{observed allele frequencies}
-
-\item{thresh_pchisq_loci}{a param. Presumably, a threshold p-val for
-flagging loci with suspicious-looking allele frequencies.}
-
-\item{showPlot}{show plots? TRUE or FALSE}
-
-\item{test}{a character string, either "Pearson" or "G"}
-
-\item{trim}{TRUE or FALSE. TRUE will keep only above max thresh_pchisq_loci.
-Arguably better as to be done post-hoc.}
-
-\item{seq_paxis}{numeric#'}
-
-\item{extra_title}{a character string to be added to the bottom-right corner
-of all plots. Best if < 25 characters.}
+\item{  lociar}{a snpgeno object}
+\item{  gpred}{predicted allele frequencies}
+\item{  gobs}{observed allele frequencies}
+\item{  thresh_pchisq_loci}{a param. Presumably, a threshold p-val for flagging loci with suspicious-looking allele frequencies.}
+\item{  test}{a character string, either "Pearson" or "G"}
+\item{  trim}{TRUE or FALSE. TRUE will keep only above max thresh_pchisq_loci. Arguably better as to be done post-hoc.}
+\item{  seq_paxis}{numeric#'}
+\item{  extra_title}{a character string to be added to the bottom-right corner of all plots. Best if < 25 characters.}
 }
-\description{
-Checks observed genotype frequencies against expected frequencies,
-presumably with expectation defined by HWE.
-}
-\seealso{
-kinference::check6and4
+\seealso{kinference::check6and4
 }
 \keyword{misc}
