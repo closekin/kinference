@@ -300,6 +300,8 @@ if(shanesComp) {
     ## refSBTPOPs <- theSBTPOPs
     ## save(refSBTPOPs, file = "SBT_referencePOPs.Rda")
 
+    ## theSBTlglkPOPs <- find_POPs_lglk(geno2019, gerr = 0.01, keep_thresh = 50)
+
     base::load("SBT_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refSBTPOPs, theSBTPOPs))
 

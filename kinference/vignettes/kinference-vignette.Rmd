@@ -12,15 +12,14 @@ Package `kinference` allows users to use SNP genotype data from
 biological samples to infer kin relationships between pairs of
 samples. In this vignette, we demonstrate how to use the core
 functions of package `kinference` to perform kin-finding with a
-perfect dataset (section 1), kin-finding with a 'typical' dataset and
-the necessary cleaning to get it to work (section 2), and a handful of
-canned examples showing the warning signs of Things Going Wrong
-(section 3).
+perfect dataset (section 1), cleaning a 'typical' dataset to get it to
+work for kinfinding (section 2), and some examples showing the warning
+signs of Things Going Wrong (section 3).
 
 # Section 1: kin-finding
 
 Here, we step through kin-finding with a well-behaved, well-cleaned
-dataset in `snpgeno` format. We will use the `dropbears` dataset,
+dataset in `snpgeno` format. We will use the `dropbears` dataset
 included with package `kinference`. Some standard checks should
 _always_ be done, but the `dropbears` dataset is already clean and
 won't require any changes. To see a dataset in need of cleaning (like
@@ -34,29 +33,9 @@ in Hardy-Weinberg proportions, with no allele dropout, gene
 duplications, loci under (strong) selection, or mistakenly-identified
 loci from hard-to-align regions such as microsatellites.
 
-## Finding and classifying kin
+## Plot an overview of the kin-space
 
-Our workflow for kin-finding goes something like:
-
-  * find 'strong' kin, ideally first-order kin (i.e., parent-offspring
-    or full-siblings), but excluding all unrelated pairs but
-    potentially including some weaker kin such as half-siblings.
-  * within the 'strong' kin, differentiate parent-offspring pairs from
-  full-sibling pairs (and any weaker kin), and record them so they can
-  be stripped from subsequent analysis.
-  * find weaker kin, i.e., second-order (half-sibling pairs,
-  grandparent-grandoffspring pairs, or full aunt-niece pairs) and
-  third-order (half aunt-niece, full cousins), and possibly some
-  fourth-order kin
-  * estimate a mixture distribution for second-order and third-order
-  kin, and use it to find a set of second-order kin and estimate the
-  false-negative rate for that set.
-
-Let's start by identifying our first-order kin.
-
-## Find Parent-offspring pairs
-
-```{r dropbears_findPOPs}
+```{r dropbears_overview}
 ## set the kin palette
 palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
           "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
@@ -68,12 +47,63 @@ data(dropbears)
 dropbears <- hsp_power(dropbears, k = 0.5)
 dropbears <- prepare_PLOD_SPA(dropbears)
 
+plod_HU <- find_HSPs(dropbears, keep_thresh = -10)
+PLOD_loghisto(plod_HU)
+```
+
+This plot shows observed log-densities of a kin-finding statistic as
+the black stair-step lines (the statistic is optimised for splitting
+half-siblings from unrelated pairs). It also shows some vertical lines
+at the the expected means for various classes of kin, and the expected
+distribution of unrelated pairs as a smooth purple curve. This is an
+excellent-looking kin space - we'll definitely be able to find kin
+here.
+
+## Finding and classifying kin
+
+From here, there are many potential workflows for finding kin. The
+workflows can depend on demographic information (e.g., one might look
+for sibling pairs only amongst samples of young animals caught at a
+similar time, to reduce confusion from aunt-niece pairs and
+parent-offspring pairs; and look for parent-offspring pairs only among
+pairs with a sizeable birth-year gap). Here, we show one potential
+workflow for kin-finding that does not use demographic information. It
+goes:
+
+  * find 'strong' kin, ideally first-order kin (i.e., parent-offspring
+    or full-siblings), but excluding all unrelated pairs but
+    potentially including some weaker kin such as half-siblings
+  * within the 'strong' kin, differentiate parent-offspring pairs from
+  full-sibling pairs (and any weaker kin), and record them so they can
+  be stripped from subsequent analysis.
+  * find weaker kin, i.e., second-order (half-sibling pairs,
+  grandparent-grandoffspring pairs, or full aunt-niece pairs) and
+  third-order (half aunt-niece, full cousins), and possibly some
+  fourth-order kin
+  * estimate a mixture distribution for second-order and third-order
+  kin, and use it to find a set of second-order kin and estimate the
+  false-negative rate for that set.
+
+Let's begin.
+
+## Find 'strong' kin and split out parent-offspring pairs
+
+```{r dropbears_findPOPs}
 ## find strong kin using find_POPs
 strongKin <- find_POPs(dropbears, keep_thresh = 0.6)
+## `keep_thresh` of 0.6 is arbitrary. The theoretical lower limit is
+## 0, and in principle keep_thresh should be set at a value where
+## unrelated pairs comprise substantial proportion of the density, as
+## shown in this graph:
 hist(strongKin$wpsex, breaks = 50)
 lines(strongKin@bins,diff(c(0,pnorm(strongKin@bins, mean = strongKin@mean_UP,
                     sd = sqrt(strongKin@var_UP)) * choose(nrow(dropbears), 2))),
-      lwd = 2, col = 5) ## col = 5 for UPs
+      lwd = 2, col = 5) ## col = 5 for UPs. The curved line gives the unrelated pair expectation.
+## There is also a likelihood-based statistic for POP-finding, but it's
+## new and a little fiddly. You would run it with this code:
+## strongKin2 <- find_POPs_lglk(dropbears, gerr = 0.3, keep_thresh = -5)
+## HSP_histo(strongKin2, lb = -5, fullsib_cut = 0)
+## PLOD_loghisto(strongKin2)
 ```
 
 The `wpsex`statistic calculated by `find_POPs` has an expectation of zero for
@@ -97,13 +127,14 @@ UPcut <- 0.055  ## keep only the clear kin from strongKin
 ## won't be able to use your dataset for kin-finding anyway.
 splitPOPs <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,], gerr = 0.01)
 hist(splitPOPs$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
+## the clump between -50 and -100 is POPs; the rest are a mix of FSPs, HSPs, and possibly weaker kin.
 
 POPs <- splitPOPs[splitPOPs$PLOD_FP < 0,] ## our first set of definite kin pairs
 POPs$ij <- paste(POPs$i, POPs$j) ## a pair ID
 ```
 
 We now have a set of known Parent-offspring pairs. The remaining
-first-order kin must be full-sibling pairs, so let's find them
+first-order kin must be full-sibling pairs, so let's find them.
 
 ## Find Full-sibling pairs
 
@@ -140,16 +171,18 @@ out the first-order kin from this set, then decide on a cutoff between
 half-siblings and thiatics that allows us to keep a large proportion
 of our sibling pairs, with a very low, known, rate of false positives.
 
+To achieve this, we use a mixture decomposition of the half-sibling,
+thiatic, and cousin pairs, set to choose a PLOD threshold that only a
+specified number of half-thiatic or cousin pairs will exceed.
+
 ```{r splitHSPsFromThiatics}
 HSPs$ij <- paste(HSPs$i, HSPs$j)
 HSPs_2 <- HSPs[!HSPs$ij %in% c(POPs$ij, FSPs$ij),] 
 ## plot the empirical PLOD scores with the expected distribution
 ## of the PLOD for half-sibling pairs
-HSP_histo(HSPs_2, lb = 0, fullsib_cut = 110, bin = 3)
-
+## HSP_histo(HSPs_2, lb = 0, fullsib_cut = 110, bin = 3)
 autopick_threshold(dropbears, kin = HSPs_2, fitrange_PLOD = c(0, 110),
                    FPtol_pairs = 1, use4th = TRUE, selecto = "ML", plot_bins = 5)
-
 ```
 
 # I need the new mixture composter here!
@@ -232,6 +265,8 @@ a member of the same stock as the main spike. Let's remove them.
 
 ```{r bluefinIlglk2}
 bluefin_3 <- bluefin_2[ilglk > -1450,]
+## now, does it look any better?
+ilglk <- ilglk_geno(bluefin_3)
 bluefin_3 <- hsp_power(bluefin_3, k = 0.5) ## important but boring internal calculation - just do it.
 ```
 

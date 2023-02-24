@@ -346,7 +346,8 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f; noooo!', E
   picki <- if( selecto=='paranoid') i_highest else i_fittest
 
   # Graph?
-  if( !is.null( plot_bins)){
+if( !is.null( plot_bins)){
+    kinPalette()
     # Taken from HSP_histo (before its renaming)
     # X-range goes from lowest *observed* PLOD (in kin), to *chosen* max_PLOD
     # CDF
@@ -360,9 +361,9 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f; noooo!', E
     # with() next allows direct use of that row of vals
     with( as.list( allvals[ picki,]), {
       # Composite distro
-      abline( v=thresh, lty=2, col='blue')
+      abline( v=thresh, lty=2, lwd = 2, col='black')
       probblies <- Nall * diff( CDF( histo$breaks, c( P2, P3, P4), c( SD2, SD3, SD4)))
-      lines( histo$mids, probblies, col='violet', lty=1)
+      lines( histo$mids, probblies, col='darkgreen', lty=1)
 
       # Might as well see the components...
       for( ord in c( 2, 3, if( use4th) 4 else NULL)){
@@ -371,7 +372,8 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f; noooo!', E
         Po <- get( 'P' %&% ord)
 
         probbly <- diff( pnorm( histo$breaks, mean=Eo, sd=SDo)) * Nall * Po
-        lines( histo$mids, probbly, col='violet', lty=2)
+        thisCol <- if(ord == 2) { HSPcol } else if(ord == 3) { HTPcol } else { HCPcol }
+        lines( histo$mids, probbly, col=thisCol, lty=2)
       } # for ord
     }) # with picki
 
@@ -2199,8 +2201,8 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   }
 
   if( is.null( minbin)) {
-    VUP <- sum( li$V.UP)
-    EUP <- sum( li$E.UP)
+    VUP <- sum( li$V_UP)
+    EUP <- sum( li$E_UP)
 
     ncomps <- length( subset1) * length( subset2) # might be out be 2 if s1==s2...
     # ... which is irrel on log scale
@@ -2212,7 +2214,7 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
   }
 
   if( is.null( maxbin)) {
-    EPOP <- sum( li$E.POP)
+    EPOP <- sum( li$E_POP)
     maxbin <- EPOP + (EPOP - EHSP) * 0.1
   }
   bins <- seq( from=minbin, to=maxbin, length=nbins)
@@ -2265,13 +2267,13 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
       xresult %without.name% cq( big_PLOD, big_i, big_j))
 
   # assign extra info as attributes
-  result@mean_UP <- snpg@Kenv$dK( 0)   # was called mean_theory
+  ## result@mean_UP <- snpg@Kenv$dK( 0)   # was called mean_theory
   result@var_UP <- snpg@Kenv$ddK( 0)
-  result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ##
-  ##   result@mean_HSP <- sum(snpg@locinfo$E_HSP) ## this should be OK
-  ##   result@mean_UP <- sum(snpg@locinfo$E_UP) ## this should be OK too
-  result@mean_POP <- sum(snpg@locinfo$E.POP)
-  result@mean_FSP <- sum(snpg@locinfo$E.FSP)
+  ## result@mean_HSP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff) ##
+  result@mean_HSP <- sum(snpg@locinfo$E_HSP) ## this should be OK
+  result@mean_UP <- sum(snpg@locinfo$E_UP) ## this should be OK too
+  result@mean_POP <- sum(snpg@locinfo$E_POP)
+  result@mean_FSP <- sum(snpg@locinfo$E_FSP)
   attributes( result) <- c( attributes( result), returnList( bins, binprobs, eta, keep_thresh))
 
   result@call <- sys.call()
@@ -2801,8 +2803,7 @@ return( c( whmo))
 function(hsps, lb, ub = max(hsps$PLOD)+bin, fullsib_cut, bin = 5,
              HSPmean = TRUE, HSPdist = TRUE, POPmean = TRUE, FSPmean = TRUE, main = "", ...) {
 
-        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+    kinPalette()
 
         hist.plod=hist(hsps$PLOD[hsps$PLOD > lb & hsps$PLOD < ub],breaks=seq(lb, ub, bin),
                        col="lightgrey",xlab="PLOD", main = main, ...)
@@ -4001,7 +4002,7 @@ function(
             lwd=2,col=5)
   }
   if( showUP["Normal"]) {
-    lines( x, log( diff( c( 0,
+    lines( x, log10( diff( c( 0,
         pnorm( binmids, mean= hsps@mean_UP, sd= sqrt( hsps@var_UP)) *
         sum( y[ binmids<0])))),
         lwd= 2, col= 5) ## Normal approx
@@ -5010,6 +5011,7 @@ function( snpg, candipairs) {
 }
 
 
+#' @export
 "split_FSPs_from_POPs" <-
 function(
     snpg,
@@ -5167,6 +5169,7 @@ return( ret)
 }
 
 
+#' @export
 "split_HSPs_from_HTPs" <-
 function( snpg, candipairs) {
   # For pairs already picked as possible HSPs, they might be HTPs
@@ -5550,5 +5553,45 @@ stopifnot(
   # ... though V_HSP will be in V0 & Vx anyway
 
 return( stuff)
+}
+
+#' Set the kin palette
+#'
+#' sets the palette to the recommended palette for the different kin
+#' types. Creates objects 'POPcol', 'GGPcol', etc., which are the hex
+#' codes for the recommended colours for POPs and GGPs, and so on for
+#' HCPs, FCPs, UPs, HTPs, FTPs, HSPs, and FSPs. Also sets the palette
+#' such that:
+#'
+#'   * 1 = POP
+#'   * 2 = GGP
+#'   * 3 = HCP
+#'   * 4 = FCP
+#'   * 5 = UP
+#'   * 6 = HTP
+#'   * 7 = FTP
+#'   * 8 = HSP
+#'   * 9 = FSP
+#'
+#' @param nlocal the environment in which to define the kin colours
+#' @return the named kin colours; see text.
+#' @export
+
+kinPalette <- function(nlocal = sys.parent() ) {
+
+mlocal({
+    POPcol <- "#0D0887FF"
+    GGPcol <- "#48039FFF"
+    HCPcol <- "#7401A8FF"
+    FCPcol <- "#9D189DFF"
+    UPcol <- "#BF3984FF"
+    HTPcol <- "#DA596AFF"
+    FTPcol <- "#EE7B51FF"
+    HSPcol <- "#FBA238FF"
+    FSPcol <- "#FCCE25FF"
+})
+
+        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 }
 
