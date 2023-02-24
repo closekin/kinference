@@ -363,7 +363,7 @@ if( !is.null( plot_bins)){
       # Composite distro
       abline( v=thresh, lty=2, lwd = 2, col='black')
       probblies <- Nall * diff( CDF( histo$breaks, c( P2, P3, P4), c( SD2, SD3, SD4)))
-      lines( histo$mids, probblies, col='darkgreen', lty=1)
+      lines( histo$mids, probblies, col='black', lty=1, lwd = 3)
 
       # Might as well see the components...
       for( ord in c( 2, 3, if( use4th) 4 else NULL)){
@@ -373,7 +373,7 @@ if( !is.null( plot_bins)){
 
         probbly <- diff( pnorm( histo$breaks, mean=Eo, sd=SDo)) * Nall * Po
         thisCol <- if(ord == 2) { HSPcol } else if(ord == 3) { HTPcol } else { HCPcol }
-        lines( histo$mids, probbly, col=thisCol, lty=2)
+        lines( histo$mids, probbly, col=thisCol, lty=2, lwd = 2)
       } # for ord
     }) # with picki
 
@@ -389,11 +389,11 @@ if( !is.null( plot_bins)){
         col= COL)
 
     # Means: show them last, so not covered by shading
-    abline( v=c( E2, E3, E4), col='black', lwd=3) # E4 *shouldn't* appear; should be off LHS!
+    abline( v=c( E2, E3, E4), col=c(HSPcol, HTPcol, HCPcol), lty = 2, lwd = 2) # E4 *shouldn't* appear; should be off LHS!
 
-    legend("topright", legend = c( 'Theory means HSP & HTP', 'Overall', 'Component'),
-      lwd= c( 3, 1, 1), lty= c( 1, 1, 2),
-      col= c( 'black', 'violet', 'violet'), bg='white')
+    legend("topright", legend = c( 'Overall', 'Threshold', 'HSP Component', 'HTP Component', if(use4th) 'HCP Component' else NULL),
+      lwd= c( 3, 2, 2, 2, if(use4th) 2 else NULL ), lty= c( 1, 2, 2, 2, if(use4th) 2 else NULL ),
+      col= c( 'black', 'black', HSPcol, HTPcol, if( use4th) HCPcol else NULL ), bg='white')
   }
 
   flatto <- function( matto){

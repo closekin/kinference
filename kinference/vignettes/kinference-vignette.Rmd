@@ -36,12 +36,10 @@ loci from hard-to-align regions such as microsatellites.
 ## Plot an overview of the kin-space
 
 ```{r dropbears_overview}
-## set the kin palette
-palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-          "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 library(kinference)
 library(atease)
 data(dropbears)
+kinPalette() ## set the kin palette
 
 ## a couple of boring but necessary data-prep steps:
 dropbears <- hsp_power(dropbears, k = 0.5)
@@ -127,9 +125,14 @@ UPcut <- 0.055  ## keep only the clear kin from strongKin
 ## won't be able to use your dataset for kin-finding anyway.
 splitPOPs <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,], gerr = 0.01)
 hist(splitPOPs$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
+abline(v = splitPOPs@E_FSP, col = FSPcol, lwd = 2) ## this col was defined by kinPalette() earlier
+abline(v = splitPOPs@E_POP, col = POPcol, lwd = 2)
+legend("topright", legend = c("POP expectation", "FSP expectation"), lty = c(1,1), lwd = c(2,2),
+       col = c(POPcol, FSPcol), bg = "white")
 ## the clump between -50 and -100 is POPs; the rest are a mix of FSPs, HSPs, and possibly weaker kin.
 
 POPs <- splitPOPs[splitPOPs$PLOD_FP < 0,] ## our first set of definite kin pairs
+
 POPs$ij <- paste(POPs$i, POPs$j) ## a pair ID
 ```
 
