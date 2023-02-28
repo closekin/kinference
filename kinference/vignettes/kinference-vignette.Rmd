@@ -125,7 +125,7 @@ UPcut <- 0.055  ## keep only the clear kin from strongKin
 ## won't be able to use your dataset for kin-finding anyway.
 splitPOPs <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,], gerr = 0.01)
 hist(splitPOPs$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
-abline(v = splitPOPs@E_FSP, col = FSPcol, lwd = 2) ## this col was defined by kinPalette() earlier
+abline(v = splitPOPs@E_FSP, col = FSPcol, lwd = 2) ## colours 'FSPcol' and 'POPcol' defined by kinPalette()
 abline(v = splitPOPs@E_POP, col = POPcol, lwd = 2)
 legend("topright", legend = c("POP expectation", "FSP expectation"), lty = c(1,1), lwd = c(2,2),
        col = c(POPcol, FSPcol), bg = "white")
@@ -143,8 +143,8 @@ first-order kin must be full-sibling pairs, so let's find them.
 
 ```{r findHSPs}
 ## find HSPs-or-stronger using find_HSPs
-HSPs <- find_HSPs(dropbears, keep_thresh = -10)
-PLOD_loghisto(HSPs)
+HSPs_1 <- find_HSPs(dropbears, keep_thresh = -10)
+PLOD_loghisto(HSPs_1)
 ## note the distribution of the PLOD - there is a large bump of
 ## unrelated pairs, with mean and variance exactly where theory
 ## predicts them to be, and bumps for second-order (half-sibling) and
@@ -159,7 +159,7 @@ statistic, subset out the parent-offspring pairs, and be left with the
 full-siblings.
 
 ```{r assignFSPs}
-POPsOrFSPs <- HSPs[HSPs$PLOD > 110,]
+POPsOrFSPs <- HSPs_1[HSPs_1$PLOD > 110,]
 POPsOrFSPs$ij <- paste(POPsOrFSPs$i, POPsOrFSPs$j) ## a pair ID to match the one in POPs
 FSPs <- POPsOrFSPs[!POPsOrFSPs$ij %in% POPs$ij,] ## find our full-sibling pairs
 ```
@@ -179,16 +179,71 @@ thiatic, and cousin pairs, set to choose a PLOD threshold that only a
 specified number of half-thiatic or cousin pairs will exceed.
 
 ```{r splitHSPsFromThiatics}
-HSPs$ij <- paste(HSPs$i, HSPs$j)
-HSPs_2 <- HSPs[!HSPs$ij %in% c(POPs$ij, FSPs$ij),] 
+HSPs_1$ij <- paste(HSPs_1$i, HSPs_1$j)
+HSPs_2 <- HSPs_1[!HSPs_1$ij %in% c(POPs$ij, FSPs$ij),] 
 ## plot the empirical PLOD scores with the expected distribution
 ## of the PLOD for half-sibling pairs
-## HSP_histo(HSPs_2, lb = 0, fullsib_cut = 110, bin = 3)
-autopick_threshold(dropbears, kin = HSPs_2, fitrange_PLOD = c(0, 110),
+thresh <- autopick_threshold(dropbears, kin = HSPs_2, fitrange_PLOD = c(0, 110),
                    FPtol_pairs = 1, use4th = TRUE, selecto = "ML", plot_bins = 5)
 ```
 
-# I need the new mixture composter here!
+The plot from `autopick_threshold` shows our observed distribution of
+the PLOD_HU (a statistic optimised for splitting half-siblings from
+unrelated pairs) alongside the component curves from a mixture
+decomposition model aiming to split the PLOD_HU into second-order
+(e.g., half-siblings), third-order (e.g., half-thiatics), and
+fourth-order (e.g., half-cousins) pairs and the combined density of
+those component curves. The observed PLOD_HU distribution should
+closely match the black curve. It has then picked a cutoff to split
+HSPs from all weaker kin-types, with only a small number of
+false-positive half-siblings. In this example, we've set that number
+of false-positives to 1, with the argument `FPtol_pairs = 1`.
+
+With that cutoff, we can define our set of HSPs and the estimated
+false-positive and false-negative rates of that set:
+
+```{r assignHSPs}
+HSPs <- HSPs_2[HSPs_2$PLOD > thresh,]
+fpos_rate <- thresh@FPtol_pairs / nrow(HSPs) ## approx 2% of our 'HSPs' are false-positives
+fneg_rate <- thresh@info["Pr_FNeg"] ## we're missing about 0.5% of HSPs to false-negatives
+nrow(HSPs) ## 52 inferred half-sibling pairs
+```
+
+## Link kin pairs to their sample covariate data
+
+Now, we have three sets of kin pairs, but they're not linked to sample
+covariate data like an individual ID - individuals are identified by
+their row numbers in the dataset used for analysis, but for any
+subsequent analysis, some additional sample information will almost
+certainly be useful. Let's associate the pairs with their sample
+covariates.
+
+```{r HSPmetadata}
+HSPs <- get_pair_covars(dropbears, HSPs)
+POPs <- get_pair_covars(dropbears, POPs)
+FSPs <- get_pair_covars(dropbears, FSPs)
+splitPOPs <- get_pair_covars(dropbears, splitPOPs)
+
+## covariate data are stored in @i_covars and @j_covars:
+HSPs@i_covars[1:5,]
+HSPs@j_covars[1:5,]
+```
+
+```{r testspaceToDelete}
+dropbears@info$ageClass <- "adult"
+pairs <- dropbears@pairs
+juvs <- pairs$j[pairs$kintype == "POP"]
+dropbears@info$ageClass[juvs] <- "juvenile"
+
+subsetPOPs <- find_POPs(dropbears, subset1 = which(dropbears@info$ageClass == "adult"),
+                        subset2 = which(dropbears@info$ageClass == "juvenile"), keep_thresh = 0.06)
+
+subsetPOPs <- get_pair_covars(dropbears, subsetPOPs, subset1 = which(dropbears@info$ageClass == "adult"),
+                              subset2 = which(dropbears@info$ageClass == "juvenile"))
+
+FSPs <- get_pair_covars(dropbears, FSPs, fields = c("Our_sample", "blah", "ageClass"))
+
+```
 
 
 # Section 2: cleaning the bluefin dataset
@@ -401,12 +456,13 @@ your data aren't properly cleaned.
 _In principle_, there are two reasons we don't want duplicate samples
 in our kin-finding dataset: first, because our null distributions for
 our various kin-finding statistics are calculated under the assumption
-that each sample is an animal drawn independently and at random from
-the sampled population. Duplicate samples, especially if they account
-for a large proportion of the dataset, will make those null
-distributions and decisions based on them inaccurate. Second, if you
-follow the normal kin-finding pathway, and have duplicate samples in
-your dataset, those dups will be mistaken for parent-offspring pairs.
+that each sample is drawn independently and at random from the sampled
+population. Duplicate samples, especially if they account for a large
+proportion of the dataset, will make those null distributions and
+decisions based on them inaccurate. Second, if you follow the
+kin-finding pathway shown in this vignette, and have duplicate samples
+in your dataset, those dups will be mistaken for parent-offspring
+pairs.
 
 Duplicate pairs are very easy to spot: they look more closely related
 than any true kin pair, so they appear far off to the right of the

@@ -5595,3 +5595,70 @@ mlocal({
                   "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 }
 
+
+
+#' Get pair covariate data
+#'
+#' Gets sample covariate data for samples `i` and `j` in a pair
+#' data.frame returned by `find_HSPs`, `find_POPs`, etc. Sample
+#' covariate data are returned as one data.frame for each sample:
+#' pairs@i_covars contains the covariate data for sample _i_,
+#' and pairs@j_covars for sample _j_.
+#'
+#' @param snpg the 'snpgeno' dataset from which the pairs were called
+#' @param pairs the output from a call to a `find_` or `split_`
+#'     function from package `kinference`, or a row-wise subset of
+#'     such an output.
+#' @param fields if NULL (the default), will return all covariate
+#'     fields for each sample. Otherwise, should be a vector whose
+#'     values match column names in `snpg@info`, and will return only
+#'     the named covariates.
+#' @param subset1 should be left as the default unless
+#'     subset-comparisons were specified in the `find_` call that
+#'     generated `pairs`, in which case should be set matching the
+#'     subset-comparisons specified in that call
+#' @param subset2 see subset1
+#' @return the data.frame given in `pairs`, with additional
+#'     data.frames pairs@i_covars and pairs@j_covars containing
+#'     covariate data for sample `i` and `j`, respectively.
+#' @export
+
+get_pair_covars <- function(snpg, pairs, fields = NULL, subset1 = 1 %upto% nrow(snpg),
+                            subset2 = subset1) {
+
+    if(all(subset2 == subset1) & length(subset1) == nrow(snpg) & max(c(subset2, subset1)) <= nrow(snpg)) {
+        ## simplest, most common case: i and j are just indices in snpg
+        iCovs <- snpg@info[pairs$i,]
+        jCovs <- snpg@info[pairs$j,]
+    } else if(! all(subset2 == subset1 & max(c(subset2, subset1)) <= nrow(snpg))) {
+        ## subset 2 isn't subset 1, but they're both within nrow(snpg)
+        iinfo <- snpg@info[subset1,]
+        jinfo <- snpg@info[subset2,]
+
+        iCovs <- iinfo[pairs$i, ]
+        jCovs <- jinfo[pairs$j, ]
+    } else {
+        stop("the subsets appear to be ill-formed: they specify animals that don't exist in snpg")
+    }
+
+    if( !is.null(fields)) {
+        if(all(fields %in% names(iCovs)) & all(fields %in% names(jCovs))) {
+            iCovs <- iCovs[,fields]
+            jCovs <- jCovs[,fields]
+        } else {
+            fields <- fields[fields %in% names(iCovs)]
+            if(length(fields) == 0) {
+                warning("'fields' is specified, has no values that match names of covariate data in snpg. Returning empty fields...")
+            } else {
+                warning("some names in 'fields' aren't in the names of the covariate data in snpg. Returning all matching fields...")
+            }
+            iCovs <- iCovs[,fields]
+            jCovs <- jCovs[,fields]
+        }
+    }
+
+    pairs@i_covars <- iCovs
+    pairs@j_covars <- jCovs
+
+    return(pairs)
+}
