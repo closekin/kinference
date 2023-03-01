@@ -5630,7 +5630,7 @@ get_pair_covars <- function(snpg, pairs, fields = NULL, subset1 = 1 %upto% nrow(
         ## simplest, most common case: i and j are just indices in snpg
         iCovs <- snpg@info[pairs$i,]
         jCovs <- snpg@info[pairs$j,]
-    } else if(! all(subset2 == subset1 & max(c(subset2, subset1)) <= nrow(snpg))) {
+    } else if(max(c(subset2, subset1)) <= nrow(snpg)) {
         ## subset 2 isn't subset 1, but they're both within nrow(snpg)
         iinfo <- snpg@info[subset1,]
         jinfo <- snpg@info[subset2,]
@@ -5648,7 +5648,7 @@ get_pair_covars <- function(snpg, pairs, fields = NULL, subset1 = 1 %upto% nrow(
         } else {
             fields <- fields[fields %in% names(iCovs)]
             if(length(fields) == 0) {
-                warning("'fields' is specified, has no values that match names of covariate data in snpg. Returning empty fields...")
+                warning("'fields' is specified, but no values match names of covariate data in snpg. Returning empty fields...")
             } else {
                 warning("some names in 'fields' aren't in the names of the covariate data in snpg. Returning all matching fields...")
             }

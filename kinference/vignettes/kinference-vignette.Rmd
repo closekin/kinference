@@ -229,23 +229,6 @@ HSPs@i_covars[1:5,]
 HSPs@j_covars[1:5,]
 ```
 
-```{r testspaceToDelete}
-dropbears@info$ageClass <- "adult"
-pairs <- dropbears@pairs
-juvs <- pairs$j[pairs$kintype == "POP"]
-dropbears@info$ageClass[juvs] <- "juvenile"
-
-subsetPOPs <- find_POPs(dropbears, subset1 = which(dropbears@info$ageClass == "adult"),
-                        subset2 = which(dropbears@info$ageClass == "juvenile"), keep_thresh = 0.06)
-
-subsetPOPs <- get_pair_covars(dropbears, subsetPOPs, subset1 = which(dropbears@info$ageClass == "adult"),
-                              subset2 = which(dropbears@info$ageClass == "juvenile"))
-
-FSPs <- get_pair_covars(dropbears, FSPs, fields = c("Our_sample", "blah", "ageClass"))
-
-```
-
-
 # Section 2: cleaning the bluefin dataset
 
 Your data will almost certainly need cleaning before you can do the
