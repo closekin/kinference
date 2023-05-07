@@ -1,0 +1,6 @@
+0.0.181ish: 
+ - Fixed bug in find_POPs() that caused asymmetry between subset1 and subset2 (thanks Paige for finding it!).
+
+ - Fixed micro doco bug in split_FSPs_from_HSPs().
+ 
+ - Added this exciting NEWS feature

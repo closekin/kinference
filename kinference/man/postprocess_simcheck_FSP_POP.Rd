@@ -26,8 +26,6 @@ simcheck_FSP_POP( snpg, chromos, N, check_genofreq= FALSE)
 }
 \seealso{\code{find_FSPs_from_POPs}
 }
-\keyword{internal
-}
 \examples{
 ForP <- simcheck_FSP_POP( my_snpg, 10, 1000)
 ForP$locinfo$useN[] <- 3 # minimal but most robust genotype
@@ -57,3 +55,4 @@ testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
 abline( v=testo4$FPstat, col='red')
 }
 }
+\keyword{misc}

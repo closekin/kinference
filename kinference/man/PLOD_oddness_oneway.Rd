@@ -33,5 +33,4 @@ PLOD_oddness_twoway (hsps, snpg, lb = min(hsps$PLOD) - 10, ub = max(hsps$PLOD) +
 }
 \seealso{HSP_oddness_oneway
 }
-\keyword{internal
-}
+\keyword{misc}
