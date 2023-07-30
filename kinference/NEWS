@@ -4,3 +4,9 @@
  - Fixed micro doco bug in split_FSPs_from_HSPs().
  
  - Added this exciting NEWS feature
+
+7/2023, 0.0.182ish: 
+  - *changed* i & j returns from 'find_<blah>' to index *entire* snpgeno argument, not relative to subsets
+  - added 'ij_numeric' arg to 'find_<blah>' to return character i & j if 'rowid_field' is set (new gbasics feature)
+  
+  - added 'histoPLOD' as unifying caller to old 'PLOD_loghisto' and 'HSP_histo', which had inconsistent names and arguments. Prolly deprecate those...

@@ -19,7 +19,7 @@ autopick_threshold(
 )
 }
 \arguments{
-\item{  x}{a \code{snpgeno} or its \code{locinfo} attribute. Must already have been prepared by running \code{hsp_power} and \code{prepare_PLOD_SPA}.}
+\item{  x}{a \code{snpgeno} or its \code{locinfo} attribute. Must already have been prepared by running \code{kin_power} and \code{prepare_PLOD_SPA}.}
 \item{  kin}{a dataframe of "close-ish" kin-pairs and their PLODs, presumably from running \code{find_HSPs}; must have a column "PLOD".}
 \item{  fitrange_PLOD}{two numbers, specifying the range of PLODs from \code{kin} to use in \emph{fitting} (though all are \emph{plotted}, by default)}
 \item{  FPtol_pairs}{how many expected False-Positive 3rd-order kin should the threshold exclude?}
@@ -42,7 +42,7 @@ Despite the name, \emph{you} still have to supply sensible values for a couple o
 }
 \value{The proposed threshold, with lots of attributes. You can use those to calculate False-Neg Probabilities for \emph{other} possible thresholds, as per \emph{Examples}; you \emph{don't} have to accept the one that is proposed here. Threshold choice is \emph{up to you} (and not the fault of kinference)!
 }
-\seealso{\code{\link{hsp_power}}, \code{\link{var_PLOD_kin}}
+\seealso{\code{\link{kin_power}}, \code{\link{var_PLOD_kin}}
 }
 \examples{
 # Better have one...

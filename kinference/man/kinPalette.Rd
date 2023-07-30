@@ -1,25 +1,32 @@
 \name{kinPalette}
 \alias{kinPalette}
 \title{Set the kin palette}
-\description{sets the palette to the recommended palette for the different kin types. Creates objects \code{POPcol}, \code{GGPcol}, etc., which are the hex codes for the recommended colours for POPs and GGPs, and so on for HCPs, FCPs, UPs, HTPs, FTPs, HSPs, and FSPs. Also sets the palette such that:
+\description{
+Sets the \code{\link{palette}} to recommended values for different kinships, so that eg \code{point( ..., col=2)} will be consistent with colours already on graphs produced by other \code{\link{kinference}} package functions such as \code{\link{histoPLOD}}. Hex values are returned in a vector, which you can use later use like so:
+
+\preformatted{
+  kincol <- kinPalette()
+  # plot something...
+  abline( v=17, col=kincol[ 'UP']) # for whatever colour corresponds to UPs
 }
-\usage{kinPalette(nlocal = sys.parent())
+
+See \bold{Value} for the predefined kinships.
 }
-\arguments{\item{  nlocal}{the environment in which to define the kin colours}
+\usage{kinPalette()
 }
-\details{
-\itemize{
-\item 1 = POP
-\item 2 = GGP
-\item 3 = HCP
-\item 4 = FCP
-\item 5 = UP
-\item 6 = HTP
-\item 7 = FTP
-\item 8 = HSP
-\item 9 = FSP
-}
-}
-\value{the named kin colours; see text.
+\value{
+A named character vector of hex codes, with names "POP" etc. The current numerical ordering (not that you should ever need to know it--- just use the names) is:
+%#
+\item{   c(}{}
+\item{   POP= 1,}{}
+\item{   GGP= 2,}{}
+\item{   HCP= 3,}{}
+\item{   FCP= 4,}{}
+\item{   UP= 5,}{}
+\item{   HTP= 6,}{}
+\item{   FTP= 7,}{}
+\item{   HSP= 8,}{}
+\item{   FSP= 9}{}
+\item{  )}{}
 }
 \keyword{misc}
