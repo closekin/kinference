@@ -159,7 +159,7 @@ function( nlocal=sys.parent()) mlocal({
 #' need. It is worth experimenting. }
 #'
 #' @param x a \code{snpgeno} or its \code{locinfo} attribute. Must already have
-#' been prepared by running \code{hsp_power} and \code{prepare_PLOD_SPA}.
+#' been prepared by running \code{kin_power} and \code{prepare_PLOD_SPA}.
 #' @param kin a dataframe of "close-ish" kin-pairs and their PLODs, presumably
 #' from running \code{find_HSPs}; must have a column "PLOD".
 #' @param fitrange_PLOD two numbers, specifying the range of PLODs from
@@ -194,7 +194,7 @@ function( nlocal=sys.parent()) mlocal({
 #' as per \emph{Examples}; you \emph{don't} have to accept the one that is
 #' proposed here. Threshold choice is \emph{up to you} (and not the fault of
 #' kinference)!
-#' @seealso \code{\link{hsp_power}}, \code{\link{var_PLOD_kin}}
+#' @seealso \code{\link{kin_power}}, \code{\link{var_PLOD_kin}}
 #' @keywords misc
 #' @examples
 #'
@@ -366,7 +366,7 @@ if( !is.null( plot_bins)){
       lines( histo$mids, probblies, col='black', lty=1, lwd = 3)
 
       # Might as well see the components...
-      for( ord in c( 2, 3, if( use4th) 4 else NULL)){
+      for( ord in c( 2, 3, if( use4th) 4)){
         Eo <- get( 'E' %&% ord)
         SDo <- get( 'SD' %&% ord)
         Po <- get( 'P' %&% ord)
@@ -391,9 +391,9 @@ if( !is.null( plot_bins)){
     # Means: show them last, so not covered by shading
     abline( v=c( E2, E3, E4), col=c(HSPcol, HTPcol, HCPcol), lty = 2, lwd = 2) # E4 *shouldn't* appear; should be off LHS!
 
-    legend("topright", legend = c( 'Overall', 'Threshold', 'HSP Component', 'HTP Component', if(use4th) 'HCP Component' else NULL),
-      lwd= c( 3, 2, 2, 2, if(use4th) 2 else NULL ), lty= c( 1, 2, 2, 2, if(use4th) 2 else NULL ),
-      col= c( 'black', 'black', HSPcol, HTPcol, if( use4th) HCPcol else NULL ), bg='white')
+    legend("topright", legend = c( 'Overall', 'Threshold', '2nd', '3rd', if(use4th) '4th'),
+      lwd= c( 4, 2, 2, 2, if(use4th) 2), lty= c( 1, 2, 1, 1, if(use4th) 1),
+      col= c( 'black', 'black', HSPcol, HTPcol, if( use4th) HCPcol), bg='white')
   }
 
   flatto <- function( matto){
@@ -625,7 +625,7 @@ return( pp6_err)
 }
 
 
-"calc_hspPower_checksum" <-
+"calc_kinPower_checksum" <-
 function( li){
   Nseq <- 1 %upto% nrow( li)
 return(  with( li, round( sum(
@@ -806,7 +806,7 @@ stopifnot( 'Kenv' %in% names( attributes( snpg)))
   # ... have already adjusted the LOD entries so that new_LOD6( XX/..) <- LOD4( XXO/..)
   # ... use the LOD that's in Kenv, where SPA is calculated
 
-  # Genofreqs could've/should've be done at the start in hsp_power, but here will do
+  # Genofreqs could've/should've be done at the start in kin_power, but here will do
 
   # LOD and PUP are stored in compacted 2D form to save space... need to fix that
   # Can't quite do this with vecless!
@@ -1754,16 +1754,14 @@ return( x)
 #' \code{maxbin<max_diff_loci} (think about it!).
 #' @param show_plot whether to plot log histogram. Regardless, plot will not be
 #' shown if other arguments would lead to stupid result (e.g. no bins...).
-#' @param keep_thresh (\code{find_HSPs} and \code{find_POPs}) is the analog of
+#' @param keep_thresh (\code{find_HSPs} is the analog of
 #' \code{max_diff_loci} for \code{find_duplicates}. It determines which pairs
 #' to retain for individual inspection. For \code{find_HSPs}, this is the
-#' lowest retained PLOD; for \code{find_POPs} (currently), it's the highest
-#' retained \code{wpsex}. Set it with the aim of including "anything
+#' lowest retained PLOD. Set it with the aim of including "anything
 #' interesting" (ie not \emph{missing} any interesting pairs) and expect false
 #' positives - i.e. be willing to have some weaker kin in there, and to
-#' subsequently filter those out yourself "manually", as per vignette. For
-#' HSPs, values like 0 (near the HTP mean) or -5 are a good start. For POPs,
-#' experiment (at a total guess, try 0.1). You may have to re-run the function
+#' subsequently filter those out yourself "manually", as per vignette. Values
+#' like 0 (near the HTP mean) or -5 are a good start. You may have to re-run the function
 #' a coupla times if you have been too brutal or too generous here - though
 #' "too generous" can be fixed post hoc just by filtering the result, as long
 #' as you haven't generated tooooo many pairs (see parameter
@@ -2159,12 +2157,12 @@ stopifnot( all( !duplicated( subset1)) && all( !duplicated( subset2)))
 stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subset2)))
 
   # SB has:
-  hspPower_change <- snpg@hspPower_checksum != calc_hspPower_checksum( snpg$locinfo)
+  hspPower_change <- snpg@kinPower_checksum != calc_kinPower_checksum( snpg$locinfo)
   # MVB: though that's not the best sum to check! pbonzer should sum to 1 per row... ditto PUP<X> below
   PLODSPA_change <- snpg@PLODSPA_checksum != calc_PLODSPA_checksum( snpg$locinfo)
 
   if(hspPower_change | PLODSPA_change) {
-      warning("snpg$locinfo appears to have been modified after hsp_power() and/or prepare_PLOD_SPA() were last called. I sure hope you know what you're doing...")
+      warning("snpg$locinfo appears to have been modified after kin_power() was last called. You generally want to run find_HSPs with a locinfo that is up-to-date with itself. Consider re-running kin_power() on your snpg and trying again")
   }
 
   define_genotypes()
@@ -2285,14 +2283,14 @@ return( result)
 "find_POPs" <-
 function( snpg, subset1=1 %upto% nrow( snpg), subset2=subset1,
     limit_pairs=0.5*nrow(snpg),
-    keep_thresh,
     eta= NULL,
     nbins= 50,
     maxbin = NULL,
     WPSEX_UP_POP_balance=0.99) {
 ###################
-  # Sanity...
-define_genotypes()
+keep_thresh <- 1 ## we don't decide who to keep via threshold any more - just via limit_pairs
+    ## Sanity...
+    define_genotypes()
 stopifnot(
     is.numeric( subset1),
     is.numeric( subset2),
@@ -2304,11 +2302,11 @@ stopifnot(
   )
 
   ## # SB checks--- but NB rowSums( pbonzer==1) !
-  ## hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+  ## hspPower_change <- snpg@kinPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
   ## PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
   ##                                                 PUP6, PUP4, PUP3))
   ## if(hspPower_change | PLODSPA_change) {
-  ##   warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+  ##   warning("snpg$locinfo appears to have been modified after kin_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
   ## }
 
   # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
@@ -2466,9 +2464,9 @@ stopifnot( all( ww>0))
   }
 
   # warning if we're running up against storage constraints
-  if(length(result$big_wpsex) == limit_pairs){
-    message("Returning just the ", limit_pairs, " pairs with the most POP-like wpsex scores, increase 'limit_pairs' if more are required")
-  }
+  ## if(length(result$big_wpsex) == limit_pairs){
+  ##   message("Returning just the ", limit_pairs, " pairs with the most POP-like wpsex scores, increase 'limit_pairs' if more are required")
+  ## }
 
   n_wpsex_in_bin <- result$n_wpsex_in_bin  ## SB tweak; the 'below zero' bin must be empty
   # bins <- seq(0+binterval, 0+(nbins*binterval), binterval)
@@ -2528,11 +2526,11 @@ stopifnot(
 
   # A POP is "just like" an HSP where the ppn coin is 1.0 not 0.5
   # but we add a little bit of geno error for statistical lubrication
-  # Call 'hsp_power' to get LODs manually for this case
+  # Call 'kin_power' to get LODs manually for this case
   # then 'prepare_PLOD_SPA' to handle useN stuff
   # then use HSP machinery.
 
-  snpg <- hsp_power( snpg, k= 1-gerr) # !! Captain Sneakypants !!
+  snpg <- kin_power( snpg, k= 1-gerr) # !! Captain Sneakypants !!
   snpg <- prepare_PLOD_SPA( snpg, n_pts_SPA_renorm=201)
 
   mc <- match.call()
@@ -2578,8 +2576,9 @@ return( result)
 "FSP_POP_histo" <-
 function(fsps2, bin = 100, FSPmean = TRUE, POPmean = TRUE, main = "", ...) {
 
-        palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-                  "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+    kinPalette()
+    ## palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+    ##           "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
         if(exists("xlim")) {
             lb <- min(xlim)
@@ -2847,7 +2846,7 @@ function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin
 
 #' Locus selection for kin-finding
 #'
-#' \code{hsp_power} can be used to predict how well a set of loci will work for
+#' \code{kin_power} can be used to predict how well a set of loci will work for
 #' HSP-finding, and to prepare for some QC and kinference steps on serious
 #' data. It returns the input \code{snpgeno} object with extra columns added to
 #' the \code{locinfo} attribute, related to the per-locus mean and variance of
@@ -2864,7 +2863,7 @@ function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin
 #' matrix) to the \code{locinfo}. They have been made dull (see
 #' \code{make_dull}) to improve your viewing experience, but they work fine for
 #' all normal purposes (and you can always \code{unclass} them to remove the S3
-#' class \code{dull}). \subsection{Notes\code{hsp_power} (and downstream)
+#' class \code{dull}). \subsection{Notes\code{kin_power} (and downstream)
 #' should get a refactor. It's daft to store LODs for only one specific kin;
 #' it'd be better to always calculate P1share and P2share as well as P0share
 #' (which is PUP), and then compute whatever-is-needed later on-the-fly. As-is,
@@ -2882,8 +2881,8 @@ function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin
 #' ## Need some examples!
 #' # See vignette for now
 #'
-#' @export hsp_power
-"hsp_power" <-
+#' @export kin_power
+"kin_power" <-
 function( lociar,
     want_LOD_table=TRUE, # T/F
     k, # 0.5 for HSPs
@@ -2891,10 +2890,18 @@ function( lociar,
 ){
 ############
   define_genotypes()
-  li <- lociar$locinfo
-  li1 <- li[1,]
 
-`%without.names%` <- function( x, what) {
+  if( is.null(lociar@locinfo$snerr) & !is.null(lociar@locinfo$useN) & all(lociar@locinfo$useN <= 4) ) {
+      message("no 'snerr' detected, but only using 4-way or 3-way genocalls, so single-null errors aren't a problem. Adding an all-zero snerr...")
+      snerr <- matrix(data = 0, nrow = length(lociar@locinfo$Locus), ncol = 4)
+      snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
+      lociar@locinfo$snerr <- snerr
+  }
+
+    li <- lociar$locinfo
+    li1 <- li[1,]
+
+    `%without.names%` <- function( x, what) {
     new.names <- names( x) %except% what
     if( identical( new.names, names( x))) {
       return( x)   # also works if names(x) is NULL!
@@ -2976,7 +2983,11 @@ function( lociar,
   li <- make_dull( li, names( li) %that.match% '^(LOD|PUP)[0-9]') # you'll thank make for this :)
 
   lociar@locinfo <- li
-  lociar@hspPower_checksum <- calc_hspPower_checksum( li)
+    lociar@kinPower_checksum <- calc_kinPower_checksum( li)
+
+    ## make it so that no-one has to call prepare_PLOD_SPA unless they want to:
+    lociar <- prepare_PLOD_SPA(lociar)  ##
+    lociar@PLODSPA_checksum <- calc_PLODSPA_checksum( li)
 return( lociar)
 }
 
@@ -2999,37 +3010,37 @@ return( lociar)
 #' At some point in future, \code{\link{kinference}} might be changed so that
 #' it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not
 #' yet. So for now this version does some ghastly "live-hacking" of existing
-#' code for \code{\link{hsp_power}} to implement no-errors no-nulls
+#' code for \code{\link{kin_power}} to implement no-errors no-nulls
 #' multi-allelic case. It will be hard to follow, so use \code{mtrace} if you
 #' really want to see what's going on. The guts of the code is in
-#' \code{\link{hsp_power}} and \code{predict_hsp_util}.
+#' \code{\link{kin_power}} and \code{predict_hsp_util}.
 #'
 #' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles).
 #' Locus names are set from the rownames, or "L1", "L2" etc if there are no
 #' rownames. Allele names will be set to "A", "B", "C", etc, regardless of
 #' colnames; you do not have a choice there. Will be renormalized so rows sum
 #' to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected
-#' for \code{hsp_power}. If so, then the allele freqs are assumed to live in
+#' for \code{kin_power}. If so, then the allele freqs are assumed to live in
 #' \code{lociar$locinfo$pbonzer}, and \emph{no} nulls or genotyping errors are
-#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{hsp_power} and
-#' \code{hsp_power2} will give \emph{different} answers.
+#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{kin_power} and
+#' \code{kin_power2} will give \emph{different} answers.
 #' @return If \code{lociar} is an allele-frequency matrix, then you get a
 #' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
 #' "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is
 #' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples}
 #' for use.
-#' @seealso \code{\link{hsp_power}}
+#' @seealso \code{\link{kin_power}}
 #' @keywords misc
 #' @examples
 #'
 #' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
-#' POW <- hsp_power2( ALF)
+#' POW <- kin_power2( ALF)
 #' # look at the contents of each...
 #' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
 #' # find anything like that in practice for lots'n'lots of loci
 #' lots <- 500
 #' ALF <- matrix( runif( lots*5), lots, 5)
-#' POW <- hsp_power2( ALF)
+#' POW <- kin_power2( ALF)
 #' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
 #' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
 #' V <- sum( POW$V.UP)  # V[PLOD|UP]
@@ -3041,15 +3052,15 @@ return( lociar)
 #' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
 #' # ... so that's probably OK...
 #'
-#' @export hsp_power2
-"hsp_power2" <-
+#' @export kin_power2
+"kin_power2" <-
 function( lociar,
     want_LOD_table=TRUE, # T/F
     k # 0.5 for HSPs
 ){
 ############
-  # Uses the code of hsp_power, but sneakily redefining a few core functions...
-  # ... hsp_power originally intended for 6way null-heavy ABCO-format Dartcap
+  # Uses the code of kin_power, but sneakily redefining a few core functions...
+  # ... kin_power originally intended for 6way null-heavy ABCO-format Dartcap
 
   just_matrix <- lociar %is.not.a% 'snpgeno'
   if( just_matrix) {
@@ -3104,15 +3115,15 @@ stop( "'lociar' must be 'snpgeno' or matrix of allele freqs (Locus X Alleles)")
     })
 
     # Make sure subsidiary functions pick up these versions
-    environment( hsp_power) <-
+    environment( kin_power) <-
         environment( calc_g6probs_IBD0_scalar) <-
         environment( calc_g6probs_IBD1_scalar) <-
         environment( calc_g6probs_IBD2_scalar) <-
         environment( add_pairprob_error) <-
         environment( predict_hsp_util) <-
         environment()
-    # mtrace( hsp_power) # automate the debugging a bit
-  return( hsp_power( lociar, want_LOD_table=TRUE, k=0.5))
+    # mtrace( kin_power) # automate the debugging a bit
+  return( kin_power( lociar, want_LOD_table=TRUE, k=0.5))
   })
 
   result$locinfo <- result$locinfo %without.name% cq( snerr, use6)
@@ -3336,8 +3347,9 @@ function(tt, geno, vec_LOD, Pg) {
 "kinlegend" <-
 function(position = "topright", include = character(), exclude = character(), ...) {
 
-    palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-              "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+    kinPalette()
+    ## palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+    ##           "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
     if(sum(include %in% exclude) > 0) {
         stop(paste("kin class(es) '",
@@ -3558,11 +3570,11 @@ stopifnot( my.all.equal( subset1, subset2) || !length( intersect( subset1, subse
 stopifnot( (snpg %is.a% 'snpgeno') && (my.all.equal( snpg@diplos, genotypes6) || my.all.equal( snpg@diplos, genotypes4_ambig)))
 
   ## # SB checks--- but NB rowSums( pbonzer==1) !
-  ## hspPower_change <- snpg@hspPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
+  ## hspPower_change <- snpg@kinPower_checksum != with(snpg@locinfo, sum(pbonzer, snerr, useN))
   ## PLODSPA_change <- snpg@PLODSPA_checksum != with(snpg@locinfo, sum(useN, LOD6, LOD4, LOD3,
   ##                                                 PUP6, PUP4, PUP3))
   ## if(hspPower_change | PLODSPA_change) {
-  ##   warning("snpg$locinfo appears to have been modified after hsp_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
+  ##   warning("snpg$locinfo appears to have been modified after kin_power and/or prepare_PLOD_SPA were last called. I sure hope you know what you're doing...")
   ## }
 
   # Decide based #apparent exclusions of AA/BB form, using 4way genos, though
@@ -3878,7 +3890,7 @@ return( ret)
 #' @export opti3ready
 "opti3ready" <-
 function( x2, kin){
-  xopti <- hsp_power( x2, k=0.25)
+  xopti <- kin_power( x2, k=0.25)
   xprod <- x3 <- xopti[1,] # save space
 
   # xopti has all the LODs and PUPs, but not ev01 needed by autopick
@@ -3889,10 +3901,10 @@ function( x2, kin){
   }
 
   # ev01 needs recalculating for new "LOD"
-  # predict_hsp_util does the work, via hsp_power
+  # predict_hsp_util does the work, via kin_power
   # k doesn't matter here; Pr[g|coin] is calculated directly
   # We will need E[ PLOD_HSP * PLOD_HTP], from xprod
-  ev01_prod <- hsp_power( xprod, k=0.5, hack_LOD=xprod$locinfo)$locinfo$ev01
+  ev01_prod <- kin_power( xprod, k=0.5, hack_LOD=xprod$locinfo)$locinfo$ev01
   ev01_opti <- 0 * ev01_prod
 
   for( coin in cq( 0, 1)){
@@ -3965,8 +3977,10 @@ function(
   showUP= c(SPA= TRUE, Normal= FALSE),
   ...
 ){
-  palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
-            "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
+
+    kinPalette()
+    ## palette(c("#0D0887FF", "#48039FFF", "#7401A8FF", "#9D189DFF", "#BF3984FF",
+    ##         "#DA596AFF", "#EE7B51FF", "#FBA238FF", "#FCCE25FF"))
 
   binmids <- hsps@bins + (hsps@bins[2] - hsps@bins[1])/2
 
@@ -4038,6 +4052,12 @@ function(
 
 
 
+
+"PLOD_oddness_oneway" <-
+function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
+             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
+
+    OLD_DOCO <- r"-----{
 #' Oddness metrics
 #'
 #' Plots the percentage of all pairs in each bin with an unusually low CLOD
@@ -4062,12 +4082,10 @@ function(
 #' highlighted. Default 0.001
 #' @param ... additional pars, passed to \code{plot}. \code{ylim} and
 #' \code{breaks} are set internally, so you cannot pass them via \code{...}.
+#' @noRd
 #' @seealso HSP_oddness_oneway
 #' @keywords internal
-"PLOD_oddness_oneway" <-
-function(hsps, snpg, lb = min(hsps$PLOD)-10, ub = max(hsps$PLOD)+10, bin = 5,
-             CLOD_prop = 0.001, ilglk_prop = 0.001, hetz_prop = 0.001, ...) {
-
+}-----"
         palette("default")
 
         cloddo <- check_FPosity(snpg)
@@ -4152,9 +4170,11 @@ function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, b
 
 
 
+"postprocess_simcheck_FSP_POP" <-
+function( forp_sim, findings, plot.=TRUE) {
+
+    OLD_DOCO <- r"-----{
 #' Check POP/FSP splitter; private and probably obsolete.
-#'
-#' This doco shouldn't be visible in the package! (KEYWORDS internal)
 #'
 #' \code{simcheck_FSP_POP} simulates POPs and FSPs based on a known set of
 #' loci, ready for checking \code{\link{split_FSPs_from_POPs}} or variants.
@@ -4193,6 +4213,7 @@ function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, b
 #' the second (B) member of the 6th POP. The \code{locinfo} field is unchanged,
 #' except as noted under "chromos" above. \code{postprocess_simcheck_FSP_POP}
 #' just plots.
+#' @noRd
 #' @seealso \code{find_FSPs_from_POPs}
 #' @keywords internal
 #' @examples
@@ -4224,9 +4245,8 @@ function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, b
 #' testo4 <- find_FSPs_from_POPs( s11nodup_all4, pops_005)
 #' abline( v=testo4$FPstat, col='red')
 #' }
-#'
-"postprocess_simcheck_FSP_POP" <-
-function( forp_sim, findings, plot.=TRUE) {
+}-----"
+
   # Are the names what we expect from simcheck_FSP_POP ..?
   stopifnot( all( grepl( '^[FP][0-9]+_[AB]$', forp_sim$info$Our_sample)))
 
@@ -4381,14 +4401,15 @@ return( retval)
 
 #' Prepare for kin-finding
 #'
-#' \code{prepare_PLOD_SPA} is something you have to run before using some
-#' kin-finding/QC tools, to set up your \code{snpgeno} object for fancy maths
-#' woooo (saddlepoint approximations). There are no meaningful options, you
-#' just have to run this. It can be \emph{slightly} slow which is why it's a
-#' separate step.
+#' \code{prepare_PLOD_SPA} is something you have to run before using
+#' some kin-finding/QC tools, to set up your \code{snpgeno} object for
+#' fancy maths woooo (saddlepoint approximations). There are no
+#' meaningful options, though, so it's _also_ called at the end of
+#' kin_power - users generally shouldn't need to use it as a
+#' standalone function. It's mostly here for dev purposes.
 #'
 #'
-#' @param geno6 a \code{snpgeno} object that has been thru \code{hsp_power}
+#' @param geno6 a \code{snpgeno} object that has been thru \code{kin_power}
 #' @param n_pts_SPA_renorm how accurate to make the approximation. Default
 #' should be fine.
 #' @return Another \code{sngeno} object with an environment \code{Kenv}, which
@@ -4400,7 +4421,7 @@ return( retval)
 #' @export prepare_PLOD_SPA
 "prepare_PLOD_SPA" <-
 function( geno6, n_pts_SPA_renorm=201) {
-    ## To be run after hsp_power( ..., want_LOD_table=TRUE)
+    ## To be run after kin_power( ..., want_LOD_table=TRUE)
 
 # n_pts_SPA_renorm should really be as big as R can handle without running
 # out of memory but 201 should be OK I guess. If 201 and 301 give
@@ -4841,8 +4862,9 @@ return( invisible( PLOD))
 #'
 #' @aliases split_FSPs_from_HSPs split_FSPs_from_POPs split_HSPs_from_HTPs
 #' @param snpg a \code{snpgeno} object
-#' @param
-#' candipairs-normally,adataframewithrowsbeingpairsandcolumns_i_and_j_(andpossiblyothers)e.g.fromfind_POPsorfind_HSPs.Canalsobea2-columnmatrix(eachrowagainonepair).
+#' @param candipairs normally, a dataframe with rows being pairs and columns
+#' _i_ and _j_ (and possibly others) e.g. from find_POPs or find_HSPs. Can also
+#' be a 2-column matrix (each row again one pair).
 #' @param gerr genotyping error rate:0.01 would mean 1\ it's up to you; e.g.,
 #' looking at replicate samples is a good way to estimate it. Results of
 #' \code{split_FSP_from_POPs} should not be very sensitive to the value,
@@ -5339,14 +5361,14 @@ function( snpg, candipairs) {
 #'
 #' The "per-locus LOD" (whose properties are stored in the columns \code{e0},
 #' \code{e1}, \code{v0}, \code{v1} in \code{linfo}) is created by calling
-#' \code{\link{hsp_power}} (qv). The normal use-case would be that you've done
+#' \code{\link{kin_power}} (qv). The normal use-case would be that you've done
 #' so with \code{k=0.5}, so that the (P)LOD pertains to HSP::UP comparisons.
 #' However, if you called it with \code{k=0.25} then the (P)LOD would be
 #' designed for HTP::UP comparisons, and so on. In fact, you could even
 #' hand-tweak the calculations to contain LODs for HTP::HSP comparisons, which
 #' \emph{might} in principle improve the resolution (but you'd have to fiddle
 #' manually; you could actually do it based on two calls to
-#' \code{\link{hsp_power}}, one with \code{k=0.5} and one with \code{k=0.25},
+#' \code{\link{kin_power}}, one with \code{k=0.5} and one with \code{k=0.25},
 #' and manipulating the results). The other calculations in this function are
 #' "agnostic WRTO", ie not intrinsically dependendent on, the values of
 #' \code{e0/e1/v0/v1}, so the rest of the calcs should just work.
@@ -5452,7 +5474,7 @@ stopifnot( # user != 'bozo',
   }
 
   # linfo should be a DF with element ev01 having cols e0, e1, v0, v1
-  # as produced by hsp_power
+  # as produced by kin_power
   # Becos of make_dull() [as of mvbutils 2.8.437] 'x %is.a% "matrix"' does NOT work
   # after make_dull( x); the implicit c( 'matrix', 'array') for class( unclass( x)) disappears
   # under make_dull() . Sigh. This is kind-of an R "feature" re implicit S3 classes...

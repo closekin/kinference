@@ -17,8 +17,8 @@ export( "autopick_threshold",
 "get_pair_covars",
 "hetzminoo_fancy",
 "HSP_histo",
-"hsp_power",
-"hsp_power2",
+"kin_power",
+"kin_power2",
 "ilglk_geno",
 "kinlegend",
 "kinPalette",
@@ -35,4 +35,3 @@ import( atease)
 import( mvbutils)
 import( gbasics)
 import( vecless)
-
