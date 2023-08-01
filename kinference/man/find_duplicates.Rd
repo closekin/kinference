@@ -96,18 +96,16 @@ But, sometimes it doesn't. In that case, the predicted values of \code{eta} and 
 }
 \value{
 A \code{data.frame} with extra attributes (see below) and at least 3 columns: statistic \code{PLOD} or \code{wpsex} or \code{ndiff} (number of mismatching genotypes), then \code{i} and \code{j} (index in \code{subset1} and \code{subset2} respectively of the first pair-member). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}- so if you are comparing subsets within the same overall \code{snpg}, then you have to adjust accordingly. The attributes in all cases include \code{bins} (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), \code{binprobs} (theoretical CDF for UPs in \code{find_HSPs}; should exist for \emph{POPs} (not UPs) in \code{find_POPs} (the \code{wpsex} version) but currently doesn't), some of the input parameters, and the \code{call} that invoked the function. \code{find_POPs} adds a column named \code{nABOO}, showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation. \code{find_HSPs} and \code{find_POPs} have a bunch of extra attributes which should be reeeeasonably clear. For \code{find_HSPs}, \code{mean_sub_PLOD} and \code{var_sub_PLOD} are the empirical means & var below \code{eta}, andy they should be close to \code{mean_UP} and \code{var_UP} \emph{iff} \code{eta} has been chosen sensibly. For \code{find_POPs}, the same goes for \code{mean_wpsex_hi} and \code{var_wpsex_hi}. For duplicates, not \emph{all} pairwise duplicates are recorded, unless the subsets are different - otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this (without "ndiff" column):
-%#
-\item{  i  j}{}
-\item{  3  1}{}
-\item{  4  3}{}
-\item{  6  4}{}
-but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{\link{drop_dups_pairwise_equiv}} - see \emph{Examples}. For POPs and HSPs, the following are also returned as attributes (that can be accessed by \code{@} if \code{atease} is loaded). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.
-\item{   - eta}{false-positive cutoff to be applied to the statistic in question (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
-\item{   - keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of statistic values.}
-\item{   - mean_sub_stat, var_sub_stat (where stat is PLOD, wpsex, or ndiff)}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
-\item{   - mean_theory, var_theory}{of the statistic, to compare to previous.}
-\item{   - n_stat_in_bin (where stat is PLOD, wpsex, or ndiff)}{number of pairs whose statstic fell within the range of each bin}
-\item{   - bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
+\item{  i j:}{}
+\item{  3 1:}{}
+\item{  4 3:}{}
+\item{  6 4}{but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{drop_dups_pairwise_equiv} - see \emph{Examples}. For POPs and HSPs, the following are also returned as attributes (that can be accessed by \code{@} if \code{atease} is loaded). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.}
+\item{  - eta}{false-positive cutoff to be applied to the statistic in question (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
+\item{  - keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of statistic values.}
+\item{  - mean_sub_stat, var_sub_stat (where stat is PLOD, wpsex, or ndiff)}{empirical values for the statistic when it is below \code{eta} (ie nearly always).}
+\item{  - mean_theory, var_theory}{of the statistic, to compare to previous.}
+\item{  - n_stat_in_bin (where stat is PLOD, wpsex, or ndiff)}{number of pairs whose statstic fell within the range of each bin}
+\item{  - bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \examples{
 \dontrun{

@@ -1,7 +1,7 @@
 \name{kin_power}
 \alias{kin_power}
 \title{Locus selection for kin-finding}
-\description{\code{kin_power} can be used to predict how well a set of loci will work for HSP-finding, and to prepare for some QC and kinference steps on serious data. It returns the input \code{snpgeno} object with extra columns added to the \code{locinfo} attribute, related to the per-locus mean and variance of LOD (presumably an HSP/UP PLOD, though not inevitably) for different true kin-types. It respects the per-locus decision about how precisely to genotype (\code{useN=6/4/3}).
+\description{This can be used to predict how well a set of loci will work for finding HSPs (or HTPs, or other specified weaker kin), and to prepare for some QC and kinference steps on serious data. It returns the input \code{snpgeno} object with extra columns added to the \code{locinfo} attribute, related to the per-locus mean and variance of LOD (presumably an HSP/UP PLOD, though not inevitably) for different true kinships. It respects the per-locus decision about how precisely to genotype (\code{useN=6/4/3}).
 }
 \usage{kin_power( lociar, want_LOD_table=TRUE, k, hack_LOD=NULL)
 }

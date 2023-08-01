@@ -39,35 +39,11 @@ loci from hard-to-align regions such as microsatellites.
 library(kinference)
 library(atease)
 data(dropbears)
-kinPalette() ## set the kin palette
+kincol <- kinPalette() ## set the kin palette and store colour names for later
 
-dropbears[1:10,1:10] ## take a look at the dataset
-head(dropbears@info) ## info about each sample
-head(dropbears@locinfo) ## info about each locus
-```
-
-The genotype data are stored in a custom data format called `snpgeno`,
-with one row per sample and one column per locus. Covariate data about
-each sample are stored in the attribute `@info`. Similarly, covariate
-data about each locus are stored in the attribute `@locinfo`. The
-`dropbears@info` pattern is shorthand for `attr(dropbears, "info")`
-made possible by package `atease`, which we use for attributes
-throughout.
-
-You may notice that `dropbears@locinfo` has quite a bit of
-locus-specific information, named `pbonzer`, `snerr`, and
-`useN`. These fields are mostly straightforward - `pbonzer`, for
-instance, is an estimate of the population allele frequencies for all
-alleles used in the dataset - but your dataset probably won't have
-them. `pbonzer` can be calculated from the genotype data by internal
-functions in `kinference`, and `snerr` and `useN` or set by the
-user. We'll show you how in **Section 2**.
-
-## Plot an overview of the kin-space
-
-```{r dropbears__overview2}
-## a boring but necessary data-prep step:
+## a couple of boring but necessary data-prep steps:
 dropbears <- kin_power(dropbears, k = 0.5)
+dropbears <- prepare_PLOD_SPA(dropbears)
 
 plod_HU <- find_HSPs(dropbears, keep_thresh = -10)
 PLOD_loghisto(plod_HU)
@@ -122,11 +98,17 @@ strongKin <- find_POPs(dropbears, limit_pairs = choose(nrow(dropbears), 2))
 ## resulting object may not fit into RAM - but dropbears is a small
 ## dataset, so this is fine.
 hist(strongKin$wpsex, breaks = 50)
-## There's a _huge_ bump of unrelated pairs, centred on wpsex =
-## 0.08. The much smaller number of kin pairs between 0 and 0.06
-## aren't properly visible on this scale. Let's zoom in to just that
-## region.
-hist(strongKin$wpsex[strongKin$wpsex < 0.06], breaks = 50)
+lines(strongKin@bins,diff(c(0,pnorm(strongKin@bins, mean = strongKin@mean_UP,
+                    sd = sqrt(strongKin@var_UP)) * choose(nrow(dropbears), 2))),
+      lwd = 2, col = kincol['UP']) 
+## The curved line gives predicted distribution for Unrelated Pairs.
+## There is also a likelihood-based statistic for POP-finding, but it's
+## new and a little fiddly. You would run it with this code:
+## strongKin2 <- find_POPs_lglk(dropbears, gerr = 0.03, keep_thresh = -5)
+## # gerr is a _rough_ idea of genotyping error rate; results should
+## # not be highly sensitive to it
+## HSP_histo(strongKin2, lb = -5, fullsib_cut = 0)
+## PLOD_loghisto(strongKin2)
 ```
 
 The `wpsex` statistic calculated by `find_POPs` has an expectation of
@@ -147,12 +129,11 @@ splitPOPs <- split_FSPs_from_POPs(dropbears, strongKin[strongKin$wpsex < UPcut,]
 ## dataset, and if your true error rate is much higher than that, you
 ## probably won't be able to use your dataset for kin-finding anyway.
 hist(splitPOPs$PLOD_FP, breaks = 50, main = "", xlab = "PLOD_FP")
-abline(v = splitPOPs@E_FSP, col = FSPcol, lwd = 2)
-abline(v = splitPOPs@E_POP, col = POPcol, lwd = 2)
-## colours 'FSPcol' and 'POPcol' are defined by kinPalette(), for fullsibs
-## and parent-offspring pairs, respectively
+## Colours: kincol was set by call to kinPalette()
+abline(v = splitPOPs@E_FSP, col = kincol['FSP'], lwd = 2) 
+abline(v = splitPOPs@E_POP, col = kincol['POP'], lwd = 2)
 legend("topright", legend = c("POP expectation", "FSP expectation"), lty = c(1,1), lwd = c(2,2),
-       col = c(POPcol, FSPcol), bg = "white")
+       col = kincol[ c('POP', 'FSP')], bg = "white")
 ## the clump between -50 and -100 is POPs; the rest are a mix of FSPs, HSPs, and possibly weaker kin.
 
 POPs <- splitPOPs[splitPOPs$PLOD_FP < 0,] ## our first set of definite kin pairs
@@ -215,13 +196,19 @@ FSPs <- POPsOrFSPs[!POPsOrFSPs$ij %in% POPs$ij,] ## find our full-sibling pairs
 
 Now, we have our set of parent-offspring pairs, our set of
 full-sibling pairs, and a set of pairs tentatively labelled as
-'half-siblings'. But that 'half-sibling' set may (in fact, will!)
-contain weaker kin pairs such as thiatic pairs ('thiatic' is the
-gender-neutral term that includes aunt-niece, uncle-niece,
-aunt-nephew, and uncle-nephew pairs) or cousin pairs. We need to trim
-out the first-order kin pairs from this set, then decide on a cutoff between
-half-siblings and thiatics that allows us to keep a large proportion
-of our sibling pairs, with a very low, known, rate of false positives.
+second-order kin. "Second-order kin" comprise half-sibling,
+full-thiatic, and grandparent-grandchild pairs ('thiatic' is a
+succinct bidirectional gender-neutral term that comprises aunt-niece,
+uncle-niece, aunt-nephew, and uncle-nephew kinships): we cannot split
+those genetically, but in most CKMR applications, half-siblings will
+be commonest on demographic grounds (details out of scope
+here). However, the bigger issue is that the set of tentative
+second-order kin may well be contaminated by more-distant kin, mainly
+third-order (half-thiatic and great-grandparent-grandchild pairs) and
+fourth-order (e.g. full first-cousin pairs). We need to trim out the
+1st-order kin from this set, then decide on a cutoff between 2nd- and
+3rd-orders that allows us to keep a large proportion of our
+half-sibling pairs, with a known and very low rate of false positives.
 
 To achieve this, we use a mixture decomposition of the second-order
 (e.g., half-sibling), third-order (e.g., thiatic), and fourth-order
@@ -664,15 +651,9 @@ HSP_histo(hsps, lb = 0, fullsib_cut = 100) ## ... and there are no
 
 
 
-
-
-
-
-
-
-
-
 ```{r tokelauOffscreen, include = FALSE, eval = FALSE}
+## the include = FALSE, eval = FALSE bits here mean 'don't show it, and don't evaluate it', so
+## the if(FALSE) is redundant unless I've missed something about vignettes
 load("~/R/localPackages/kinference/kinference/data/yellowfin.rda") ## loads 'tokelau_snpgeno'
 load("~/Dropbox/CSIRO/contamStat/yellowfin_probablyContam.rda") ## use 'ttlc' as a sample ID
 tokelau_snpgeno@info$probablyContam <- info$probablyContam[match(tokelau_snpgeno@info$ttlc, info$ttlc)]

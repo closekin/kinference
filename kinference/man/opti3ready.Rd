@@ -6,8 +6,8 @@
 \usage{opti3ready(x2, kin)
 }
 \arguments{
-\item{ x2}{a \code{snpgeno}}
-\item{ kin}{result of a previous call to \code{find_HSPs} (qv) on \code{x2}}
+\item{  x2}{a \code{snpgeno}}
+\item{  kin}{result of a previous call to \code{find_HSPs} (qv) on \code{x2}}
 }
 \details{Some tricky manoeuvering to calculate the needful...
 }
@@ -20,5 +20,4 @@
 reformat.my.hard.drive()
 }
 }
-\keyword{misc
-}
+\keyword{misc}

@@ -3,17 +3,17 @@
 \alias{split_FSPs_from_POPs}
 \alias{split_HSPs_from_HTPs}
 \title{Discriminate between kinships of known close-kin}
-\description{For pairs already picked as likely close-kin via one of the \code{find_XXX} functions, but whose exact kinship is uncertain (e.g. they might clearly be either POPs or FSPs, but it's not obvious which), these \code{split_XXX_from_YYY} functions apply a (somewhat) more powerful pairwise test statistic to each pair, to help decide what it is.
+\description{For pairs already picked as likely close-kin via one of the \code{find_XXX} functions, but whose exact kinship is uncertain (e.g. they might clearly be either POPs or FSPs, but it's not obvious which), these \code{split_XXX_from_YYY} functions apply a more powerful likelihood-based pairwise test statistic to each pair, to help decide what it is. All these functions use 4-way genotypes, i.e. not relying on 6-way genotyping. They possibly should be adapted to cope with 3-way (ie not trusting double-nulls) but currently they aren't (so they do trust double-nulls).
 }
 \usage{
-#split_FSPs_from_HSPs(snpg, candipairs)
-#split_FSPs_from_POPs( snpg, candiPOPs, gerr, use_obsolete_version=FALSE
-#split_HSPs_from_HTPs(snpg, candipairs)
+split_FSPs_from_HSPs(snpg, candipairs)
+split_FSPs_from_POPs( snpg, candiPOPs, gerr, use_obsolete_version=FALSE)
+split_HSPs_from_HTPs(snpg, candipairs)
 }
 \arguments{
 \item{  snpg}{a \code{snpgeno} object}
-\item{  candipairs- normally, a dataframe with rows being pairs and columns _i_ and _j_ (and possibly others) e.g. from find_POPs or find_HSPs. Can also be a 2-column matrix (each row again one pair).}{}
-\item{  gerr}{genotyping error rate:0.01 would mean 1\\ it's up to you; e.g., looking at replicate samples is a good way to estimate it. Results of \code{split_FSP_from_POPs} should not be very sensitive to the value, however.}
+\item{  candipairs}{normally, a dataframe with rows being pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from \code{find_POPs} or \code{find_HSPs}. Can also be a 2-column matrix (each row again one pair).}
+\item{  gerr}{genotyping error rate, where 0.01 would mean \code{1\%}. It's there to make the POP case robust; you have to choose it, but the precise value should not matter. See \bold{Details}.}
 \item{  use_obsolete_version}{the original code for POPs-vs-FSPs was based on a different non-likelihood-based statistic; see \emph{Obsolete note}. It turned out to have low statistical power, but did not require specifying a \code{gerr}. For replicability purposes, you can still run it by setting this parameter to \code{TRUE}.}
 }
 \details{
@@ -36,6 +36,8 @@ However, an equally reasonable workflow might be:
 }
 
 All \code{split_} functions return expected values under different possible kin-types (not variances, since these cannot be predicted for all kin-types).
+
+The \code{gerr} parameter in \code{split_FSPs_from_POPs} is there to alleviate the problem that a single locus displaying apparent Mendelian exclusion is in theory reason enough to prove that a pair is \emph{not} a POP (if a likelihood-based criterion is used). But, of course, we can have genotyping errors (and, in a reasonably big dataset, mutations). Allowing for a small amount of error gives the method much mor flexibility, without paying a high price in statistical efficiency (provided \code{gerr} is small). The technical interpretation is that, if a genotyping error occurs at a locus, then the true genotype is replaced by a randomly-drawn genotype from the marginal distro of genotypes at that locus. Real genotyping errors don't work like that, but it is mathematically convenient and achieves the desired effect of robustifying the FSP-vs-POP statistic. The value to use is up to you; you can experiment; if you really want to estimate it, then look at replicate genotypes.
 \subsection{Obsolete note}{
 The statistic for \code{split_FSPs_from_POPs} - which isn't as powerful as I'd hoped; I'm going to redo it - is based on the weighted sum of the number of exactly-matching 4-way genotypes, with weights chosen to have high power for this particular discrimination. Weighting is optimized for the unlikely scenario that POPs and FSPs are equally likely a priori, but in practice the weights are not sensitive to this. The test is deliberately crude and robust- e.g. it avoids exclusion-based checks- on the assumption that you have enough loci to pick HSPs, so the more-related kin-types should be slam-dunks. \emph{But} it doesn't seem powerful enough. More worked needed...
 

@@ -6,7 +6,7 @@
 \usage{drop_dups_pairwise_equiv(ij, want_groups = FALSE)
 }
 \arguments{
-\item{  ij}{2-column matrix or data.frame; probably "row numbers" in a dataset, though might work with character strings too}
+\item{  ij}{2-column matrix or data.frame; possibly row numbers in a dataset, or strings (now that \code{find_HSPs} etc can optionally return "row ID" strings)}
 \item{  want_groups}{if \code{TRUE}, also return the equivalence-classes themselves, as attribute \code{groups}.}
 }
 \details{Input should be row numbers in a \code{snpgeno} objects of duplicates, as a two-column data.frame or matrix with each row being a pair of duplicates, or the output from \code{\link{find_duplicates}} (a 3-col matrix). Identifies \code{groups} of equivalent observations (e.g., if i and j are duplicates, and j and k are duplicates, then i, j, and k are all equivalent). Outputs a vector of the row numbers for all-but-one of each group.

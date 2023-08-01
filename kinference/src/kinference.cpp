@@ -533,12 +533,11 @@ SEXP POP_wt_paircomps_lots(
   int keep_n, // number of pairs to return
   int AAO, // encoding in diplos
   int BBO,
-  int nbins, // SB insertion
-  double binterval // SB insertion
-) {
-  BEGIN_RCPP
-    // NumericVector bins, // SB deletion
-    // Avoid scoping woes by doing the include-file right here
+  int nbins,
+  double binterval
+){
+BEGIN_RCPP
+  // Avoid scoping woes by doing the include-file right here
 #if defined( MVBDEBUG)
 #include <r_int_defs_debug.h>
 #endif
@@ -546,7 +545,6 @@ SEXP POP_wt_paircomps_lots(
   int n_samps1;
   int n_samps2;
   int n_loci;
-  //  int n_bins; // SB deletion
   int n_kept;
   int n_hi_wpsex; // discarded ones
   int i;
@@ -561,12 +559,10 @@ SEXP POP_wt_paircomps_lots(
   double mean_hi_wpsex;
   double mean_hi_wpsex2;
   double var_hi_wpsex;
-  int which_bin; // SB addition
-  IntegerVector n_wpsex_in_bin( nbins); // SB addition
-  double ibinterval = 1/binterval; // MVB
+  int which_bin;
+  IntegerVector n_wpsex_in_bin( nbins);
 
-  // n_bins = bins.size(); // SB deletion
-  // IntegerVector n_wpsex_below( n_bins); // SB deletion
+  double ibinterval = 1/binterval;
 
   // Ensure matching size of LOD and pair_geno
   // Can't seem to directly get length of pair_geno@what...
@@ -586,14 +582,13 @@ SEXP POP_wt_paircomps_lots(
   IntegerVector which_AAOs1_i( n_loci);
   IntegerVector which_BBOs1_i( n_loci);
 
-  // Need to grow the kept-values, so std::vector is apparently better
-  //std::vector<double> big_wpsex;
-  //std::vector<int>  big_i;
-  //std::vector<int> big_j;
-  // Now get rid of these and use containers
-  std::vector<double> big_WPSEX;
-  std::vector<int>  big_i;
-  std::vector<int> big_j;
+  // MVB: next obsolete, since now "records" of WPSEX and indices are used
+  // and might as well put those directly into NumericVector etc at the end
+  // Did say: Need to grow the kept-values, so std::vector is apparently better
+  // std::vector<double> big_WPSEX;
+  // std::vector<int>  big_i;
+  // std::vector<int> big_j;
+
   // Define a new type, which is the WPSEX and i and j
   typedef std::tuple<double, int, int> WPSEXder;
   // define what "better" means
@@ -616,10 +611,9 @@ SEXP POP_wt_paircomps_lots(
   mean_hi_wpsex2 = 0;
 
   for( i = 0; i < n_samps1; i++){
-    // Could maybe speed this up a bit...
-    // but next doesn't seem to work. Need something that gives a pointer to first-row-of-column-X
-
-    // For speed, only check exlcus over loci where g1 == AAO (then just check if g2 == BBO there) and conversely
+    // For speed, only check exlcus over loci where g1 == AAO 
+    // (then just check if g2 == BBO there) and conversely
+    
     // Set up info for i; only done once
     RawVector genoi = geno1( _, i);
 
@@ -641,13 +635,14 @@ SEXP POP_wt_paircomps_lots(
       this_wpsex = 0;
       for( iiloc = 0; iiloc < n_AAOs1_i; iiloc++) {
         iloc = which_AAOs1_i[ iiloc];
-        g2 = genoj[ which_AAOs1_i[ iiloc]];
+        g2 = genoj[ iloc];
         this_wpsex += w[ iloc-1] * (int)( g2 == BBO);
       };
 
       for( iiloc = 0; iiloc < n_BBOs1_i; iiloc++) {
-        iloc = which_AAOs1_i[ iiloc];
-        this_wpsex += w[ iloc-1] * (int)( genoj[ which_BBOs1_i[ iiloc]] == AAO);
+        iloc = which_BBOs1_i[ iiloc];
+        g2 = genoj[ iloc];
+        this_wpsex += w[ iloc-1] * (int)( g2 == AAO);
       };
 
       if( this_wpsex > eta) { // common; predictable branch
@@ -657,16 +652,13 @@ SEXP POP_wt_paircomps_lots(
       };
 
       if( this_wpsex <= max_keep_wpsex) { // rare; predictable branch
-        //big_wpsex. push_back( this_wpsex);
-        //big_i. push_back( i+1); // Effing 0-base...
-        //big_j. push_back( j+1); // Effing 0-base...
         WPSEXder new_WPSEX_on_the_block = WPSEXder(this_wpsex, i, j);
 
         // if we didn't fill up yet, then just push away
         // Effing Sodding C bloody pedantry
         if( WPSEXing_along.size() < (size_t)keep_n){
           WPSEXing_along.push(new_WPSEX_on_the_block);
-        }else{
+        } else {
           // uh oh we filled-up! check to see if we really need to add
           // this one (is it better than what's in there?), then exile
           // the last element to the garbage and induct our new best friend
@@ -680,53 +672,50 @@ SEXP POP_wt_paircomps_lots(
         n_kept += 1;
       };
 
-      // make fixes here re: issue 36
-      // begin SB deletion
-      //  for( ibin = 0; ibin < n_bins; ibin++) { // avoid if() which is slow
-      //    n_wpsex_below( ibin) += (int) ( this_wpsex < bins( ibin));
-      //  };
-      // end SB deletion
-
-      // here, input the new solution re: issue 36
-      which_bin = floor( this_wpsex * ibinterval); // SB/MVB addition
-      which_bin = max(0, min(which_bin, nbins-1)); // SB addition. Goddamn 0-base.
-      n_wpsex_in_bin[ which_bin] += 1; // SB addition
+      which_bin = floor( this_wpsex * ibinterval);
+      which_bin = max(0, min(which_bin, nbins-1));
+      n_wpsex_in_bin[ which_bin] += 1;
     }; // for j
   }; // for i
 
   mean_hi_wpsex /= n_hi_wpsex;
   var_hi_wpsex = mean_hi_wpsex2 / n_hi_wpsex - mean_hi_wpsex*mean_hi_wpsex;
 
-  // n_wpsex_below is cumul but should really be n_wpsex_in_bin, so...
-  // probably going to have to make fixes here, too...
-  // for( ibin = n_bins; ibin > 0; ibin--){ // SB deletion
-  //  n_wpsex_below[ ibin] -= n_wpsex_below[ ibin-1]; // SB deletion
-  // }; // SB deletion
-
   // build big_i, big_j, big_Nexclu
-  big_i.reserve(WPSEXing_along.size());
-  big_j.reserve(WPSEXing_along.size());
-  big_WPSEX.reserve(WPSEXing_along.size());
+  int nbig = WPSEXing_along.size();
+  IntegerVector big_i( nbig);
+  IntegerVector big_j( nbig);
+  NumericVector big_WPSEX( nbig);
 
   // unwrap that nice structure I guess :'(
+  // MVB: DLM's code re-pushed an inverted stack...
+  // which seems inefficient, though with C who effing knows really?
+  // And: effing 0-base !
+  int ibig = nbig-1;
   while (!WPSEXing_along.empty()) {
-    big_WPSEX.push_back(get<0>(WPSEXing_along.top())); // I should write "effing 0-base" here :P
-    big_i.push_back(get<1>(WPSEXing_along.top()) + 1);
-    big_j.push_back(get<2>(WPSEXing_along.top()) + 1);
+    big_WPSEX[ ibig] = get<0>(WPSEXing_along.top());
+    big_i[ ibig] = get<1>(WPSEXing_along.top()) + 1; // effing 0-base
+    big_j[ ibig] = get<2>(WPSEXing_along.top()) + 1;
+    ibig--;
+
+    // big_WPSEX.push_back(get<0>(WPSEXing_along.top())); // I should write "effing 0-base" here :P
+    // big_i.push_back(get<1>(WPSEXing_along.top()) + 1);
+    // big_j.push_back(get<2>(WPSEXing_along.top()) + 1);
+    
     WPSEXing_along.pop();
   }
 
   // make a list object using wrap() for the stdvectors
   return( Rcpp::List::create(
-    Rcpp::Named("big_wpsex")=wrap( big_WPSEX),
-    Rcpp::Named("big_i")=wrap( big_i),
-    Rcpp::Named("big_j")=wrap( big_j),
-    Rcpp::Named( "n_wpsex_in_bin")= n_wpsex_in_bin, // SB modification. Was n_wpsex_below
-    Rcpp::Named( "mean_hi_wpsex")=mean_hi_wpsex,
-    Rcpp::Named( "var_hi_wpsex")=var_hi_wpsex
+    Rcpp::Named("big_wpsex")= big_WPSEX, // wrap( big_WPSEX) not reqd now
+    Rcpp::Named("big_i")= big_i, // wrap( big_i) ditto
+    Rcpp::Named("big_j")= big_j, // wrap( big_j) ditto
+    Rcpp::Named( "n_wpsex_in_bin")= wrap( n_wpsex_in_bin),
+    Rcpp::Named( "mean_hi_wpsex")= wrap( mean_hi_wpsex),
+    Rcpp::Named( "var_hi_wpsex")= wrap( var_hi_wpsex)
   ));
 
-  END_RCPP
+END_RCPP
 };
 
 

@@ -6,7 +6,7 @@
 \usage{prepare_PLOD_SPA(geno6, n_pts_SPA_renorm = 201)
 }
 \arguments{
-\item{  geno6}{a \code{snpgeno} object that has been thru \code{hsp_power}}
+\item{  geno6}{a \code{snpgeno} object that has been thru \code{kin_power}}
 \item{  n_pts_SPA_renorm}{how accurate to make the approximation. Default should be fine.}
 }
 \value{Another \code{sngeno} object with an environment \code{Kenv}, which contains functions (with their own preloaded data) allowing null distributions (eg PLODs for true UPs) to be calculated. Various sanity checks are incorporated to try to stop you from stuffing up with out-of-synch loci etc later.
