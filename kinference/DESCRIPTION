@@ -9,11 +9,11 @@ Suggests: knitr, rmarkdown, tinytest
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 SystemRequirements: C++11
 NeedsCompilation: YES
 Encoding: UTF-8
 KeepSource: TRUE
-Collate: kinference.R Cloaders_kinference.R kinference-package.R
+Collate: kinference.R Cloaders_kinference.R kinference-package.R RcppExports.R
 LazyData: true
 Version: 0.0.192

@@ -1,3 +1,5 @@
 kinference/src/RcppExports.o
 kinference/src/kinference.o
 kinference/src/kinference.so
+kinference/R/funs.rda
+kinference/R/sysdata.rda
