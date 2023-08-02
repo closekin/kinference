@@ -2229,7 +2229,7 @@ stopifnot(
   )
 
   hspPower_change <-
-      snpg@hspPower_checksum != calc_hspPower_checksum( snpg$locinfo)
+      snpg@hspPower_checksum != calc_kinPower_checksum( snpg$locinfo)
   PLODSPA_change <-
       snpg@PLODSPA_checksum != calc_PLODSPA_checksum( snpg$locinfo)
 
@@ -3594,7 +3594,7 @@ function( lociar,
   li <- make_dull( li, names( li) %that.match% '^(LOD|PUP)[0-9]') # you'll thank make for this :)
 
   lociar@locinfo <- li
-  lociar@hspPower_checksum <- calc_hspPower_checksum( li)
+  lociar@hspPower_checksum <- calc_kinPower_checksum( li)
 
   # Need to run prepare_PLOD_SPA() again
   lociar@Kenv <- lociar@PLODSPA_checksum <- NULL
