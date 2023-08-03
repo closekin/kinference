@@ -2228,12 +2228,12 @@ stopifnot(
     !missing( keep_thresh)
   )
 
-  hspPower_change <-
-      snpg@hspPower_checksum != calc_kinPower_checksum( snpg$locinfo)
+  kinPower_change <-
+      snpg@kinPower_checksum != calc_kinPower_checksum( snpg$locinfo)
   PLODSPA_change <-
       snpg@PLODSPA_checksum != calc_PLODSPA_checksum( snpg$locinfo)
 
-  if(hspPower_change | PLODSPA_change) {
+  if(kinPower_change | PLODSPA_change) {
       warning("snpg$locinfo appears to have been modified after kin_power() was last called. You generally want to run find_HSPs with a locinfo that is up-to-date with itself. Consider re-running kin_power() on your snpg and trying again")
   }
 
@@ -3510,6 +3510,14 @@ function( lociar,
 ############
   define_genotypes()
   li <- lociar$locinfo
+  if( my.all.equal( genotypes4_ambig, lociar@diplos)) {
+      if(is.null( li$useN)) {
+          li$useN <- 4L
+      }
+      snerrmat <- matrix(0, ncol(lociar), 4,
+                         dimnames = list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB")))
+      li$snerr <- snerrmat
+  }
   li1 <- li[1,]
 
 `%without.names%` <- function( x, what) {
@@ -5037,7 +5045,7 @@ return( invisible( PLOD))
 #' @param candipairs normally, a dataframe with rows being pairs and columns
 #' \emph{i} and \emph{j} (and possibly others) e.g. from \code{find_POPs} or
 #' \code{find_HSPs}. Can also be a 2-column matrix (each row again one pair).
-#' @param gerr genotyping error rate, where 0.01 would mean \code{1%}. It's
+#' @param gerr genotyping error rate, where 0.01 would mean one percent. It's
 #' there to make the POP case robust; you have to choose it, but the precise
 #' value should not matter. See \bold{Details}.
 #' @param use_obsolete_version the original code for POPs-vs-FSPs was based on
