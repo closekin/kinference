@@ -993,6 +993,8 @@ return( result)
 #' @param return_what one of \code{just_pvals} or \code{all}; see value
 #' @param extra_title a character string to be added to the bottom-right corner
 #' of all plots. Best if < 25 characters.
+#' @param show6 show the plots for 6-way goodness-of-fit? Defaults to TRUE. If
+#' diplos is anything other than genotypes6, should be set to FALSE.
 #' @return Creates per-locus vectors \code{pval6} and \code{pval4} for 6-way
 #' and 4-way genotypes respectively. If \code{return_what="just_pvals"}, these
 #' are returned in a list; if \code{return_what="all"}, they are added as
@@ -3602,7 +3604,7 @@ function( lociar,
   li <- make_dull( li, names( li) %that.match% '^(LOD|PUP)[0-9]') # you'll thank make for this :)
 
   lociar@locinfo <- li
-  lociar@hspPower_checksum <- calc_kinPower_checksum( li)
+  lociar@kinPower_checksum <- calc_kinPower_checksum( li)
 
   # Need to run prepare_PLOD_SPA() again
   lociar@Kenv <- lociar@PLODSPA_checksum <- NULL
