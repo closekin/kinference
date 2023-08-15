@@ -372,7 +372,7 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f;' %&%
       lines( histo$mids, probblies, col='black', lty=1, lwd = 3)
 
       # Might as well see the components...
-      kinship_order <- c( HSP=2, HTP=3, HCP=4)
+      kinship_order <- c( POP=1, HSP=8, HTP=6, HCP=3)
       for( ord in c( 2, 3, if( use4th) 4 else NULL)){
         Eo <- get( 'E' %&% ord)
         SDo <- get( 'SD' %&% ord)
