@@ -2567,8 +2567,8 @@ stopifnot( all( ww>0))
 
 
   # calculate nABOO, only for interesting pairs
-  snpg_i <- snpg[ subset1[ result$i], pop_loci]
-  snpg_j <- snpg[ subset2[ result$j], pop_loci]
+  snpg_i <- snpg[ result$i, pop_loci]
+  snpg_j <- snpg[ result$j, pop_loci]
   isABOO <- ((snpg_i==OO) & (snpg_j==AB)) + ((snpg_i==AB) & (snpg_j==OO))
   result$nABOO <- rowSums( isABOO)
 
