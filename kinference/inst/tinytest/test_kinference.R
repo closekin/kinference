@@ -71,7 +71,7 @@ snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
     rawgenos4@info <- info
     class(rawgenos4) <- "snpgeno"
     temp <- rawgenos4
-    pbonzer <- est_ALF_ABCO(rawgenos4, geno_amb = temp)@locinfo$pambig
+    pbonzer <- kinference:::est_ALF_ABCO(rawgenos4, geno_amb = temp)@locinfo$pambig
     if(way == 4 | 3) { rawgenos <- rawgenos4 }
 
     ## do most of that prep-work again for the six-way object, if 6-way
@@ -123,18 +123,37 @@ genos <- matrix(data = c(rep("AAO", 4)), nrow = 2, ncol = 2)
 ## first, 4-way:
 set.seed(1111)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
-genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),dim = c(30, 100))
+genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),
+               dim = c(30, 100))
 Locus <- paste("locus_", 1:100, sep = "")
-newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)), thingThree.l = runif(ncol(genos)))
+newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)),
+                           thingThree.l = runif(ncol(genos)))
 Our_sample <- paste("sample_", 1:30, sep = "")
 
 newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
-smallsnpg4a <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData)
-smallsnpg4 <- snpgeno(x = genos+1, diplos = c("BB", "AB", "AA", "OO", "AO", "BO"), info = cbind(Our_sample, newSampleData),
-                       locinfo = cbind(Locus, newLocusData), allow_nonchar = TRUE)  ## can't make this work with char genos,
-## and it needs to be indexed from 1, and its 'diplos' must include all of genotypes6, even if not all of them are used.
+smallsnpg4a <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample,
+                               locinfo = newLocusData, info = newSampleData)
+smallsnpg4 <- snpgeno(x = genos+1, diplos = c("BB", "AB", "AA", "OO", "AO", "BO"),
+                      info = cbind(Our_sample, newSampleData),
+                      locinfo = cbind(Locus, newLocusData), allow_nonchar = TRUE)
+## can't make this work with char genos, and it needs to be indexed
+## from 1, and its 'diplos' must include all of genotypes6, even if
+## not all of them are used.
 
-smallsnpg4@locinfo$pbonzer <- re_est_ALF(smallsnpg4)@locinfo$pambig
+## because of new basic pairfinding sanity checks, smallsnpg4@diplos
+## has to be genotypes6 or genotypes4_ambig. Make that happen:
+define_genotypes()
+smallsnpg4a <- smallsnpg4
+smallsnpg4a@diplos <- genotypes6
+smallsnpg4a[ smallsnpg4 == "BB"] <- "BB"
+smallsnpg4a[ smallsnpg4 == "AB"] <- "AB"
+smallsnpg4a[ smallsnpg4 == "AA"] <- "AA"
+smallsnpg4a[ smallsnpg4 == "OO"] <- "OO"
+smallsnpg4a[ smallsnpg4 == "AO"] <- "AO"
+smallsnpg4a[ smallsnpg4 == "BO"] <- "BO"
+smallsnpg4 <- smallsnpg4a
+
+smallsnpg4@locinfo$pbonzer <- kinference:::re_est_ALF(smallsnpg4)@locinfo$pambig
 smallsnpg4@locinfo$useN <- 4
 ## snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
 ## snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
@@ -148,7 +167,7 @@ thePLODs4 <- find_HSPs(smallsnpg4b, limit_pairs = choose(nrow(smallsnpg4b),2), k
 ## test w/o independent prepare_PLOD_SPA:
 expect_silent({ find_HSPs(smallsnpg4a, limit_pairs = choose(nrow(smallsnpg4b),2), keep_thresh = -20) } )
 
-## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
 ## refPLODs4 <- thePLODs4
 ## save(refPLODs4, file = "smallsnpg4_referencePLODs.Rda")
 
@@ -156,7 +175,8 @@ base::load("smallsnpg4_referencePLODs.Rda")  ## base:: to avoid a conflict with 
 expect_true(all.equal(refPLODs4, thePLODs4, check.attributes = FALSE))
 
 ## test auto-generation of snerr by kin_power in cases where it's absent
-smallsnpg4
+expect_true( length( dim(smallsnpg4b@locinfo$snerr)) > 0 ) ## this is basically just
+## 'exists( "smallsnpg4b@locinfo$snerr")', but I can't atease within a quoted string
 
 ## now, 6-way.
 
@@ -300,8 +320,8 @@ if(shanesComp) {
     base::load("SBT_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refSBTPLODs, theSBTPLODs, check.attributes = FALSE))
 
-    theSBTPOPs <- find_POPs(geno2019)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    theSBTPOPs <- find_POPs(geno2019, keep_thresh = 0.91)
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSBTPOPs <- theSBTPOPs
     ## save(refSBTPOPs, file = "SBT_referencePOPs.Rda")
 
@@ -311,7 +331,7 @@ if(shanesComp) {
     expect_true(all.equal(refSBTPOPs, theSBTPOPs, check.attributes = FALSE))
 
     theSBTwtsame <- split_FSPs_from_POPs(geno2019, candiPOPs = refSBTPOPs, gerr = 0.01)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSBTwtsame <- theSBTwtsame
     ## save(refSBTwtsame, file = "SBT_referencewtsame.Rda")
 
@@ -319,7 +339,7 @@ if(shanesComp) {
     expect_true(all.equal(refSBTwtsame, theSBTwtsame, check.attributes = FALSE))
 
     theSBTwpsex <- split_FSPs_from_HSPs(geno2019, candipairs = refSBTPOPs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSBTwpsex <- theSBTwpsex
     ## save(refSBTwpsex, file = "SBT_referencewpsex.Rda")
 
@@ -430,8 +450,8 @@ if(shanesComp) {
     base::load("GGar_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refGGarPLODs, theGGarPLODs, check.attributes = FALSE))
 
-    theGGarPOPs <- find_POPs(ggarnear2)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    theGGarPOPs <- find_POPs(ggarnear2, keep_thresh = 0.91)
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGGarPOPs <- theGGarPOPs
     ## save(refGGarPOPs, file = "GGar_referencePOPs.Rda")
 
@@ -439,7 +459,7 @@ if(shanesComp) {
     expect_true(all.equal(refGGarPOPs, theGGarPOPs, check.attributes = FALSE))
 
     theGGarwtsame <- split_FSPs_from_POPs(ggarnear2, candiPOPs = theGGarPOPs, gerr = 0.01)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGGarwtsame <- theGGarwtsame
     ## save(refGGarwtsame, file = "GGar_referencewtsame.Rda")
 
@@ -447,7 +467,7 @@ if(shanesComp) {
     expect_true(all.equal(refGGarwtsame, theGGarwtsame, check.attributes = FALSE))
 
     theGGarwpsex <- split_FSPs_from_HSPs(ggarnear2, candipairs = theGGarPOPs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGGarwpsex <- theGGarwpsex
     ## save(refGGarwpsex, file = "GGar_referencewpsex.Rda")
 
@@ -556,8 +576,8 @@ if(shanesComp) {
     base::load("GNS_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refGNSPLODs, theGNSPLODs, check.attributes = FALSE))
 
-    theGNSPOPs <- find_POPs(gns14)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    theGNSPOPs <- find_POPs(gns14, keep_thresh = 0.91)
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGNSPOPs <- theGNSPOPs
     ## save(refGNSPOPs, file = "GNS_referencePOPs.Rda")
 
@@ -565,7 +585,7 @@ if(shanesComp) {
     expect_true(all.equal(refGNSPOPs, theGNSPOPs, check.attributes = FALSE))
 
     theGNSwtsame <- split_FSPs_from_POPs(gns14, candiPOPs = theGNSPOPs, gerr = 0.01)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGNSwtsame <- theGNSwtsame
     ## save(refGNSwtsame, file = "GNS_referencewtsame.Rda")
 
@@ -573,7 +593,7 @@ if(shanesComp) {
     expect_true(all.equal(refGNSwtsame, theGNSwtsame, check.attributes = FALSE))
 
     theGNSwpsex <- split_FSPs_from_HSPs(gns14, candipairs = theGNSPOPs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGNSwpsex <- theGNSwpsex
     ## save(refGNSwpsex, file = "GNS_referencewpsex.Rda")
 
@@ -610,7 +630,7 @@ if(shanesComp) {
     allFish <- allFish[allFish@info$TargetID %in% strata$TargetID,]
     ## allFish@info <- merge(allFish@info, strata, sort = FALSE) ## introduces the misalignment bug
     allFish@info <- join(allFish@info, strata, type = "left", by = "TargetID")
-    allFish@locinfo$pbonzer <- re_est_ALF(allFish)@locinfo$pambig
+    allFish@locinfo$pbonzer <- kinference:::re_est_ALF(allFish)@locinfo$pambig
 
     which_not <- which(allFish@info$STRATA %in% cq(ASH2016, ASH2017, CAN2016, CAN2017, GOL2016,
                                                       GOL2017, GOL2018, AzT, BLF2020, GoM, iTY2020, MED) )
@@ -705,7 +725,7 @@ if(shanesComp) {
     ## HSP_histo(theABTPLODs, lb = 0, fullsib_cut = 25)
     ## PLOD_loghisto(theABTPLODs)
 
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refABTPLODs <- theABTPLODs
     ## save(refABTPLODs, file = "ABT_referencePLODs.Rda")
 
@@ -743,25 +763,16 @@ if(shanesComp) {
     table(FSPsOrPOPs$pairID %in% c(originalPOPs$pairID, originalFSPs$pairID) ) ## 2 TRUE, 47 FALSE
 
     ## continue with unit testing ################################################################################################
-    theABTPOPs <- find_POPs(ABT, limit_pairs = 400)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    theABTPOPs <- find_POPs(ABT, limit_pairs = 400, keep_thresh = 0.91)
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refABTPOPs <- theABTPOPs
     ## save(refABTPOPs, file = "ABT_referencePOPs.Rda")
 
     base::load("ABT_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refABTPOPs, theABTPOPs, check.attributes = FALSE))
 
-    ## one-off testing of new find_POPs
-    kakarikiKaraka <- kinference:::OLD_find_POPs(ABT, keep_thresh = 0.6, limit_pairs = 400)
-    kakarikiKaraka$ij <- paste(kakarikiKaraka$i, kakarikiKaraka$j)
-    kakarikiKaraka$oldwpsex <- kakarikiKaraka$wpsex
-    theABTPOPs$ij <- paste(theABTPOPs$i, theABTPOPs$j)
-    theABTPOPs$newwpsex <- theABTPOPs$wpsex
-    bothTechs <- join(kakarikiKaraka, theABTPOPs, by = "ij")
-    expect_true(all.equal(bothTechs$oldwpsex, bothTechs$newwpsex))
-
     theABTwtsame <- split_FSPs_from_POPs(ABT, candiPOPs = theABTPLODs[theABTPLODs$PLOD > 150,], gerr = 0.005)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refABTwtsame <- theABTwtsame
     ## save(refABTwtsame, file = "ABT_referencewtsame.Rda")
 
@@ -785,7 +796,7 @@ if(shanesComp) {
     ## ## FSPs than I would expect, though.
 
     theABTwpsex <- split_FSPs_from_HSPs(ABT, candipairs = theABTPOPs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refABTwpsex <- theABTwpsex
     ## save(refABTwpsex, file = "ABT_referencewpsex.Rda")
 
@@ -801,7 +812,7 @@ if(shanesComp) {
     expect_true(all.equal(refABTvarhtp, theABTvarhtp, check.attributes = FALSE))
 
     theABTPLODST <- split_HSPs_from_HTPs(ABT, candipairs = theABTPLODs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refABTPLODST <- theABTPLODST
     ## save(refABTPLODST, file = "ABT_referencePLODST.Rda")
 
@@ -841,7 +852,7 @@ if(shanesComp) {
     oneofeach <- drop_dups_pairwise_equiv( dups[,2:3])
     SHS <- SHS[ -c( oneofeach),]
 
-    SHS@locinfo$pbonzer <- re_est_ALF(SHS)@locinfo$pambig
+    SHS@locinfo$pbonzer <- kinference:::re_est_ALF(SHS)@locinfo$pambig
     theSHS6and4s <- check6and4(SHS, thresh_pchisq_6and4 = c(0.0001, 0.00001))
     ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSHS6and4s <- theSHS6and4s
@@ -919,8 +930,8 @@ if(shanesComp) {
     base::load("SHS_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
     expect_true(all.equal(refSHSPLODs, theSHSPLODs, check.attributes = FALSE))
 
-    theSHSPOPs <- find_POPs(SHS)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    theSHSPOPs <- find_POPs(SHS, keep_thresh = 0.91)
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSHSPOPs <- theSHSPOPs
     ## save(refSHSPOPs, file = "SHS_referencePOPs.Rda")
 
@@ -928,7 +939,7 @@ if(shanesComp) {
     expect_true(all.equal(refSHSPOPs, theSHSPOPs, check.attributes = FALSE))
 
     theSHSwtsame <- split_FSPs_from_POPs(SHS, candiPOPs = theSHSPOPs, gerr = 0.01)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSHSwtsame <- theSHSwtsame
     ## save(refSHSwtsame, file = "SHS_referencewtsame.Rda")
 
@@ -936,7 +947,7 @@ if(shanesComp) {
     expect_true(all.equal(refSHSwtsame, theSHSwtsame, check.attributes = FALSE))
 
     theSHSwpsex <- split_FSPs_from_HSPs(SHS, candipairs = theSHSPOPs)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSHSwpsex <- theSHSwpsex
     ## save(refSHSwpsex, file = "SHS_referencewpsex.Rda")
 

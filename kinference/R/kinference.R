@@ -1373,8 +1373,8 @@ return( snpg)
 #' "locinfo" attribute, plus attributes \code{gobs} and \code{gpred} showing
 #' observed and expected counts of each genotype per locus.
 #' @seealso geno_dembig_ABC
-#' @keywords misc
-#' @export est_ALF_ABCO
+#' @noRd
+#' @keywords internal misc
 "est_ALF_ABCO" <-
 function( lociar, geno_amb = lociar@geno_amb) {
 ########## Taken largely from "pipeline_for_SBT_baits.r"
@@ -3338,6 +3338,8 @@ function(snpg, hist_pars=list(), showPlot = TRUE) {
   n_samps <- nrow( snpg)
   n_loci <- ncol( snpg)
   minfo_fields <- cq( Our_plate, Our_sample) %that.are.in% names( snpg$info)
+
+  if( suppressWarnings( all( snpg@diplos == genotypes6))) {
   snpg4 <- snpgeno(
       NULL,
       diplos=genotypes4_ambig,
@@ -3350,6 +3352,9 @@ function(snpg, hist_pars=list(), showPlot = TRUE) {
   snpg4[ snpg==AO] <- AAO
   snpg4[ snpg==BB] <- BBO
   snpg4[ snpg==BO] <- BBO
+  } else if( suppressWarnings( all(snpg@diplos == genotypes4_ambig))) {
+      snpg4 <- snpg
+  } else { warning("snpg@diplos isn't one of genotypes6 or genotypes4_ambig, so I dunno what to do") }
 
   pgeno <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
   pgeno[ , OO] <- sqr( p0)
@@ -3516,10 +3521,13 @@ function( lociar,
       if(is.null( li$useN)) {
           li$useN <- 4L
       }
+  }
+  if( all(li$useN == 4) & is.null(li$snerr)) {
       snerrmat <- matrix(0, ncol(lociar), 4,
                          dimnames = list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB")))
       li$snerr <- snerrmat
   }
+
   li1 <- li[1,]
 
 `%without.names%` <- function( x, what) {
@@ -4734,8 +4742,8 @@ return( geno6)
 #'
 #'
 #' @param snpg an snpg object
-#' @keywords misc
-#' @export re_est_ALF
+#' @noRd
+#' @keywords internal misc
 "re_est_ALF" <-
 function( snpg) {
 ## check to be called after load_whopper loads entire dataset
