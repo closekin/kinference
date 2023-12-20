@@ -91,24 +91,20 @@ Let's begin.
 
 ```{r dropbears_findPOPs}
 ## first, let's get a global overview of the situation
-strongKin <- find_POPs(dropbears, limit_pairs = choose(nrow(dropbears), 2))
-## I've set limit_pairs to keep every pair - setting limit_pairs to
-## _n_ will return only the _n_ most POP-like pairs. We recommend
-## against choose(nrow(dataset), 2) for large datasets because the
-## resulting object may not fit into RAM - but dropbears is a small
-## dataset, so this is fine.
+strongKin <- find_POPs(dropbears, limit_pairs = choose(nrow(dropbears), 2),
+                       keep_thresh = 1)
+## As a demonstration, I've set limit_pairs and keep_thresh to keep
+## every pair - setting limit_pairs to _n_ and keep_thresh to 1 (an
+## arbitrary very high value - you can see in the figure below that
+## nearly all pairs have a wpsex < 0.10) will return only the _n_ most
+## POP-like pairs. We recommend against choose(nrow(dataset), 2) for
+## large datasets because the resulting object may not fit into RAM -
+## but dropbears is a small dataset, so this is fine.
 hist(strongKin$wpsex, breaks = 50)
 lines(strongKin@bins,diff(c(0,pnorm(strongKin@bins, mean = strongKin@mean_UP,
                     sd = sqrt(strongKin@var_UP)) * choose(nrow(dropbears), 2))),
       lwd = 2, col = kincol['UP']) 
 ## The curved line gives predicted distribution for Unrelated Pairs.
-## There is also a likelihood-based statistic for POP-finding, but it's
-## new and a little fiddly. You would run it with this code:
-## strongKin2 <- find_POPs_lglk(dropbears, gerr = 0.03, keep_thresh = -5)
-## # gerr is a _rough_ idea of genotyping error rate; results should
-## # not be highly sensitive to it
-## HSP_histo(strongKin2, lb = -5, fullsib_cut = 0)
-## PLOD_loghisto(strongKin2)
 ```
 
 The `wpsex` statistic calculated by `find_POPs` has an expectation of
@@ -276,10 +272,12 @@ we'll use the `bluefin` dataset included in package `kinference`.
 
 ## checking for badly-behaved loci
 
-The `bluefin` dataset has 1510 loci, and in an abstract perfect
-dataset, we would expect their P-values to be uniformly distributed
-over the interval [0,1] - so we would _expect_ about 0.151 of them to
-have a P-value less than 1e-4. 
+The `bluefin` dataset has 1510 loci. The function `check6and4`
+compares observed genotype frequencies for each locus to the expected
+frequencies under Hardy-Weinberg Equilibrium, giving a P-value for
+each locus. In an abstract perfect dataset, we would expect their
+P-values to be uniformly distributed over the interval [0,1] - so we
+would _expect_ about 0.151 of them to have a P-value less than 1e-4.
 
 ```{r bluefin6and4}
 data(bluefin)
@@ -415,6 +413,10 @@ kin-finding routine again here - it would be the same as for
 can see that kin-finding would work for `bluefin`, cleaned as it is.
 
 ```{r bluefinKinfer}
+## As outlined in Section 1, `keep_thresh` sets a PLOD limit to
+## prevent storing umpteen-millions of PLODs. Negative 10 is a often
+## about right, but you may need to set it lower (to store more PLODs)
+## or higher (to save RAM or make `hsp_histo` plots prettier)
 HSPs <- find_HSPs(bluefin_4, keep_thresh = -10)
 PLOD_loghisto(HSPs)
 ```
@@ -462,6 +464,14 @@ bluefin_exceptHetz <- bluefin[! bluefin@info$Our_sample %in% c(ilglks, dups) ,
                               ! bluefin@locinfo$Locus %in% badLoci]
 bluefin_exceptHetz <- kin_power(bluefin_exceptHetz, k = 0.5)
 ```
+In this section, we demonstrate a handful of things that can go wrong
+in a kinference analysis, and suggest ways to deal with them. This set
+of examples is not exhaustive! If you have a problem that is not dealt
+with in this section, you can try getting in touch with experienced 
+kinferencers, including the maintainer of package `kinference`, at the 
+[Github Discussions
+page](https://github.com/orgs/closekin/discussions) 
+for `closekin`, the parent Organisation of package `kinference`.
 
 Offscreen, I've prepared versions of the `bluefin` dataset with
 all-but-one of the cleaning steps. For example, `bluefin_exceptIlglk`

@@ -159,7 +159,25 @@ smallsnpg4@locinfo$useN <- 4
 ## snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB"))
 ## smallsnpg4@locinfo$snerr <- snerr
 
-## just to prove it can be kinferred:
+### check that subsets via [.snpgeno are also subsetting @info and @locinfo correctly
+#### subset samples by lookup
+smallsnpg4b <- smallsnpg4[ ! smallsnpg4@info$Our_sample %in% c("sample_10", "sample_13") ,]
+expect_true( dim(smallsnpg4b)[1] == dim(smallsnpg4b@info)[1] )
+#### subset samples by number
+smallsnpg4c <- smallsnpg4[ 1:10 ,]
+expect_true( dim(smallsnpg4c)[1] == dim(smallsnpg4c@info)[1] )
+#### subset loci by lookup
+smallsnpg4d <- smallsnpg4[, ! smallsnpg4@locinfo$Locus %in% c("locus_10", "locus_13")]
+expect_true( dim(smallsnpg4d)[2] == dim(smallsnpg4d@locinfo)[1] )
+#### subset loci by number
+smallsnpg4e <- smallsnpg4[ , 1:70 ]
+expect_true( dim(smallsnpg4e)[2] == dim(smallsnpg4e@locinfo)[1] )
+#### subset samples and loci by number
+smallsnpg4f <- smallsnpg4[ 1:10 , 1:70 ]
+expect_true( dim(smallsnpg4f)[1] == dim(smallsnpg4f@info)[1] )
+expect_true( dim(smallsnpg4f)[2] == dim(smallsnpg4f@locinfo)[1] )
+
+## check that it can be kinferred w/o tripping an error or warning from find_HSPs:
 smallsnpg4a <- kin_power(smallsnpg4, k = 0.5)
 smallsnpg4b <- prepare_PLOD_SPA(smallsnpg4a) ## technically superfluous now
 
