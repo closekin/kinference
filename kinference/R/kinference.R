@@ -1544,8 +1544,23 @@ function(
 
   if( !is.null( x)){
 stopifnot( missing( AB), missing( AAO), missing( BBO), missing( OO))
-    gbasics::define_genotypes()
-stopifnot( my.all.equal( x@diplos, genotypes4_ambig))
+gbasics::define_genotypes()
+
+stopifnot( my.all.equal( x@diplos, genotypes4_ambig) | my.all.equal(x@diplos, genotypes6))
+
+output6way <- FALSE
+if(my.all.equal( x@diplos, genotypes6)) {
+    oldx <- x
+    x@diplos <- genotypes4_ambig
+    x[ oldx == "AA"] <- "AAO"
+    x[ oldx == "AO"] <- "AAO"
+    x[ oldx == "BB"] <- "BBO"
+    x[ oldx == "BO"] <- "BBO"
+    x[ oldx == "AB"] <- "AB"
+    x[ oldx == "OO"] <- "OO"
+    output6way <- TRUE
+}
+
     AB <- colSums( x=='AB')
     AAO <- colSums( x=='AAO')
     BBO <- colSums( x=='BBO')
@@ -1680,7 +1695,8 @@ warning( sprintf( "Still %i not-fully-converged loci after maximum [%i] Aitken s
     mat@nits <- nits
 return( mat)
   } else {
-    x@locinfo$pbonzer <- matrix( c( alpha, beta, 0*beta, omega), ncol=4,
+      if(output6way) { x <- oldx }
+      x@locinfo$pbonzer <- matrix( c( alpha, beta, 0*beta, omega), ncol=4,
         dimnames=list( NULL, cq( A, B, C, O)))
 return( x)
   }
