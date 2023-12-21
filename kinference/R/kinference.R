@@ -1006,47 +1006,80 @@ function( geno6,
     thresh_pchisq_6and4,
     return_what=c( 'just_pvals', 'all'),
     extra_title = "",
-    show6 = TRUE) {
+    show6 = FALSE) {
 ##########
   n_fish <- nrow( geno6)
   n_loci <- ncol( geno6)
   define_genotypes()
   diplos <- geno6@diplos
-stopifnot( my.all.equal( sort( genotypes6), sort( diplos)))
-
+    stopifnot(
+        my.all.equal( sort( genotypes6), sort( diplos)) |
+        my.all.equal( sort( genotypes4_ambig), sort( diplos))
+    )
+    if( my.all.equal( sort( genotypes4_ambig), sort( diplos))) {
+        warning("genotypes are stored 4-way. Skipping 6-way GOF tests...")
+        do6 <- FALSE
+    } else {
+        do6 <- TRUE
+    }
   p6 <- with( geno6@locinfo,
       calc_g6probs( pbonzer[,'A'], pbonzer[,'B'], pbonzer[,'C'],
-          snerr=snerr))[,genotypes6]
+                   snerr=snerr))[,genotypes6]
+
+  p4 <- matrix( NaN, nrow(p6), 4)
+  colnames(p4) <- genotypes4_ambig
+  p4[,"OO"] <- p6[,"OO"]
+  p4[,"AB"] <- p6[,"AB"]
+  p4[,"AAO"] <- p6[,"AA"] + p6[,"AO"]
+  p4[,"BBO"] <- p6[,"BB"] + p6[,"BO"]
+
   # At some point, will also need p6_IBD... later...
 
   # Chi-sq check: requires gpred & gobs attr on geno6
   g6pred <- p6 * n_fish
   g6obs <- matrix( 0, n_loci, 6, dimnames=list( NULL, genotypes6))
 
-  for( ig in genotypes6) {
-    g6obs[,ig] <- colSums( geno6==match( ig, diplos))
-  }
-
-    if(show6) {
-        pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = TRUE,
-                                      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
-    } else {
-        pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = FALSE,
-                                      thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+  if(do6) {
+    for( ig in genotypes6) {
+      g6obs[,ig] <- colSums( geno6==match( ig, diplos))
     }
 
-  g4obs <- gtab6to4( g6obs)
-  g4pred <- gtab6to4( g6pred)
+    if(show6) {
+      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = TRUE,
+                                    thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+    } else {
+      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, test='G', showPlot = FALSE,
+                                    thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
+    }
+    g4obs <- gtab6to4( g6obs)
+    g4pred <- gtab6to4( g6pred)
+  }
+
+    if( !do6) {
+  g4pred <- p4 * n_fish
+  g4obs <- matrix( 0, n_loci, 4, dimnames=list( NULL, genotypes4_ambig))
+
+    for( ig in genotypes4_ambig) { ## need to fix this for diplos != genotypes6
+      g4obs[,ig] <- colSums( geno6==match( ig, diplos))
+    }
+  }
+
   pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, test='G',
       thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, extra_title = extra_title)@locinfo$pval
 
   return_what <- match.arg( return_what)
   if( return_what=='all') {
-    geno6@locinfo$pval6 <- pval6
+    if( do6) {
+      geno6@locinfo$pval6 <- pval6
+    }
     geno6@locinfo$pval4 <- pval4
-return( geno6)
+    return( geno6)
   } else {
-return( returnList( pval6, pval4))
+    if( do6) {
+      return( returnList( pval6, pval4))
+    } else {
+      return( returnList( pval6 = NULL, pval4))
+    }
   }
 }
 
