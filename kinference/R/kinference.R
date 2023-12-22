@@ -2271,7 +2271,8 @@ function(
   maxbin= NULL,
   ij_numeric= is.null( rowid_field( snpg))
 ){ ##################
-  define_genotypes()
+    define_genotypes()
+
   basic_sanity_checks_pairfinding()
   # Also, snpg should have been thru 'prepare_PLOD_SPA' so it has @PPS
 stopifnot(
@@ -2286,6 +2287,18 @@ stopifnot(
 
   if(kinPower_change | PLODSPA_change) {
       warning("snpg$locinfo appears to have been modified after kin_power() was last called. You generally want to run find_HSPs with a locinfo that is up-to-date with itself. Consider re-running kin_power() on your snpg and trying again")
+  }
+
+  ## if snpg@diplos is genotypes4_ambig, convert to pseudo 6-way
+  if( my.all.equal( snpg@diplos, genotypes4_ambig)) {
+    tempsnpg <- snpg
+    snpg@diplos <- genotypes6
+    snpg[ tempsnpg == OO] <- OO
+    snpg[ tempsnpg == AB] <- AB
+    snpg[ tempsnpg == AAO] <- AA
+    snpg[ tempsnpg == BBO] <- BB
+    rm(tempsnpg)
+    snpg <- kin_power(snpg, k = 0.5) ## HACK!
   }
 
   og <- options( vecless.print=FALSE)
