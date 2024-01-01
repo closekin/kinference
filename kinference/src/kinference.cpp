@@ -1060,7 +1060,7 @@ BEGIN_RCPP
   int n_samps;
   int n_geno;
   int n_loci;
-  int n_t;
+  int n_t= tt. size() ;
   int i;
   int l;
   int g;

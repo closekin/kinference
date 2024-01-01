@@ -19,21 +19,25 @@ split_HSPs_from_HTPs(snpg, candipairs)
 \details{
 The idea of \code{split_FSPs_from_POPs}- though this is not the only possible workflow- is that pairs which are \emph{either} POPs \emph{or} FSPs should stand out very clearly from everything else, via \code{\link{find_POPs}}. Then the job is to pick between those possibilities. The workflow is supposed to be:
 
-\itemize{
-\item nail POPs/FSPs first with \code{\link{find_POPs}}`
-\item pick between them with \code{split_FSPs_from_POPs} (update: this doesn't work very well yet... use age info if you can)
-\item look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs
-\item filter out HTPs from the remaining set of HSPs with \code{\link{split_HSPs_from_HTPs}} and/or \code{\link{autopick_threshold}}
+ nail POPs/FSPs first with \code{\link{find_POPs}}`
+
+\describe{
+\item{pick between them with \code{split_FSPs_from_POPs} (update}{this doesn't work very well yet... use age info if you can)}
 }
+
+ look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs
+
+ filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
 
 However, an equally reasonable workflow might be:
 
-\itemize{
-\item nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}}
-\item split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs}
-\item filter out HTPs from the remaining set of HSPs with \code{\link{split_HSPs_from_HTPs}} and/or \code{\link{autopick_threshold}}
-\item use \code{split_FSPs_from_POPs} to split FSPs from POPs
-}
+ nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}}
+
+ split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs}
+
+ filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
+
+ use \code{split_FSPs_from_POPs} to split FSPs from POPs
 
 All \code{split_} functions return expected values under different possible kin-types (not variances, since these cannot be predicted for all kin-types).
 
@@ -41,15 +45,7 @@ The \code{gerr} parameter in \code{split_FSPs_from_POPs} is there to alleviate t
 \subsection{Obsolete note}{
 The statistic for \code{split_FSPs_from_POPs} - which isn't as powerful as I'd hoped; I'm going to redo it - is based on the weighted sum of the number of exactly-matching 4-way genotypes, with weights chosen to have high power for this particular discrimination. Weighting is optimized for the unlikely scenario that POPs and FSPs are equally likely a priori, but in practice the weights are not sensitive to this. The test is deliberately crude and robust- e.g. it avoids exclusion-based checks- on the assumption that you have enough loci to pick HSPs, so the more-related kin-types should be slam-dunks. \emph{But} it doesn't seem powerful enough. More worked needed...
 
-\code{split_FSPs_from_HSPs} and \code{split_HSPs_from_HTPs} use 4-way
-genotypes only (to avoid having to worry about errors) but in a properly
-optimal PLOD designed for FSP/HSP or HSP/HTP discrimination- its
-expectation is positive for the higher-order kinship and negative for
-the lower-order kinship. Theoretical means for the two kinships named in
-the function's name are returned as attributes (variances cannot be
-predicted). Haven't added means for POPs or UPs since you're not
-"supposed" to have those in the mix by the time you run
-\code{split_*_from_*} functions, but maybe I should fix that at some point.
+\code{split_FSPs_from_HSPs} and \code{split_HSPs_from_HTPs} use 4-way genotypes only (to avoid having to worry about errors) but in a properly optimal PLOD designed for FSP/HSP or HSP/HTP discrimination- its expectation is positive for the higher-order kinship and negative for the lower-order kinship. Theoretical means for the two kinships named in the function's name are returned as attributes (variances cannot be predicted). Haven't added means for POPs or UPs since you're not "supposed" to have those in the mix by the time you run \code{split_*_from_*} functions, but maybe I should fix that at some point.
 }
 }
 \examples{

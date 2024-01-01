@@ -5,8 +5,17 @@
  
  - Added this exciting NEWS feature
 
-7/2023, 0.0.182ish: 
+0.0.182ish, 7/2023: 
   - *changed* i & j returns from 'find_<blah>' to index *entire* snpgeno argument, not relative to subsets
   - added 'ij_numeric' arg to 'find_<blah>' to return character i & j if 'rowid_field' is set (new gbasics feature)
   
   - added 'histoPLOD' as unifying caller to old 'PLOD_loghisto' and 'HSP_histo', which had inconsistent names and arguments. Prolly deprecate those...
+
+1.0.0, 1/1/2024:
+ - fixed up new vignette, including to deal with 'knitr' infelicity re 'atease' and package sequence
+ - tried to use "2OP" and "3OP" instead of HSP, HTP, and so on (in vignette)
+ - bug fixes with 'prepare_PLOD_SPA' and non-monotonic behaviour in extreeeeeme tails
+ - 'find_POPs_lglk' working OK now (means for HSP and FSP are wrong, but not plotted)
+ - 'drop_dup_pairwise_equiv' should not misbehave now on empty input
+ 
+ 

@@ -1,4 +1,4 @@
-# This is package kinference
+# This is package kinference 
 #' @rawNamespace import( Rcpp)
 #' @rawNamespace import( atease)
 #' @rawNamespace import( mvbutils)
@@ -26,8 +26,14 @@ structure( function( libname, pkgname) {
 
   assign( 'are_we_deprecating_yet', FALSE, envir=asNamespace( 'kinference'))
 }
-, roxy_orig = structure(c("#' @rawNamespace import( Rcpp)", "#' @rawNamespace import( atease)",  "#' @rawNamespace import( mvbutils)", "#' @rawNamespace import( gbasics)",  "#' @rawNamespace import( vecless)"), class = "cat")
+, roxy_orig = structure(c("#' @rawNamespace import( Rcpp)", "#' @rawNamespace import( atease)",  "#' @rawNamespace import( mvbutils)", "#' @rawNamespace import( gbasics)",  "#' @rawNamespace import( vecless)"), class = "cat") 
 )
+
+
+".onUnload" <-
+function( libpath){
+  library.dynam.unload( 'kinference', libpath)
+}
 
 
 "add_pairprob_error" <-
@@ -108,11 +114,11 @@ function( nlocal=sys.parent()) mlocal({
 
 
 #' PLOD threshold for HSPs
-#'
+#' 
 #' This function proposes a PLOD threshold for excluding almost all 3rd-order
 #' kin, and computes the associated False-Negative Probability (i.e., that a
 #' true HSP will have a PLOD below that threshold).
-#'
+#' 
 #' The rationale comes from fitting a mixture distribution to observed PLODs
 #' within some range that is expected to contain only 2nd, 3rd, and
 #' \emph{perhaps} a few 4th order kin. The threshold is then "chosen" (or
@@ -120,7 +126,7 @@ function( nlocal=sys.parent()) mlocal({
 #' false-positives from 3rd-order kin-pairs (i.e., with PLODs above the
 #' threshold) matches whatever you decide. A histogram with expected values is
 #' plotted (unless you tell it not to).
-#'
+#' 
 #' Means and variances of the mixture components are automatically set in
 #' advance, so the mixture-fit only has to estimate the proportion of kin-pairs
 #' of each type. The means are easily calculated from kinship coefficients,
@@ -133,7 +139,7 @@ function( nlocal=sys.parent()) mlocal({
 #' extreme assumptions about the \emph{nature} of linkage). The code of
 #' \code{autopick_threshold} then explores different variances within those
 #' bounds and
-#'
+#' 
 #' Despite the name, \emph{you} still have to supply sensible values for a
 #' couple of parameters, based on looking at your data and understanding what
 #' you are trying to do. So it's not \emph{completely} automated- and never
@@ -142,7 +148,7 @@ function( nlocal=sys.parent()) mlocal({
 #' adequate "engineering tolerance" in the next stage of CKMR. The
 #' False-Negative Probability will, to a great extent, compensate for the
 #' choice of threshold (i.e. removing any bias in the fitted CKMR model)
-#' \emph{unless} you set the threshold too low, and thus qend up with some
+#' \emph{unless} you set the threshold too low, and thus end up with some
 #' 3rd-order kin-pairs in your set of "definite 2nd-orders".
 #' \subsection{Fitrange and use4thIf you are using an HSP-oriented PLOD, then
 #' the range of PLODs you fit to should extend from somewhere above 0 (which is
@@ -159,9 +165,9 @@ function( nlocal=sys.parent()) mlocal({
 #' assumptions may not be perfect) will "concentrate its efforts" on getting a
 #' good fit near 0, rather than near the 2nd-order mean which is what we really
 #' need. It is worth experimenting. }
-#'
+#' 
 #' @param x a \code{snpgeno} or its \code{locinfo} attribute. Must already have
-#' been prepared by running \code{kin_power} and \code{prepare_PLOD_SPA}.
+#' been prepared by running \code{kin_power}.
 #' @param kin a dataframe of "close-ish" kin-pairs and their PLODs, presumably
 #' from running \code{find_HSPs}; must have a column "PLOD".
 #' @param fitrange_PLOD two numbers, specifying the range of PLODs from
@@ -199,9 +205,9 @@ function( nlocal=sys.parent()) mlocal({
 #' @seealso \code{\link{kin_power}}, \code{\link{var_PLOD_kin}}
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # Better have one...
-#'
+#' 
 #' @export autopick_threshold
 "autopick_threshold" <-
 function(
@@ -709,7 +715,7 @@ function(lociar){
 
 
 #' Find chains in HSPs; summarize sib-groups
-#'
+#' 
 #' For checking veracity of \emph{potential} half-sibs or other kin-pairs.
 #' \code{chain_pairwise} organizes them into chains within which each sample
 #' can be linked to another by a succession of direct pairwise links. The
@@ -721,9 +727,9 @@ function(lociar){
 #' used) within a particular suspect range, so each chain may have
 #' false-negatives (i.e. missing direct links), but the general idea should be
 #' clear.
-#'
+#' 
 #' \code{get_chain} finds the chain for one specific sample.
-#'
+#' 
 #' @aliases chain_pairwise get_chain
 #' @param thing output from \code{find_HSPs} or \code{find_POPs} etc, or some
 #' subset thereof
@@ -782,7 +788,7 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 
 
 #' QC for kin-finding; private for now
-#'
+#' 
 #' Incomplete! Suppose to return predicted mean & variance of CLODs for each
 #' sample, ie how prone is that sample's particular genotype to yielding
 #' unusually high/low PLODs when compared with a random unrelated sample. Then
@@ -794,25 +800,25 @@ pairmats[ order( do.on( pairmats, nrow( .)))]
 #' cause..!) The document
 #' "d:/docs/genetics/Dart/sbt-baits-v3/too-many-plods.lyx" has more info in
 #' section 4.1 on "rat CLODs".
-#'
+#' 
 #' There is a bunch of code in the function connected with simulations and more
 #' elaborate calculations, currently commented out. So I'm "internalling" this
 #' for now. Let's hope you're not able to see this in the documentation...
-#'
+#' 
 #' @param snpg a \code{snpgeno} object.
 #' @param nsim currently inactive. A simulation option exists in the code to
 #' check the null distro (not much use for far tails, of course).
 #' @return Dataframe with columns "ECLOD" and "VCLOD". See examples format.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' ## Rough chance of yielding a PLOD>5, say
 #' # cloddo <- check_FPosity( snpg = snpg)
 #' # Pr_FPos_5 <- pnorm( 5, mean=cloddo$ECLOD, sd=sqrt( cloddo$CLOD), lower=FALSE)
 #' # hist( Pr_Fpos_5, nc=50)
 #' ## highlight some known suspects
 #' # abline( v=Pr_Fpos_5[ suspects], col='red')
-#'
+#' 
 #' @export check_FPosity
 "check_FPosity" <-
 function( snpg, nsim=0){
@@ -982,19 +988,19 @@ return( result)
 
 
 #' Locus QC check
-#'
+#' 
 #' Checks 6-way and 4-way genotype frequencies against HWE expectations, and
 #' generates plots of observed / expected frequencies. Recently moved into
 #' kinference from genocalldart.
-#'
-#'
-#' @param geno6 a \code{snpgeno} object with 4-way or 6-way genocalls
+#' 
+#' 
+#' @param geno6 a \code{snpgeno} object with 4-way and 6-way genocalls
 #' @param thresh_pchisq_6and4 thresholds for \code{bad} and really bad p-values
 #' @param return_what one of \code{just_pvals} or \code{all}; see value
 #' @param extra_title a character string to be added to the bottom-right corner
 #' of all plots. Best if < 25 characters.
-#' @param show6 compute values for, and show the plots of, 6-way goodness-of-fit?
-#' Defaults to TRUE. If diplos is anything other than genotypes6, should be FALSE.
+#' @param show6 show the plots for 6-way goodness-of-fit? Defaults to TRUE. If
+#' diplos is anything other than genotypes6, should be FALSE.
 #' @return Creates per-locus vectors \code{pval6} and \code{pval4} for 6-way
 #' and 4-way genotypes respectively. If \code{return_what="just_pvals"}, these
 #' are returned in a list; if \code{return_what="all"}, they are added as
@@ -1087,11 +1093,11 @@ function( geno6,
 
 
 #' Check observed genotypes against HWE expectations
-#'
+#' 
 #' Checks observed genotype frequencies against expected frequencies,
 #' presumably with expectation defined by HWE.
-#'
-#'
+#' 
+#' 
 #' @param lociar a snpgeno object
 #' @param gpred predicted allele frequencies
 #' @param gobs observed allele frequencies
@@ -1198,18 +1204,18 @@ return( lociar)
 
 
 #' Grouping pairwise duplicates
-#'
+#' 
 #' Constructs equivalence classes to show from pairwise equivalences, and
 #' returns the "surplus" elements; if you then drop those elements, only one
 #' element from each eq-class will be retained.
-#'
+#' 
 #' Input should be row numbers in a \code{snpgeno} objects of duplicates, as a
 #' two-column data.frame or matrix with each row being a pair of duplicates, or
 #' the output from \code{\link{find_duplicates}} (a 3-col matrix). Identifies
 #' \code{groups} of equivalent observations (e.g., if i and j are duplicates,
 #' and j and k are duplicates, then i, j, and k are all equivalent). Outputs a
 #' vector of the row numbers for all-but-one of each group.
-#'
+#' 
 #' @param ij 2-column matrix or data.frame; possibly row numbers in a dataset,
 #' or strings (now that \code{find_HSPs} etc can optionally return "row ID"
 #' strings)
@@ -1217,10 +1223,12 @@ return( lociar)
 #' themselves, as attribute \code{groups}.
 #' @return Surplus elements in \code{ij}, perhaps plus attributes \code{groups}
 #' if \code{want_groups=TRUE}. You can look at that to figure out which
-#' elements are being retained (one "representative" from each equiv class).
+#' elements are being retained (one "representative" from each equiv class). If
+#' \code{ij} has no rows, an empty integer vector is returned, without any
+#' attributes.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' pairs <- matrix( c(
 #' 294, 289,
 #' 328, 294,
@@ -1235,7 +1243,7 @@ return( lociar)
 #' #
 #' #attr(,"groups")$`6`
 #' #[1] 904 905 857
-#'
+#' 
 #' @export drop_dups_pairwise_equiv
 "drop_dups_pairwise_equiv" <-
 function( ij, want_groups=FALSE) {
@@ -1243,6 +1251,10 @@ function( ij, want_groups=FALSE) {
     ij <- ij[,2:3]
   }  ## so that users don't have to specify it every time
 
+  if( !nrow( ij)){
+return( integer())
+  }
+  
   ij <- as.matrix( ij) # in case it was a data.frame
   uij <- unique( c( ij))
   m <- nrow( ij)
@@ -1307,22 +1319,22 @@ function(geno1, geno2, symmo, max_diff_ppn, limit) {
 
 
 "DUP_paircomps_lots" <-
-function(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval) {
-    .Call(`_kinference_DUP_paircomps_lots`, geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval)
+function(geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval, maxbin) {
+    .Call(`_kinference_DUP_paircomps_lots`, geno1, geno2, symmo, max_diff_loci, keep_n, nbins, binterval, maxbin)
 }
 
 
 
 
 #' Estimate ALFs from 6-way genotypes and snerr
-#'
+#' 
 #' Performs "straight" estimation of ALFs, given 6-way genotypes and snerr.
 #' Won't allow for changes in C-allele frequency from one population to the
 #' next. In principle, should just use
 #' \code{genocalldart::choose_geno6_thresholds} but fix the count-related
 #' thresholds and re-estimate ALFs. (What??)
-#'
-#'
+#' 
+#' 
 #' @param snpg a \code{snpgeno} object with \code{snerr} included
 #' @param control as per \code{nlminb}
 #' @keywords misc
@@ -1393,21 +1405,21 @@ return( snpg)
 
 
 #' Estimate allele frequencies, including nulls
-#'
+#' 
 #' Uses "ABCO" genotypes, ie up to 3 scorable alleles plus possible nulls, eg
 #' from \code{geno_deambig_ABC}. NALF (null allele frequency) is estimated from
 #' HWE deviations, so this requires a decent sample size. But, it doesn't
 #' require the elaborate 6-way genotyping and the massive read-depths needed
 #' for that.
-#'
-#'
+#' 
+#' 
 #' @param lociar a \code{loc.ar} object with the @geno_amb attribute.
 #' @return Returns the input, adding a 4-column matrix \code{pambig} to the
 #' "locinfo" attribute, plus attributes \code{gobs} and \code{gpred} showing
 #' observed and expected counts of each genotype per locus.
 #' @seealso geno_dembig_ABC
-#' @noRd
-#' @keywords internal misc
+#' @keywords misc
+#' @export est_ALF_ABCO
 "est_ALF_ABCO" <-
 function( lociar, geno_amb = lociar@geno_amb) {
 ########## Taken largely from "pipeline_for_SBT_baits.r"
@@ -1526,14 +1538,14 @@ return( lociar)
 
 #' Estimate allele frequencies with nulls; much faster than 'est_ALF_ABCO'
 #' (qv).
-#'
+#' 
 #' Fast estimation of A (major), B (minor), and O (null) frequencies for a set
 #' of loci. Uses the EM algorithm plus Aitken acceleration; this means the
 #' whole calculation can be vectorized across loci, which more than compensates
 #' for any EM inefficiency (and Aitken helps \emph{a lot}).
-#'
+#' 
 #' I should add some more...
-#'
+#' 
 #' @param x a \code{snpgeno} object, or NULL to use the next 4 args explicitly.
 #' @param AB,AAO,BBO,OO vectors (over all loci) of counts of these genotypes.
 #' Can't mix with non-null \code{x}.
@@ -1551,9 +1563,9 @@ return( lociar)
 #' @seealso \code{\link{est_ALF_ABCO}}
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # Should have one
-#'
+#' 
 #' @export est_ALF_ABO_quick
 "est_ALF_ABO_quick" <-
 function(
@@ -1739,27 +1751,50 @@ return( x)
 
 
 #' Kin-finders for loads-of-SNPs datasets
-#'
+#' 
 #' These take a \code{snpgeno} dataset that has been processed as far as
-#' \code{\link{check6and4}} (and for HSPs, \code{\link{prepare_PLOD_SPA}}) and
-#' find various relations between the samples. Relationships include duplicates
+#' \code{\link{check6and4}} (and for HSPs, \code{\link{kin_power}}) and find
+#' various relations between the samples. Relationships include duplicates
 #' (DUPs/dupes/dups), parent-offspring pairs (POPs) and half-sibling pairs
-#' (HSPs), plus of course unrelated pairs (UPs). You can specify the same or
-#' different subsets of the \code{snpgeno} for comparison: e.g., first subset
-#' for the adults, second for the juveniles.
-#'
+#' (HSPs) or other 2nd-order kin, plus of course unrelated pairs (UPs). You can
+#' specify the same or different subsets of the \code{snpgeno} for comparison:
+#' e.g., first subset for the adults, second for the juveniles.
+#' 
+#' There are two versions aimed at POPs currently called \code{find_POPs} and
+#' \code{find_POPs_lglk}. The former uses a "weighted pseudo-exclusion"
+#' ("wpsex") statistic that allows for null alleles and is robust to genotyping
+#' errors. The latter uses a likelihood-based statistic (again allowing for
+#' nulls), but you do have to provide a guesstimate of genotyping error rate
+#' (to robustify the calculation--- otherwise, a single genotyping error in a
+#' true POP could give a log-likelihood of -Inf). \code{find_POPs_lglk} is
+#' newer, easier to explain, and perhaps less "arbitrary", but we have used the
+#' "wpsex" version on all our real CKMR datasets (>10). Time will tell whether
+#' one is better/easier than the other; finding POPs ought to be pretty easy,
+#' so the results really should be the same.
+#' 
+#' \code{find_HSPs} should really be called \code{find_2OPs} because it cannot
+#' discriminate amongst second-order kin types; there is no way to distinguish
+#' genetically between HSPs, Grandparent-Grandchild Pairs, and Full-Thiatic
+#' Pairs (eg aunt/nephew) with \code{snpgeno} data alone. But, for historical
+#' reasons, it's still called \code{find_HSPs}. Note that \code{find_HSPs} can
+#' also be tricked into targeting [some] other types of kin, such as 3; see
+#' \bold{Details}, but watch out.
+#' 
 #' Some categories will "catch" others (e.g. \code{find_HSPs} will certainly
 #' include any POPs too), so you may need the splitter routines such as
 #' \code{split_POPs_from_HSPs} afterwards. The safest general-purpose strategy
 #' - but often \emph{not} the most sensible, if your data is nicely organized
 #' and you know what you want - would be:
-#'
-#' \itemize{ \item \code{find_duplicates} and then get rid of them \item
+#' 
+#' \code{find_duplicates} and then get rid of them
+#' 
 #' \code{find_HSPs} to get \emph{all} kin (though you will usually have to
-#' sacrifice some HSPs to false-neg because you'll need a threshold) \item
-#' \code{split_POPs_from_HSPs} to split HSPs from POPs/FSPs \item
-#' \code{split_POPs_from_FSPs} to split the latter. }
-#'
+#' sacrifice some HSPs to false-neg because you'll need a threshold)
+#' 
+#' \code{split_POPs_from_HSPs} to split HSPs from POPs/FSPs
+#' 
+#' \code{split_POPs_from_FSPs} to split the latter.
+#' 
 #' The non-splitter functions, i.e. \code{find_XXX}, might be run on huge
 #' numbers of samples, entailing a \code{choose(huge, 2)} number of
 #' comparisons. You don't want all those individual comparison results, and
@@ -1769,7 +1804,7 @@ return( x)
 #' you \emph{do} want, plus some dross), and then to retain just binned counts
 #' of the relevant comp statistic for all comps (usually, the vast majority)
 #' which don't make your threshold.
-#'
+#' 
 #' In addition, the \code{limit_pairs} argument is there to prevent your
 #' computer locking out with bazillions of unwanted pairs (in case you guess
 #' the bin limit inapproriately); the comparisons will be stopped if
@@ -1777,7 +1812,7 @@ return( x)
 #' to change a threshold, or re-run with larger \code{limit_pairs}. The default
 #' isn't meant to correspond to any biomathematical logic, it's just to stop
 #' blue smoke coming out your USB ports.
-#'
+#' 
 #' For \code{find_duplicates}, there are at least two different use-cases.
 #' First, you might want an initial run on a non-too-large subset of your data,
 #' to check that dups \emph{can} be clearly distinguished and to look at
@@ -1797,9 +1832,16 @@ return( x)
 #' not-yet-known duplicates \emph{based on} \code{max_diff_loci}. To discard
 #' duplicates and to find entire equivalence-classes of duplicates, e.g. from a
 #' control specimen included in numerous plates, see
-#' \code{drop_dup_pairwise_equiv}. \subsection{Kinformation The idea is that
-#' kin-finding is based on a statistic and a threshold \code{eta}, where the
-#' latter is chosen to keep false-positives down to a user-specified level.
+#' \code{drop_dup_pairwise_equiv}.
+#' 
+#' \code{find_HSPs} relies on pre-computed values of "LOD" and "PUP" that have
+#' been set by \code{\link{kin_power}}. Normally you would call the latter with
+#' \code{k=0.5}, since that's what HSPs are. However, the devious user can try
+#' \emph{different} values of \code{k}--- which is how \code{find_POPs_lglk}
+#' works--- and then the target of \code{find_HSPs} will become "kin with that
+#' value of \code{k}". Be very careful!!! \subsection{Kinformation The idea is
+#' that kin-finding is based on a statistic and a threshold \code{eta}, where
+#' the latter is chosen to keep false-positives down to a user-specified level.
 #' Anything "beyond" \code{eta} will be treated as a kin-pair ("beyond" depends
 #' on how the statistic is defined, i.e. whether a kin-pair should come out
 #' very low or very high). However, you're also likely to want to look post hoc
@@ -1812,17 +1854,19 @@ return( x)
 #' The thing is that there will be zillions of statistics from UPs - enough to
 #' blow out computer memory - and they are not individually interesting.
 #' Specifically, the main things returned are:
-#'
-#' \itemize{ \item mean and variance of stats. Computation is restricted to
-#' those on the UP-side of \code{eta} (which is nearly all of them, usually) in
-#' order to avoid distortion from non-UP cases. The latter will often be so
-#' rare that distortion would be negligible - but means and variances are not
-#' "robust". \item counts of binned stats, regardless of whether above or below
-#' \code{eta}. The bins are set based on SPAs to the theoretical distributions,
-#' and chosen so that an equal number of UP-pairs should fall into each bin.
-#' \item cases where the stat is "interesting", i.e. on the non-UP side of
-#' \code{keep_thresh}, as a \code{data.frame}. See \emph{Value} for details }
-#'
+#' 
+#' mean and variance of stats. Computation is restricted to those on the
+#' UP-side of \code{eta} (which is nearly all of them, usually) in order to
+#' avoid distortion from non-UP cases. The latter will often be so rare that
+#' distortion would be negligible - but means and variances are not "robust".
+#' 
+#' counts of binned stats, regardless of whether above or below \code{eta}. The
+#' bins are set based on SPAs to the theoretical distributions, and chosen so
+#' that an equal number of UP-pairs should fall into each bin.
+#' 
+#' cases where the stat is "interesting", i.e. on the non-UP side of
+#' \code{keep_thresh}, as a \code{data.frame}. See \emph{Value} for details
+#' 
 #' The process is controlled by three numbers: \code{nbins} for number of bins,
 #' \code{eta} itself, and some nearby threshold \code{keep_thresh} on the
 #' UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise)
@@ -1836,14 +1880,14 @@ return( x)
 #' actual kin-decisions yourself after the event (by subsetting the
 #' "interesting" pairs, comparing the statistic for each pair to \code{eta})-
 #' assuming that observed does match expected.
-#'
+#' 
 #' But, sometimes it doesn't. In that case, the predicted values of \code{eta}
 #' and \code{keep_thresh} may be way off the mark, and lead to retaining faaar
 #' too few or too many pairs. If so, then look at the histogram of retained
 #' statistics from an initial run, and try setting \code{eta} and/or
 #' \code{keep_thresh} manually, rather than futzing around with the indirect
 #' parameters until you get what you were after. }
-#'
+#' 
 #' @aliases find_duplicates find_HSPs find_POPs %upto% find_POPs_lglk
 #' @param snpg a \code{snpgeno} object
 #' @param subset1,subset2 numeric vectors of which samples to use (not logical,
@@ -1882,14 +1926,16 @@ return( x)
 #' \code{maxbin<max_diff_loci} (think about it!).
 #' @param show_plot whether to plot log histogram. Regardless, plot will not be
 #' shown if other arguments would lead to stupid result (e.g. no bins...).
-#' @param keep_thresh (\code{find_HSPs} is the analog of
+#' @param keep_thresh (\code{find_HSPs} and \code{find_POPs}) is the analog of
 #' \code{max_diff_loci} for \code{find_duplicates}. It determines which pairs
 #' to retain for individual inspection. For \code{find_HSPs}, this is the
-#' lowest retained PLOD. Set it with the aim of including "anything
+#' lowest retained PLOD; for \code{find_POPs} (currently), it's the highest
+#' retained \code{wpsex}. Set it with the aim of including "anything
 #' interesting" (ie not \emph{missing} any interesting pairs) and expect false
 #' positives - i.e. be willing to have some weaker kin in there, and to
-#' subsequently filter those out yourself "manually", as per vignette. Values
-#' like 0 (near the HTP mean) or -5 are a good start. You may have to re-run the function
+#' subsequently filter those out yourself "manually", as per vignette. For
+#' HSPs, values like 0 (near the HTP mean) or -5 are a good start. For POPs,
+#' experiment (at a total guess, try 0.1). You may have to re-run the function
 #' a coupla times if you have been too brutal or too generous here - though
 #' "too generous" can be fixed post hoc just by filtering the result, as long
 #' as you haven't generated tooooo many pairs (see parameter
@@ -1955,32 +2001,32 @@ return( x)
 #' the same, and i & k are the same, then j & k must also be the same), only
 #' the necessary ones are recorded to allow you to filter out yourself
 #' afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get
-#' this (without "ndiff" column): \item{ i j:}{} \item{ 3 1:}{} \item{ 4 3:}{}
-#' \item{ 6 4}{but you won't see the pairings for 1/4, 1/6, 3/6. If you just
-#' want to strip out all duplicates bar one in each group (and you don't care
-#' which one is kept), then you can use the function
-#' \code{drop_dups_pairwise_equiv} - see \emph{Examples}. For POPs and HSPs,
-#' the following are also returned as attributes (that can be accessed by
-#' \code{@} if \code{atease} is loaded). The main point is that the "boring"
-#' below-threshold pairs get put into bins and are not kept individually. The
-#' names sometimes change depending on which statistic is being used.} \item{ -
-#' eta}{false-positive cutoff to be applied to the statistic in question
-#' (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if
-#' not). Variance of the stat will only be calculated from values to the "UP
-#' side" of \code{eta}. However, the set of retained pairs/individuals is
-#' actually controlled by...} \item{ - keep_thresh}{the cutoff used to retain
-#' "interesting" pairs. Usually obvious from the range of statistic values.}
-#' \item{ - mean_sub_stat, var_sub_stat (where stat is PLOD, wpsex, or
-#' ndiff)}{empirical values for the statistic when it is below \code{eta} (ie
-#' nearly always).} \item{ - mean_theory, var_theory}{of the statistic, to
-#' compare to previous.} \item{ - n_stat_in_bin (where stat is PLOD, wpsex, or
-#' ndiff)}{number of pairs whose statstic fell within the range of each bin}
-#' \item{ - bins}{cutpoints for the bins. These should be quantiles, according
-#' to the SPA; so if practice matches theory, the numbers-per-bin should all be
-#' similar.}
+#' this (without "ndiff" column) [FORMATTING SCREWED UP PROBABLY ROXYGEN'S
+#' FAULT]: \item{ i j::}{} \item{ 3 1::}{} \item{ 4 3::}{} \item{ 6 4}{but you
+#' won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all
+#' duplicates bar one in each group (and you don't care which one is kept),
+#' then you can use the function \code{drop_dups_pairwise_equiv} - see
+#' \emph{Examples}. For POPs and HSPs, the following are also returned as
+#' attributes (that can be accessed by \code{@} if \code{atease} is loaded).
+#' The main point is that the "boring" below-threshold pairs get put into bins
+#' and are not kept individually. The names sometimes change depending on which
+#' statistic is being used.} \item{ - eta}{false-positive cutoff to be applied
+#' to the statistic in question (automatically done if
+#' \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat
+#' will only be calculated from values to the "UP side" of \code{eta}. However,
+#' the set of retained pairs/individuals is actually controlled by...} \item{ -
+#' keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious
+#' from the range of statistic values.} \item{ - mean_sub_stat, var_sub_stat
+#' (where stat is PLOD, wpsex, or ndiff)}{empirical values for the statistic
+#' when it is below \code{eta} (ie nearly always).} \item{ - mean_theory,
+#' var_theory}{of the statistic, to compare to previous.} \item{ -
+#' n_stat_in_bin (where stat is PLOD, wpsex, or ndiff)}{number of pairs whose
+#' statstic fell within the range of each bin} \item{ - bins}{cutpoints for the
+#' bins. These should be quantiles, according to the SPA; so if practice
+#' matches theory, the numbers-per-bin should all be similar.}
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' \dontrun{
 #' ## And out-of-date!
 #' ## duplicate checking. ckmini2 has 6 fish where 1,3,4,6 are all identical (zero differing loci).
@@ -2022,7 +2068,7 @@ return( x)
 #' #test <- find_POPs( ckdata, subset1=adults, subset2=juves,
 #' #    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
 #' }
-#'
+#' 
 #' @export find_duplicates
 "find_duplicates" <-
 function(
@@ -2140,7 +2186,7 @@ return( result)
 
 
 #' Dup-finding with some missing genotypes
-#'
+#' 
 #' This documentation seems to have disappeared... though I \emph{think} this
 #' is the function Paige relies on in GT for detecting recaptures! So it's
 #' quite important... The basic point is that GT data \emph{does} sometimes
@@ -2148,8 +2194,8 @@ return( result)
 #' pairwise comparisons will be done willy-nilly (ie regardless of the precise
 #' missingness pattern for the pair), so subset your data beforehand to remove
 #' Bad Eggs.
-#'
-#'
+#' 
+#' 
 #' @param snpg a \code{snpgeno} object
 #' @param subset1,subset2 numeric vectors of which samples to use (not logical,
 #' not negative). Defaults to all of them. Iff \code{subset1} and
@@ -2359,8 +2405,10 @@ stopifnot(
   bins <- seq( from=minbin, to=maxbin, length=nbins)
   binterval <- bins[2] - bins[1]
 
-  # Distro of PLOD|UP via SPA
-  binprobs <- c( snpg@Kenv$CDF( bins), 1)
+  # Distro of PLOD|UP via SPA. Can _slightly_ exceed 1 at far-right tail, and oscillate, so squish it with a big hammer...
+  binprobs <- snpg@Kenv$CDF( bins)
+  binprobs <- c( cummax( binprobs), max( c( binprobs, 1)))
+  binprobs <- binprobs / tail( binprobs, 1)
 
   # Trying special-case "all vs all" here to minimize copying
   if( all(subset2 %in% subset1) & all(subset1 %in% subset2)) {
@@ -2680,7 +2728,7 @@ stopifnot(
   # then use HSP machinery.
 
   snpg <- kin_power( snpg, k= 1-gerr) # !! Captain Sneakypants !!
-  snpg <- prepare_PLOD_SPA( snpg, n_pts_SPA_renorm=201)
+  # snpg <- prepare_PLOD_SPA( snpg, n_pts_SPA_renorm=201) # now automatic
 
   mc <- match.call()
   mc$gerr <- NULL
@@ -2699,6 +2747,9 @@ stopifnot(
   result@mean_UP <- snpg@Kenv$dK( 0)   # was called mean_theory
   result@var_UP <- snpg@Kenv$ddK( 0)
   result@mean_POP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff)
+  result@trustplot_FSP_HSP_means <- FALSE
+  
+  # ... which is slightly lower than sum( snpg@locinfo$E_POP). Cozza gerr?
   result@call <- sys.call()
 
 return( result)
@@ -2708,11 +2759,11 @@ return( result)
 
 
 #' Plot for splitting FSPs from POPs
-#'
+#' 
 #' Plots an absolute-frequency histogram for the output of
 #' \code{find_FSPs_from_POPs_v2()}.
-#'
-#'
+#' 
+#' 
 #' @param fsps2 the output of a call to \code{find_FSPs_from_POPs_v2()}
 #' @param bin hist bin width. Used to define \code{breaks} (along with
 #' \code{xlim}, if given), so you can't manually pass in \code{breaks}.
@@ -2779,14 +2830,14 @@ function( thing, seed) {
 
 
 #' Get pair covariate data
-#'
+#' 
 #' Gets sample covariate data for samples \code{i} and \code{j} in a pair
 #' data.frame returned by \code{\link{find_HSPs}}, \code{\link{find_POPs}},
 #' etc. Sample covariate data are returned as one data.frame for each sample:
 #' pairs@i_covars contains the covariate data for sample \emph{i}, and
 #' pairs@j_covars for sample \emph{j}.
-#'
-#'
+#' 
+#' 
 #' @param snpg the \code{snpgeno} dataset from which the pairs were called
 #' @param pairs the output from a call to a \code{find_} or \code{split_}
 #' function from package \pkg{kinference}, or a row-wise subset of such an
@@ -2861,15 +2912,15 @@ return( gt4)
 
 
 #' QC checks on
-#'
+#' 
 #' This test looks at whether the allele frequencies in a given fish seem
 #' right, or if there are discrepancies due to (i) degraded DNA or (ii) sample
 #' contamination. Useful both for finding outlier samples, and for checking
 #' whether the loci are collectively working as they should (and as is assumed
 #' by all the calculations in \code{\link{kinference}}). The histogram should
 #' coincide nicely with its predicted line.
-#'
-#'
+#' 
+#' 
 #' @param snpg a \code{snpgeno} object
 #' @param target which weighting should be used. \code{rich} is meant to be
 #' more sensitive for detecting contaminated data (too many heterozygotes) and
@@ -2992,25 +3043,28 @@ return( c( whmo))
 
 
 #' Histogram PLODs
-#'
+#' 
 #' This is a wrapper for the two old (and strangely-named, and
 #' too-HSP-specific) functions \code{\link{HSP_histo}} (qv) and
 #' \code{\link{PLOD_loghisto}} (qv), which are likely to become hidden inside
 #' the namespace so that \code{histoPLOD} will be the only way to call them.
-#' For now, see their help--- while you still can. Eventually their help will
+#' For now, see their help- while you still can. Eventually their help will
 #' move into this docu instead.
-#'
-#'
+#' 
+#' 
 #' @param PLODs dataframe from \code{find_HSPs} or conceivably a future
 #' \code{find_kin3} etc
 #' @param log TRUE or FALSE to call \code{PLOD_loghisto} or \code{HSP_histo}
 #' respectively
 #' @param mean_show for which kinships should expected PLODs values be shown?
+#' (Default won't show FSP or HSP "means" for \code{find_POPs_lglk}, since they
+#' are calculated wrongly for now.)
 #' @param main graph title, defaulting to the name of \code{PLODs} argument
 #' @param ... passed to the plotting routines
 #' @param UP_distro_show Only for \code{log=TRUE}, this controls which
 #' approximations to show for the theoretical PLODs distribution of UPs. In
-#' practice, they look damn similar!
+#' practice, they look damn similar! The remaining args only apply when
+#' \code{log=FALSE}:
 #' @param HSP_distro_show ?show theoretical PLODs distro for HSPs, based on
 #' \emph{empirical}variance?
 #' @param lb,ub \code{lb} is \emph{mandatory} cutoff for which PLODs to include
@@ -3025,7 +3079,7 @@ return( c( whmo))
 function(
   PLODs,
   log= c( FALSE, TRUE)[0],
-  mean_show= c( 'HSP', 'FSP', 'POP', 'UP'),
+  mean_show= c( 'POP', 'UP', if( !isFALSE( PLODs@trustplot_FSP_HSP_means)) c( 'HSP', 'FSP')),
   UP_distro_show= c( SPA=TRUE, Normal=FALSE),
   HSP_distro_show= !log && !is.null( PLODs$mean_HSP),
   lb, ub=NULL,
@@ -3079,15 +3133,15 @@ stopifnot(
 
 
 #' PLOD histogram
-#'
+#' 
 #' Plots an absolute-frequency histogram for the output of
 #' \code{find_kinpairs}, with the lower bound set by the user. Lower bounds
 #' should be set to exclude (as much as possible) the UP bump, as this will
 #' otherwise swamp the signal from the HSP bump. Users must manually set a
 #' lower bound for full-sibling PLODs (\code{fullsib_cut}) on order to exclude
 #' full-siblings from the variance estimate for HSP PLODs.
-#'
-#'
+#' 
+#' 
 #' @param kinpairs the output of a call to \code{find_kinpairs}
 #' @param lb PLOD lower bound for plot extent. Should exclude the UP bump
 #' @param ub PLOD upper bound for plot extent. Defaults to maximum PLOD score
@@ -3200,157 +3254,11 @@ function(pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin
     .Call(`_kinference_HSP_paircomps_lots`, pair_geno, LOD, geno1, geno2, symmo, eta, min_keep_PLOD, keep_n, minbin, binterval, nbins)
 }
 
-#' Kin-finding power for microhaplotyped loci
-#'
-#' This is a short-term fudge for checking HSP-finding power of a bunch of loci
-#' that (i) can have as many haplotypes as you like, but (ii) have no errors or
-#' nulls. See \emph{Examples} for how you might use it.
-#'
-#' If you want to explore the impact of missing genotypes (so that e.g. only
-#' 90\ reasonable and very easy option is to multiply \code{Ediff} and
-#' \code{V.UP} both by 0.9, then go thru the steps. If you choose the 0.9
-#' conservatively- ie it's highly likely that >0.9 of loci get co-scored- then
-#' the above calc avoids any need to do much more complicated stuff (which I
-#' leave to you...).
-#'
-#' At some point in future, \code{\link{kinference}} might be changed so that
-#' it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not
-#' yet. So for now this version does some ghastly "live-hacking" of existing
-#' code for \code{\link{kin_power}} to implement no-errors no-nulls
-#' multi-allelic case. It will be hard to follow, so use \code{mtrace} if you
-#' really want to see what's going on. The guts of the code is in
-#' \code{\link{kin_power}} and \code{predict_hsp_util}.
-#'
-#' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles).
-#' Locus names are set from the rownames, or "L1", "L2" etc if there are no
-#' rownames. Allele names will be set to "A", "B", "C", etc, regardless of
-#' colnames; you do not have a choice there. Will be renormalized so rows sum
-#' to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected
-#' for \code{kin_power}. If so, then the allele freqs are assumed to live in
-#' \code{lociar$locinfo$pbonzer}, and \emph{no} nulls or genotyping errors are
-#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{kin_power} and
-#' \code{kin_power2} will give \emph{different} answers.
-#' @return If \code{lociar} is an allele-frequency matrix, then you get a
-#' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
-#' "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is
-#' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples}
-#' for use.
-#' @seealso \code{\link{kin_power}}
-#' @keywords misc
-#' @examples
-#'
-#' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
-#' POW <- kin_power2( ALF)
-#' # look at the contents of each...
-#' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
-#' # find anything like that in practice for lots'n'lots of loci
-#' lots <- 500
-#' ALF <- matrix( runif( lots*5), lots, 5)
-#' POW <- kin_power2( ALF)
-#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
-#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
-#' V <- sum( POW$V.UP)  # V[PLOD|UP]
-#' E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
-#' E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
-#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
-#' # ... more stringent than "typical"--- and, NB weaker kin
-#' bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
-#' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
-#' # ... so that's probably OK...
-#'
-#' @export kin_power2
-
-"kin_power2" <-
-function( lociar,
-    want_LOD_table=TRUE, # T/F
-    k # 0.5 for HSPs
-){
-############
-  # Uses the code of kin_power, but sneakily redefining a few core functions...
-  # ... kin_power originally intended for 6way null-heavy ABCO-format Dartcap
-
-  just_matrix <- lociar %is.not.a% 'snpgeno'
-  if( just_matrix) {
-    if( lociar %is.not.a% 'matrix') {
-stop( "'lociar' must be 'snpgeno' or matrix of allele freqs (Locus X Alleles)")
-    }
-    # Turn lociar into a snpgeno with .$locinfo$pbonzer==lociar
-
-    locnames <- rownames( lociar)
-    if( is.null( locnames)) {
-      locnames <- 'L' %&% seq.int( nrow( lociar))
-    }
-
-    lociar[ l, a] := lociar[ l, a] / (SUM_ %[a]% lociar[ l, a]) # normalize
-    lociar <- as.array( lociar) # vecless xtensor legacy removal
-    dimnames( lociar) <- NULL
-    colnames( lociar) <- LETTERS[ seq.int( ncol( lociar))]
-
-    data.frame <- data.frame
-    formals( data.frame)$stringsAsFactors <- FALSE
-    li <- data.frame( Locus=locnames, pbonzer=I( lociar)) # needs 2-step otherwise R messes up matrix
-
-    genos <- expand.grid( colnames( lociar), colnames( lociar),
-        stringsAsFactors=FALSE) %where% (Var1 <= Var2)
-    diplos <- genos$Var1 %&% genos$Var2
-
-    lociar <- snpgeno( 1, nrow( lociar), diplos, info=data.frame( Our_sample='THE_THING'),
-        locinfo=li)
-  }
-
-  e <- new.env( parent=asNamespace( 'kinference'))
-  e$lociar <- lociar
-
-  result <- evalq( envir=e, {
-    lociar$locinfo$snerr <- 0 # various things expect 'snerr' to exist
-
-    define_genotypes <- eval( substitute( function( nlocal=sys.parent(), eg) mlocal({
-        # Fakes various "genotypes_blah" categories that are expected by subsequent routines
-
-        ALLeles <- THE_ALLELES # colnames( pbonzer) # eg A,B,C,D,E; use named() if we need to write A for "A"
-
-        # need stringsAsFactors... FFS WTF were they (R) thinking ????
-        eg <- expand.grid( ALLeles, ALLeles, stringsAsFactors=FALSE) %where% (Var1 <= Var2)
-        genotypes_C <- eg$Var1 %&% eg$Var2
-        genotypes6 <- genotypes_C
-        ABCO <- named( ALLeles)
-      }), list( THE_ALLELES=colnames( lociar$locinfo$pbonzer))))
-
-    add_pairprob_error <- function( nlocal=sys.parent()) mlocal({
-      pp_err <- pp_true                ? 0
-      pp6_err <- pp_true               ? 0
-    })
-
-    # Make sure subsidiary functions pick up these versions
-    environment( kin_power) <-
-        environment( calc_g6probs_IBD0_scalar) <-
-        environment( calc_g6probs_IBD1_scalar) <-
-        environment( calc_g6probs_IBD2_scalar) <-
-        environment( add_pairprob_error) <-
-        environment( predict_hsp_util) <-
-        environment()
-    # mtrace( kin_power) # automate the debugging a bit
-  return( kin_power( lociar, want_LOD_table=TRUE, k=0.5))
-  })
-
-  result$locinfo <- result$locinfo %without.name% cq( snerr, use6)
-  if( just_matrix){
-    result <- result$locinfo[ cq( Ediff, V.UP, sdiff)]
-  }
-
-return( result)
-
-
-
-  lociar@locinfo <- li
-return( lociar)
-}
-
 
 
 
 #' Check individual multilocus genotypes for typicality
-#'
+#' 
 #' \code{ilglk_geno} computes log-likelihood of entire 4-way (not 6-way)
 #' genotype of each individual, i.e., sum log Pr g(i,l); and compares the
 #' distribution across individuals to theoretical distro given allele
@@ -3358,22 +3266,22 @@ return( lociar)
 #' individuals, usually with lglks that are much too low (ie rather than too
 #' high- I'm not sure what could generate "too typical a genome" at the
 #' individual level).
-#'
+#' 
 #' You can use \code{locator(1)} to click the histogram to figure out where to
 #' adjust the \code{xlim/ylim} values to change the range of the data to
 #' inspect more closely- ie you then re-run the function with its
 #' \code{...hist_par} argument set accordingly.
-#'
+#' 
 #' Currently, the SPA calcs are a wee bit slow because of heavy use of
 #' \code{vecless} which in version 1.0 is sluggish. The lglks themselves are
 #' computed in C and are blisteringly fast. If the SPA line (expected distro)
 #' doesn't appear, let us know- needs fixing! There might e.g. be too many
 #' loci, so that the calculation is falling over.
-#'
+#' 
 #' Haven't added any formal uh-oh criteria yet; that could be done via the SPA,
 #' as in \code{dump_badhetz_fish}. But, reading off from the graph is probably
 #' fine...
-#'
+#' 
 #' @param snpg a \code{snpgeno} (6-way genotype)
 #' @param hist_pars \code{list()} passed to \code{hist} for controlling
 #' histogram, e.g. \code{hist_pars=list(xlim=c(-12000, -6000))}, or use
@@ -3384,9 +3292,9 @@ return( lociar)
 #' optionally), a histogram of log-likelihood values across individuals.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' ## Need an example!
-#'
+#' 
 #' @export ilglk_geno
 "ilglk_geno" <-
 function(snpg, hist_pars=list(), showPlot = TRUE) {
@@ -3533,7 +3441,7 @@ function(tt, geno, vec_LOD, Pg) {
 
 
 #' Locus selection for kin-finding
-#'
+#' 
 #' This can be used to predict how well a set of loci will work for finding
 #' HSPs (or HTPs, or other specified weaker kin), and to prepare for some QC
 #' and kinference steps on serious data. It returns the input \code{snpgeno}
@@ -3541,12 +3449,16 @@ function(tt, geno, vec_LOD, Pg) {
 #' the per-locus mean and variance of LOD (presumably an HSP/UP PLOD, though
 #' not inevitably) for different true kinships. It respects the per-locus
 #' decision about how precisely to genotype (\code{useN=6/4/3}).
-#'
-#' \itemize{ \item E_UP, V_UP mean & variance for UPs \item E_HSP, E_POP,E_FSP
-#' as you would expect \item Ediff E_HSP - E_POP ie the "absolute" power of
-#' that locus \item sdiff (E_HSP-E_POP)/sqrt(V_UP) which is arguably better
-#' than \code{Ediff} for ranking loci }
-#'
+#' 
+#' E_UP, V_UP mean & variance for UPs
+#' 
+#' E_HSP, E_POP,E_FSP as you would expect
+#' 
+#' Ediff E_HSP - E_POP ie the "absolute" power of that locus
+#' 
+#' sdiff (E_HSP-E_POP)/sqrt(V_UP) which is arguably better than \code{Ediff}
+#' for ranking loci
+#' 
 #' It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a
 #' matrix) to the \code{locinfo}. They have been made dull (see
 #' \code{make_dull}) to improve your viewing experience, but they work fine for
@@ -3557,24 +3469,28 @@ function(tt, geno, vec_LOD, Pg) {
 #' (which is PUP), and then compute whatever-is-needed later on-the-fly. As-is,
 #' we are re-computing P1 and P2 based on LOD and PUP OTF instead (which is
 #' also unsafe, because LOD could have been calculated with k != 0.5). }
-#'
+#' 
 #' @param lociar \code{snpgeno} objects with the necessary ingredients
 #' @param want_LOD_table can't think why you'd set this to FALSE
 #' @param k target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.
 #' @param hack_LOD Don't mess around with this; it's for internal black magic
+#' @param sd_half_range Normally leave this alone, but in case the final
+#' \code{prepare_PLOD_SPA} (qv) step gives an error (rare but possible), try
+#' reducing it below the default.
 #' @return \code{snpgeno} object with augmented columns in "locinfo" attr.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' ## Need some examples!
 #' # See vignette for now
-#'
+#' 
 #' @export kin_power
 "kin_power" <-
 function( lociar,
-    want_LOD_table=TRUE, # T/F
+    want_LOD_table= TRUE, # T/F
     k, # 0.5 for HSPs
-    hack_LOD = NULL
+    hack_LOD= NULL,
+    sd_half_range= 10
 ){
 ############
   define_genotypes()
@@ -3678,7 +3594,198 @@ function( lociar,
 
   # Need to run prepare_PLOD_SPA() again
   lociar@Kenv <- lociar@PLODSPA_checksum <- NULL
-  lociar <- prepare_PLOD_SPA(lociar)
+  lociar <- prepare_PLOD_SPA(lociar, sd_half_range= sd_half_range)
+return( lociar)
+}
+
+
+
+
+#' Kin-finding power for microhaplotyped loci
+#' 
+#' This is a short-term fudge for checking HSP-finding power of a bunch of loci
+#' that (i) can have as many haplotypes as you like, but (ii) have no errors or
+#' nulls. See \emph{Examples} for how you might use it.
+#' 
+#' This is a short-term fudge for checking HSP-finding power of a bunch of loci
+#' that (i) can have as many haplotypes as you like, but (ii) have no errors or
+#' nulls. See \emph{Examples} for how you might use it.
+#' 
+#' If you want to explore the impact of missing genotypes (so that e.g. only
+#' 90\ reasonable and very easy option is to multiply \code{Ediff} and
+#' \code{V.UP} both by 0.9, then go thru the steps. If you choose the 0.9
+#' conservatively- ie it's highly likely that >0.9 of loci get co-scored- then
+#' the above calc avoids any need to do much more complicated stuff (which I
+#' leave to you...).
+#' 
+#' At some point in future, \code{\link{kinference}} might be changed so that
+#' it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not
+#' yet. So for now this version does some ghastly "live-hacking" of existing
+#' code for \code{\link{kin_power}} to implement no-errors no-nulls
+#' multi-allelic case. It will be hard to follow, so use \code{mtrace} if you
+#' really want to see what's going on. The guts of the code is in
+#' \code{\link{kin_power}} and \code{predict_hsp_util}.
+#' 
+#' If you want to explore the impact of missing genotypes (so that e.g. only
+#' 90\ reasonable and very easy option is to multiply \code{Ediff} and
+#' \code{V.UP} both by 0.9, then go thru the steps. If you choose the 0.9
+#' conservatively- ie it's highly likely that >0.9 of loci get co-scored- then
+#' the above calc avoids any need to do much more complicated stuff (which I
+#' leave to you...).
+#' 
+#' At some point in future, \code{\link{kinference}} might be changed so that
+#' it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not
+#' yet. So for now this version does some ghastly "live-hacking" of existing
+#' code for \code{\link{kin_power}} to implement no-errors no-nulls
+#' multi-allelic case. It will be hard to follow, so use \code{mtrace} if you
+#' really want to see what's going on. The guts of the code is in
+#' \code{\link{kin_power}} and \code{predict_hsp_util}.
+#' 
+#' @param lociar Usually, a matrix of allele frequencies (Locus * Alleles).
+#' Locus names are set from the rownames, or "L1", "L2" etc if there are no
+#' rownames. Allele names will be set to "A", "B", "C", etc, regardless of
+#' colnames; you do not have a choice there. Will be renormalized so rows sum
+#' to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected
+#' for \code{kin_power}. If so, then the allele freqs are assumed to live in
+#' \code{lociar$locinfo$pbonzer}, and \emph{no} nulls or genotyping errors are
+#' allowed for; hence, for a DartCap "ABCO"-style dataset, \code{kin_power} and
+#' \code{kin_power2} will give \emph{different} answers.
+#' @return If \code{lociar} is an allele-frequency matrix, then you get a
+#' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
+#' "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is
+#' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples}
+#' for use. If \code{lociar} is an allele-frequency matrix, then you get a
+#' dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff".
+#' "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is
+#' \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples}
+#' for use.
+#' @seealso \code{\link{kin_power}}
+#' 
+#' \code{\link{kin_power}}
+#' @keywords misc
+#' @examples
+#' 
+#' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+#' POW <- kin_power2( ALF)
+#' # look at the contents of each...
+#' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
+#' # find anything like that in practice for lots'n'lots of loci
+#' lots <- 500
+#' ALF <- matrix( runif( lots*5), lots, 5)
+#' POW <- kin_power2( ALF)
+#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+#' V <- sum( POW$V.UP)  # V[PLOD|UP]
+#' E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+#' E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+#' # ... more stringent than "typical"--- and, NB weaker kin
+#' bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+#' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+#' # ... so that's probably OK...
+#' ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+#' POW <- kin_power2( ALF)
+#' # look at the contents of each...
+#' # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
+#' # find anything like that in practice for lots'n'lots of loci
+#' lots <- 500
+#' ALF <- matrix( runif( lots*5), lots, 5)
+#' POW <- kin_power2( ALF)
+#' # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+#' # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+#' V <- sum( POW$V.UP)  # V[PLOD|UP]
+#' E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+#' E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+#' # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+#' # ... more stringent than "typical"--- and, NB weaker kin
+#' bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+#' smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+#' # ... so that's probably OK...
+#' 
+#' @export kin_power2
+"kin_power2" <-
+function( lociar,
+    want_LOD_table=TRUE, # T/F
+    k # 0.5 for HSPs
+){
+############
+  # Uses the code of kin_power, but sneakily redefining a few core functions...
+  # ... kin_power originally intended for 6way null-heavy ABCO-format Dartcap
+
+  just_matrix <- lociar %is.not.a% 'snpgeno'
+  if( just_matrix) {
+    if( lociar %is.not.a% 'matrix') {
+stop( "'lociar' must be 'snpgeno' or matrix of allele freqs (Locus X Alleles)")
+    }
+    # Turn lociar into a snpgeno with .$locinfo$pbonzer==lociar
+
+    locnames <- rownames( lociar)
+    if( is.null( locnames)) {
+      locnames <- 'L' %&% seq.int( nrow( lociar))
+    }
+
+    lociar[ l, a] := lociar[ l, a] / (SUM_ %[a]% lociar[ l, a]) # normalize
+    lociar <- as.array( lociar) # vecless xtensor legacy removal
+    dimnames( lociar) <- NULL
+    colnames( lociar) <- LETTERS[ seq.int( ncol( lociar))]
+
+    data.frame <- data.frame
+    formals( data.frame)$stringsAsFactors <- FALSE
+    li <- data.frame( Locus=locnames, pbonzer=I( lociar)) # needs 2-step otherwise R messes up matrix
+
+    genos <- expand.grid( colnames( lociar), colnames( lociar),
+        stringsAsFactors=FALSE) %where% (Var1 <= Var2)
+    diplos <- genos$Var1 %&% genos$Var2
+
+    lociar <- snpgeno( 1, nrow( lociar), diplos, info=data.frame( Our_sample='THE_THING'),
+        locinfo=li)
+  }
+
+  e <- new.env( parent=asNamespace( 'kinference'))
+  e$lociar <- lociar
+
+  result <- evalq( envir=e, {
+    lociar$locinfo$snerr <- 0 # various things expect 'snerr' to exist
+
+    define_genotypes <- eval( substitute( function( nlocal=sys.parent(), eg) mlocal({
+        # Fakes various "genotypes_blah" categories that are expected by subsequent routines
+
+        ALLeles <- THE_ALLELES # colnames( pbonzer) # eg A,B,C,D,E; use named() if we need to write A for "A"
+
+        # need stringsAsFactors... FFS WTF were they (R) thinking ????
+        eg <- expand.grid( ALLeles, ALLeles, stringsAsFactors=FALSE) %where% (Var1 <= Var2)
+        genotypes_C <- eg$Var1 %&% eg$Var2
+        genotypes6 <- genotypes_C
+        ABCO <- named( ALLeles)
+      }), list( THE_ALLELES=colnames( lociar$locinfo$pbonzer))))
+
+    add_pairprob_error <- function( nlocal=sys.parent()) mlocal({
+      pp_err <- pp_true                ? 0
+      pp6_err <- pp_true               ? 0
+    })
+
+    # Make sure subsidiary functions pick up these versions
+    environment( kin_power) <-
+        environment( calc_g6probs_IBD0_scalar) <-
+        environment( calc_g6probs_IBD1_scalar) <-
+        environment( calc_g6probs_IBD2_scalar) <-
+        environment( add_pairprob_error) <-
+        environment( predict_hsp_util) <-
+        environment()
+    # mtrace( kin_power) # automate the debugging a bit
+  return( kin_power( lociar, want_LOD_table=TRUE, k=0.5))
+  })
+
+  result$locinfo <- result$locinfo %without.name% cq( snerr, use6)
+  if( just_matrix){
+    result <- result$locinfo[ cq( Ediff, V.UP, sdiff)]
+  }
+
+return( result)
+
+
+
+  lociar@locinfo <- li
 return( lociar)
 }
 
@@ -3686,15 +3793,15 @@ return( lociar)
 
 
 #' add a kin-type legend with the default colour scheme
-#'
+#' 
 #' Package kinference uses a constant colour scheme for kin types, designed to
 #' be colourblind-friendly and to allow clear visual distinction between kin
 #' classes that share similar relatedness levels. We recommend that users
 #' maintain this colour scheme in any custom plots they create. This utility
 #' function adds a legend with kinship acronyms and their colours. By default,
 #' it will display only the "top four" kin classes (UP, FSP, POP, and HSP)
-#'
-#'
+#' 
+#' 
 #' @param position passed to \code{legend}. Must be one of "topleft", "top",
 #' "topright", etc.
 #' @param include a character vector of kin-classes to include. Limited to
@@ -3750,24 +3857,24 @@ function(position = "topright", include = character(), exclude = character(), ..
 
 
 #' Set the kin palette
-#'
-#' Sets the \code{\link{palette}} to recommended values for different kinships,
-#' so that eg \code{point( ..., col=2)} will be consistent with colours already
-#' on graphs produced by other \code{\link{kinference}} package functions such
-#' as \code{\link{histoPLOD}}. Hex values are returned in a vector, which you
-#' can use later use like so:
-#'
+#' 
+#' Sets the \code{palette} to recommended values for different kinships, so
+#' that eg \code{point( ..., col=2)} will be consistent with colours already on
+#' graphs produced by other \code{\link{kinference}} package functions such as
+#' \code{\link{histoPLOD}}. Hex values are returned in a vector, which you can
+#' use later use like so:
+#' 
 #' \preformatted{ kincol <- kinPalette() # plot something...  abline( v=17,
 #' col=kincol[ 'UP']) # for whatever colour corresponds to UPs }
-#'
+#' 
 #' See \bold{Value} for the predefined kinships.
-#'
-#'
+#' 
+#' 
 #' @return A named character vector of hex codes, with names "POP" etc. The
-#' current numerical ordering (not that you should ever need to know it--- just
-#' use the names) is: %# \item{ c(}{} \item{ POP= 1,}{} \item{ GGP= 2,}{}
-#' \item{ HCP= 3,}{} \item{ FCP= 4,}{} \item{ UP= 5,}{} \item{ HTP= 6,}{}
-#' \item{ FTP= 7,}{} \item{ HSP= 8,}{} \item{ FSP= 9}{} \item{ )}{}
+#' current numerical ordering (not that you should ever need to know it- just
+#' use the names) is: \item{ c(:}{} \item{ POP= 1,:}{} \item{ GGP= 2,:}{}
+#' \item{ HCP= 3,:}{} \item{ FCP= 4,:}{} \item{ UP= 5,:}{} \item{ HTP= 6,:}{}
+#' \item{ FTP= 7,:}{} \item{ HSP= 8,:}{} \item{ FSP= 9:}{} \item{ ):}{}
 #' @keywords misc
 #' @export kinPalette
 "kinPalette" <-
@@ -4091,25 +4198,25 @@ return( ret)
 
 
 #' Prepare for autopick_threshold
-#'
+#' 
 #' When choosing threshold to eliminate 3rd-order kin, \code{opti3ready} can be
 #' used first to recompute an optimal PLOD for HSP::HTP, rather than just using
 #' the HSP::UP PLOD. NOT WORKING YET!
-#'
+#' 
 #' Some tricky manoeuvering to calculate the needful...
-#'
+#' 
 #' @param x2 a \code{snpgeno}
 #' @param kin result of a previous call to \code{find_HSPs} (qv) on \code{x2}
 #' @seealso \code{doc2Rd}, \code{flatdoc}
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # Not compulsory to have an EXAMPLES -- you can put examples into other sections.
 #' # Here's how to make a "don't run" example:
 #' \dontrun{
 #' reformat.my.hard.drive()
 #' }
-#'
+#' 
 #' @export opti3ready
 "opti3ready" <-
 function( x2, kin){
@@ -4165,21 +4272,21 @@ function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
 
 
 #' PLOD histogram on log-scale
-#'
+#' 
 #' Plots a log-frequency histogram for the output of \code{\link{find_HSPs}},
 #' with the expected mean PLOD for unrelated pairs, the expected distribution
 #' of unrelated pairs, and the expected mean PLOD for HSPs. Expectations are
 #' coloured according to the table below
-#'
+#' 
 #' Colour scheme for all kin-finding markers: Shamelessly cropped from package
 #' viridis::viridis; defined as a one-off palette to avoid adding dependencies.
 #' Apparently quite colourblind-friendly.
-#'
+#' 
 #' Kin class Hex Colour Number Colour UP #BF3984FF 5 Magenta (light) POP
 #' #0D0887FF 1 Navy blue GGP #48039FFF 2 Violet HSP #FBA238FF 8 Orange FSP
 #' #FCCE25FF 9 Yellow HCP #7401A8FF 3 Purple FCP #9D189DFF 4 Magenta (dark) HTP
 #' #DA596AFF 6 Rose FTP #EE7B51FF 7 Coral
-#'
+#' 
 #' @param hsps the output of a call to \code{find_HSPs}
 #' @param UP,HSP,POP,FSP whether plot the expected (mean) PLOD for pairs of
 #' that type? Defaults TRUE
@@ -4281,9 +4388,6 @@ function(
            lwd= 2, lty= 1, col= legendBits$allNumbers, bg= "white")
   }
 }
-
-
-
 
 
 "PLOD_oddness_oneway" <-
@@ -4399,8 +4503,6 @@ function(geno1, geno2, symmo, eta, max_keep_Nexclu, keep_n, bins, AAO, BBO) {
 function(geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval) {
     .Call(`_kinference_POP_wt_paircomps_lots`, geno1, geno2, w, symmo, eta, max_keep_wpsex, keep_n, AAO, BBO, nbins, binterval)
 }
-
-
 
 
 "postprocess_simcheck_FSP_POP" <-
@@ -4601,15 +4703,22 @@ function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5, hack_LOD=NULL) {
   E_POP[l] := LOD[l,i,j] %[i,j]% Ppop[l,i,j]
   E_FSP[l] := LOD[l,i,j] %[i,j]% Pfsp[l,i,j]
 
-    ## Code for mean and variance of LOD difference given coinheritance ---
-    ## results needed for var.PLOD.kin
-    P1 <- 2 * Phsp - Pup # of genopair, given exactly 1 coinherited allele
-    e1[ l]:= LOD[l,i,j] %[i,j]% P1[l,i,j]
-    e2_1[ l]:= (LOD*LOD)[l,i,j] %[i,j]% P1[l,i,j]
-    v1 <- e2_1 - sqr( e1)
-    e0 <- E_UP
-    v0 <- V_UP
-    matto <- cbind( e0, v0, e1, v1)
+  # In R4.3 I was having printing problems because of retained xtensor class.
+  # I've tried to fix that, but just to be on the safe side...
+  things <- cq( Ediff, V_UP, E_POP, E_FSP, E_UP, E_HSP)
+  for( thing in things){
+    assign( thing, unclass( get( thing)), environment())
+  }
+
+  ## Code for mean and variance of LOD difference given coinheritance ---
+  ## results needed for var.PLOD.kin
+  P1 <- 2 * Phsp - Pup # of genopair, given exactly 1 coinherited allele
+  e1[ l]:= LOD[l,i,j] %[i,j]% P1[l,i,j]
+  e2_1[ l]:= (LOD*LOD)[l,i,j] %[i,j]% P1[l,i,j]
+  v1 <- e2_1 - sqr( e1)
+  e0 <- E_UP
+  v0 <- V_UP
+  matto <- cbind( e0, v0, e1, v1)
 
   # Standardized difference ie locus power: not so useful post hoc,
   #  but possibly interesting for 6 vs 4 comps
@@ -4619,8 +4728,7 @@ function( pIBD0, pIBD1, pIBD2, want_LOD_table=FALSE, k=0.5, hack_LOD=NULL) {
 #  V_UP <- unclass( V_UP)
 #  sdiff <- unclass( sdiff)
 
-    retval <- data.frame( Ediff, V_UP, sdiff, matto,
-                         E_POP, E_FSP, E_UP, E_HSP)
+  retval <- data.frame( Ediff, V_UP, sdiff, matto, E_POP, E_FSP, E_UP, E_HSP)
     ## matto comes in as 4 named columns, not as matto.
     ## E_UP is not 100% efficient, but bonus points for readability
   if( want_LOD_table) {
@@ -4634,18 +4742,22 @@ return( retval)
 
 
 #' Prepare for kin-finding
-#'
-#' \code{prepare_PLOD_SPA} is something you have to run before using
-#' some kin-finding/QC tools, to set up your \code{snpgeno} object for
-#' fancy maths woooo (saddlepoint approximations). There are no
-#' meaningful options, though, so it's _also_ called at the end of
-#' kin_power - users generally shouldn't need to use it as a
-#' standalone function, and can just re-call kin_power as necessary to
-#' keep things up-to-date.
-#'
+#' 
+#' \code{prepare_PLOD_SPA} is something you used to have to run before using
+#' some kin-finding/QC tools, to set up your \code{snpgeno} object for fancy
+#' maths woooo (saddlepoint approximations). There are no meaningful options,
+#' you just have to run this. It can be \emph{slightly} slow which is why it
+#' was a separate step. However, nowadays I don't think you need to run it at
+#' all, because it's built into \code{\link{kin_power}} (qv).
+#' 
+#' 
 #' @param geno6 a \code{snpgeno} object that has been thru \code{kin_power}
 #' @param n_pts_SPA_renorm how accurate to make the approximation. Default
 #' should be fine.
+#' @param sd_half_range How many SD's into the tails to push the approximation.
+#' The default of 10 is massively far. Normally this is fine, but if you get an
+#' error (probably from an NA cropping up during extreme calculations), then
+#' trying making it smaller.
 #' @return Another \code{sngeno} object with an environment \code{Kenv}, which
 #' contains functions (with their own preloaded data) allowing null
 #' distributions (eg PLODs for true UPs) to be calculated. Various sanity
@@ -4654,7 +4766,7 @@ return( retval)
 #' @keywords misc
 #' @export prepare_PLOD_SPA
 "prepare_PLOD_SPA" <-
-function( geno6, n_pts_SPA_renorm=201) {
+function( geno6, n_pts_SPA_renorm=201, sd_half_range=10) {
     ## To be run after kin_power( ..., want_LOD_table=TRUE)
 
 # n_pts_SPA_renorm should really be as big as R can handle without running
@@ -4740,6 +4852,7 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
       e$LOD <- e$LODOK <- LOD
       e$LODOK[ is.na( LOD)] <- 0 # leaving NAs in would mess up the calcs
       e$n_pts_SPA_renorm <- n_pts_SPA_renorm
+      e$sd_half_range <- sd_half_range
 
       evalq( envir=e, {
         if( !nrow( PUP)) {
@@ -4771,7 +4884,7 @@ stopifnot( all( cq( LOD4, LOD6, useN) %in% names( geno6@locinfo)))
             rowSums( (SLL/S-sqr( SL/S)))
           }
 
-          extract.named( renorm_SPA_cumul( K, dK, ddK, n_pts=n_pts_SPA_renorm))
+          extract.named( renorm_SPA_cumul( K, dK, ddK, n_pts=n_pts_SPA_renorm, sd_half_range=sd_half_range))
           # ... CDF and inv_CDF but *not* for extreeeme values
         } # if nrow PUP
       })
@@ -4799,13 +4912,13 @@ return( geno6)
 
 
 #' Re-estimate allele frequencies after read-in with load_whopper.
-#'
+#' 
 #' Returns locus-specific allele frequency estimates.
-#'
-#'
+#' 
+#' 
 #' @param snpg an snpg object
-#' @noRd
-#' @keywords internal misc
+#' @keywords misc
+#' @export re_est_ALF
 "re_est_ALF" <-
 function( snpg) {
 ## check to be called after load_whopper loads entire dataset
@@ -5043,7 +5156,7 @@ return( invisible( PLOD))
 
 
 #' Discriminate between kinships of known close-kin
-#'
+#' 
 #' For pairs already picked as likely close-kin via one of the \code{find_XXX}
 #' functions, but whose exact kinship is uncertain (e.g. they might clearly be
 #' either POPs or FSPs, but it's not obvious which), these
@@ -5052,33 +5165,42 @@ return( invisible( PLOD))
 #' functions use 4-way genotypes, i.e. not relying on 6-way genotyping. They
 #' possibly should be adapted to cope with 3-way (ie not trusting double-nulls)
 #' but currently they aren't (so they do trust double-nulls).
-#'
+#' 
 #' The idea of \code{split_FSPs_from_POPs}- though this is not the only
 #' possible workflow- is that pairs which are \emph{either} POPs \emph{or} FSPs
 #' should stand out very clearly from everything else, via
 #' \code{\link{find_POPs}}. Then the job is to pick between those
 #' possibilities. The workflow is supposed to be:
-#'
-#' \itemize{ \item nail POPs/FSPs first with \code{\link{find_POPs}}` \item
-#' pick between them with \code{split_FSPs_from_POPs} (update: this doesn't
-#' work very well yet... use age info if you can) \item look for HSPs and
-#' filter out already-known POPs and FSPs }
-#'
-#' Hence the other function, \code{split_FSPs_from_HSPs}, is theoretically
-#' unnecessary in that you have already run \code{\link{find_POPs}} and
-#' \code{split_FSPs_from_POPs} so you should know which of your "HSPs" are
-#' really something else. But, nevertheless it's handy to have.
-#'
+#' 
+#' nail POPs/FSPs first with \code{\link{find_POPs}}`
+#' 
+#' \describe{ \item{pick between them with }{this doesn't work very well yet...
+#' use age info if you can)}\item{list("split_FSPs_from_POPs")}{this doesn't
+#' work very well yet... use age info if you can)}\item{ (update}{this doesn't
+#' work very well yet... use age info if you can)} }
+#' 
+#' look for HSPs (and potentially some HTPs) and filter out already-known POPs
+#' and FSPs
+#' 
+#' filter out HTPs from the remaining set of HSPs with
+#' \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
+#' 
 #' However, an equally reasonable workflow might be:
-#'
-#' \itemize{ \item nail HSPs and everything stronger with
-#' \code{\link{find_HSPs}} \item split HSPs from POPs/FSPs with
-#' \code{split_FSPs_from_HSPs} \item \code{split_FSPs_from_POPs} }
-#'
+#' 
+#' nail HSPs and everything stronger (and potentially some HTPs) with
+#' \code{\link{find_HSPs}}
+#' 
+#' split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs}
+#' 
+#' filter out HTPs from the remaining set of HSPs with
+#' \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
+#' 
+#' use \code{split_FSPs_from_POPs} to split FSPs from POPs
+#' 
 #' All \code{split_} functions return expected values under different possible
 #' kin-types (not variances, since these cannot be predicted for all
 #' kin-types).
-#'
+#' 
 #' The \code{gerr} parameter in \code{split_FSPs_from_POPs} is there to
 #' alleviate the problem that a single locus displaying apparent Mendelian
 #' exclusion is in theory reason enough to prove that a pair is \emph{not} a
@@ -5103,21 +5225,23 @@ return( invisible( PLOD))
 #' have enough loci to pick HSPs, so the more-related kin-types should be
 #' slam-dunks. \emph{But} it doesn't seem powerful enough. More worked
 #' needed...
-#'
-#' \code{split_FSPs_from_HSPs} again uses 4-way genotypes only (to avoid having
-#' to worry about errors) but in a properly optimal PLOD designed for FSP/HSP
-#' discrimination- its expectation is positive for FSPs and negative for HSPs.
-#' Theoretical means for those are returned as attributes (variances cannot be
-#' predicted). Haven't added means for POPs or UPs since you're not "supposed"
-#' to have those in the mix by the time you run \code{split_FSPs_from_HSPs},
-#' but maybe I should fix that at some point. }
-#'
+#' 
+#' \code{split_FSPs_from_HSPs} and \code{split_HSPs_from_HTPs} use 4-way
+#' genotypes only (to avoid having to worry about errors) but in a properly
+#' optimal PLOD designed for FSP/HSP or HSP/HTP discrimination- its expectation
+#' is positive for the higher-order kinship and negative for the lower-order
+#' kinship. Theoretical means for the two kinships named in the function's name
+#' are returned as attributes (variances cannot be predicted). Haven't added
+#' means for POPs or UPs since you're not "supposed" to have those in the mix
+#' by the time you run \code{split_*_from_*} functions, but maybe I should fix
+#' that at some point. }
+#' 
 #' @aliases split_FSPs_from_HSPs split_FSPs_from_POPs split_HSPs_from_HTPs
 #' @param snpg a \code{snpgeno} object
 #' @param candipairs normally, a dataframe with rows being pairs and columns
 #' \emph{i} and \emph{j} (and possibly others) e.g. from \code{find_POPs} or
 #' \code{find_HSPs}. Can also be a 2-column matrix (each row again one pair).
-#' @param gerr genotyping error rate, where 0.01 would mean one percent. It's
+#' @param gerr genotyping error rate, where 0.01 would mean \code{1%}. It's
 #' there to make the POP case robust; you have to choose it, but the precise
 #' value should not matter. See \bold{Details}.
 #' @param use_obsolete_version the original code for POPs-vs-FSPs was based on
@@ -5127,7 +5251,7 @@ return( invisible( PLOD))
 #' this parameter to \code{TRUE}.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # pops_or_fsps <- find_POPs( mysnpg, ...)
 #' ## do histograms etc to find likely ones
 #' # discro <- split_FSPs_from_POPs( mysngp, pops_or_fsps %where% (wpsex < 0.042), gerr=0.01)
@@ -5147,7 +5271,7 @@ return( invisible( PLOD))
 #' # text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
 #' # abline( v=discro2@E_FSP, col='lightblue')
 #' # text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-#'
+#' 
 #' @export split_FSPs_from_HSPs
 "split_FSPs_from_HSPs" <-
 function( snpg, candipairs) {
@@ -5584,7 +5708,7 @@ function( snpg, candipairs) {
 
 
 #' Predict variance of PLOD for HCPs and HTPs
-#'
+#' 
 #' Aim is to work out how much your putative half-sibling pairs (HSPs) might be
 #' contaminated by half-thiatic pairs (HTPs) or half-cousin pairs (HCPs) (or,
 #' theoretically, by more remote kin). HSP-selection is presumably based on the
@@ -5607,29 +5731,29 @@ function( snpg, candipairs) {
 #' variance estimates which ought to bound the true variance for the
 #' "contaminating" kin-type of interest- subject to statistical noise) can be
 #' fed into \code{autopick_HSP_threshold} to do what it says.
-#'
+#' 
 #' The "per-locus LOD" (whose properties are stored in the columns \code{e0},
 #' \code{e1}, \code{v0}, \code{v1} in \code{linfo}) is created by calling
-#' \code{\link{kin_power}} (qv). The normal use-case would be that you've done
-#' so with \code{k=0.5}, so that the (P)LOD pertains to HSP::UP comparisons.
-#' However, if you called it with \code{k=0.25} then the (P)LOD would be
-#' designed for HTP::UP comparisons, and so on. In fact, you could even
-#' hand-tweak the calculations to contain LODs for HTP::HSP comparisons, which
-#' \emph{might} in principle improve the resolution (but you'd have to fiddle
-#' manually; you could actually do it based on two calls to
-#' \code{\link{kin_power}}, one with \code{k=0.5} and one with \code{k=0.25},
-#' and manipulating the results). The other calculations in this function are
-#' "agnostic WRTO", ie not intrinsically dependendent on, the values of
-#' \code{e0/e1/v0/v1}, so the rest of the calcs should just work.
-#'
+#' \code{hsp_power} (qv). The normal use-case would be that you've done so with
+#' \code{k=0.5}, so that the (P)LOD pertains to HSP::UP comparisons. However,
+#' if you called it with \code{k=0.25} then the (P)LOD would be designed for
+#' HTP::UP comparisons, and so on. In fact, you could even hand-tweak the
+#' calculations to contain LODs for HTP::HSP comparisons, which \emph{might} in
+#' principle improve the resolution (but you'd have to fiddle manually; you
+#' could actually do it based on two calls to \code{hsp_power}, one with
+#' \code{k=0.5} and one with \code{k=0.25}, and manipulating the results). The
+#' other calculations in this function are "agnostic WRTO", ie not
+#' intrinsically dependendent on, the values of \code{e0/e1/v0/v1}, so the rest
+#' of the calcs should just work.
+#' 
 #' It's assumed that lots of loci are being used, so that the mix of loci on
 #' each "chromo", or the splatter of loci along the single "megachromo", always
 #' matches the overall population, on law-of-large-numbers grounds.
-#'
+#' 
 #' Stuff like uncertainly in allele frequencies, and in the PLOD variance for
 #' HSPs, needs to be accounted for externally, by repeatedly drawing from the
 #' posteriors and re-calculating the PLODs and re-running this function.
-#'
+#' 
 #' If the variance estimates show really good separation between the kin-pair
 #' types, then one could refine the "preliminary variance" step by reducing the
 #' super-high threshold (and assuming a truncated-Normal distribution). This
@@ -5660,7 +5784,7 @@ function( snpg, candipairs) {
 #' one is 0 and the other is 2. But since the single-chromo
 #' equal-linkage-distance model is highly approximate anyway, do you really
 #' care? }
-#'
+#' 
 #' @param linfo either a \code{snpgeno} object, or its "locinfo" attribute (or
 #' a fake one). The "locinfo" should be a dataframe with columns \code{e0},
 #' \code{e1}, \code{v0}, \code{v1}, \code{count}. Each row is one "type" of
@@ -5692,7 +5816,7 @@ function( snpg, candipairs) {
 #' for the all-crossover scenario.
 #' @keywords misc
 #' @examples
-#'
+#' 
 #' # COMPLETELY MADE-UP e/v values! Nothing to do with genetics :)
 #' var_PLOD_kin( data.frame( count=45, ev01= I( cbind( e0=-1, e1=2, v0=0.03, v1=0.02))), C_equiv=22, n_meio=3:4)
 #' #        M2    M3    M4
@@ -5701,7 +5825,7 @@ function( snpg, candipairs) {
 #' #  attr(,"info")
 #' #      V_UP    V_HSP    C_hat  rho_hat
 #' #    1.3500 208.2273  22.0000   0.2616
-#'
+#' 
 #' @export var_PLOD_kin
 "var_PLOD_kin" <-
 function(

@@ -11,7 +11,7 @@
 }
 \details{Input should be row numbers in a \code{snpgeno} objects of duplicates, as a two-column data.frame or matrix with each row being a pair of duplicates, or the output from \code{\link{find_duplicates}} (a 3-col matrix). Identifies \code{groups} of equivalent observations (e.g., if i and j are duplicates, and j and k are duplicates, then i, j, and k are all equivalent). Outputs a vector of the row numbers for all-but-one of each group.
 }
-\value{Surplus elements in \code{ij}, perhaps plus attributes \code{groups} if \code{want_groups=TRUE}. You can look at that to figure out which elements are being retained (one "representative" from each equiv class).
+\value{Surplus elements in \code{ij}, perhaps plus attributes \code{groups} if \code{want_groups=TRUE}. You can look at that to figure out which elements are being retained (one "representative" from each equiv class). If \code{ij} has no rows, an empty integer vector is returned, without any attributes.
 }
 \examples{
 pairs <- matrix( c(

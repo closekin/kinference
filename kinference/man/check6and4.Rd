@@ -18,7 +18,6 @@ check6and4(
 \item{  return_what}{one of \code{just_pvals} or \code{all}; see value}
 \item{  extra_title}{a character string to be added to the bottom-right corner of all plots. Best if < 25 characters.}
 \item{  show6}{show the plots for 6-way goodness-of-fit? Defaults to TRUE. If diplos is anything other than genotypes6, should be FALSE.}
-
 }
 \value{Creates per-locus vectors \code{pval6} and \code{pval4} for 6-way and 4-way genotypes respectively. If \code{return_what="just_pvals"}, these are returned in a list; if \code{return_what="all"}, they are added as columns to \code{geno6$locinfo}.
 }

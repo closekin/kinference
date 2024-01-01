@@ -6,6 +6,7 @@ export( "autopick_threshold",
 "chisq_genofreq_check",
 "drop_dups_pairwise_equiv",
 "est_ALF_6way",
+"est_ALF_ABCO",
 "est_ALF_ABO_quick",
 "find_duplicates",
 "find_dups_with_missing",
@@ -25,11 +26,8 @@ export( "autopick_threshold",
 "kinPalette",
 "opti3ready",
 "PLOD_loghisto",
-"PLOD_oddness_oneway",
-"PLOD_oddness_twoway",
-"postprocess_simcheck_FSP_POP",
 "prepare_PLOD_SPA",
-"simcheck_FSP_POP",
+"re_est_ALF",
 "split_FSPs_from_HSPs",
 "split_FSPs_from_POPs",
 "split_HSPs_from_HTPs",
@@ -39,3 +37,4 @@ import( atease)
 import( mvbutils)
 import( gbasics)
 import( vecless)
+
