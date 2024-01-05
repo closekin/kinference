@@ -9,7 +9,9 @@ library(mvbutils)
 
 shanesComp <- Sys.info()["nodename"] == "pacific-hf"  ## because !Shane doesn't have the CSIRO datasets
 
-## utility functions: snpgeno.snpgds6 should probably replace the existing snpgeno.snpgds in package kinference, but for now...
+## snpgeno.snpgds6 is outdated and the default snpgeno constructor
+## should be used instead, and extended to handle anything that
+## snpgeno.snpgds6 was able to do, if it can't already.
 snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
                             Our_plate = NULL, their_diplos = c("BBO", "AB", "AAO", "OO"), way = 4, ...) {
     define_genotypes()
@@ -251,7 +253,189 @@ thePLODs3 <- find_HSPs(smallsnpg3b, limit_pairs = choose(nrow(smallsnpg3b),2), k
     expect_true(all.equal(refPLODs3, thePLODs3, check.attributes = FALSE))
     ## rm(list = ls() )
 
-shanesComp <- Sys.info()["nodename"] == "pacific-hf"  ## because !Shane doesn't have the CSIRO datasets
+
+#####################################################################################
+### Tests to ensure that the core toolchain works for either diplos =
+### genotypes6 or diplos = genotypes4_ambig
+#####################################################################################
+
+expect_silent( {
+## using the included dataset 'bluefin'
+library(kinference)
+library(gbasics)
+define_genotypes()
+data(bluefin)
+
+BFT <- bluefin ## for testing on only the included datasets; incorporation into tinytests
+BFT <- kin_power(BFT, k = 0.5)
+
+if( ! "BFT_loci_keepies.Rdata" %in% dir() ) {
+    loci <- check6and4(BFT, thresh_pchisq_6and4 = c(0.001, 0.0001))
+    loci_keepies <- which( loci$pval4 > 0.00001)
+    save( loci_keepies, file = "BFT_loci_keepies.Rdata")
+}
+load( "BFT_loci_keepies.Rdata")
+BFT <- BFT[ , loci_keepies]
+
+if( ! "BFT_fish_keepies.Rdata" %in% dir() ) {
+    fish <- ilglk_geno(BFT)
+    fish_keepies <- which( fish > -1500 )
+    save( fish_keepies, file = "BFT_fish_keepies.Rdata")
+}
+load( "BFT_fish_keepies.Rdata")
+BFT <- BFT[ fish_keepies ,]
+
+sixway <- BFT
+sixway@locinfo$useN <- 6
+
+fourway <- BFT
+fourway@diplos <- genotypes4_ambig
+fourway[ BFT == "AA"] <- "AAO"
+fourway[ BFT == "BB"] <- "BBO"
+fourway[ BFT == "AO"] <- "AAO"
+fourway[ BFT == "BO"] <- "BBO"
+fourway[ BFT == "AB"] <- "AB"
+fourway[ BFT == "OO"] <- "OO"
+
+mixway <- sixway
+sixfours <- check6and4(mixway, thresh_pchisq_6and4 = c(0.001, 0.0001))
+mixway@locinfo$useN <- ifelse( sixfours$pval6 < 0.01, 6, 4)
+
+    })
+
+## sixway is six-way diplos (genotypes6) and all useN = 6
+## fourway is four-way diplos (genotypes4_ambig) and all useN = 4
+## mixway is six-way diplos (genotypes6) and useN a mix of 6 and 4
+
+## test check6and4
+expect_silent( { six_sixandfour <- check6and4( sixway, thresh_pchisq_6and4 = c(0.001, 0.0001)) })
+expect_silent( { mix_sixandfour <- check6and4( mixway, thresh_pchisq_6and4 = c(0.001, 0.0001)) })
+expect_silent( { four_sixandfour <- check6and4( fourway, thresh_pchisq_6and4 = c(0.001, 0.0001)) })## fixed
+
+## test re_est_ALF
+
+expect_silent( { six_alfbco <- kinference:::re_est_ALF( sixway) })
+expect_silent( { mix_alfbco <- kinference:::re_est_ALF( mixway) })
+expect_silent( { four_alfbco <- kinference:::re_est_ALF( fourway) })
+
+## test est_ALF_ABCO
+
+## complains about 'no geno_amb'. If 6-way, geno_amb is 4-way; if
+## 4-way, is self.  Should it auto-detect these states? Or is that
+## unimportant now that est_ALF_ABCO is hidden?
+
+## six_alfbco <- kinference:::est_ALF_ABCO( sixway) ## FAIL
+## mix_alfbco <- kinference:::est_ALF_ABCO( mixway) ## FAIL
+## four_alfbco <- kinference:::est_ALF_ABCO( fourway) ## FAIL
+
+## test est_ALF_ABO_quick
+
+expect_silent( { six_alfABOquick <- est_ALF_ABO_quick( sixway) }) ## Fixed
+expect_silent( { mix_alfABOquick <- est_ALF_ABO_quick( mixway) }) ## Fixed
+expect_silent( { four_alfABOquick <- est_ALF_ABO_quick( fourway) })
+
+## test find_duplicates
+
+expect_silent( { six_findDups <- find_duplicates( sixway, max_diff_loci = 200) })
+expect_silent( { mix_findDups <- find_duplicates( mixway, max_diff_loci = 200) })
+expect_silent( { four_findDups <- find_duplicates( fourway, max_diff_loci = 200) })
+
+## test ilglk_geno
+
+expect_silent( { six_ilglk <- ilglk_geno( sixway) })
+expect_silent( { mix_ilglk <- ilglk_geno( mixway) })
+expect_silent( { four_ilglk <- ilglk_geno( fourway) })
+
+## test hetzminoo_fancy
+### Rich
+expect_silent( { six_hetzR <- hetzminoo_fancy( sixway, target = "rich") })
+expect_silent( { mix_hetzR <- hetzminoo_fancy( mixway, target = "rich") })
+expect_silent( { four_hetzR <- hetzminoo_fancy( fourway, target = "rich") })
+### Poor
+expect_silent( { six_hetzP <- hetzminoo_fancy( sixway, target = "poor") })
+expect_silent( { mix_hetzP <- hetzminoo_fancy( mixway, target = "poor") })
+expect_silent( { four_hetzP <- hetzminoo_fancy( fourway, target = "poor") })
+
+## test kin_power
+
+expect_silent( { sixway <- kin_power( sixway, k = 0.5) })
+expect_silent( { mixway <- kin_power( mixway, k = 0.5) })
+expect_silent( { fourway <- kin_power( fourway, k = 0.5) })
+
+## test find_HSPs
+
+expect_silent( { six_hsps <- find_HSPs( sixway, keep_thresh = -5, limit_pairs = 10000) })
+## PLOD_loghisto( six_hsps)
+## HSP_histo(six_hsps, lb = 10, fullsib_cut = 150)
+expect_silent( { autopick_threshold(sixway, kin = six_hsps, fitrange_PLOD = c(1, 150), FPtol_pairs = 2, use4th = TRUE, plot_bins = 5) })
+
+expect_silent( { mix_hsps <- find_HSPs( mixway, keep_thresh = -5, limit_pairs = 10000) })
+## PLOD_loghisto( mix_hsps)
+## HSP_histo(mix_hsps, lb = 10, fullsib_cut = 130)
+expect_silent( { autopick_threshold(sixway, kin = mix_hsps, fitrange_PLOD = c(1, 130), FPtol_pairs = 2, use4th = TRUE, plot_bins = 5) })
+
+    expect_silent( { four_hsps <- find_HSPs( fourway, keep_thresh = -5, limit_pairs = 10000) })
+    ## Fixed, I think.
+## PLOD_loghisto( four_hsps)
+## HSP_histo(four_hsps, lb = 10, fullsib_cut = 100)
+expect_silent( { autopick_threshold(sixway, kin = four_hsps, fitrange_PLOD = c(1, 100), FPtol_pairs = 2, use4th = TRUE, plot_bins = 5) })
+
+## test find_POPs
+
+expect_silent( { six_POPs <- find_POPs(sixway, keep_thresh = 0.06) })
+expect_silent( { mix_POPs <- find_POPs(mixway, keep_thresh = 0.06) })
+expect_silent( { four_POPs <- find_POPs(fourway, keep_thresh = 0.06) })
+
+## test split_FSPs_from_POPs
+
+kinPalette()
+expect_silent( { six_sFfP <- split_FSPs_from_POPs(sixway, candiPOPs = six_POPs[six_POPs$wpsex < 0.05,], gerr = 0.01) })
+## hist(six_sFfP$PLOD_FP, breaks = 50)
+## abline(v = c(six_sFfP@E_FSP, six_sFfP@E_POP), col = kinPalette()[c("FSP", "POP")])
+
+expect_silent( { mix_sFfP <- split_FSPs_from_POPs(mixway, candiPOPs = mix_POPs[mix_POPs$wpsex < 0.05,], gerr = 0.01) })
+## hist(mix_sFfP$PLOD_FP, breaks = 50)
+## abline(v = c(mix_sFfP@E_FSP, mix_sFfP@E_POP), col = kinPalette()[c("FSP", "POP")])
+
+expect_silent( { four_sFfP <- split_FSPs_from_POPs(fourway, candiPOPs = four_POPs[four_POPs$wpsex < 0.05,], gerr = 0.01) })
+## hist(four_sFfP$PLOD_FP, breaks = 50)
+## abline(v = c(four_sFfP@E_FSP, four_sFfP@E_POP), col = kinPalette()[c("FSP", "POP")])
+
+## test split_HSPs_from_FSPs
+
+expect_silent( { six_sFfH <- split_FSPs_from_HSPs(sixway, candipairs = six_POPs[six_POPs$wpsex < 0.05,]) })
+## hist(six_sFfH$PLOD_FH, breaks = 50)
+## abline(v = c(six_sFfH@E_FSP, six_sFfH@E_HSP), col = kinPalette()[c("FSP", "HSP")])
+
+expect_silent( { mix_sFfH <- split_FSPs_from_HSPs(mixway, candipairs = mix_POPs[mix_POPs$wpsex < 0.05,]) })
+## hist(mix_sFfH$PLOD_FH, breaks = 50)
+## abline(v = c(mix_sFfH@E_FSP, mix_sFfH@E_HSP), col = kinPalette()[c("FSP", "HSP")])
+
+expect_silent( { four_sFfH <- split_FSPs_from_HSPs(fourway, candipairs = four_POPs[four_POPs$wpsex < 0.05,]) })
+## hist(four_sFfH$PLOD_FH, breaks = 50)
+## abline(v = c(four_sFfH@E_FSP, four_sFfH@E_HSP), col = kinPalette()[c("FSP", "HSP")])
+
+## test split_HSPs_from_HTPs
+
+expect_silent( { six_sHfH <- split_HSPs_from_HTPs(sixway, candipairs = six_hsps[six_hsps$PLOD > 0,]) })
+## hist(six_sHfH$PLOD_ST, breaks = 50)
+## abline(v = c(six_sHfH@E_HTP, six_sHfH@E_HSP), col = kinPalette()[c("HTP", "HSP")])
+
+expect_silent( { mix_sHfH <- split_HSPs_from_HTPs(mixway, candipairs = mix_hsps[mix_hsps$PLOD > 0,]) })
+## hist(mix_sHfH$PLOD_ST, breaks = 50)
+## abline(v = c(mix_sHfH@E_HTP, mix_sHfH@E_HSP), col = kinPalette()[c("HTP", "HSP")])
+
+expect_silent( { four_sHfH <- split_HSPs_from_HTPs(fourway, candipairs = four_hsps[four_hsps$PLOD > 0,])  })
+## hist(four_sHfH$PLOD_ST, breaks = 50)
+## abline(v = c(four_sHfH@E_HTP, four_sHfH@E_HSP), col = kinPalette()[c("HTP", "HSP")])
+
+
+#############################################################################################
+#### Individual Species output-consistency tests - Shane's computer only  ###################
+#############################################################################################
+
+shanesComp <- Sys.info()["nodename"] == "pacific-hf" ## because !Shane doesn't have the CSIRO datasets
+
 ##############################################################################################
 ## SBT testing  ##############################################################################
 ##############################################################################################
