@@ -14,7 +14,6 @@ shanesComp <- Sys.info()["nodename"] == "pacific-hf"  ## because !Shane doesn't 
 ## snpgeno.snpgds6 was able to do, if it can't already.
 snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
                             Our_plate = NULL, their_diplos = c("BBO", "AB", "AAO", "OO"), way = 4, ...) {
-    define_genotypes()
     genos <- x
     genos <- genos + 1
     if(way == 3) {
@@ -120,6 +119,118 @@ genos <- matrix(data = c(rep("AAO", 4)), nrow = 2, ncol = 2)
     expect_true(as.raw(minisnpg[2,1]) == 03)
     expect_true(as.raw(minisnpg[2,2]) == 04)
 
+## test snpgeno generation
+define_genotypes()
+### 6-way parts
+chargenos6 <- matrix( data = c( "AA", "AO", "BB", "AB", "OO", "BO"), nrow = 2, ncol = 3)
+intgenos6 <- matrix( data = c(1,3,4,2,6,5) , nrow = 2, ncol = 3)
+rawgenos6 <- as.raw( matrix( data = c(1,3,4,2,6,5) , nrow = 2, ncol = 3))
+
+info6 <- data.frame(Our_sample = c("sample1", "sample2"), location = c("loc1", "loc2") )
+locinfo6 <- data.frame(Locus = c("L1", "L2", "L3"), n_alleles = c(2,2,2))
+
+### 4-way parts
+chargenos4 <- matrix( data = c( "OO", "AAO", "BBO", "AB"), nrow = 2, ncol = 2)
+intgenos4 <- matrix( data = c(1,3,4,2) , nrow = 2, ncol = 2)
+rawgenos4 <- as.raw( matrix( data = c(1,3,4,2) , nrow = 2, ncol = 2))
+
+info4 <- data.frame(Our_sample = c("sample1", "sample2"), location = c("loc1", "loc2") )
+locinfo4 <- data.frame(Locus = c("L1", "L2"), n_alleles = c(2,2))
+
+### 6-way diplos
+#### character genos
+expect_silent( {
+snpg6_char <- snpgeno( x = chargenos6, diplos = genotypes6, info = info6, locinfo = locinfo6)
+})
+#### integer genos
+expect_silent( {
+snpg6_int <- snpgeno( x = intgenos6, diplos = genotypes6, info = info6, locinfo = locinfo6,
+                     allow_nonchar = TRUE)
+})
+#### raw genos
+expect_silent( {
+snpg6_raw <- snpgeno( x = rawgenos6, diplos = genotypes6, info = info6, locinfo = locinfo6,
+                     allow_nonchar = TRUE)
+})
+##### check that char, int, and raw inputs all give the same genotypes
+expect_true( { all( snpg6_char == snpg6_int) })
+expect_true( { all( snpg6_char == snpg6_raw) })
+
+#### empty genos
+expect_silent( {
+snpg6_nogeno <- snpgeno( x = NULL, diplos = genotypes6, info = info6, locinfo = locinfo6)
+})
+#### empty info
+expect_silent( {
+snpg6_noinfo <- snpgeno( x = chargenos6, diplos = genotypes6, locinfo = locinfo6)
+})
+#### empty locinfo
+expect_silent( {
+snpg6_nolocinfo <- snpgeno( x = chargenos6, diplos = genotypes6, info = info6)
+})
+#### empty genos and info
+expect_silent( {
+snpg6_nogeno_noinfo <- snpgeno( x = NULL, diplos = genotypes6,
+                               locinfo = locinfo6, n_samples = 2)
+})
+#### empty genos and locinfo
+expect_silent( {
+snpg6_nogeno_nolocinfo <- snpgeno( x = NULL, diplos = genotypes6, info = info6,
+                                  n_loci = 2)
+})
+#### empty genos, info, and locinfo
+expect_silent( {
+snpg6_nogenoinfolocinfo <- snpgeno( x = NULL, diplos = genotypes6,
+                                         n_loci = 2, n_samples = 2)
+})
+
+### 4-way diplos
+#### character genos
+expect_silent( {
+snpg4_char <- snpgeno( x = chargenos4, diplos = genotypes4_ambig, info = info4, locinfo = locinfo4)
+})
+#### integer genos
+expect_silent( {
+snpg4_int <- snpgeno( x = intgenos4, diplos = genotypes4_ambig, info = info4, locinfo = locinfo4,
+                     allow_nonchar = TRUE)
+})
+#### raw genos
+expect_silent( {
+snpg4_raw <- snpgeno( x = rawgenos4, diplos = genotypes4_ambig, info = info4, locinfo = locinfo4,
+                     allow_nonchar = TRUE)
+})
+##### check that char, int, and raw inputs all give the same genotypes
+expect_true( { all( snpg4_char == snpg4_int) })
+expect_true( { all( snpg4_char == snpg4_raw) })
+
+#### empty genos
+expect_silent( {
+snpg4_nogeno <- snpgeno( x = NULL, diplos = genotypes4_ambig, info = info4, locinfo = locinfo4)
+})
+#### empty info
+expect_silent( {
+snpg4_noinfo <- snpgeno( x = chargenos4, diplos = genotypes4_ambig, locinfo = locinfo4)
+})
+#### empty locinfo
+expect_silent( {
+snpg4_nolocinfo <- snpgeno( x = chargenos4, diplos = genotypes4_ambig, info = info4)
+})
+#### empty genos and info
+expect_silent( {
+snpg4_nogeno_noinfo <- snpgeno( x = NULL, diplos = genotypes4_ambig,
+                               locinfo = locinfo4, n_samples = 2)
+})
+#### empty genos and locinfo
+expect_silent( {
+snpg4_nogeno_nolocinfo <- snpgeno( x = NULL, diplos = genotypes4_ambig, info = info4,
+                                  n_loci = 2)
+})
+#### empty genos, info, and locinfo
+expect_silent( {
+snpg4_nogenoinfolocinfo <- snpgeno( x = NULL, diplos = genotypes4_ambig,
+                                         n_loci = 2, n_samples = 2)
+})
+
 ## generate a small 4-way, 6-way, and 3-way snpgeno object
 
 ## first, 4-way:
@@ -144,7 +255,6 @@ smallsnpg4 <- snpgeno(x = genos+1, diplos = c("BB", "AB", "AA", "OO", "AO", "BO"
 
 ## because of new basic pairfinding sanity checks, smallsnpg4@diplos
 ## has to be genotypes6 or genotypes4_ambig. Make that happen:
-define_genotypes()
 smallsnpg4a <- smallsnpg4
 smallsnpg4a@diplos <- genotypes6
 smallsnpg4a[ smallsnpg4 == "BB"] <- "BB"
@@ -199,8 +309,6 @@ expect_true( length( dim(smallsnpg4b@locinfo$snerr)) > 0 ) ## this is basically 
 ## 'exists( "smallsnpg4b@locinfo$snerr")', but I can't atease within a quoted string
 
 ## now, 6-way.
-
-define_genotypes()
 set.seed(1111)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
 genos <- array(data = sample(c(0,1,2,3,4,5), 3000, prob = c(0.25, 0.3, 0.2, 0.09, 0.12, 0.04), replace = TRUE),dim = c(100, 30))
@@ -263,7 +371,6 @@ expect_silent( {
 ## using the included dataset 'bluefin'
 library(kinference)
 library(gbasics)
-define_genotypes()
 data(bluefin)
 
 BFT <- bluefin ## for testing on only the included datasets; incorporation into tinytests
