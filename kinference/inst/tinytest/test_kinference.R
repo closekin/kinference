@@ -9,92 +9,6 @@ library(mvbutils)
 
 shanesComp <- Sys.info()["nodename"] == "pacific-hf"  ## because !Shane doesn't have the CSIRO datasets
 
-## snpgeno.snpgds6 is outdated and the default snpgeno constructor
-## should be used instead, and extended to handle anything that
-## snpgeno.snpgds6 was able to do, if it can't already.
-snpgeno.snpgds6 <- function (x, Locus, Our_sample, info = NULL, locinfo = NULL,
-                            Our_plate = NULL, their_diplos = c("BBO", "AB", "AAO", "OO"), way = 4, ...) {
-    genos <- x
-    genos <- genos + 1
-    if(way == 3) {
-        genos[is.na(genos)] <- 4
-        useN <- c(rep(3, length(Locus)))
-    }
-    if(way == 4) {
-        genos[is.na(genos)] <- 4
-        useN <- c(rep(4, length(Locus)))
-    }
-    if(way == 6) {
-        genos[is.na(genos)] <- 6
-        useN <- c(rep(6, length(Locus)))
-    }
-
-    ## what would their diplos be, if all of their values corresponded to 4-way values?
-    their_ambig_diplos <- their_diplos
-    their_ambig_diplos[their_ambig_diplos == "AO"] <- "AAO"
-    their_ambig_diplos[their_ambig_diplos == "AA"] <- "AAO"
-    their_ambig_diplos[their_ambig_diplos == "BO"] <- "BBO"
-    their_ambig_diplos[their_ambig_diplos == "BB"] <- "BBO"
-
-## now, we need to make a version of the dataset that is 4-way (ambig) for est_ALF_ABCO
-    mm4 <- match(their_ambig_diplos, genotypes_ambig)
-    xgenos4 <- mm4[genos]
-
-    if(way == 4 | 3) { xgenos <- xgenos4 }
-    if(way == 6) {
-        mm6 <- match(their_diplos, genotypes6)
-        xgenos <- mm6[genos]
-    }
-
-    snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
-    snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO",
-                                   "BO2BB"))
-    if (!is.null(locinfo)) {
-        locinfo <- data.frame(Locus, locinfo, useN)
-    } else {
-        locinfo <- data.frame(Locus, useN)
-    }
-    locinfo$snerr <- snerr
-    if (is.null(Our_plate)) {
-        Our_plate <- c(rep(1, length(Our_sample)))
-    }
-    if (!is.null(info)) {
-        info <- cbind(Our_sample, Our_plate, info)
-    }  else {
-        info <- cbind(Our_sample, Our_plate)
-    }
-
-    ## 4-way rawgenos for calculating pnonzer - only version, if 4-way
-    rawgenos4 <- as.raw(xgenos4)
-    dim(rawgenos4) <- c(length(Our_sample), length(Locus))
-    rawgenos4@locinfo <- locinfo
-    rawgenos4@diplos <- genotypes_ambig
-    rawgenos4@info <- info
-    class(rawgenos4) <- "snpgeno"
-    temp <- rawgenos4
-    pbonzer <- kinference:::est_ALF_ABCO(rawgenos4, geno_amb = temp)@locinfo$pambig
-    if(way == 4 | 3) { rawgenos <- rawgenos4 }
-
-    ## do most of that prep-work again for the six-way object, if 6-way
-    if(way == 6) {
-        rawgenos <- as.raw(xgenos)
-        dim(rawgenos) <- c(length(Our_sample), length(Locus))
-        rawgenos@locinfo <- locinfo
-        rawgenos@diplos <- genotypes_ambig
-        rawgenos@info <- info
-        class(rawgenos) <- "snpgeno"
-        temp <- rawgenos
-    }
-
-    temp@locinfo$pbonzer <- pbonzer
-    temp@diplos <- genotypes6
-    temp[rawgenos == AB] <- AB
-    temp[rawgenos == AAO] <- AA
-    temp[rawgenos == BBO] <- BB
-    temp[rawgenos == OO] <- OO
-    return(temp)
-}
-
 ## absolute basic mechanics
 
     expect_true("kinference" %in% sessionInfo()$otherPkgs$kinference)
@@ -236,7 +150,7 @@ snpg4_nogenoinfolocinfo <- snpgeno( x = NULL, diplos = genotypes4_ambig,
 ## first, 4-way:
 set.seed(1111)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
-genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),
+genos <- array(data = sample(c(1,2,4,6), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),
                dim = c(30, 100))
 Locus <- paste("locus_", 1:100, sep = "")
 newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)),
@@ -244,26 +158,10 @@ newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(n
 Our_sample <- paste("sample_", 1:30, sep = "")
 
 newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
-smallsnpg4a <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample,
-                               locinfo = newLocusData, info = newSampleData)
-smallsnpg4 <- snpgeno(x = genos+1, diplos = c("BB", "AB", "AA", "OO", "AO", "BO"),
+
+smallsnpg4 <- snpgeno(x = genos, diplos = genotypes6,
                       info = cbind(Our_sample, newSampleData),
                       locinfo = cbind(Locus, newLocusData), allow_nonchar = TRUE)
-## can't make this work with char genos, and it needs to be indexed
-## from 1, and its 'diplos' must include all of genotypes6, even if
-## not all of them are used.
-
-## because of new basic pairfinding sanity checks, smallsnpg4@diplos
-## has to be genotypes6 or genotypes4_ambig. Make that happen:
-smallsnpg4a <- smallsnpg4
-smallsnpg4a@diplos <- genotypes6
-smallsnpg4a[ smallsnpg4 == "BB"] <- "BB"
-smallsnpg4a[ smallsnpg4 == "AB"] <- "AB"
-smallsnpg4a[ smallsnpg4 == "AA"] <- "AA"
-smallsnpg4a[ smallsnpg4 == "OO"] <- "OO"
-smallsnpg4a[ smallsnpg4 == "AO"] <- "AO"
-smallsnpg4a[ smallsnpg4 == "BO"] <- "BO"
-smallsnpg4 <- smallsnpg4a
 
 smallsnpg4@locinfo$pbonzer <- kinference:::re_est_ALF(smallsnpg4)@locinfo$pambig
 smallsnpg4@locinfo$useN <- 4
@@ -309,26 +207,28 @@ expect_true( length( dim(smallsnpg4b@locinfo$snerr)) > 0 ) ## this is basically 
 ## 'exists( "smallsnpg4b@locinfo$snerr")', but I can't atease within a quoted string
 
 ## now, 6-way.
-set.seed(1111)
+set.seed(1112)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
-genos <- array(data = sample(c(0,1,2,3,4,5), 3000, prob = c(0.25, 0.3, 0.2, 0.09, 0.12, 0.04), replace = TRUE),dim = c(100, 30))
+genos <- array(data = sample(c(1:6), 3000, prob = c(0.25, 0.3, 0.2, 0.09, 0.12, 0.04),
+                             replace = TRUE),dim = c(30, 100))
 Locus <- paste("locus_", 1:100, sep = "")
-newLocusData <- data.frame(thingOne.l = runif(nrow(genos)), thingTwo.l = runif(nrow(genos)), thingThree.l = runif(nrow(genos)))
-Our_sample <- paste("sample_", 1:30, sep = "")
+snerr <- matrix(data = 0, nrow = length(Locus), ncol = 4)
+snerr@dimnames <- list(NULL, c("AA2AO", "AO2AA", "BB2BO","BO2BB"))
+newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)), thingThree.l = runif(ncol(genos)), useN = 6)
+Our_sample <- paste("sample_", 1:nrow(genos), sep = "")
 
-newSampleData <- data.frame(thingOne.s = runif(ncol(genos)),thingTwo.s = runif(ncol(genos)))
-## smallsnpg6 <- snpgeno.snpgds(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData,
-##                              their_diplos = genotypes6)
+newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
 
-smallsnpg6 <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData,
-                             their_diplos = genotypes6, way = 6)
+smallsnpg6b <- snpgeno( x = genos, diplos = genotypes6,
+                       locinfo = cbind(Locus, newLocusData),
+                       info = cbind(Our_sample, newSampleData),
+                       allow_nonchar = TRUE)
+smallsnpg6b@locinfo$snerr <- snerr
+smallsnpg6b <- est_ALF_ABO_quick( smallsnpg6b)
 
-## just to prove it can be kinferred:
-smallsnpg6a <- kin_power(smallsnpg6, k = 0.5)
-smallsnpg6b <- prepare_PLOD_SPA(smallsnpg6a)
-
+smallsnpg6b <- kin_power(smallsnpg6b, k = 0.5)
 thePLODs6 <- find_HSPs(smallsnpg6b, limit_pairs = choose(nrow(smallsnpg4b),2), keep_thresh = -20)
-## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
 ## refPLODs6 <- thePLODs6
 ## save(refPLODs6, file = "smallsnpg6_referencePLODs.Rda")
 
@@ -337,23 +237,26 @@ thePLODs6 <- find_HSPs(smallsnpg6b, limit_pairs = choose(nrow(smallsnpg4b),2), k
 
 ## now, 3-way. Build a 4-way dataset, then kinfer it 3-way via useN
 
-set.seed(1111)
+set.seed(1113)
 ## 100 loci, 30 samples. Simple snpgeno prep lightly modified from the kinference course notes
-genos <- array(data = sample(c(0,1,2,3), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),dim = c(100, 30))
-Locus <- paste("locus_", 1:100, sep = "")
-newLocusData <- data.frame(thingOne.l = runif(nrow(genos)), thingTwo.l = runif(nrow(genos)), thingThree.l = runif(nrow(genos)))
-Our_sample <- paste("sample_", 1:30, sep = "")
+genos <- array(data = sample(c(1,2,3,4), 3000, prob = c(0.35, 0.4, 0.24, 0.01), replace = TRUE),dim = c(100, 30))
+Locus <- paste("locus_", 1:ncol(genos), sep = "")
+newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)), thingThree.l = runif(ncol(genos)))
+Our_sample <- paste("sample_", 1:nrow(genos), sep = "")
 
-newSampleData <- data.frame(thingOne.s = runif(ncol(genos)),thingTwo.s = runif(ncol(genos)))
-## smallsnpg4 <- snpgeno.snpgds(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData)
-smallsnpg3 <- snpgeno.snpgds6(x = genos, Locus = Locus, Our_sample = Our_sample, locinfo = newLocusData, info = newSampleData,
-                              way = 3)
+newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
+
+smallsnpg3 <- snpgeno( x = genos, diplos = genotypes4_ambig,
+                       locinfo = cbind(Locus, newLocusData),
+                       info = cbind(Our_sample, newSampleData),
+                      allow_nonchar = TRUE)
+smallsnpg3 <- est_ALF_ABO_quick(smallsnpg3)
+
 ## just to prove it can be kinferred:
 smallsnpg3a <- kin_power(smallsnpg3, k = 0.5)
-smallsnpg3b <- prepare_PLOD_SPA(smallsnpg3a)
 
-thePLODs3 <- find_HSPs(smallsnpg3b, limit_pairs = choose(nrow(smallsnpg3b),2), keep_thresh = -20)
-## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+thePLODs3 <- find_HSPs(smallsnpg3a, limit_pairs = choose(nrow(smallsnpg3a),2), keep_thresh = -20)
+## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
 ## refPLODs3 <- thePLODs3
 ## save(refPLODs3, file = "smallsnpg3_referencePLODs.Rda")
 
