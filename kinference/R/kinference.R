@@ -3442,7 +3442,6 @@ function(snpg, hist_pars=list(), showPlot = TRUE) {
     ilglk_manual <- colSums( lp)
   }
 
-  ## note that null density assumes 4-way
   dens_SPA <- renorm_SPA( K, dK, ddK, return='func', already_vectorized=TRUE)
 
   if( isFALSE( hist_pars)) {
