@@ -4,7 +4,7 @@
 
 library(atease)
 library(kinference)
-library(gbasics) ## shouldn't be necessary to do this manually; hack for now to get in snpgeno.default
+library(gbasics) ## shouldn't be necessary to do this manually
 library(mvbutils)
 
 shanesComp <- Sys.info()["nodename"] == "pacific-hf"  ## because !Shane doesn't have the CSIRO datasets
@@ -195,11 +195,11 @@ thePLODs4 <- find_HSPs(smallsnpg4b, limit_pairs = choose(nrow(smallsnpg4b),2), k
 ## test w/o independent prepare_PLOD_SPA:
 expect_silent({ find_HSPs(smallsnpg4a, limit_pairs = choose(nrow(smallsnpg4b),2), keep_thresh = -20) } )
 
-## run once in November 2023, our benchmark of 'correct', yea, unto eternity:
+## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
 ## refPLODs4 <- thePLODs4
 ## save(refPLODs4, file = "smallsnpg4_referencePLODs.Rda")
 
-base::load("smallsnpg4_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+base::load("smallsnpg4_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load.
 expect_true(all.equal(refPLODs4, thePLODs4, check.attributes = FALSE))
 
 ## test auto-generation of snerr by kin_power in cases where it's absent
@@ -232,7 +232,7 @@ thePLODs6 <- find_HSPs(smallsnpg6b, limit_pairs = choose(nrow(smallsnpg4b),2), k
 ## refPLODs6 <- thePLODs6
 ## save(refPLODs6, file = "smallsnpg6_referencePLODs.Rda")
 
-    base::load("smallsnpg6_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("smallsnpg6_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refPLODs6, thePLODs6, check.attributes = FALSE))
 
 ## now, 3-way. Build a 4-way dataset, then kinfer it 3-way via useN
@@ -260,7 +260,7 @@ thePLODs3 <- find_HSPs(smallsnpg3a, limit_pairs = choose(nrow(smallsnpg3a),2), k
 ## refPLODs3 <- thePLODs3
 ## save(refPLODs3, file = "smallsnpg3_referencePLODs.Rda")
 
-    base::load("smallsnpg3_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("smallsnpg3_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refPLODs3, thePLODs3, check.attributes = FALSE))
     ## rm(list = ls() )
 
@@ -458,15 +458,16 @@ if(shanesComp) {
     ## refSBT6and4s <- theSBT6and4s
     ## save(refSBT6and4s, file = "SBT_reference6and4s.Rda")
 
-    base::load("SBT_reference6and4s.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_reference6and4s.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBT6and4s, theSBT6and4s, check.attributes = FALSE))
 
+    geno2019@locinfo$useN <- ifelse( geno2019@locinfo$use6, 6, 4)
     theSBTilglks <- ilglk_geno(geno2019)
     ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
     ## refSBTilglks <- theSBTilglks
     ## save(refSBTilglks, file = "SBT_referenceilglks.Rda")
 
-    base::load("SBT_referenceilglks.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referenceilglks.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTilglks, theSBTilglks, check.attributes = FALSE))
 
     geno2019 <- geno2019[theSBTilglks > -1680 & theSBTilglks < -1280 ,]
@@ -476,7 +477,7 @@ if(shanesComp) {
     ## refSBThetzpoors <- theSBThetzpoors
     ## save(refSBThetzpoors, file = "SBT_referencehetzpoors.Rda")
 
-    base::load("SBT_referencehetzpoors.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencehetzpoors.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBThetzpoors, theSBThetzpoors, check.attributes = FALSE))
 
     geno2019 <- geno2019[theSBThetzpoors > 0.18 & theSBThetzpoors < 0.27 ,]
@@ -486,14 +487,11 @@ if(shanesComp) {
     ## refSBThetzriches <- theSBThetzriches
     ## save(refSBThetzriches, file = "SBT_referencehetzriches.Rda")
 
-    base::load("SBT_referencehetzriches.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencehetzriches.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBThetzriches, theSBThetzriches, check.attributes = FALSE))
 
     geno2019 <- geno2019[theSBThetzriches > 0.19 & theSBThetzriches < 0.28 ,]
 
-    geno2019@locinfo$useN <- NaN  ## because 2019 pre-dates 'useN' by default
-    geno2019@locinfo$useN[geno2019@locinfo$use6 == TRUE] <- 6
-    geno2019@locinfo$useN[geno2019@locinfo$use6 == FALSE] <- 4
     geno2019 <- kin_power(geno2019, k = 0.5)
     geno2019 <- prepare_PLOD_SPA(geno2019)
 
@@ -529,7 +527,7 @@ if(shanesComp) {
     ## refSBTPLODs <- theSBTPLODs
     ## save(refSBTPLODs, file = "SBT_referencePLODs.Rda")
 
-    base::load("SBT_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTPLODs, theSBTPLODs, check.attributes = FALSE))
 
     theSBTPOPs <- find_POPs(geno2019, keep_thresh = 0.91)
@@ -539,7 +537,7 @@ if(shanesComp) {
 
     ## theSBTlglkPOPs <- find_POPs_lglk(geno2019, gerr = 0.01, keep_thresh = 50)
 
-    base::load("SBT_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencePOPs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTPOPs, theSBTPOPs, check.attributes = FALSE))
 
     theSBTwtsame <- split_FSPs_from_POPs(geno2019, candiPOPs = refSBTPOPs, gerr = 0.01)
@@ -547,7 +545,7 @@ if(shanesComp) {
     ## refSBTwtsame <- theSBTwtsame
     ## save(refSBTwtsame, file = "SBT_referencewtsame.Rda")
 
-    base::load("SBT_referencewtsame.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencewtsame.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTwtsame, theSBTwtsame, check.attributes = FALSE))
 
     theSBTwpsex <- split_FSPs_from_HSPs(geno2019, candipairs = refSBTPOPs)
@@ -555,7 +553,7 @@ if(shanesComp) {
     ## refSBTwpsex <- theSBTwpsex
     ## save(refSBTwpsex, file = "SBT_referencewpsex.Rda")
 
-    base::load("SBT_referencewpsex.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencewpsex.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTwpsex, theSBTwpsex, check.attributes = FALSE))
 
     theSBTvarhtp <- var_PLOD_kin(geno2019@locinfo, emp_V_HSP = 900, n_meio = 3)
@@ -563,7 +561,7 @@ if(shanesComp) {
     ## refSBTvarhtp <- theSBTvarhtp
     ## save(refSBTvarhtp, file = "SBT_referencevarhtp.Rda")
 
-    base::load("SBT_referencevarhtp.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencevarhtp.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTvarhtp, theSBTvarhtp, check.attributes = FALSE))
 
     theSBTPLODST <- split_HSPs_from_HTPs(geno2019, candipairs = theSBTPLODs)
@@ -571,7 +569,7 @@ if(shanesComp) {
     ## refSBTPLODST <- theSBTPLODST
     ## save(refSBTPLODST, file = "SBT_referencePLODST.Rda")
 
-    base::load("SBT_referencePLODST.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SBT_referencePLODST.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSBTPLODST, theSBTPLODST, check.attributes = FALSE))
 }
 
@@ -589,42 +587,41 @@ if(shanesComp) {
     ## refGGar6and4s <- theGGar6and4s
     ## save(refGGar6and4s, file = "GGar_reference6and4s.Rda")
 
-    base::load("GGar_reference6and4s.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_reference6and4s.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGar6and4s, theGGar6and4s, check.attributes = FALSE))
 
+    ggarnear2@locinfo$useN <- ifelse( ggarnear2@locinfo$use6 == 6, 6, 4)
+
     theGGarilglks <- ilglk_geno(ggarnear2)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
     ## refGGarilglks <- theGGarilglks
     ## save(refGGarilglks, file = "GGar_referenceilglks.Rda")
 
-    base::load("GGar_referenceilglks.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referenceilglks.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarilglks, theGGarilglks, check.attributes = FALSE))
 
-    ggarnear2 <- ggarnear2[theGGarilglks > -1150 & theGGarilglks < -950 ,]
+    ggarnear2 <- ggarnear2[theGGarilglks > -1100 & theGGarilglks < -1000 ,]
 
     theGGarhetzpoors <- hetzminoo_fancy(ggarnear2, 'poor')
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
     ## refGGarhetzpoors <- theGGarhetzpoors
     ## save(refGGarhetzpoors, file = "GGar_referencehetzpoors.Rda")
 
-    base::load("GGar_referencehetzpoors.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencehetzpoors.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarhetzpoors, theGGarhetzpoors, check.attributes = FALSE))
 
     ggarnear2 <- ggarnear2[theGGarhetzpoors > 0.30 & theGGarhetzpoors < 0.36 ,]
 
     theGGarhetzriches <- hetzminoo_fancy(ggarnear2, 'rich')
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
     ## refGGarhetzriches <- theGGarhetzriches
     ## save(refGGarhetzriches, file = "GGar_referencehetzriches.Rda")
 
-    base::load("GGar_referencehetzriches.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencehetzriches.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarhetzriches, theGGarhetzriches, check.attributes = FALSE))
 
     ggarnear2 <- ggarnear2[theGGarhetzriches > 0.32 & theGGarhetzriches < 0.37 ,]
 
-    ggarnear2@locinfo$useN <- NaN  ## because 2019 pre-dates 'useN' by default
-    ggarnear2@locinfo$useN[ggarnear2@locinfo$use6 == TRUE] <- 6
-    ggarnear2@locinfo$useN[ggarnear2@locinfo$use6 == FALSE] <- 4
     ggarnear2 <- kin_power(ggarnear2, k = 0.5)
     ggarnear2 <- prepare_PLOD_SPA(ggarnear2)
 
@@ -640,10 +637,10 @@ if(shanesComp) {
     ## Now, let's check the consistency of our results, only for those animals
     ## involved in a high PLOD pair
     base::load("GGar_highPLODs.Rda")
-    ggarnear2 <- ggarnear2[ijs,]
+    ## ggarnear2 <- ggarnear2[ijs,]
 
     theGGardups <- find_duplicates(ggarnear2, max_diff_loci = 200)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
     ## refGGardups <- theGGardups
     ## save(refGGardups, file = "GGar_referencedups.Rda")
 
@@ -659,7 +656,7 @@ if(shanesComp) {
     ## refGGarPLODs <- theGGarPLODs
     ## save(refGGarPLODs, file = "GGar_referencePLODs.Rda")
 
-    base::load("GGar_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarPLODs, theGGarPLODs, check.attributes = FALSE))
 
     theGGarPOPs <- find_POPs(ggarnear2, keep_thresh = 0.91)
@@ -667,7 +664,7 @@ if(shanesComp) {
     ## refGGarPOPs <- theGGarPOPs
     ## save(refGGarPOPs, file = "GGar_referencePOPs.Rda")
 
-    base::load("GGar_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencePOPs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarPOPs, theGGarPOPs, check.attributes = FALSE))
 
     theGGarwtsame <- split_FSPs_from_POPs(ggarnear2, candiPOPs = theGGarPOPs, gerr = 0.01)
@@ -675,7 +672,7 @@ if(shanesComp) {
     ## refGGarwtsame <- theGGarwtsame
     ## save(refGGarwtsame, file = "GGar_referencewtsame.Rda")
 
-    base::load("GGar_referencewtsame.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencewtsame.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarwtsame, theGGarwtsame, check.attributes = FALSE))
 
     theGGarwpsex <- split_FSPs_from_HSPs(ggarnear2, candipairs = theGGarPOPs)
@@ -683,7 +680,7 @@ if(shanesComp) {
     ## refGGarwpsex <- theGGarwpsex
     ## save(refGGarwpsex, file = "GGar_referencewpsex.Rda")
 
-    base::load("GGar_referencewpsex.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencewpsex.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarwpsex, theGGarwpsex, check.attributes = FALSE))
 
     theGGarvarhtp <- var_PLOD_kin(ggarnear2@locinfo, emp_V_HSP = 900, n_meio = 3)
@@ -691,7 +688,7 @@ if(shanesComp) {
     ## refGGarvarhtp <- theGGarvarhtp
     ## save(refGGarvarhtp, file = "GGar_referencevarhtp.Rda")
 
-    base::load("GGar_referencevarhtp.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencevarhtp.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarvarhtp, theGGarvarhtp, check.attributes = FALSE))
 
     theGGarPLODST <- split_HSPs_from_HTPs(ggarnear2, candipairs = theGGarPLODs)
@@ -699,7 +696,7 @@ if(shanesComp) {
     ## refGGarPLODST <- theGGarPLODST
     ## save(refGGarPLODST, file = "GGar_referencePLODST.Rda")
 
-    base::load("GGar_referencePLODST.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GGar_referencePLODST.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGGarPLODST, theGGarPLODST, check.attributes = FALSE))
 }
 
@@ -715,15 +712,17 @@ if(shanesComp) {
     ## refGNS6and4s <- theGNS6and4s
     ## save(refGNS6and4s, file = "GNS_reference6and4s.Rda")
 
-    base::load("GNS_reference6and4s.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_reference6and4s.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNS6and4s, theGNS6and4s, check.attributes = FALSE))
+
+    gns14@locinfo$useN <- ifelse( gns14@locinfo$use6, 6, 4)
 
     theGNSilglks <- ilglk_geno(gns14)
     ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
     ## refGNSilglks <- theGNSilglks
     ## save(refGNSilglks, file = "GNS_referenceilglks.Rda")
 
-    base::load("GNS_referenceilglks.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referenceilglks.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSilglks, theGNSilglks, check.attributes = FALSE))
 
     gns14 <- gns14[theGNSilglks > -1740 & theGNSilglks < -1560 ,]
@@ -733,7 +732,7 @@ if(shanesComp) {
     ## refGNShetzpoors <- theGNShetzpoors
     ## save(refGNShetzpoors, file = "GNS_referencehetzpoors.Rda")
 
-    base::load("GNS_referencehetzpoors.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencehetzpoors.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNShetzpoors, theGNShetzpoors, check.attributes = FALSE))
 
     gns14 <- gns14[theGNShetzpoors > 0.24 & theGNShetzpoors < 0.3 ,]
@@ -743,14 +742,11 @@ if(shanesComp) {
     ## refGNShetzriches <- theGNShetzriches
     ## save(refGNShetzriches, file = "GNS_referencehetzriches.Rda")
 
-    base::load("GNS_referencehetzriches.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencehetzriches.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNShetzriches, theGNShetzriches, check.attributes = FALSE))
 
     gns14 <- gns14[theGNShetzriches > 0.28 & theGNShetzriches < 0.35 ,]
 
-    gns14@locinfo$useN <- NaN  ## because 2019 pre-dates 'useN' by default
-    gns14@locinfo$useN[gns14@locinfo$use6 == TRUE] <- 6
-    gns14@locinfo$useN[gns14@locinfo$use6 == FALSE] <- 4
     gns14 <- kin_power(gns14, k = 0.5)
     gns14 <- prepare_PLOD_SPA(gns14)
 
@@ -785,7 +781,7 @@ if(shanesComp) {
     ## refGNSPLODs <- theGNSPLODs
     ## save(refGNSPLODs, file = "GNS_referencePLODs.Rda")
 
-    base::load("GNS_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSPLODs, theGNSPLODs, check.attributes = FALSE))
 
     theGNSPOPs <- find_POPs(gns14, keep_thresh = 0.91)
@@ -793,7 +789,7 @@ if(shanesComp) {
     ## refGNSPOPs <- theGNSPOPs
     ## save(refGNSPOPs, file = "GNS_referencePOPs.Rda")
 
-    base::load("GNS_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencePOPs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSPOPs, theGNSPOPs, check.attributes = FALSE))
 
     theGNSwtsame <- split_FSPs_from_POPs(gns14, candiPOPs = theGNSPOPs, gerr = 0.01)
@@ -801,7 +797,7 @@ if(shanesComp) {
     ## refGNSwtsame <- theGNSwtsame
     ## save(refGNSwtsame, file = "GNS_referencewtsame.Rda")
 
-    base::load("GNS_referencewtsame.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencewtsame.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSwtsame, theGNSwtsame, check.attributes = FALSE))
 
     theGNSwpsex <- split_FSPs_from_HSPs(gns14, candipairs = theGNSPOPs)
@@ -809,7 +805,7 @@ if(shanesComp) {
     ## refGNSwpsex <- theGNSwpsex
     ## save(refGNSwpsex, file = "GNS_referencewpsex.Rda")
 
-    base::load("GNS_referencewpsex.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencewpsex.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSwpsex, theGNSwpsex, check.attributes = FALSE))
 
     theGNSvarhtp <- var_PLOD_kin(gns14@locinfo, emp_V_HSP = 900, n_meio = 3)
@@ -817,7 +813,7 @@ if(shanesComp) {
     ## refGNSvarhtp <- theGNSvarhtp
     ## save(refGNSvarhtp, file = "GNS_referencevarhtp.Rda")
 
-    base::load("GNS_referencevarhtp.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencevarhtp.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSvarhtp, theGNSvarhtp, check.attributes = FALSE))
 
     theGNSPLODST <- split_HSPs_from_HTPs(gns14, candipairs = theGNSPLODs)
@@ -825,7 +821,7 @@ if(shanesComp) {
     ## refGNSPLODST <- theGNSPLODST
     ## save(refGNSPLODST, file = "GNS_referencePLODST.Rda")
 
-    base::load("GNS_referencePLODST.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("GNS_referencePLODST.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refGNSPLODST, theGNSPLODST, check.attributes = FALSE))
 }
 
@@ -857,7 +853,7 @@ if(shanesComp) {
     ## refABT6and4s <- theABT6and4s
     ## save(refABT6and4s, file = "ABT_reference6and4s.Rda")
 
-    base::load("ABT_reference6and4s.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_reference6and4s.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABT6and4s, theABT6and4s, check.attributes = FALSE))
 
     ## At <- ABT[ABT@info$STRATA %in% cq(At6, At7, At8),]
@@ -874,7 +870,7 @@ if(shanesComp) {
     ## refABTilglks <- theABTilglks
     ## save(refABTilglks, file = "ABT_referenceilglks.Rda")
 
-    base::load("ABT_referenceilglks.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referenceilglks.Rda")  ## avoid conflict with renv::load.
     ## Does fixing the misalignment also fix the 'tiny troublemakers' bug?
     ## tiny_troublemakers <- is.nan(theABTilglks) | is.nan(refABTilglks)
     ## expect_true(sum(tiny_troublemakers) < 10)
@@ -890,7 +886,7 @@ if(shanesComp) {
     ## refABThetzpoors <- theABThetzpoors
     ## save(refABThetzpoors, file = "ABT_referencehetzpoors.Rda")
 
-    base::load("ABT_referencehetzpoors.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencehetzpoors.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABThetzpoors, theABThetzpoors, check.attributes = FALSE))
 
     ABT <- ABT[theABThetzpoors > 0.105 & theABThetzpoors < 0.180 ,]
@@ -900,7 +896,7 @@ if(shanesComp) {
     ## refABThetzriches <- theABThetzriches
     ## save(refABThetzriches, file = "ABT_referencehetzriches.Rda")
 
-    base::load("ABT_referencehetzriches.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencehetzriches.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABThetzriches, theABThetzriches, check.attributes = FALSE))
 
     ABT <- ABT[theABThetzriches > 0.143 & theABThetzriches < 0.210 ,]
@@ -941,7 +937,7 @@ if(shanesComp) {
     ## refABTPLODs <- theABTPLODs
     ## save(refABTPLODs, file = "ABT_referencePLODs.Rda")
 
-    base::load("ABT_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTPLODs, theABTPLODs, check.attributes = FALSE))
 
     ## investigate the effect of the misalignment bug on the kin sets used in the billycart: #####################################
@@ -966,13 +962,13 @@ if(shanesComp) {
     originalHSPs <- read.csv("~/Dropbox/CSIRO/Reports/ABT all-ages kinference/CapCluster/halfsibs_allfish.csv")
     originalHSPs$pairID <- paste(originalHSPs$iTargetID, originalHSPs$jTargetID)
 
-    table(originalHSPs$pairID %in% HSPs$pairID) ## 12 TRUE, 225 FALSE
+    table(originalHSPs$pairID %in% HSPs$pairID)
 
     originalPOPs <- read.csv("~/Dropbox/CSIRO/Reports/ABT all-ages kinference/CapCluster/pops_allfish.csv")
     originalFSPs <- read.csv("~/Dropbox/CSIRO/Reports/ABT all-ages kinference/CapCluster/fullsibs_allfish.csv")
     originalPOPs$pairID <- paste(originalPOPs$iTargetID, originalPOPs$jTargetID)
     originalFSPs$pairID <- paste(originalFSPs$iTargetID, originalFSPs$jTargetID)
-    table(FSPsOrPOPs$pairID %in% c(originalPOPs$pairID, originalFSPs$pairID) ) ## 2 TRUE, 47 FALSE
+    table(FSPsOrPOPs$pairID %in% c(originalPOPs$pairID, originalFSPs$pairID) )
 
     ## continue with unit testing ################################################################################################
     theABTPOPs <- find_POPs(ABT, limit_pairs = 400, keep_thresh = 0.91)
@@ -980,7 +976,7 @@ if(shanesComp) {
     ## refABTPOPs <- theABTPOPs
     ## save(refABTPOPs, file = "ABT_referencePOPs.Rda")
 
-    base::load("ABT_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencePOPs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTPOPs, theABTPOPs, check.attributes = FALSE))
 
     theABTwtsame <- split_FSPs_from_POPs(ABT, candiPOPs = theABTPLODs[theABTPLODs$PLOD > 150,], gerr = 0.005)
@@ -988,7 +984,7 @@ if(shanesComp) {
     ## refABTwtsame <- theABTwtsame
     ## save(refABTwtsame, file = "ABT_referencewtsame.Rda")
 
-    base::load("ABT_referencewtsame.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencewtsame.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTwtsame, theABTwtsame, check.attributes = FALSE))
     ## There's a 'call' attribute for both wtsames, and all.equal tests for equality of attributes (!)
     ## the ref was called manually, but the 'theABTwtsame' was called by tinytest::test_all, so these were in conflict.
@@ -1012,7 +1008,7 @@ if(shanesComp) {
     ## refABTwpsex <- theABTwpsex
     ## save(refABTwpsex, file = "ABT_referencewpsex.Rda")
 
-    base::load("ABT_referencewpsex.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencewpsex.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTwpsex, theABTwpsex, check.attributes = FALSE))
 
     theABTvarhtp <- var_PLOD_kin(ABT@locinfo, emp_V_HSP = 900, n_meio = 3)
@@ -1020,7 +1016,7 @@ if(shanesComp) {
     ## refABTvarhtp <- theABTvarhtp
     ## save(refABTvarhtp, file = "ABT_referencevarhtp.Rda")
 
-    base::load("ABT_referencevarhtp.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencevarhtp.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTvarhtp, theABTvarhtp, check.attributes = FALSE))
 
     theABTPLODST <- split_HSPs_from_HTPs(ABT, candipairs = theABTPLODs)
@@ -1028,7 +1024,7 @@ if(shanesComp) {
     ## refABTPLODST <- theABTPLODST
     ## save(refABTPLODST, file = "ABT_referencePLODST.Rda")
 
-    base::load("ABT_referencePLODST.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("ABT_referencePLODST.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refABTPLODST, theABTPLODST, check.attributes = FALSE))
 
     ## ## one-off split_HSPs_from_HTPs testing:
@@ -1070,15 +1066,15 @@ if(shanesComp) {
     ## refSHS6and4s <- theSHS6and4s
     ## save(refSHS6and4s, file = "SHS_reference6and4s.Rda")
 
-    base::load("SHS_reference6and4s.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_reference6and4s.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHS6and4s, theSHS6and4s, check.attributes = FALSE))
 
     theSHSilglks <- ilglk_geno(SHS)
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
+    ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
     ## refSHSilglks <- theSHSilglks
     ## save(refSHSilglks, file = "SHS_referenceilglks.Rda")
 
-    base::load("SHS_referenceilglks.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referenceilglks.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSilglks, theSHSilglks, check.attributes = FALSE))
 
     SHS <- SHS[theSHSilglks > -1450 & theSHSilglks < -1260 ,]
@@ -1087,11 +1083,11 @@ if(shanesComp) {
 
     theSHShetzpoors <- hetzminoo_fancy(SHS, 'poor')
 
-    ## run once in January 2023, our benchmark of 'correct', yea, unto eternity:
-    ## refSHShetzpoors <- theSHShetzpoors
-    ## save(refSHShetzpoors, file = "SHS_referencehetzpoors.Rda")
+    ## run once in January 2024, our benchmark of 'correct', yea, unto eternity:
+    refSHShetzpoors <- theSHShetzpoors
+    save(refSHShetzpoors, file = "SHS_referencehetzpoors.Rda")
 
-    base::load("SHS_referencehetzpoors.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencehetzpoors.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHShetzpoors, theSHShetzpoors, check.attributes = FALSE))
 
     SHS <- SHS[theSHShetzpoors > 0.14 & theSHShetzpoors < 0.19 ,]
@@ -1101,7 +1097,7 @@ if(shanesComp) {
     ## refSHShetzriches <- theSHShetzriches
     ## save(refSHShetzriches, file = "SHS_referencehetzriches.Rda")
 
-    base::load("SHS_referencehetzriches.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencehetzriches.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHShetzriches, theSHShetzriches, check.attributes = FALSE))
 
     SHS <- SHS[theSHShetzriches > 0.212 & theSHShetzriches < 0.275 ,]
@@ -1139,7 +1135,7 @@ if(shanesComp) {
     ## refSHSPLODs <- theSHSPLODs
     ## save(refSHSPLODs, file = "SHS_referencePLODs.Rda")
 
-    base::load("SHS_referencePLODs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencePLODs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSPLODs, theSHSPLODs, check.attributes = FALSE))
 
     theSHSPOPs <- find_POPs(SHS, keep_thresh = 0.91)
@@ -1147,7 +1143,7 @@ if(shanesComp) {
     ## refSHSPOPs <- theSHSPOPs
     ## save(refSHSPOPs, file = "SHS_referencePOPs.Rda")
 
-    base::load("SHS_referencePOPs.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencePOPs.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSPOPs, theSHSPOPs, check.attributes = FALSE))
 
     theSHSwtsame <- split_FSPs_from_POPs(SHS, candiPOPs = theSHSPOPs, gerr = 0.01)
@@ -1155,7 +1151,7 @@ if(shanesComp) {
     ## refSHSwtsame <- theSHSwtsame
     ## save(refSHSwtsame, file = "SHS_referencewtsame.Rda")
 
-    base::load("SHS_referencewtsame.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencewtsame.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSwtsame, theSHSwtsame, check.attributes = FALSE))
 
     theSHSwpsex <- split_FSPs_from_HSPs(SHS, candipairs = theSHSPOPs)
@@ -1163,7 +1159,7 @@ if(shanesComp) {
     ## refSHSwpsex <- theSHSwpsex
     ## save(refSHSwpsex, file = "SHS_referencewpsex.Rda")
 
-    base::load("SHS_referencewpsex.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencewpsex.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSwpsex, theSHSwpsex, check.attributes = FALSE))
 
     theSHSvarhtp <- var_PLOD_kin(SHS@locinfo, emp_V_HSP = 900, n_meio = 3)
@@ -1171,7 +1167,7 @@ if(shanesComp) {
     ## refSHSvarhtp <- theSHSvarhtp
     ## save(refSHSvarhtp, file = "SHS_referencevarhtp.Rda")
 
-    base::load("SHS_referencevarhtp.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencevarhtp.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSvarhtp, theSHSvarhtp, check.attributes = FALSE))
 
     theSHSPLODST <- split_HSPs_from_HTPs(SHS, candipairs = theSHSPLODs)
@@ -1179,6 +1175,6 @@ if(shanesComp) {
     ## refSHSPLODST <- theSHSPLODST
     ## save(refSHSPLODST, file = "SHS_referencePLODST.Rda")
 
-    base::load("SHS_referencePLODST.Rda")  ## base:: to avoid a conflict with renv::load. What kind of monster overloads 'load'?!?
+    base::load("SHS_referencePLODST.Rda")  ## avoid conflict with renv::load.
     expect_true(all.equal(refSHSPLODST, theSHSPLODST, check.attributes = FALSE))
 }
