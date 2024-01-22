@@ -49,24 +49,66 @@ The statistic for \code{split_FSPs_from_POPs} - which isn't as powerful as I'd h
 }
 }
 \examples{
-# pops_or_fsps <- find_POPs( mysnpg, ...)
-## do histograms etc to find likely ones
-# discro <- split_FSPs_from_POPs( mysngp, pops_or_fsps \%where\% (wpsex < 0.042), gerr=0.01)
-# hist( discro, nc=30, col='grey')
-# abline( v=discro@E_POP, col='red')
-# text( discro@E_POP, par( 'usr')[4], 'POP', col='red', pos=1) # below
-# abline( v=discro@E_FSP, col='lightblue')
-# text( discro@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
-# abline( v=discro@E_HSP, col='pink', lty='dashed')
-# text( discro@E_HSP, par( 'usr')[4], 'HSP', col='pink', pos=1) # below
-###
-# h_or_f <- find_HSPs( mysnpg, ...)
-## do histograms etc to find likely sib pairs
-# discro2 <- split_FSPs_from_HSPs(  mysngp, h_or_f \%where\% (PLOD > 55))
-# hist( discro2$PLOD_FH, nc=20, col='grey') # HSPs "should" be < 0, FSPs > 0
-# abline( v=discro2@E_HSP, col='orange')
-# text( discro2@E_HSP, par( 'usr')[4], 'POP', col='orange', pos=1) # below
-# abline( v=discro2@E_FSP, col='lightblue')
-# text( discro2@E_FSP, par( 'usr')[4], 'FSP', col='lightblue', pos=1) # below
+data( bluefin)
+## stripped-down data-cleaning for example - see the
+## vignette for approach for real data!
+pvals <- check6and4( bluefin, thresh_pchisq_6and4 = c( 0.001, 0.0001))
+bluefin_1 <- bluefin[ , pvals$pval4 > 0.01]
+ilglks <- ilglk_geno( bluefin_1)
+bluefin_2 <- bluefin_1[ ilglks > -1050,]
+bluefin_3 <- est_ALF_ABO_quick( bluefin_2)
+bluefin_4 <- bluefin_3[ , bluefin_3@locinfo$pbonzer[,"B"] > 0.02]
+
+bluefin_5 <- kin_power( bluefin_4, k = 0.5)
+dups <- find_duplicates( bluefin_5, max_diff_loci = 20)
+bluefin_6 <- bluefin_5[ -c(drop_dups_pairwise_equiv( dups)) ,]
+
+## via find_HSPs for isolated split of 'FSPsOrPOPs'
+hsps <- find_HSPs( bluefin_6, keep_thresh = 0)
+
+histoPLOD( hsps, log = FALSE, lb = 0, fullsib_cut = 70, HSP_distro_show
+= TRUE)
+## note the gap between PLOD = 60 and PLOD = 75, separating likely HSPs
+## from likely POPs and FSPs
+FSPsOrPOPs <- hsps[ hsps$PLOD > 70,]
+HSPsOrHTPs <- hsps[ hsps$PLOD < 70,] ## implicit >0 from keep_thresh in
+## find_HSPs call
+
+## via find_POPs_lglk for 'laser-focus on POPs'
+maybePOPs <- find_POPs_lglk( bluefin_6, gerr = 0.01, keep_thresh = -30)
+hist(maybePOPs$PLOD, breaks = 20)
+abline( v = maybePOPs@mean_POP, col = kinPalette()["POP"], lwd = 2)
+abline( v = maybePOPs@mean_UP, col = kinPalette()["UP"], lwd = 2)
+## note the 6 pairs clustered around the expected mean PLOD for
+## POPs (all > 60). They are probably POPs, but may include FSPs.
+maybePOPs <- maybePOPs[ maybePOPs$PLOD > 60,]
+
+## split_FSPs_from_POPs
+### using FSPsOrPOPs
+splitFSPsOrPOPs <- split_FSPs_from_POPs(bluefin_6, candiPOPs = FSPsOrPOPs, gerr = 0.01)
+hist(splitFSPsOrPOPs$PLOD)
+## add line of expected PLOD if FSP
+abline( v = splitFSPsOrPOPs@E_FSP, lwd = 2, col = kinPalette()["FSP"])
+## add line of expected PLOD if POP
+abline( v = splitFSPsOrPOPs@E_POP, lwd = 2, col = kinPalette()["POP"])
+## The expected PLOD for true POPs is negative, and for true FSPs is positive
+
+### using maybePOPs
+splitmaybePOPs <- split_FSPs_from_POPs(bluefin_6, candiPOPs = maybePOPs, gerr = 0.01)
+hist(splitmaybePOPs$PLOD)
+## add line of expected PLOD if FSP
+abline( v = splitmaybePOPs@E_FSP, lwd = 2, col = kinPalette()["FSP"])
+## add line of expected PLOD if POP
+abline( v = splitmaybePOPs@E_POP, lwd = 2, col = kinPalette()["POP"])
+## The expected PLOD for true POPs is negative, and for true FSPs is positive
+
+## split_HSPs_from_HTPs
+splitHSPsOrHTPs <- split_HSPs_from_HTPs( bluefin_6, HSPsOrHTPs)
+hist(splitHSPsOrHTPs$PLOD, breaks = 15)
+## add line of expected PLOD if HSP
+abline( v = splitHSPsOrHTPs@E_HSP, lwd = 2, col = kinPalette()["HSP"])
+## add line of expected PLOD if HTP
+abline( v = splitHSPsOrHTPs@E_HTP, lwd = 2, col = kinPalette()["HTP"])
+## the expected PLOD for true HSPs is positive, and for true HTPs is negative
 }
 \keyword{misc}

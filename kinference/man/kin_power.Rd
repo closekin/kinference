@@ -30,7 +30,13 @@ It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a matrix
 \value{\code{snpgeno} object with augmented columns in "locinfo" attr.
 }
 \examples{
-## Need some examples!
-# See vignette for now
+data( dropbears)
+## not run:
+## fails because of missing pre-calculated objects necessary for kin-finding:
+## hsps <- find_HSPs( dropbears, keep_thresh = 0)
+
+dropbears_1 <- kin_power( dropbears, k = 0.5)
+## works now
+hsps <- find_HSPs( dropbears_1, keep_thresh = 0)
 }
 \keyword{misc}

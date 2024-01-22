@@ -45,6 +45,14 @@ Despite the name, \emph{you} still have to supply sensible values for a couple o
 \seealso{\code{\link{kin_power}}, \code{\link{var_PLOD_kin}}
 }
 \examples{
-# Better have one...
+data( dropbears)
+dropbears1 <- kin_power( dropbears, k = 0.5)
+hsps <- find_HSPs( dropbears1, keep_thresh = -10)
+PLOD_loghisto( hsps) ## observe HSP - POP gap centred ~ PLOD = 120.
+## Use that air-gap to set fitrange_PLOD.
+thresh <- autopick_threshold( x = dropbears1, kin = hsps, fitrange_PLOD = c(0, 120), FPtol_pairs = 1, use4th = TRUE, plot_bins = 5)
+thresh ## the 2nd order / 3rd order threshold value
+attr(thresh, "info")["Pr_FNeg"] ## the estimated second-order pair
+## false-negative rate, given that threshold
 }
 \keyword{misc}

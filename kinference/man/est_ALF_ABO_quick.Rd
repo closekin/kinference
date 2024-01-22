@@ -21,6 +21,10 @@ est_ALF_ABO_quick(x = NULL, AB, AAO, BBO, OO,
 \seealso{\code{\link{est_ALF_ABCO}}
 }
 \examples{
-# Should have one
+data( dropbears)
+dropbears@locinfo$pbonzer <- NULL ## no population allele frequency
+estimates!
+dropbears <- est_ALF_ABO_quick( dropbears)
+head( dropbears@locinfo$pbonzer)
 }
 \keyword{misc}

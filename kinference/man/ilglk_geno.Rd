@@ -20,6 +20,15 @@ Haven't added any formal uh-oh criteria yet; that could be done via the SPA, as 
 \value{Vector of log-likelihood for each individual; also usually (but optionally), a histogram of log-likelihood values across individuals.
 }
 \examples{
-## Need an example!
+data( bluefin)
+## get rid of really bad loci
+pvals <- check6and4( bluefin, thresh_pchisq_6and4 = c( 0.001, 0.0001))
+bluefin_1 <- bluefin[ , pvals$pval4 > 0.01]
+## check for samples that are not like the others
+ilglks <- ilglk_geno( bluefin_1)
+## looks like anything with a lglk < -1030 is definitely abnormal 
+bluefin_2 <- bluefin_1[ ilglks > -1030,]
+ilglks <- ilglk_geno( bluefin_2) ## much better, but not perfect -
+## see other cleaning steps in the vignette
 }
 \keyword{misc}

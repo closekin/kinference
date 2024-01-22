@@ -155,13 +155,14 @@ genos <- array(data = sample(c(1,2,4,6), 3000, prob = c(0.35, 0.4, 0.24, 0.01), 
 Locus <- paste("locus_", 1:100, sep = "")
 newLocusData <- data.frame(thingOne.l = runif(ncol(genos)), thingTwo.l = runif(ncol(genos)),
                            thingThree.l = runif(ncol(genos)))
-Our_sample <- paste("sample_", 1:30, sep = "")
+locinfo <- cbind( Locus, newLocusData)
 
+Our_sample <- paste("sample_", 1:30, sep = "")
 newSampleData <- data.frame(thingOne.s = runif(nrow(genos)),thingTwo.s = runif(nrow(genos)))
+info <- cbind( Our_sample, newSampleData)
 
 smallsnpg4 <- snpgeno(x = genos, diplos = genotypes6,
-                      info = cbind(Our_sample, newSampleData),
-                      locinfo = cbind(Locus, newLocusData), allow_nonchar = TRUE)
+                      info = info, locinfo = locinfo, allow_nonchar = TRUE)
 
 smallsnpg4@locinfo$pbonzer <- kinference:::re_est_ALF(smallsnpg4)@locinfo$pambig
 smallsnpg4@locinfo$useN <- 4

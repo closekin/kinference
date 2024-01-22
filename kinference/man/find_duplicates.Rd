@@ -116,46 +116,101 @@ A \code{data.frame} with extra attributes (see below) and at least 3 columns: st
 \item{  - bins}{cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.}
 }
 \examples{
-\dontrun{
-## And out-of-date!
-## duplicate checking. ckmini2 has 6 fish where 1,3,4,6 are all identical (zero differing loci).
-## there's only 7 crappy loci and I faked the data for this anyway, so strict identical is needed
-## All-in-one
-#test <- find_duplicates( ckmini2, max=0) # strict identity
-#test
-##  ndiff i j
-##1     0 3 1
-##2     0 4 3
-##3     0 6 4
-## To remove them--- subtlety of keeping ONE from each group
-#droppies <- drop_dups_pairwise_equiv( test[,2:3])
-#droppies # 1, 4, 6
-#ckmini2_nodups <- ckmini2[ -droppies, ]
-## Two-stage
-#first_half <- 1:3
-#second_half <- (1:nrow( ckmini2)) \\
-#test1 <- find_duplicates( ckmini2, subset1=first_half, subset2=first_half, max=0)
-#test1
-##  ndiff i j
-##1     0 3 1
-#droppies1 <- first_half[ drop_dups_pairwise_equiv( test1[,2:3])] # NB must do lookup in subset
-#test2 <- find_duplicates( ckmini2, subset1=second_half, subset2=second_half, max=0)
-#droppies2 <- second_half[ drop_dups_pairwise_equiv( test2[,2:3])] # 4
-## Now check 2nd half vs 1st
-#test2_1 <- find_duplicates( ckmini2,
-#    subset1=first_half \\
-#    subset2=second_half \\
-#    max=0)
-## Simpler since no internal checks. Just remove 2nd-halfers that match something in the 1st-half
-#droppies2_1 <- (second_half \\
-#droppies <- c( droppies1, droppies2, droppies2_1)
-#ckmini2_nodups2 <- ckmini2[ -droppies,]
-## HSPs: comparing everything with itself (not sensible for real data, should take out adults first)
-## set threshold for 1 FP
-#test <- find_HSPs( ckdata, one_in_X_eta=sqr( nrow( ckdata))/2 )
-## POPs: Ad-Ju comps; again 1 FP
-#test <- find_POPs( ckdata, subset1=adults, subset2=juves,
-#    one_in_X_eta=length( adults) * length( juves), rough_n_pairs_to_keep=500)
-}
+## find_duplicates
+
+define_genotypes()
+x <- matrix(sample(c("AAO", "AB", "BBO", "OO"), 10000, TRUE, prob = c(0.2, 0.45, 0.2, 0.15)), nrow = 100, ncol = 100)
+minisnpg <- snpgeno(x = x, diplos = genotypes4_ambig)
+
+## seed some duplicates in. Sample 2 will be a copy of sample 1,
+## and samples 21, 22, and 23 will be an exactly-matching group.
+minisnpg[2,] <- minisnpg[1,]
+minisnpg[ 22,] <- minisnpg[ 23,] <- minisnpg[ 21,]
+
+## seed some inexact duplicates in. Make sample 3 nearly match
+## sample 4, and the same for samples 13 and 14
+minisnpg[4,1:80] <- minisnpg[3,1:80]
+minisnpg[14,1:80] <- minisnpg[13,1:80]
+
+## find exact duplicates
+exact <- find_duplicates( minisnpg, max_diff_loci = 0)
+exact ## finds ij pairs {1, 2} and the group {21, 22, 23}
+## as pairs {21, 22} and {22, 23}
+
+## find (in-)exact duplicates
+inexact <- find_duplicates( minisnpg, max_diff_loci = 25)
+inexact ## finds the exactly-matching pairs as before, plus 
+## the inexactly-matching row pairs {3, 4} and {13, 14} with
+## >0 differences
+
+## to remove duplicates, keeping only one member of each
+## group, use drop_dups_pairwise_equiv
+droppers <- drop_dups_pairwise_equiv( inexact[,2:3])
+droppers ## note that _all but one_ of each _group_ of
+## (near-)duplicates is included in 'droppers'
+
+minisnpg_nodups <- minisnpg[ - droppers,] ## drop all-but-one
+## of each set of duplicates
+
+## find_HSPs (PLOD_HU)
+
+data( bluefin)
+## stripped-down data-cleaning for example - see the
+## vignette for approach for real data!
+pvals <- check6and4( bluefin, thresh_pchisq_6and4 = c( 0.001, 0.0001))
+bluefin_1 <- bluefin[ , pvals$pval4 > 0.01]
+ilglks <- ilglk_geno( bluefin_1)
+bluefin_2 <- bluefin_1[ ilglks > -1050,]
+bluefin_3 <- est_ALF_ABO_quick( bluefin_2)
+bluefin_4 <- bluefin_3[ , bluefin_3@locinfo$pbonzer[,"B"] > 0.02]
+
+bluefin_5 <- kin_power( bluefin_4, k = 0.5)
+dups <- find_duplicates( bluefin_5, max_diff_loci = 20)
+bluefin_6 <- bluefin_5[ -c(drop_dups_pairwise_equiv( dups)) ,]
+hsps <- find_HSPs( bluefin_6, keep_thresh = 0)
+HSP_histo( hsps, lb = 0, fullsib_cut = 75)
+head( hsps) ## PLODs and row numbers for each pair member in bluefin
+hsps@mean_HSP ## mean expected PLOD for true HSPs. mean_UP (unrelated),
+## mean_POP (parent-offspring), mean_FSP (full-sibling) follow the
+## same format
+
+## subset comparisons
+## limit comparisons to those between animals on plate 3 and animals on
+## the other two plates. Useful when, e.g., looking for kinships between
+## adults and juveniles, but not kinships between adults and other
+## adults. For demonstration, treat plate 3 as adults and plates 1 and 2
+## as juveniles (they're not really).
+
+adults <- which( bluefin_6@info$Our_plate == "plate3")
+juvs <- which( bluefin_6@info$Our_plate == "plate1" | bluefin_6@info$Our_plate == "plate2" )
+hsps_subset <- find_HSPs( bluefin_6, subset1 = adults, subset2 = juvs, keep_thresh = 0)
+hsps_subset$iplate <- bluefin_6@info$Our_plate[ hsps_subset$i]
+hsps_subset$jplate <- bluefin_6@info$Our_plate[ hsps_subset$j]
+## all pairs are between a plate 3 fish and a fish on plate 1 or plate 2
+head(hsps_subset)
+
+## find_POPs and find_POPs_lglk
+
+pops <- find_POPs(bluefin_6, keep_thresh = 0.1) 
+## keep_thresh = 0.1 is not magic, but often OK. If you
+## don't see a big spike out to the right of your plot,
+## you should generally set keep_thresh higher
+pops@mean_UP ## expected mean 'wpsex' for unrelated pairs
+pops@var_UP ## expected variance 'wpsex' for unrelated pairs
+hist(pops$wpsex) ## true POPs should have a wpsex near zero, and
+## a nABOO of exactly zero, unless sequencing error has occurred
+with( pops, plot.default( wpsex ~ nABOO))
+## plot the full distribution from binned records
+plot( pops@bins, pops@n_wpsex_in_bin, type = "s")
+## add expected mean wpsex for unrelated pairs
+abline( v = pops@mean_UP, col = kinPalette()["UP"], lwd = 2)
+
+pops_lglk <- find_POPs_lglk(bluefin_6, keep_thresh = 0, gerr = 0.01)
+pops_lglk@mean_UP ## as before
+pops_lglk@mean_POP ## both mean_POP and mean_UP, because E(stat | k = UP) is
+## no longer zero
+
+## plot the full distribution from binned records
+PLOD_loghisto( hsps = pops_lglk, HSP = FALSE, FSP = FALSE)
 }
 \keyword{misc}
