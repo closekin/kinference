@@ -90,6 +90,7 @@ if( getRversion() >= '4.3'){
 library( gbasics)      ## so data objects behave nicely
 library( atease)       ## convenient access to attributes
 library( kinference)
+library( mvbutils)
 kincol <- kinPalette() ## set the kin palette and store colour names for later
 
 data( dropbears)
@@ -504,20 +505,47 @@ Your data will almost certainly need cleaning before you can do the
 kin-finding in Section One. To show how (and, in **Section 3**, _why_),
 we'll use the `bluefin` dataset included in package `kinference`.
 
+## Population allele frequencies
+
+Many of the functions in `kinference` require a `snpgeno` with
+pre-computed population allele frequencies for each locus, stored in
+an object called `pbonzer`. The `bluefin` dataset has its allele
+frequencies pre-computed based on a larger version of the dataset, so
+we won't recompute them, but here's how to do it:
+
+```{r bluefinPbonzers, results = 'hide'}
+data(bluefin)
+## if your data are stored 4-way (most likely)
+## bluefin <- est_ALF_ABO_quick( bluefin)
+
+## if your data are stored 6-way (rare and a bit specialised:
+## 'bluefin' is 6-way, but 'dropbears' is 4-way)
+## bluefin <- est_ALF_6way( bluefin)
+```
+
+Some loci may have an estimated A or B allele frequency of zero, which
+can cause problems. It is best to drop loci with very low estimated A
+or B allele frequencies - they wouldn't be very informative anyway.
+
+```{r bluefindropLoMALFs}
+bluefin <- bluefin[ , bluefin$locinfo$pbonzer[ ,"A"] > 1e-6]
+bluefin <- bluefin[ , bluefin$locinfo$pbonzer[ ,"B"] > 1e-6]
+```
+
 ## Checking for badly-behaved loci
 
-The `bluefin` dataset has 1510 loci. The function `check6and4`
-compares observed genotype frequencies for each locus to the expected
-frequencies under Hardy-Weinberg Equilibrium, giving a P-value for
-each locus. In an abstract perfect dataset, we would expect their
-P-values to be uniformly distributed over the interval [0,1] - so we
-would _expect_ about 0.151 of them to have a P-value less than
-1e-4. In practice, they have _always_ looked "worse than expected" on
-real data, but often this has not mattered downstream. The P-values
-are more to be taken as _relative_ measures of well-behavedness here.
+The `bluefin` dataset, after these tweaks, has 1627 loci. The function
+`check6and4` compares observed genotype frequencies for each locus to
+the expected frequencies under Hardy-Weinberg Equilibrium, giving a
+P-value for each locus. In an abstract perfect dataset, we would
+expect their P-values to be uniformly distributed over the interval
+[0,1] - so we would _expect_ about 0.151 of them to have a P-value
+less than 1e-4. In practice, they have _always_ looked "worse than
+expected" on real data, but often this has not mattered
+downstream. The P-values are more to be taken as _relative_ measures
+of well-behavedness here.
 
 ```{r bluefin6and4}
-data(bluefin)
 pvals <- check6and4(bluefin, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
 ## 'thresh...' values are entirely subjective, and good choices will vary from one dataset
 ## to another. They just control which points get coloured
