@@ -1025,6 +1025,11 @@ function( geno6,
     if( my.all.equal( sort( genotypes4_ambig), sort( diplos))) {
         message("genotypes are stored 4-way. Skipping 6-way GOF tests...")
         do6 <- FALSE
+      if( is.null(geno6@locinfo$snerr)) {
+          snerrmat <- matrix(0, ncol(geno6), 4,
+                             dimnames = list(NULL, c("AA2AO", "AO2AA", "BB2BO", "BO2BB")))
+          geno6@locinfo$snerr <- snerrmat
+      }
     } else {
         message("genotypes are stored 6-way. Doing both 6-way and 4-way GOF tests...")
         do6 <- TRUE
