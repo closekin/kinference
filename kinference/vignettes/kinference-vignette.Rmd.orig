@@ -511,7 +511,7 @@ Many of the functions in `kinference` require a `snpgeno` with
 pre-computed population allele frequencies for each locus, stored in
 an object called `pbonzer`. The `bluefin` dataset has its allele
 frequencies pre-computed based on a larger version of the dataset, so
-we won't recompute them, but here's how to do it:
+we won't recompute them. For demonstration, here's how to do it:
 
 ```{r bluefinPbonzers, results = 'hide'}
 data(bluefin)

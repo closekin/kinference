@@ -18,7 +18,7 @@ est_ALF_ABO_quick(x = NULL, AB, AAO, BBO, OO,
 }
 \value{If \code{x} is supplied, then its \code{locinfo} attribute will be augmented with the \code{pbonzer} (allele frequency) matrix required by most functions in the \pkg{kinference} package. Note that \code{pbonzer} has 4 columns always, so here the 3rd column ("C") is set to zero. If \code{x} is not supplied, then a 3-column matrix matrix is returned. Rowsums of the matrix are always 1 in either case.
 }
-\seealso{\code{\link{est_ALF_ABCO}}
+\seealso{\code{\link{est_ALF_ABCO}, \code{ \link{ re_est_ALF}}, and \code{ \link{ est_ALF_6way}}}.
 }
 \examples{
 data( dropbears)
