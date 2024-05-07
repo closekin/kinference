@@ -3,3 +3,4 @@ kinference/src/kinference.o
 kinference/src/kinference.so
 kinference/R/funs.rda
 kinference/R/sysdata.rda
+kinference/src/kinference-vsc.code-workspace

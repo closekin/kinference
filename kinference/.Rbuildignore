@@ -5,4 +5,4 @@
 ^Meta$
 [.]/R/funs[.]rda
 R/meta.vignette.rds
-
+src/kinference-vsc.code-workspace
