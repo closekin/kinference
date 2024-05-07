@@ -1,8 +1,8 @@
 ## Package 'kinference': installation instructions
 
-This file that you're reading pertains only to the Github version of kinference. Windows users "just wanting the damn package" could read the "Alternative" bit at the end.
+This file that you're reading pertains mainly to the Github version of kinference. However, you may also have dot-tar-dot-gz "tarballs" of 'gbasics' and 'kinference', which are good too. Users "just wanting the damn package" could read the "Alternative" bit at the end.
 
-Installing the Github version  _from source_ is something that GNU/Linux OSes can do out-of-the-box, whereas Windows users need to add Rtools and Mac users need xcode. Those should be pretty standard these days.
+Installing the Github version, or the dot-tar-dot-gz versions,  _from source_ is something that GNU/Linux OSes can do out-of-the-box, whereas Windows users need to add Rtools and Mac users need xcode. Those should be pretty standard these days.
 
 ### Rtools installation on Windows:
 See [https://cran.r-project.org/bin/windows/Rtools/]
@@ -23,7 +23,14 @@ Then you need to make sure you have some CRAN packages, and some MVB packages, i
 
 ### kinference and gbasics
 
-ATM the Github repos for these two packages are private (though that's temporary; see below), so either we've specially given you access or more likely we've sent you zip files (which we ourselves obtained from Github, via Code->Download_ZIP). 
+If you have dot-tar-dot-gz files, then 
+
+`install.packages( "<path-to-gbasics-targz", repos=NULL)`
+`install.packages( "<path-to-kinference-targz", repos=NULL)`
+
+and you should be good to go.
+
+If you are working off Github, ATM the Github repos for these two packages are private (though that's temporary; see below), so either we've specially given you access or more likely we've sent you zip files (which we ourselves obtained from Github, via Code->Download_ZIP). 
 
 Then, if we've given you access to Github itself, you can do:
 
@@ -35,10 +42,12 @@ If you only have the ZIPs, you need
 `remotes::install_local( "<path-to-gbasics-zip", subdir='gbasics')`
 `remotes::install_local( "<path-to-kinference-zip", subdir='kinference')`
 
+However, I can't get the godammn vignette to work properly that way, so... well, I don't know. It is all a nightmare really.
+
 
 ## Alternative installation for gbasics and kinference
 
-This is the way most people might do it, because it corresponds closely to installation of most packages from CRAN and is very easy (not requiring compilation, if you're on Windows). It has worked well in the past, but it relies on MVB having kept his own CRAN-alike repo up-to-date, which is not always the case. (Note that Github's meaning of "repo" is different from CRAN's meaning. Not our fault.)
+This is the way most people might do it, because it corresponds closely to installation of most packages from CRAN and is very easy. It should work on Linux and Macs, as well as on Windows where it does not even require you to have Rtools. It has worked well in the past, but it relies on MVB having kept his own CRAN-alike repo up-to-date. (Note that Github's meaning of "repo" is different from CRAN's meaning. Not our fault.)
 
 `install.packages(pkgs = c("gbasics", "kinference"), repos = "https://markbravington.github.io/Rmvb-repo")`
 
