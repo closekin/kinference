@@ -19,9 +19,7 @@ If you want to explore the impact of missing genotypes (so that e.g. only 90\\ r
 
 At some point in future, \code{\link{kinference}} might be changed so that it can handle >2 non-null alleles gracefully (ie microhaplotypes). But not yet. So for now this version does some ghastly "live-hacking" of existing code for \code{\link{kin_power}} to implement no-errors no-nulls multi-allelic case. It will be hard to follow, so use \code{mtrace} if you really want to see what's going on. The guts of the code is in \code{\link{kin_power}} and \code{predict_hsp_util}.
 }
-\value{
-If \code{lociar} is an allele-frequency matrix, then you get a dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff". "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples} for use.
-If \code{lociar} is an allele-frequency matrix, then you get a dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff". "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples} for use.
+\value{If \code{lociar} is an allele-frequency matrix, then you get a dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff". "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples} for use. If \code{lociar} is an allele-frequency matrix, then you get a dataframe with one row per locus and columns "Ediff", "V.UP", and "sdiff". "Ediff" is "ELOD|HSP - ELOD|UP"; "V.UP" is "VLOD|UP"; "sdiff" is \code{sqrt(V.UP)/Ediff}, useful for ranking locus power. See \emph{Examples} for use.
 }
 \seealso{
 \code{\link{kin_power}}

@@ -8,7 +8,7 @@
 \description{
 These take a \code{snpgeno} dataset that has been processed as far as \code{\link{check6and4}} (and for HSPs, \code{\link{kin_power}}) and find various relations between the samples. Relationships include duplicates (DUPs/dupes/dups), parent-offspring pairs (POPs) and half-sibling pairs (HSPs) or other 2nd-order kin, plus of course unrelated pairs (UPs). You can specify the same or different subsets of the \code{snpgeno} for comparison: e.g., first subset for the adults, second for the juveniles.
 
-There are two versions aimed at POPs currently called \code{find_POPs} and \code{find_POPs_lglk}. The former uses a "weighted pseudo-exclusion" ("wpsex") statistic that allows for null alleles and is robust to genotyping errors. The latter uses a likelihood-based statistic (again allowing for nulls), but you do have to provide a guesstimate of genotyping error rate (to robustify the calculation--- otherwise, a single genotyping error in a true POP could give a log-likelihood of -Inf). \code{find_POPs_lglk} is newer, easier to explain, and perhaps less "arbitrary", but we have used the "wpsex" version on all our real CKMR datasets (>10). Time will tell whether one is better/easier than the other; finding POPs ought to be pretty easy, so the results really should be the same.
+There are two versions aimed at POPs currently called \code{find_POPs} and \code{find_POPs_lglk}. The former uses a "weighted pseudo-exclusion" ("wpsex") statistic that allows for null alleles and is robust to genotyping errors. The latter uses a likelihood-based statistic (again allowing for nulls), but you do have to provide a guesstimate of genotyping error rate (to robustify the calculation- otherwise, a single genotyping error in a true POP could give a log-likelihood of -Inf). \code{find_POPs_lglk} is newer, easier to explain, and perhaps less "arbitrary", but we have used the "wpsex" version on all our real CKMR datasets (>10). Time will tell whether one is better/easier than the other; finding POPs ought to be pretty easy, so the results really should be the same.
 
 \code{find_HSPs} should really be called \code{find_2OPs} because it cannot discriminate amongst second-order kin types; there is no way to distinguish genetically between HSPs, Grandparent-Grandchild Pairs, and Full-Thiatic Pairs (eg aunt/nephew) with \code{snpgeno} data alone. But, for historical reasons, it's still called \code{find_HSPs}. Note that \code{find_HSPs} can also be tricked into targeting [some] other types of kin, such as 3; see \bold{Details}, but watch out.
 }
@@ -73,13 +73,13 @@ find_POPs_lglk(
 \details{
 Some categories will "catch" others (e.g. \code{find_HSPs} will certainly include any POPs too), so you may need the splitter routines such as \code{split_POPs_from_HSPs} afterwards. The safest general-purpose strategy - but often \emph{not} the most sensible, if your data is nicely organized and you know what you want - would be:
 
- \code{find_duplicates} and then get rid of them
+\code{find_duplicates} and then get rid of them
 
- \code{find_HSPs} to get \emph{all} kin (though you will usually have to sacrifice some HSPs to false-neg because you'll need a threshold)
+\code{find_HSPs} to get \emph{all} kin (though you will usually have to sacrifice some HSPs to false-neg because you'll need a threshold)
 
- \code{split_POPs_from_HSPs} to split HSPs from POPs/FSPs
+\code{split_POPs_from_HSPs} to split HSPs from POPs/FSPs
 
- \code{split_POPs_from_FSPs} to split the latter.
+\code{split_POPs_from_FSPs} to split the latter.
 
 The non-splitter functions, i.e. \code{find_XXX}, might be run on huge numbers of samples, entailing a \code{choose(huge, 2)} number of comparisons. You don't want all those individual comparison results, and your computer certainly wouldn't enjoy trying to keep them! So the general idea is to set a threshold for what constitutes "maybe worth keeping individually" (that you expect will be generous enough to contain everything you \emph{do} want, plus some dross), and then to retain just binned counts of the relevant comp statistic for all comps (usually, the vast majority) which don't make your threshold.
 
@@ -87,15 +87,15 @@ In addition, the \code{limit_pairs} argument is there to prevent your computer l
 
 For \code{find_duplicates}, there are at least two different use-cases. First, you might want an initial run on a non-too-large subset of your data, to check that dups \emph{can} be clearly distinguished and to look at typical extent of genotyping errors (based on clear duplicates that don't match at every locus). For that, you can set \code{nbins} and choose some reasonable guess as to \code{max_diff_loci} (say, 5\\ loci). Because you set \code{nbins>0}, \emph{every} pair (almost...) gets checked at \emph{all} loci, so it can be slow. Thus, if you have done this before and have a good sense of "how bad can a real duplicate be?", then set \code{nbins=0} (and \code{max_diff_geno} to a small but safe value that won't miss any realistic duplicate-with-genotyping-error) so it will abort a comparison early as soon as it reaches \code{max_diff_geno} differing loci. That saves a \emph{lot} of time on big datasets! You won't get a histo of number-of-diffs, but you don't need one for that use-case. The "almost" is that \code{find_duplicates} uses "transitivity" (if A is a dup of B and of C, then we don't need to check B vs C), so it only counts differences for not-yet-known duplicates \emph{based on} \code{max_diff_loci}. To discard duplicates and to find entire equivalence-classes of duplicates, e.g. from a control specimen included in numerous plates, see \code{drop_dup_pairwise_equiv}.
 
-\code{find_HSPs} relies on pre-computed values of "LOD" and "PUP" that have been set by \code{\link{kin_power}}. Normally you would call the latter with \code{k=0.5}, since that's what HSPs are. However, the devious user can try \emph{different} values of \code{k}--- which is how \code{find_POPs_lglk} works--- and then the target of \code{find_HSPs} will become "kin with that value of \code{k}". Be very careful!!!
+\code{find_HSPs} relies on pre-computed values of "LOD" and "PUP" that have been set by \code{\link{kin_power}}. Normally you would call the latter with \code{k=0.5}, since that's what HSPs are. However, the devious user can try \emph{different} values of \code{k}- which is how \code{find_POPs_lglk} works- and then the target of \code{find_HSPs} will become "kin with that value of \code{k}". Be very careful!!!
 \subsection{Kinformation}{
 The idea is that kin-finding is based on a statistic and a threshold \code{eta}, where the latter is chosen to keep false-positives down to a user-specified level. Anything "beyond" \code{eta} will be treated as a kin-pair ("beyond" depends on how the statistic is defined, i.e. whether a kin-pair should come out very low or very high). However, you're also likely to want to look post hoc at the distro of computed statistics \emph{near} \code{eta}, to see whether separation is as clean (or otherwise) as expected - and also very unbeyond \code{eta} into the zone where UPs are entirely dominant, to check that theory is OK. So, as well as returning the "interesting" pairs that have a statistic close to or on the non-UP size of \code{eta}, the POP and HSP versions also return \emph{summaries} of the distribution of the statistic. The thing is that there will be zillions of statistics from UPs - enough to blow out computer memory - and they are not individually interesting. Specifically, the main things returned are:
 
- mean and variance of stats. Computation is restricted to those on the UP-side of \code{eta} (which is nearly all of them, usually) in order to avoid distortion from non-UP cases. The latter will often be so rare that distortion would be negligible - but means and variances are not "robust".
+mean and variance of stats. Computation is restricted to those on the UP-side of \code{eta} (which is nearly all of them, usually) in order to avoid distortion from non-UP cases. The latter will often be so rare that distortion would be negligible - but means and variances are not "robust".
 
- counts of binned stats, regardless of whether above or below \code{eta}. The bins are set based on SPAs to the theoretical distributions, and chosen so that an equal number of UP-pairs should fall into each bin.
+counts of binned stats, regardless of whether above or below \code{eta}. The bins are set based on SPAs to the theoretical distributions, and chosen so that an equal number of UP-pairs should fall into each bin.
 
- cases where the stat is "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a \code{data.frame}. See \emph{Value} for details
+cases where the stat is "interesting", i.e. on the non-UP side of \code{keep_thresh}, as a \code{data.frame}. See \emph{Value} for details
 
 The process is controlled by three numbers: \code{nbins} for number of bins, \code{eta} itself, and some nearby threshold \code{keep_thresh} on the UP-side of \code{eta} (it will be automatically set to \code{eta} otherwise) to determine which pairs are explicitly retained for your inspection. There are two ways to specify \code{eta} and \code{keep_thresh}. Usually, you would start with the indirect method, where you choose the predicted-false-positive proportion of UP-pairs via the parameter \code{one_in_X_eta}, and \code{rough_n_pairs_to_keep}. The routines then use SPAs to the corresponding values of \code{eta} and \code{keep_thresh}; the returned value of \code{eta} is what you can subsequently use to make the actual kin-decisions yourself after the event (by subsetting the "interesting" pairs, comparing the statistic for each pair to \code{eta})- assuming that observed does match expected.
 
@@ -104,9 +104,9 @@ But, sometimes it doesn't. In that case, the predicted values of \code{eta} and 
 }
 \value{
 A \code{data.frame} with extra attributes (see below) and at least 3 columns: statistic \code{PLOD} or \code{wpsex} or \code{ndiff} (number of mismatching genotypes), then \code{i} and \code{j} (index in \code{subset1} and \code{subset2} respectively of the first pair-member). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}- so if you are comparing subsets within the same overall \code{snpg}, then you have to adjust accordingly. The attributes in all cases include \code{bins} (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), \code{binprobs} (theoretical CDF for UPs in \code{find_HSPs}; should exist for \emph{POPs} (not UPs) in \code{find_POPs} (the \code{wpsex} version) but currently doesn't), some of the input parameters, and the \code{call} that invoked the function. \code{find_POPs} adds a column named \code{nABOO}, showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation. \code{find_HSPs} and \code{find_POPs} have a bunch of extra attributes which should be reeeeasonably clear. For \code{find_HSPs}, \code{mean_sub_PLOD} and \code{var_sub_PLOD} are the empirical means & var below \code{eta}, andy they should be close to \code{mean_UP} and \code{var_UP} \emph{iff} \code{eta} has been chosen sensibly. For \code{find_POPs}, the same goes for \code{mean_wpsex_hi} and \code{var_wpsex_hi}. For duplicates, not \emph{all} pairwise duplicates are recorded, unless the subsets are different - otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since "duplication" is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. e.g., if samples 1, 3, 5, and 6 are all duplicates, you'll get this (without "ndiff" column) [FORMATTING SCREWED UP PROBABLY ROXYGEN'S FAULT]:
-\item{  i j::}{}
-\item{  3 1::}{}
-\item{  4 3::}{}
+\item{  i j:::}{}
+\item{  3 1:::}{}
+\item{  4 3:::}{}
 \item{  6 4}{but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function \code{drop_dups_pairwise_equiv} - see \emph{Examples}. For POPs and HSPs, the following are also returned as attributes (that can be accessed by \code{@} if \code{atease} is loaded). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.}
 \item{  - eta}{false-positive cutoff to be applied to the statistic in question (automatically done if \code{rough_n_pairs_to_keep==NA}, or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of \code{eta}. However, the set of retained pairs/individuals is actually controlled by...}
 \item{  - keep_thresh}{the cutoff used to retain "interesting" pairs. Usually obvious from the range of statistic values.}
@@ -117,43 +117,34 @@ A \code{data.frame} with extra attributes (see below) and at least 3 columns: st
 }
 \examples{
 ## find_duplicates
-
 define_genotypes()
 x <- matrix(sample(c("AAO", "AB", "BBO", "OO"), 10000, TRUE, prob = c(0.2, 0.45, 0.2, 0.15)), nrow = 100, ncol = 100)
 minisnpg <- snpgeno(x = x, diplos = genotypes4_ambig)
-
 ## seed some duplicates in. Sample 2 will be a copy of sample 1,
 ## and samples 21, 22, and 23 will be an exactly-matching group.
 minisnpg[2,] <- minisnpg[1,]
 minisnpg[ 22,] <- minisnpg[ 23,] <- minisnpg[ 21,]
-
 ## seed some inexact duplicates in. Make sample 3 nearly match
 ## sample 4, and the same for samples 13 and 14
 minisnpg[4,1:80] <- minisnpg[3,1:80]
 minisnpg[14,1:80] <- minisnpg[13,1:80]
-
 ## find exact duplicates
 exact <- find_duplicates( minisnpg, max_diff_loci = 0)
-exact ## finds ij pairs {1, 2} and the group {21, 22, 23}
-## as pairs {21, 22} and {22, 23}
-
+exact ## finds ij pairs \{1, 2\} and the group \{21, 22, 23\}
+## as pairs \{21, 22\} and \{22, 23\}
 ## find (in-)exact duplicates
 inexact <- find_duplicates( minisnpg, max_diff_loci = 25)
-inexact ## finds the exactly-matching pairs as before, plus 
-## the inexactly-matching row pairs {3, 4} and {13, 14} with
+inexact ## finds the exactly-matching pairs as before, plus
+## the inexactly-matching row pairs \{3, 4\} and \{13, 14\} with
 ## >0 differences
-
 ## to remove duplicates, keeping only one member of each
 ## group, use drop_dups_pairwise_equiv
 droppers <- drop_dups_pairwise_equiv( inexact[,2:3])
 droppers ## note that _all but one_ of each _group_ of
 ## (near-)duplicates is included in 'droppers'
-
 minisnpg_nodups <- minisnpg[ - droppers,] ## drop all-but-one
 ## of each set of duplicates
-
 ## find_HSPs (PLOD_HU)
-
 data( bluefin)
 ## stripped-down data-cleaning for example - see the
 ## vignette for approach for real data!
@@ -163,7 +154,6 @@ ilglks <- ilglk_geno( bluefin_1)
 bluefin_2 <- bluefin_1[ ilglks > -1050,]
 bluefin_3 <- est_ALF_ABO_quick( bluefin_2)
 bluefin_4 <- bluefin_3[ , bluefin_3@locinfo$pbonzer[,"B"] > 0.02]
-
 bluefin_5 <- kin_power( bluefin_4, k = 0.5)
 dups <- find_duplicates( bluefin_5, max_diff_loci = 20)
 bluefin_6 <- bluefin_5[ -c(drop_dups_pairwise_equiv( dups)) ,]
@@ -173,14 +163,12 @@ head( hsps) ## PLODs and row numbers for each pair member in bluefin
 hsps@mean_HSP ## mean expected PLOD for true HSPs. mean_UP (unrelated),
 ## mean_POP (parent-offspring), mean_FSP (full-sibling) follow the
 ## same format
-
 ## subset comparisons
 ## limit comparisons to those between animals on plate 3 and animals on
 ## the other two plates. Useful when, e.g., looking for kinships between
 ## adults and juveniles, but not kinships between adults and other
 ## adults. For demonstration, treat plate 3 as adults and plates 1 and 2
 ## as juveniles (they're not really).
-
 adults <- which( bluefin_6@info$Our_plate == "plate3")
 juvs <- which( bluefin_6@info$Our_plate == "plate1" | bluefin_6@info$Our_plate == "plate2" )
 hsps_subset <- find_HSPs( bluefin_6, subset1 = adults, subset2 = juvs, keep_thresh = 0)
@@ -188,10 +176,8 @@ hsps_subset$iplate <- bluefin_6@info$Our_plate[ hsps_subset$i]
 hsps_subset$jplate <- bluefin_6@info$Our_plate[ hsps_subset$j]
 ## all pairs are between a plate 3 fish and a fish on plate 1 or plate 2
 head(hsps_subset)
-
 ## find_POPs and find_POPs_lglk
-
-pops <- find_POPs(bluefin_6, keep_thresh = 0.1) 
+pops <- find_POPs(bluefin_6, keep_thresh = 0.1)
 ## keep_thresh = 0.1 is not magic, but often OK. If you
 ## don't see a big spike out to the right of your plot,
 ## you should generally set keep_thresh higher
@@ -204,12 +190,10 @@ with( pops, plot.default( wpsex ~ nABOO))
 plot( pops@bins, pops@n_wpsex_in_bin, type = "s")
 ## add expected mean wpsex for unrelated pairs
 abline( v = pops@mean_UP, col = kinPalette()["UP"], lwd = 2)
-
 pops_lglk <- find_POPs_lglk(bluefin_6, keep_thresh = 0, gerr = 0.01)
 pops_lglk@mean_UP ## as before
 pops_lglk@mean_POP ## both mean_POP and mean_UP, because E(stat | k = UP) is
 ## no longer zero
-
 ## plot the full distribution from binned records
 PLOD_loghisto( hsps = pops_lglk, HSP = FALSE, FSP = FALSE)
 }

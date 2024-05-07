@@ -15,13 +15,13 @@ kin_power( lociar, want_LOD_table=TRUE, k,
 \item{  sd_half_range}{Normally leave this alone, but in case the final \code{prepare_PLOD_SPA} (qv) step gives an error (rare but possible), try reducing it below the default.}
 }
 \details{
- E_UP, V_UP mean & variance for UPs
+E_UP, V_UP mean & variance for UPs
 
- E_HSP, E_POP,E_FSP as you would expect
+E_HSP, E_POP,E_FSP as you would expect
 
- Ediff E_HSP - E_POP ie the "absolute" power of that locus
+Ediff E_HSP - E_POP ie the "absolute" power of that locus
 
- sdiff (E_HSP-E_POP)/sqrt(V_UP) which is arguably better than \code{Ediff} for ranking loci
+sdiff (E_HSP-E_POP)/sqrt(V_UP) which is arguably better than \code{Ediff} for ranking loci
 
 It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a matrix) to the \code{locinfo}. They have been made dull (see \code{make_dull}) to improve your viewing experience, but they work fine for all normal purposes (and you can always \code{unclass} them to remove the S3 class \code{dull}).
 \subsection{Notes}{\code{kin_power} (and downstream) should get a refactor. It's daft to store LODs for only one specific kin; it'd be better to always calculate P1share and P2share as well as P0share (which is PUP), and then compute whatever-is-needed later on-the-fly. As-is, we are re-computing P1 and P2 based on LOD and PUP OTF instead (which is also unsafe, because LOD could have been calculated with k != 0.5).
@@ -31,12 +31,12 @@ It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a matrix
 }
 \examples{
 data( dropbears)
-## not run:
+\dontrun{
 ## fails because of missing pre-calculated objects necessary for kin-finding:
 ## hsps <- find_HSPs( dropbears, keep_thresh = 0)
-
 dropbears_1 <- kin_power( dropbears, k = 0.5)
 ## works now
 hsps <- find_HSPs( dropbears_1, keep_thresh = 0)
+}
 }
 \keyword{misc}

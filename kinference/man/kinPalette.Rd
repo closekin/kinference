@@ -16,16 +16,16 @@ See \bold{Value} for the predefined kinships.
 }
 \value{
 A named character vector of hex codes, with names "POP" etc. The current numerical ordering (not that you should ever need to know it- just use the names) is:
-\item{  c(:}{}
-\item{  POP= 1,:}{}
-\item{  GGP= 2,:}{}
-\item{  HCP= 3,:}{}
-\item{  FCP= 4,:}{}
-\item{  UP= 5,:}{}
-\item{  HTP= 6,:}{}
-\item{  FTP= 7,:}{}
-\item{  HSP= 8,:}{}
-\item{  FSP= 9:}{}
-\item{  ):}{}
+\item{  c(::}{}
+\item{  POP= 1,::}{}
+\item{  GGP= 2,::}{}
+\item{  HCP= 3,::}{}
+\item{  FCP= 4,::}{}
+\item{  UP= 5,::}{}
+\item{  HTP= 6,::}{}
+\item{  FTP= 7,::}{}
+\item{  HSP= 8,::}{}
+\item{  FSP= 9::}{}
+\item{  )::}{}
 }
 \keyword{misc}

@@ -19,25 +19,23 @@ split_HSPs_from_HTPs(snpg, candipairs)
 \details{
 The idea of \code{split_FSPs_from_POPs}- though this is not the only possible workflow- is that pairs which are \emph{either} POPs \emph{or} FSPs should stand out very clearly from everything else, via \code{\link{find_POPs}}. Then the job is to pick between those possibilities. The workflow is supposed to be:
 
- nail POPs/FSPs first with \code{\link{find_POPs}}`
+nail POPs/FSPs first with \code{\link{find_POPs}}`
 
-\describe{
-\item{pick between them with \code{split_FSPs_from_POPs} (update}{this doesn't work very well yet... use age info if you can)}
-}
+pick between them with \code{split_FSPs_from_POPs} (update this doesn't work very well yet... use age info if you can)
 
- look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs
+look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs
 
- filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
+filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
 
 However, an equally reasonable workflow might be:
 
- nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}}
+nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}}
 
- split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs}
+split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs}
 
- filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
+filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}
 
- use \code{split_FSPs_from_POPs} to split FSPs from POPs
+use \code{split_FSPs_from_POPs} to split FSPs from POPs
 
 All \code{split_} functions return expected values under different possible kin-types (not variances, since these cannot be predicted for all kin-types).
 
@@ -58,14 +56,11 @@ ilglks <- ilglk_geno( bluefin_1)
 bluefin_2 <- bluefin_1[ ilglks > -1050,]
 bluefin_3 <- est_ALF_ABO_quick( bluefin_2)
 bluefin_4 <- bluefin_3[ , bluefin_3@locinfo$pbonzer[,"B"] > 0.02]
-
 bluefin_5 <- kin_power( bluefin_4, k = 0.5)
 dups <- find_duplicates( bluefin_5, max_diff_loci = 20)
 bluefin_6 <- bluefin_5[ -c(drop_dups_pairwise_equiv( dups)) ,]
-
 ## via find_HSPs for isolated split of 'FSPsOrPOPs'
 hsps <- find_HSPs( bluefin_6, keep_thresh = 0)
-
 histoPLOD( hsps, log = FALSE, lb = 0, fullsib_cut = 70, HSP_distro_show
 = TRUE)
 ## note the gap between PLOD = 60 and PLOD = 75, separating likely HSPs
@@ -73,7 +68,6 @@ histoPLOD( hsps, log = FALSE, lb = 0, fullsib_cut = 70, HSP_distro_show
 FSPsOrPOPs <- hsps[ hsps$PLOD > 70,]
 HSPsOrHTPs <- hsps[ hsps$PLOD < 70,] ## implicit >0 from keep_thresh in
 ## find_HSPs call
-
 ## via find_POPs_lglk for 'laser-focus on POPs'
 maybePOPs <- find_POPs_lglk( bluefin_6, gerr = 0.01, keep_thresh = -30)
 hist(maybePOPs$PLOD, breaks = 20)
@@ -82,7 +76,6 @@ abline( v = maybePOPs@mean_UP, col = kinPalette()["UP"], lwd = 2)
 ## note the 6 pairs clustered around the expected mean PLOD for
 ## POPs (all > 60). They are probably POPs, but may include FSPs.
 maybePOPs <- maybePOPs[ maybePOPs$PLOD > 60,]
-
 ## split_FSPs_from_POPs
 ### using FSPsOrPOPs
 splitFSPsOrPOPs <- split_FSPs_from_POPs(bluefin_6, candiPOPs = FSPsOrPOPs, gerr = 0.01)
@@ -92,7 +85,6 @@ abline( v = splitFSPsOrPOPs@E_FSP, lwd = 2, col = kinPalette()["FSP"])
 ## add line of expected PLOD if POP
 abline( v = splitFSPsOrPOPs@E_POP, lwd = 2, col = kinPalette()["POP"])
 ## The expected PLOD for true POPs is negative, and for true FSPs is positive
-
 ### using maybePOPs
 splitmaybePOPs <- split_FSPs_from_POPs(bluefin_6, candiPOPs = maybePOPs, gerr = 0.01)
 hist(splitmaybePOPs$PLOD)
@@ -101,7 +93,6 @@ abline( v = splitmaybePOPs@E_FSP, lwd = 2, col = kinPalette()["FSP"])
 ## add line of expected PLOD if POP
 abline( v = splitmaybePOPs@E_POP, lwd = 2, col = kinPalette()["POP"])
 ## The expected PLOD for true POPs is negative, and for true FSPs is positive
-
 ## split_HSPs_from_HTPs
 splitHSPsOrHTPs <- split_HSPs_from_HTPs( bluefin_6, HSPsOrHTPs)
 hist(splitHSPsOrHTPs$PLOD, breaks = 15)
