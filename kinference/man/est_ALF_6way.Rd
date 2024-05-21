@@ -13,6 +13,7 @@
 }
 \examples{
 data( bluefin)
+library( atease)
 head( bluefin$locinfo$snerr) ## has to exist for 6-way genotypes
 bluefin@locinfo$pbonzer <- NULL ## remove pre-existing allele freq
 ## estimates!

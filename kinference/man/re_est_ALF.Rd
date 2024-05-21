@@ -13,6 +13,7 @@
 }
 \examples{
 data( bluefin)
+library( atease)
 bluefin@locinfo$pbonzer <- NULL ## remove pre-existing ALFs
 bluefin@locinfo$snerr <- NULL ## remove pre-existing snerr
 bluefin <- re_est_ALF( bluefin)

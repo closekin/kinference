@@ -13,12 +13,14 @@
 }
 \examples{
 data( bluefin)
+library( atease)
+library( mvbutils)
 bluefin@locinfo$pbonzer <- NULL ## remove pre-existing ALFs
 bluefin@locinfo$snerr <- NULL ## remove pre-existing snerr
 ## bluefin <- est_ALF_ABCO( bluefin) ## error :(
 ## geno_amb is a version of the snpg where all single-nulls
 ## are re-coded as ambiguous single-null / homozygote genotypes
-define_genotypes()
+gbasics::define_genotypes()
 bluefin@diplos ## check what genotypes exist in the dataset
 geno_amb <- bluefin
 geno_amb@diplos <- genotypes_ambig ## note genotypes_ambig has

@@ -117,9 +117,11 @@ A \code{data.frame} with extra attributes (see below) and at least 3 columns: st
 }
 \examples{
 ## find_duplicates
-define_genotypes()
+library( mvbutils)
+library( atease)
+gbasics::define_genotypes()
 x <- matrix(sample(c("AAO", "AB", "BBO", "OO"), 10000, TRUE, prob = c(0.2, 0.45, 0.2, 0.15)), nrow = 100, ncol = 100)
-minisnpg <- snpgeno(x = x, diplos = genotypes4_ambig)
+minisnpg <- gbasics::snpgeno(x = x, diplos = genotypes4_ambig)
 ## seed some duplicates in. Sample 2 will be a copy of sample 1,
 ## and samples 21, 22, and 23 will be an exactly-matching group.
 minisnpg[2,] <- minisnpg[1,]

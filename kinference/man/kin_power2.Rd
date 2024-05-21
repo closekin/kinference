@@ -27,41 +27,44 @@ At some point in future, \code{\link{kinference}} might be changed so that it ca
 \code{\link{kin_power}}
 }
 \examples{
-ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
-POW <- kin_power2( ALF)
-# look at the contents of each...
-# Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
-# find anything like that in practice for lots'n'lots of loci
-lots <- 500
-ALF <- matrix( runif( lots*5), lots, 5)
-POW <- kin_power2( ALF)
-# Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
-# Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
-V <- sum( POW$V.UP)  # V[PLOD|UP]
-E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
-E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
-# ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
-# ... more stringent than "typical"--- and, NB weaker kin
-bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
-smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
-# ... so that's probably OK...
-ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
-POW <- kin_power2( ALF)
-# look at the contents of each...
-# Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
-# find anything like that in practice for lots'n'lots of loci
-lots <- 500
-ALF <- matrix( runif( lots*5), lots, 5)
-POW <- kin_power2( ALF)
-# Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
-# Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
-V <- sum( POW$V.UP)  # V[PLOD|UP]
-E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
-E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
-# ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
-# ... more stringent than "typical"--- and, NB weaker kin
-bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
-smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
-# ... so that's probably OK...
+%% library( mvbutils)
+%% library( gbasics)
+%% define_genotypes()
+%% ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+%% POW <- kin_power2( ALF)
+%% # look at the contents of each...
+%% # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
+%% # find anything like that in practice for lots'n'lots of loci
+%% lots <- 500
+%% ALF <- matrix( runif( lots*5), lots, 5)
+%% POW <- kin_power2( ALF)
+%% # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+%% # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+%% V <- sum( POW$V.UP)  # V[PLOD|UP]
+%% E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+%% E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+%% # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+%% # ... more stringent than "typical"--- and, NB weaker kin
+%% bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+%% smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+%% # ... so that's probably OK...
+%% ALF <- matrix( runif( 15), 3, 5) # 3 loci; 5 alleles
+%% POW <- kin_power2( ALF)
+%% # look at the contents of each...
+%% # Now do it for lots of loci. NB the allele freqs above are *insanely* good; you won't
+%% # find anything like that in practice for lots'n'lots of loci
+%% lots <- 500
+%% ALF <- matrix( runif( lots*5), lots, 5)
+%% POW <- kin_power2( ALF)
+%% # Now say we plan 1e6 pairwise comps, and might expect 100 HSPs
+%% # Work relative to E[LOD|UP] which is not returned explicitly; treat that as "origin" ie 0
+%% V <- sum( POW$V.UP)  # V[PLOD|UP]
+%% E <- sum( POW$Ediff) # E[PLOD|HSP] - E[PLOD|UP]
+%% E / sqrt( V) # 10.5 SDs--- pretty good.  Mean of HSPs is 10.5 UP-SDs above mean of UPs,
+%% # ... so v. unlikely an UP will get as far as _typical_ HSP. But we need to be a bit
+%% # ... more stringent than "typical"--- and, NB weaker kin
+%% bigUP <- qnorm( 1e-6, mean=0, sd=sqrt( V), lower=FALSE) # most-kinlike UP
+%% smallHSP <- qnorm( 1e-2, mean=E, sd=sqrt( 4*V))      # least-kinlike HSP
+%% # ... so that's probably OK...
 }
 \keyword{misc}

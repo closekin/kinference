@@ -993,48 +993,48 @@ histoPLOD( hsps, log=FALSE, lb = 0, fullsib_cut = 100)
 
 
 ```{r tokelauOffscreen, include = FALSE, eval = FALSE}
-## the include = FALSE, eval = FALSE bits here mean 'don't show it, and don't evaluate it', so
-## the if(FALSE) is redundant unless I've missed something about vignettes
-load("~/R/localPackages/kinference/kinference/data/yellowfin.rda") ## loads 'tokelau_snpgeno'
-load("~/Dropbox/CSIRO/contamStat/yellowfin_probablyContam.rda") ## use 'ttlc' as a sample ID
-tokelau_snpgeno$info$probablyContam <- info$probablyContam[match(tokelau_snpgeno$info$ttlc, info$ttlc)]
-tokelau_snpgeno$info$ttlcCheck <- info$ttlc[match(tokelau_snpgeno$info$ttlc, info$ttlc)]
+## ## the include = FALSE, eval = FALSE bits here mean 'don't show it, and don't evaluate it', so
+## ## the if(FALSE) is redundant unless I've missed something about vignettes
+## load("~/R/localPackages/kinference/kinference/data/yellowfin.rda") ## loads 'tokelau_snpgeno'
+## load("~/Dropbox/CSIRO/contamStat/yellowfin_probablyContam.rda") ## use 'ttlc' as a sample ID
+## tokelau_snpgeno$info$probablyContam <- info$probablyContam[match(tokelau_snpgeno$info$ttlc, info$ttlc)]
+## tokelau_snpgeno$info$ttlcCheck <- info$ttlc[match(tokelau_snpgeno$info$ttlc, info$ttlc)]
 
-tokelau_clean <- tokelau_snpgeno[tokelau_snpgeno$info$probablyContam == FALSE,]
-tokelau_all <- tokelau_snpgeno
+## tokelau_clean <- tokelau_snpgeno[tokelau_snpgeno$info$probablyContam == FALSE,]
+## tokelau_all <- tokelau_snpgeno
 
-## tokelau_all$locinfo$pbonzer <- re_est_ALF(tokelau_all)$locinfo$pambig
+## ## tokelau_all$locinfo$pbonzer <- re_est_ALF(tokelau_all)$locinfo$pambig
 
-## checking for badly-behaved loci
-pvals <- check6and4(tokelau_all, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
-## allelic dropout is a big problem with the ToK data: see
-## over-representation of OO, AAO and BBO, and under-representation of
-## AB
+## ## checking for badly-behaved loci
+## pvals <- check6and4(tokelau_all, thresh_pchisq_6and4 = c(1e-4, 1e-6), show6 = FALSE)
+## ## allelic dropout is a big problem with the ToK data: see
+## ## over-representation of OO, AAO and BBO, and under-representation of
+## ## AB
 
-tokelau_all_1 <- tokelau_all[, pvals$pval4 > 0.2]
+## tokelau_all_1 <- tokelau_all[, pvals$pval4 > 0.2]
 
-## finding and removing duplicate samples
+## ## finding and removing duplicate samples
 
-## look for duplicates in 'tokelau_all' and keep any pairs with less than 50
-## different genotypes:
-dups <- find_duplicates(tokelau_all_1, max_diff_loci = 500, show_plot = FALSE)
-nrow(dups) ## no duplicates
-tokelau_all_2 <- tokelau_all_1 ## nothing to remove
+## ## look for duplicates in 'tokelau_all' and keep any pairs with less than 50
+## ## different genotypes:
+## dups <- find_duplicates(tokelau_all_1, max_diff_loci = 500, show_plot = FALSE)
+## nrow(dups) ## no duplicates
+## tokelau_all_2 <- tokelau_all_1 ## nothing to remove
 
-## finding and removing samples from another population or species
-ilglk <- ilglk_geno(tokelau_all_2) ## doesn't align to priors _at all_. Maybe re-do later, for didactic reasons?
+## ## finding and removing samples from another population or species
+## ilglk <- ilglk_geno(tokelau_all_2) ## doesn't align to priors _at all_. Maybe re-do later, for didactic reasons?
 
-tokelau_all_3 <- tokelau_all_2
-tokelau_all_3 <- kin_power(tokelau_all_3, k = 0.5)
+## tokelau_all_3 <- tokelau_all_2
+## tokelau_all_3 <- kin_power(tokelau_all_3, k = 0.5)
 
-## finding and removing cross-contaminated and degraded samples
+## ## finding and removing cross-contaminated and degraded samples
 
-hetzrich <- hetzminoo_fancy(tokelau_all_3, "rich")
-hetzpoor <- hetzminoo_fancy(tokelau_all_3, "poor")
+## hetzrich <- hetzminoo_fancy(tokelau_all_3, "rich")
+## hetzpoor <- hetzminoo_fancy(tokelau_all_3, "poor")
 
-tokelau_all_4 <- tokelau_all_3
+## tokelau_all_4 <- tokelau_all_3
 
-contamHSPs <- find_HSPs(tokelau_all_4, keep_thresh = -10)
-histoPLOD( contamHSPs, log=TRUE) # wait, that looks like _cousins_ in the tokelau data
-## ok, the tokelau data aren't a great example to use - too much allelic dropout; not enough contamination
+## contamHSPs <- find_HSPs(tokelau_all_4, keep_thresh = -10)
+## histoPLOD( contamHSPs, log=TRUE) # wait, that looks like _cousins_ in the tokelau data
+## ## ok, the tokelau data aren't a great example to use - too much allelic dropout; not enough contamination
 ```

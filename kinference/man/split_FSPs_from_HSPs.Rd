@@ -48,6 +48,7 @@ The statistic for \code{split_FSPs_from_POPs} - which isn't as powerful as I'd h
 }
 \examples{
 data( bluefin)
+library( atease)
 ## stripped-down data-cleaning for example - see the
 ## vignette for approach for real data!
 pvals <- check6and4( bluefin, thresh_pchisq_6and4 = c( 0.001, 0.0001))
