@@ -15,4 +15,5 @@ Encoding: UTF-8
 KeepSource: TRUE
 Collate: kinference.R Cloaders_kinference.R kinference-package.R
 LazyData: true
+LazyDataCompression:xz
 Version: 1.0.4

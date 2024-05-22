@@ -15,6 +15,7 @@
 data( bluefin)
 library( atease)
 library( mvbutils)
+bluefin <- bluefin[, 1:100] ## just 100 loci, else too slow for R CMD check
 bluefin@locinfo$pbonzer <- NULL ## remove pre-existing ALFs
 bluefin@locinfo$snerr <- NULL ## remove pre-existing snerr
 ## bluefin <- est_ALF_ABCO( bluefin) ## error :(

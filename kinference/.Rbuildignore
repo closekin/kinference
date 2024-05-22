@@ -6,3 +6,6 @@
 [.]/R/funs[.]rda
 R/meta.vignette.rds
 src/kinference-vsc.code-workspace
+/data/.make_dropbears.Rmd
+/data/.SBT data-stripping.R
+/data/.test_geno data-stripping.R

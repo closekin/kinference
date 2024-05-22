@@ -9,7 +9,7 @@ check6and4(
   thresh_pchisq_6and4,
   return_what = c("just_pvals", "all"),
   extra_title = "",
-  show6 = TRUE
+  show6 = FALSE
 )
 }
 \arguments{

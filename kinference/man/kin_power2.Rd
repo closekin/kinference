@@ -27,6 +27,7 @@ At some point in future, \code{\link{kinference}} might be changed so that it ca
 \code{\link{kin_power}}
 }
 \examples{
+NULL
 %% library( mvbutils)
 %% library( gbasics)
 %% define_genotypes()

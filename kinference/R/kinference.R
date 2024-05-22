@@ -931,7 +931,7 @@ return( data.frame( ECLOD=colSums( my_e_CLOD), VCLOD=colSums( my_v_CLOD)))
     S[ it, l] := PUP[ l, g12] %[g12]% ETT[ it, l, g12]
     SL[ it, l] := PUPLOD[ l, g12] %[g12]% ETT[ it, l, g12]
     SLL[ it, l] := PUPLOD2[ l, g12] %[g12]% ETT[ it, l, g12]
-    rowSums( (SLL/S-gbasics::sqr( SL/S)))
+    rowSums( (SLL/S-mvbutils::sqr( SL/S)))
   }
 
 stop()

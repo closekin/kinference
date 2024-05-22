@@ -32,8 +32,7 @@ find_HSPs(
   eta = NULL,
   nbins = 50,
   minbin = NULL,
-  maxbin = NULL
-)
+  maxbin = NULL)
 find_POPs(
   snpg,
   subset1 = 1 \%upto\% nrow(snpg),
@@ -68,7 +67,7 @@ find_POPs_lglk(
 \item{  keep_thresh}{(\code{find_HSPs} and \code{find_POPs}) is the analog of \code{max_diff_loci} for \code{find_duplicates}. It determines which pairs to retain for individual inspection. For \code{find_HSPs}, this is the lowest retained PLOD; for \code{find_POPs} (currently), it's the highest retained \code{wpsex}. Set it with the aim of including "anything interesting" (ie not \emph{missing} any interesting pairs) and expect false positives - i.e. be willing to have some weaker kin in there, and to subsequently filter those out yourself "manually", as per vignette. For HSPs, values like 0 (near the HTP mean) or -5 are a good start. For POPs, experiment (at a total guess, try 0.1). You may have to re-run the function a coupla times if you have been too brutal or too generous here - though "too generous" can be fixed post hoc just by filtering the result, as long as you haven't generated tooooo many pairs (see parameter \code{limit_pairs}).}
 \item{  eta}{(\code{find_HSPs} and \code{find_POPs}) Not essential; limit for calculating empirical mean and var PLOD, to compare with theoretical \code{mean_UP} and \code{var_UP}. If you care about this (and you might not, since for \code{find_HSPs} the observed/expected binwise comparison is perhaps clearest), then set it to somewhere above 0 that should include almost all UPs and exclude most strong kin; that's an \emph{upper} limit for HSPs, and a \emph{lower} limit (currently) for POPs. The defaults are guesses, and might not do that adequately, so an apparent mismatch may not actually matter; be prepared to look at the histograms and think. The general idea is that the number of UPs should dominate any other kin-type in large sparsely-sampled datasets, so "contaminating" the empirical UP statistics with a few weakish kin at the top end shouldn't mess up mean and variance too much.}
 \item{  WPSEX_UP_POP_balance}{(\code{find_POPs}) loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? \code{WPSEX_UP_POP_balance} sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives (which is probably the Right Thing To Do). 0.99 could be completely fine... (but hopefully \code{WPSEX_UP_POP_balance} won't affect the result much anyway.)}
-\item{  gerr}{(\code{find_POPs_lglk}) Genotyping error rate (apart from any AA/AO-type errors)- which had better be a small number. You have to pick it yourself, but it is only used to "robustify" the lglk-based (PO)PLOD for testing POPs vs UPs, and thus can be a rough guesstimate. FWIW we have used 0.01 (i.e. 1\\ replicate analysis suggests, but is "safe" while still being small enough not to muck up overall statistical performance. You should really do the same thing yourself, and if you are very paranoid then try sensitivity analyses; but in practice, the results of \code{find_POPs_lglk} are liable to be so clear-cut that you may not feel it necessary to try more than one small value...}
+\item{  gerr}{(\code{find_POPs_lglk}) Genotyping error rate (apart from any AA/AO-type errors)- which had better be a small number. You have to pick it yourself, but it is only used to "robustify" the lglk-based (PO)PLOD for testing POPs vs UPs, and thus can be a rough guesstimate. FWIW we have used 0.01 (i.e. 1\\ replicate analysis suggests, but is "safe" while still being small enough not to muck up overall statistical performance. You should really do the same thing yourself, and if you are very paranoid then try sensitivity analyses; but in practice, the results of \code{find_POPs_lglk} are liable to be so clear-cut that you may not feel it necessary to try more than one small value...)}
 }
 \details{
 Some categories will "catch" others (e.g. \code{find_HSPs} will certainly include any POPs too), so you may need the splitter routines such as \code{split_POPs_from_HSPs} afterwards. The safest general-purpose strategy - but often \emph{not} the most sensible, if your data is nicely organized and you know what you want - would be:
@@ -148,6 +147,7 @@ minisnpg_nodups <- minisnpg[ - droppers,] ## drop all-but-one
 ## of each set of duplicates
 ## find_HSPs (PLOD_HU)
 data( bluefin)
+bluefin <- bluefin[,1:500] ## make dataset smaller for speed in R CMD check
 ## stripped-down data-cleaning for example - see the
 ## vignette for approach for real data!
 pvals <- check6and4( bluefin, thresh_pchisq_6and4 = c( 0.001, 0.0001))

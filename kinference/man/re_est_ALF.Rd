@@ -14,6 +14,7 @@
 \examples{
 data( bluefin)
 library( atease)
+bluefin <- bluefin[,1:100] ## just 100 loci, otherwise too slow for R CMD check
 bluefin@locinfo$pbonzer <- NULL ## remove pre-existing ALFs
 bluefin@locinfo$snerr <- NULL ## remove pre-existing snerr
 bluefin <- re_est_ALF( bluefin)
