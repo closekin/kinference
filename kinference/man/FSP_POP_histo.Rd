@@ -10,6 +10,7 @@
 \item{  bin}{hist bin width. Used to define \code{breaks} (along with \code{xlim}, if given), so you can't manually pass in \code{breaks}.}
 \item{  FSPmean}{plot the expected mean FP stat for FSPs? Default TRUE}
 \item{  POPmean}{plot the expected mean FP stat for POPs? Default TRUE}
+\item{  main}{ plot title. Passed to \code{hist.default}.}
 \item{  ...}{additional pars, passed to \code{hist} (?should we force naming them in a list?)}
 }
 \seealso{PLOD_loghisto

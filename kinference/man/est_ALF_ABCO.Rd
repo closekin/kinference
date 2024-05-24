@@ -5,7 +5,11 @@
 }
 \usage{est_ALF_ABCO(lociar, geno_amb = lociar@geno_amb)
 }
-\arguments{\item{  lociar}{a \code{loc.ar} object with the @geno_amb attribute.}
+\arguments{
+  \item{  lociar}{a \code{loc.ar} object with or without the @geno_amb
+    attribute. If without the @geno_amb attribute, one will need to be
+    supplied via the \code{geno_amb} argument.}
+  \item{ geno_amb}{ a geno_amb attribute for the \code{loc.ar} object}
 }
 \value{Returns the input, adding a 4-column matrix \code{pambig} to the "locinfo" attribute, plus attributes \code{gobs} and \code{gpred} showing observed and expected counts of each genotype per locus.
 }

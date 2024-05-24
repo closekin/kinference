@@ -9,14 +9,19 @@ find_dups_with_missing(
   subset1 = 1 \%upto\% nrow(snpg),
   subset2 = subset1,
   max_diff_ppn,
-  limit = 10000
+  limit = 10000,
+  ij_numeric = is.null(rowid_field(snpg))
 )
 }
 \arguments{
 \item{  snpg}{a \code{snpgeno} object}
 \item{  subset1, subset2}{numeric vectors of which samples to use (not logical, not negative). Defaults to all of them. Iff \code{subset1} and \code{subset2} are identical, only half the comparisons are done (i.e., not \emph{i} with \emph{j} then \emph{j} with \emph{i}). Some sanity checks are made.}
 \item{  max_diff_ppn}{What \emph{proportion} of non-missing (ie scored-in-both) loci to treat as the threshold for duplicity?}
-\item{  limit}{if you hit this many "duplicates", it will stop, to avoid blowing out memory. It means you set \code{max_diff_ppn} too high. For consistency, we should probably have called this \code{keep_n} as per other \code{find_XXX} functions.}
+\item{  limit}{if you hit this many "duplicates", it will stop, to avoid
+  blowing out memory. It means you set \code{max_diff_ppn} too high. For
+  consistency, we should probably have called this \code{keep_n} as per
+  other \code{find_XXX} functions.}
+\item{  ij_numeric}{The returned data.frame of pairs will have columns 'i' and 'j', which identify the members of each pair. By default, if ij_numeric = TRUE, 'i' and 'j' are row-numbers in the input snpg. If the input snpg has row names, these may be more meaningful sample IDs, and can be substituted in as 'i' and 'j' values using ij_numeric = FALSE}
 }
 \value{A dataframe with columns \code{ppn_diff}, then \code{i} and \code{j} (index in \code{subset1} and \code{subset2} respectively of the first pair-member), then \code{ndiff} and \code{ncomp} (numbers of loci differing and actually compared for that pair). Note that \code{i} and \code{j} refer to the \emph{subsets}, not to the rows of the original \code{snpg}- so if you are comparing subsets within the same overall \code{snpg}, then you have to adjust accordingly.
 }

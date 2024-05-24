@@ -3548,7 +3548,7 @@ function(snpg, hist_pars=list(), showPlot = TRUE) {
     ilglk_manual <- colSums( lp)
   }
 
-  dens_SPA <- renorm_SPA( K, dK, ddK, return='func', already_vectorized=TRUE)
+  dens_SPA <- renorm_SPA( K, dK, ddK, return_what='func', already_vectorized=TRUE)
 
   if( isFALSE( hist_pars)) {
     showPlot <- FALSE

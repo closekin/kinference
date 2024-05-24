@@ -12,7 +12,11 @@ split_HSPs_from_HTPs(snpg, candipairs)
 }
 \arguments{
 \item{  snpg}{a \code{snpgeno} object}
-\item{  candipairs}{normally, a dataframe with rows being pairs and columns \emph{i} and \emph{j} (and possibly others) e.g. from \code{find_POPs} or \code{find_HSPs}. Can also be a 2-column matrix (each row again one pair).}
+\item{  candipairs}{normally, a dataframe with rows being pairs and
+  columns \emph{i} and \emph{j} (and possibly others) e.g. from
+  \code{find_POPs} or \code{find_HSPs}. Can also be a 2-column matrix
+  (each row again one pair).}
+\item{  candiPOPs}{ see \code{candipairs}.}
 \item{  gerr}{genotyping error rate, where 0.01 would mean \code{1\%}. It's there to make the POP case robust; you have to choose it, but the precise value should not matter. See \bold{Details}.}
 \item{  use_obsolete_version}{the original code for POPs-vs-FSPs was based on a different non-likelihood-based statistic; see \emph{Obsolete note}. It turned out to have low statistical power, but did not require specifying a \code{gerr}. For replicability purposes, you can still run it by setting this parameter to \code{TRUE}.}
 }

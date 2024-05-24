@@ -8,7 +8,6 @@
 }
 \arguments{
 \item{  thing}{output from \code{find_HSPs} or \code{find_POPs} etc, or some subset thereof}
-\item{  seed}{one sample ID, interpreted as a row-number in \code{thing}. To do:also allow names, via \code{info} attr.}
 }
 \details{\code{get_chain} finds the chain for one specific sample.
 }

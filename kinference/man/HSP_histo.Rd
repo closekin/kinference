@@ -7,15 +7,17 @@
 HSP_histo(
   kinpairs,
   lb,
-  ub = max(kinpairs$PLOD) + bin,
+  ub = NULL,
   fullsib_cut,
   bin = 5,
   HSPmean = TRUE,
   HSPdist = TRUE,
   POPmean = TRUE,
   FSPmean = TRUE,
+  UPmean = FALSE,
   main = "",
-  ...
+  ...,
+  .deprecate = TRUE
 )
 }
 \arguments{
@@ -28,8 +30,12 @@ HSP_histo(
 \item{  HSPdist}{plot the distribution of PLOD for kinpairs? Default TRUE}
 \item{  POPmean}{plot the mean PLOD for POPs? Default TRUE}
 \item{  FSPmean}{plot the mean PLOD for FSPs? Default TRUE}
+\item{  UPmean}{plot the mean PLOD for UPs? Default FALSE; normally
+  outside the plotting area}
 \item{  main}{graph title, passed straight to \code{hist()}}
 \item{  ...}{additional pars, passed to \code{hist()}}
+\item{  .deprecate}{HSP_histo is being retired in favour of
+  \code{histoPLOD}. Send all the arguments there instead? Defaults to TRUE}
 }
 \seealso{PLOD_loghisto
 }

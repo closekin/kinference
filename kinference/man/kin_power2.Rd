@@ -8,7 +8,10 @@ This is a short-term fudge for checking HSP-finding power of a bunch of loci tha
 }
 \usage{kin_power2(lociar, want_LOD_table = TRUE, k)
 }
-\arguments{\item{  lociar}{Usually, a matrix of allele frequencies (Locus * Alleles). Locus names are set from the rownames, or "L1", "L2" etc if there are no rownames. Allele names will be set to "A", "B", "C", etc, regardless of colnames; you do not have a choice there. Will be renormalized so rows sum to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected for \code{kin_power}. If so, then the allele freqs are assumed to live in \code{lociar$locinfo$pbonzer}, and \emph{no} nulls or genotyping errors are allowed for; hence, for a DartCap "ABCO"-style dataset, \code{kin_power} and \code{kin_power2} will give \emph{different} answers.}
+\arguments{
+  \item{  lociar}{Usually, a matrix of allele frequencies (Locus * Alleles). Locus names are set from the rownames, or "L1", "L2" etc  if there are no rownames. Allele names will be set to "A", "B", "C",  etc, regardless of colnames; you do not have a choice there. Will be renormalized so rows sum to unity. NB \code{lociar} can also be a \code{snpgeno} object, as expected for \code{kin_power}. If so, then the allele freqs are assumed to live in \code{lociar$locinfo$pbonzer}, and \emph{no} nulls or genotyping errors are allowed for; hence, for a DartCap "ABCO"-style dataset, \code{kin_power} and \code{kin_power2}will give \emph{different} answers.}
+  \item{  want_LOD_table}{ TRUE or FALSE. Do you want a LOD table or not? Honestly, can't think why you would ever not want one}
+  \item{  k}{ the probability of koinheritance (or Cotterman's K) for the optimal relationship-class to find. Should (almost?) always be 0.5}
 }
 \details{
 If you want to explore the impact of missing genotypes (so that e.g. only 90\\ reasonable and very easy option is to multiply \code{Ediff} and \code{V.UP} both by 0.9, then go thru the steps. If you choose the 0.9 conservatively- ie it's highly likely that >0.9 of loci get co-scored- then the above calc avoids any need to do much more complicated stuff (which I leave to you...).

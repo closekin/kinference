@@ -11,8 +11,9 @@ PLOD_loghisto(
   POP = TRUE,
   FSP = TRUE,
   showUP = c(SPA = TRUE, Normal = FALSE),
-  main= deparse1( substitute( hsps), width_cutoff=50),
-  ...
+  main= '',
+  ...,
+  .deprecate = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ PLOD_loghisto(
 \item{  showUP}{plot the expected density curve for unrelated pairs using the SPA approximation (default TRUE), Normal approximation (default FALSE), both, or neither. Either approximation will plot in colour 5, a light magenta.}
 \item{  main}{optional title for plot}
 \item{  ...}{additional pars, passed to \code{plot}}
+\item{  .deprecate}{PLOD_loghisto is being retired in favour of
+  \code{histoPLOD}. Send all the arguments there instead? Defaults to TRUE}
 }
 \details{
 Colour scheme for all kin-finding markers: Shamelessly cropped from package viridis::viridis; defined as a one-off palette to avoid adding dependencies. Apparently quite colourblind-friendly.

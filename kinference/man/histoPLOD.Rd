@@ -7,7 +7,7 @@
 histoPLOD(PLODs, log = c(FALSE, TRUE)[0],
     mean_show = c( 'POP', 'UP', if( !isFALSE( PLODs@trustplot_FSP_HSP_means)) c( 'HSP', 'FSP')),
     UP_distro_show = c(SPA = TRUE, Normal = FALSE),
-    HSP_distro_show = !log,
+    HSP_distro_show = !log && !is.null( PLODs$mean_HSP),
     lb,
     ub = NULL,
     fullsib_cut = NULL,

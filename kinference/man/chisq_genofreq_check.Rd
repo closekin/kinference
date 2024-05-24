@@ -20,7 +20,9 @@ chisq_genofreq_check(
 \item{  lociar}{a snpgeno object}
 \item{  gpred}{predicted allele frequencies}
 \item{  gobs}{observed allele frequencies}
-\item{  thresh_pchisq_loci}{a param. Presumably, a threshold p-val for flagging loci with suspicious-looking allele frequencies.}
+\item{  thresh_pchisq_loci}{a param. Presumably, a threshold p-val for
+  flagging loci with suspicious-looking allele frequencies.}
+\item{  showPlot}{ Show plots of observed vs. expected counts? TRUE or FALSE}
 \item{  test}{a character string, either "Pearson" or "G"}
 \item{  trim}{TRUE or FALSE. TRUE will keep only above max thresh_pchisq_loci. Arguably better as to be done post-hoc.}
 \item{  seq_paxis}{numeric#'}
