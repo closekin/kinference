@@ -8,7 +8,9 @@ kin_power( lociar, want_LOD_table=TRUE, k,
   hack_LOD= NULL, sd_half_range= 10)
 }
 \arguments{
-\item{  lociar}{\code{snpgeno} objects with the necessary ingredients}
+\item{  lociar}{\code{snpgeno} objects with the necessary ingredients -
+  notably (for 'standard' workflows), a \code{pbonzer} calculated by
+  \code{est_ALF_ABO_quick} or similar}
 \item{  want_LOD_table}{can't think why you'd set this to FALSE}
 \item{  k}{target average kinship for LOD; 0.5 for HSPs, 0.25 for HTPs, etc.}
 \item{  hack_LOD}{Don't mess around with this; it's for internal black magic}
