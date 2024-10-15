@@ -194,6 +194,7 @@ function( nlocal=sys.parent()) mlocal({
 #' bars altogether.
 #' @param want_all_results if TRUE, return dataframe(s) containing results for
 #' each variance explored. This lets you examine "sensitivity".
+#' @param xlab x axis label for the plot, passed directly to \code{hist}
 #' @param ... other parameters passed to \code{hist}, eg \code{xlim},
 #' \code{ylim}, \code{col}. Many others will be ignored, and some will cause
 #' problems.
@@ -229,6 +230,7 @@ function(
   plot_bins= NULL,
   shading_density= 10,
   want_all_results= FALSE,
+  xlab = "PLOD",
   ... # for plot
 ){
 stopifnot(
@@ -372,7 +374,7 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f;' %&%
     # CDF
     histo <- hist( kin$PLOD %such.that% (. < max_PLOD),
         breaks=seq( from= min( kin$PLOD), to= max_PLOD, by= plot_bins),
-        col="lightgrey",xlab="PLOD",
+        col="lightgrey",xlab=xlab,
         main = sprintf( 'Autothresh: %s, #FP=%5.1f', selecto, FPtol_pairs),
         ...)
 
@@ -1804,7 +1806,11 @@ return( mat)
   } else {
       if(output6way) { x <- oldx }
       x@locinfo$pbonzer <- matrix( c( alpha, beta, 0*beta, omega), ncol=4,
-        dimnames=list( NULL, cq( A, B, C, O)))
+                                  dimnames=list( NULL, cq( A, B, C, O)))
+      if( any( is.na( x@locinfo$pbonzer))) {
+          warning( "inestimable frequencies ('pbonzer') for some loci. Some may be double-null for all samples")
+      }
+
 return( x)
   }
 }
@@ -3189,6 +3195,7 @@ function(
   fullsib_cut= NULL,
   bin= 5,
   main= deparse1( substitute( PLODs), width.cutoff=50),
+  xlab = "PLOD",
   ...
 ){
 ## Wrapper for pre-existing PLOD_loghisto and HSP_histo,
@@ -3209,6 +3216,7 @@ stopifnot(
         FSP= 'FSP' %in% mean_show,
         showUP= UP_distro_show,
         main= main,
+        xlab = xlab,
         ...,
         .deprecate= FALSE
       )
@@ -3226,6 +3234,7 @@ stopifnot(
         FSPmean = 'FSP' %in% mean_show,
         UPmean = 'UP' %in% mean_show,
         main= main,
+        xlab = xlab,
         ...,
         .deprecate= FALSE
       )
@@ -3257,6 +3266,7 @@ stopifnot(
 #' @param POPmean plot the mean PLOD for POPs? Default TRUE
 #' @param FSPmean plot the mean PLOD for FSPs? Default TRUE
 #' @param main graph title, passed straight to \code{hist()}
+#' @param xlab graph x axis label, passed straight to \code{hist()}
 #' @param ... additional pars, passed to \code{hist()}
 #' @seealso PLOD_loghisto
 #' @keywords misc
@@ -3274,6 +3284,7 @@ function(
   FSPmean = TRUE,
   UPmean = FALSE, # normally waaaay off to left
   main = "",
+  xlab = "PLOD",
   ...,
   .deprecate= TRUE
 ){
@@ -3292,7 +3303,7 @@ function(
   hist.plod <- hist(
     PLOD %such.that% (. %in.range% c( lb, ub)),
     breaks=seq(lb, ub, bin),
-    col="lightgrey", xlab="PLOD", main = main, ...)
+    col="lightgrey", xlab=xlab, main = main, ...)
 
   # Save lotas hist.plod$... later on;
   extract.named( hist.plod[ cq( mids, breaks, counts)])
@@ -4457,6 +4468,7 @@ function(pair_geno, LOD, geno1, geno2, symmo, granulum, granulum_loci) {
 #' both, or neither. Either approximation will plot in colour 5, a light
 #' magenta.
 #' @param main optional title for plot
+#' @param xlab x axis label for plot, passed directly to \code{plot}
 #' @param ... additional pars, passed to \code{plot}
 #' @keywords misc
 #' @export PLOD_loghisto
@@ -4469,6 +4481,7 @@ function(
   FSP= TRUE,
   showUP= c(SPA= TRUE, Normal= FALSE),
   main= '',
+  xlab = "PLOD",
   ...,
   .deprecate= TRUE
 ){
@@ -4492,7 +4505,7 @@ function(
 
   plot( x[-1], log10( head( pmax( y, 0.1), -1)),
      ylim= ylim, main= main, ...,
-     type= "S", xlab= "PLOD", ylab= "log10(Frequency)")
+     type= "S", xlab= xlab, ylab= "log10(Frequency)")
   # was: hsps@bins[-1], log10( hsps@n_PLODs_in_bin[1:(length(hsps@n_PLODs_in_bin)-1)]),
 
   # Pass thru _some_ graphical pars
