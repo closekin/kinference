@@ -1,0 +1,1 @@
+v1.1.20: first beta release. Lots of tidy-ups, mostly docu. Now passes CMD CHECK with just one warning, and just a stupid one at that (so, no plans to "fix" it). We're reeady to roll!

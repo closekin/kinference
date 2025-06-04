@@ -1,44 +1,41 @@
 \name{est_ALF_ABCO}
 \alias{est_ALF_ABCO}
-\title{Estimate allele frequencies, including nulls}
-\description{Performs estimation of ALFs, given a snpgeno or loc.ar object with \code{geno_amb} attribute. Uses "ABCO" genotypes, ie up to 3 scorable alleles plus possible nulls, eg from \code{geno_deambig_ABC}. NALF (null allele frequency) is estimated from HWE deviations, so this requires a decent sample size. But, it doesn't require the elaborate 6-way genotyping and the massive read-depths needed for that. Largely superseded by est_ALF_ABO_quick, except in cases where C alleles are used.
+\alias{re_est_ALF}
+\title{Estimate allele frequencies olde-style, including nulls}
+\description{
+Most users should avoid these! \code{re_est_ALF} calculates maximum-likelhood estimates of minor, null, and 3rd-allele freqs from a \code{snpgeno} object. Its workhorse is \code{est_ALF_ABCO} which has a weirder syntax unless you are using an old CSIRO "pipeline", and is documented here for that reason only.
+
+\code{re_est_ALF} will accept genotypes 4-way genotypes including "AAO" and "BBO", 6-way genotypes (but there are better options in that case; see below), or triallelic "ABCO" genotypes. The latter corresponds to \code{genotypes_ambig} as seen in the code of \code{define_genotypes}; they allow for an optional 3rd allele and nulls, but do not distinguish between single-nulls and homozygotes. Historically, for CSIRO users, "ABCO"-type genotypes are produced by \code{genocalldart::geno_deambig_ABC}.
+
+Null-allele frequency has to be estimated from HWE deviations, so good estimates require a decent sample size.
+
+The original use-case for these functions was datasets where bona fide 3rd alleles are common; even though they are not used in any \code{\link{kinference}} step (because they get recoded to nulls, i.e. "neither A nor B" en route), it's useful to have them around for ALF estimation. There's a bit of history behind this, which I shan't go into here.
+
+If there are no 3rd alleles, then \code{re_est_ALF} is not the best choice. If you really do have 6-way genotypes (i.e. differentiating single-nulls from homozygotes, at least approximately) then you \emph{could} use \code{re_est_ALF} but the problems are:
+
+\itemize{
+\item \code{re_est_ALF} does not use the extra statistical information on single-null vs homozygote that is available with 6-way genotypes, whereas \code{\link{est_ALF_6way}} does;
+\item and in the absence of that information, it's much slower than \code{\link{est_ALF_ABO_quick}} would be, so why not use that instead?!
 }
-\usage{est_ALF_ABCO(lociar, geno_amb = lociar@geno_amb)
+}
+\usage{
+re_est_ALF( snpg)
+est_ALF_ABCO( lociar, geno_amb = attr( lociar, 'geno_amb'))
 }
 \arguments{
-  \item{  lociar}{a \code{loc.ar} object with or without the @geno_amb
-    attribute. If without the @geno_amb attribute, one will need to be
-    supplied via the \code{geno_amb} argument.}
-  \item{ geno_amb}{ a geno_amb attribute for the \code{loc.ar} object}
+\item{  snpg}{a \code{snpgeno} object.}
+\item{  lociar}{a \code{loc.ar} or \code{snpgeno} object, normally with a \code{geno_amb} attribute from 4-way genotyping (see next).}
+\item{  geno_amb}{a set of 4-way genotypes. In CSIRO's 6-way genotyping pipeline (in package \pkg{genocalldart}, not for general use), 4-way genotypes get called first and stored in a \code{geno_amb} attribute, before making initial allele frequency estimates with \code{est_ALF_ABCO}. those are then used as starting values in 6-way genotype-calling and allele-frequency estimation, and the \code{geno_amb} attribute gets discarded..}
 }
-\value{Returns the input, adding a 4-column matrix \code{pambig} to the "locinfo" attribute, plus attributes \code{gobs} and \code{gpred} showing observed and expected counts of each genotype per locus.
+\value{\code{re_est_ALF} returns the input, adding a 4-column matrix \code{pbonzer} to the \code{$locinfo} attribute, plus attributes \code{gobs} and \code{gpred} showing observed and expected counts of each genotype per locus. \code{pbonzer} is what you want for subsequent calculations. \code{est_ALF_ABCO} is similar but creates a new attribute \code{$locinfo$pambig}, instead of creating/modifying \code{pbonzer}.
 }
-\seealso{\code{est_ALF_ABO_quick, } re_est_ALF', and \code{ est_ALF_6way}'.
+\seealso{\code{\link{est_ALF_ABO_quick}} for normal users, \code{\link{est_ALF_6way}} for special 6-way people.
 }
 \examples{
-data( bluefin)
-library( atease)
-library( mvbutils)
-bluefin <- bluefin[, 1:100] ## just 100 loci, else too slow for R CMD check
-bluefin@locinfo$pbonzer <- NULL ## remove pre-existing ALFs
-bluefin@locinfo$snerr <- NULL ## remove pre-existing snerr
-## bluefin <- est_ALF_ABCO( bluefin) ## error :(
-## geno_amb is a version of the snpg where all single-nulls
-## are re-coded as ambiguous single-null / homozygote genotypes
-gbasics::define_genotypes()
-bluefin@diplos ## check what genotypes exist in the dataset
-geno_amb <- bluefin
-geno_amb@diplos <- genotypes_ambig ## note genotypes_ambig has
-## possibility for C alleles, but bluefin doesn't start with these.
-## Turn each genotype into its single-null-ambiguous equivalent.
-geno_amb[ bluefin == "AA"] <- "AAO"
-geno_amb[ bluefin == "AO"] <- "AAO"
-geno_amb[ bluefin == "BB"] <- "BBO"
-geno_amb[ bluefin == "BO"] <- "BBO"
-geno_amb[ bluefin == "AB"] <- "AB"
-geno_amb[ bluefin == "OO"] <- "OO"
-bluefin@geno_amb <- geno_amb
-bluefin <- est_ALF_ABCO( bluefin)
-head( bluefin@locinfo$pbonzer)
+head( bluefin$pbonzer) # C alleles sometimes present
+bluefin$locinfo$pbonzer <- NULL ## remove pre-existing ALFs
+bluefin$locinfo$snerr <- NULL ## remove pre-existing snerr
+bluefin <- re_est_ALF( bluefin)
+head( bluefin$locinfo$pbonzer) # C-alleles have gone to 0
 }
 \keyword{misc}

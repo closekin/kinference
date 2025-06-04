@@ -1,39 +1,32 @@
 useDynLib( kinference, .registration=TRUE)
 export( "autopick_threshold",
 "chain_pairwise",
-"check_FPosity",
 "check6and4",
-"chisq_genofreq_check",
 "drop_dups_pairwise_equiv",
 "est_ALF_6way",
 "est_ALF_ABCO",
 "est_ALF_ABO_quick",
+"est_ALF_nonulls",
 "find_duplicates",
 "find_dups_with_missing",
 "find_HSPs",
 "find_POPs",
 "find_POPs_lglk",
-"FSP_POP_histo",
 "get_chain",
-"get_pair_covars",
 "hetzminoo_fancy",
 "histoPLOD",
-"HSP_histo",
 "ilglk_geno",
 "kin_power",
-"kin_power2",
-"kinlegend",
 "kinPalette",
-"opti3ready",
-"PLOD_loghisto",
 "prepare_PLOD_SPA",
 "re_est_ALF",
 "split_FSPs_from_HSPs",
 "split_FSPs_from_POPs",
 "split_HSPs_from_HTPs",
 "var_PLOD_kin")
+import( gbasics)
 import( Rcpp)
 import( atease)
 import( mvbutils)
-import( gbasics)
 import( vecless)
+
