@@ -19,7 +19,7 @@ Then you need to make sure you have some CRAN packages, and some MVB packages, i
 
 ### The MVB support packages
 
-`install.packages(pkgs = c("atease", "mvbutils", "vecless"), repos = "https://markbravington.github.io/Rmvb-repo")`
+`install.packages(c("atease", "mvbutils", "vecless"), repos = "https://markbravington.r-universe.dev/")`
 
 ### kinference and gbasics
 
@@ -35,21 +35,25 @@ If you are working off Github, ATM the Github repos for these two packages are p
 Then, if we've given you access to Github itself, you can do:
 
 `remotes::install_github("closekin/gbasics")`
-`remotes::install_github("closekin/kinference")`
+`remotes::install_github("closekin/kinference", build = TRUE, build_vignettes = TRUE)`
+
 
 If you only have the ZIPs, you need 
 
 `remotes::install_local( "<path-to-gbasics-zip", subdir='gbasics')`
-`remotes::install_local( "<path-to-kinference-zip", subdir='kinference')`
+`remotes::install_local( "<path-to-kinference-zip", subdir='kinference', build = TRUE, build_vignettes = TRUE)`
 
-However, I can't get the godammn vignette to work properly that way, so... well, I don't know. It is all a nightmare really.
+If you don't need the vignette, feel free to skip the `build` and `build_vignettes` arguments. Otherwise, do check it out - the kinference vignette is:
 
+`vignette( "kinference-vignette")`
 
 ## Alternative installation for gbasics and kinference
 
 This is the way most people might do it, because it corresponds closely to installation of most packages from CRAN and is very easy. It should work on Linux and Macs, as well as on Windows where it does not even require you to have Rtools. It has worked well in the past, but it relies on MVB having kept his own CRAN-alike repo up-to-date. (Note that Github's meaning of "repo" is different from CRAN's meaning. Not our fault.)
 
 `install.packages(pkgs = c("gbasics", "kinference"), repos = "https://markbravington.github.io/Rmvb-repo")`
+
+...except that we'll have to get back to you on the location of that repos, because Rmvb-repo is no longer with us.
 
 
 ## Plans
