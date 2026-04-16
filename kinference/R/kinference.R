@@ -2020,7 +2020,7 @@ These take a 'snpgeno' dataset that has been processed as far as 'check6and4' (a
 
 There are two versions aimed at POPs currently called 'find_POPs' and 'find_POPs_lglk'. The former uses a "weighted pseudo-exclusion" ("wpsex") statistic that allows for null alleles and is robust to genotyping errors. The latter uses a likelihood-based statistic (again allowing for nulls), but you do have to provide a guesstimate of genotyping error rate (to robustify the calculation- otherwise, a single genotyping error in a true POP could give a log-likelihood of -Inf). 'find_POPs_lglk' is newer, easier to explain, and perhaps less arbitrary, but we have used the "wpsex" version on all our real CKMR datasets (>10). Time will tell whether one is better/easier than the other; finding POPs ought to be pretty easy, so the results really should be the same.
 
-'find_HSPs' should really be called 'find_2OPs' because it cannot discriminate amongst second-order kin types; there is no way to distinguish genetically between HSPs, Grandparent-Grandchild Pairs, and Full-Thiatic Pairs (eg aunt/nephew) with 'snpgeno' data alone. But, for historical reasons, it's still called 'find_HSPs'. Note that 'find_HSPs' can also be tricked into targeting [some] other types of kin, such as 3; see *Details*, but watch out.
+'find_HSPs' should really be called 'find_2KPs' because it cannot discriminate amongst second-order kinships; there is no way to distinguish genetically between HSPs, Grandparent-Grandchild Pairs, and Full-Thiatic Pairs (eg aunt/nephew) with 'snpgeno' data alone. But, for historical reasons, it's still called 'find_HSPs'. Note that 'find_HSPs' can also be tricked into targeting [some] other types of kin, such as 3KPs; see *Details*, but watch out.
 
 
 USAGE
@@ -2085,7 +2085,7 @@ ARGUMENTS
 
   limit_pairs: Integer. Defines the _maximum_ number of candidate pairs to keep. Will provide a warning if the number of identified pairs equals 'limit_pairs'.
 
-  nbins, minbin, maxbin: 'find_XXX' functions summarise their pairwise comparison statistics into bins (in the part of the range where exact values are uninteresting), as well as returning specific pairs that pass the "interesting" threshold. 'nbins' sets the number of bins, 'minbin' sets the top value of the lowest bin (so that bin stretches from -Inf to 'minbin' for HSPs); 'maxbin' sets the highest. For HSPs, the minimum is 3 bins (-Inf:minbin),[minbin:maxbin),[maxbin:Inf). 'minbin' is not used for duplicates or (at present) for POPs, since the statistics there are defined so that the lowest possible value is 0. The defaults for 'minbin' and/or 'maxbin' may not be what you need in all cases, so be prepared to select manually and then re-run. For duplicates, where calculations can be slow for big datasets, you can set 'nbins=0' to disable binning and focus instead on just finding the pairs with fewer than 'max_diff_loci' discrepancies. Each pairwise calculation normally loops over all the loci, but is aborted when the running total of discrepant loci reaches 'maxbin' (or, if 'nbins=0', when it reaches 'max_diff_loci'), thus saving considerable time. It is therefore not sensible to have 'maxbin<max_diff_loci' (think about it!).
+  nbins, minbin, maxbin: 'find_XXX' functions summarise their pairwise comparison statistics into bins (in the part of the range where exact values are uninteresting), as well as returning specific pairs that pass the "interesting" threshold. 'nbins' sets the number of bins, 'minbin' sets the top value of the lowest bin (so that bin stretches from -Inf to 'minbin' for HSPs); 'maxbin' sets the highest. For HSPs, the minimum is 3 bins (-Inf:minbin),[minbin:maxbin),[maxbin:Inf). 'minbin' is not used for duplicates, nor at present for POPs, since the statistics there are defined so that the lowest possible value is 0. The defaults for 'minbin' and/or 'maxbin' may not be what you need in all cases, so be prepared to select manually and then re-run. For duplicates, where calculations can be slow for big datasets, you can set 'nbins=0' to disable binning and focus instead on just finding the pairs with fewer than 'max_diff_loci' discrepancies. Each pairwise calculation normally loops over all the loci, but is aborted when the running total of discrepant loci reaches 'maxbin' (or, if 'nbins=0', when it reaches 'max_diff_loci'), thus saving considerable time. It is therefore not sensible to have 'maxbin<max_diff_loci' (think about it!).
 
   show_plot: whether to plot log histogram. Regardless, plot will not be shown if other arguments would lead to stupid result (e.g. no bins...).
   
@@ -2116,14 +2116,14 @@ The non-splitter functions, i.e. 'find_XXX', might be run on huge numbers of sam
 
 In addition, the 'limit_pairs' argument is there to prevent your computer locking out with bazillions of unwanted pairs (in case you guess the bin limit inapproriately); the comparisons will be stopped if 'limit_pairs' is hit, with a warning. In that case, you probably need to change a threshold, or re-run with larger 'limit_pairs'. The default isn't meant to correspond to any biomathematical logic, it's just to stop blue smoke coming out your USB ports.
 
-For 'find_duplicates', there are at least two different use-cases. First, you might want an initial run on a non-too-large subset of your data, to check that dups _can_ be clearly distinguished and to look at typical extent of genotyping errors (based on clear duplicates that don't match at every locus). For that, you can set 'nbins' and choose some reasonable guess as to 'max_diff_loci' (say, 5\ loci). Because you set 'nbins>0', _every_ pair (almost...) gets checked at _all_ loci, so it can be slow. Thus, if you have done this before and have a good sense of "how bad can a real duplicate be?", then set 'nbins=0' (and 'max_diff_geno' to a small but safe value that won't miss any realistic duplicate-with-genotyping-error) so it will abort a comparison early as soon as it reaches 'max_diff_geno' differing loci. That saves a _lot_ of time on big datasets! You won't get a histo of number-of-diffs, but you don't need one for that use-case. The "almost" is that 'find_duplicates' uses "transitivity" (if A is a dup of B and of C, then we don't need to check B vs C), so it only counts differences for not-yet-known duplicates _based on_ 'max_diff_loci'. To discard duplicates and to find entire equivalence-classes of duplicates, e.g. from a control specimen included in numerous plates, see 'drop_dup_pairwise_equiv'.
+For 'find_duplicates', there are at least two different use-cases. First, you might want an initial run on a non-too-large subset of your data, to check that dups _can_ be clearly distinguished and to look at typical extent of genotyping errors (based on clear duplicates that don't match at every locus). For that, you can set 'nbins' and choose some reasonable guess as to 'max_diff_loci' (say, 50 loci). Because you set 'nbins>0', _every_ pair (almost...) gets checked at _all_ loci, so it can be slow. Thus, if you have done this before and have a good sense of "how bad can a real duplicate be?", then set 'nbins=0' (and 'max_diff_geno' to a small but safe value that won't miss any realistic duplicate-with-genotyping-error) so it will abort a comparison early as soon as it reaches 'max_diff_geno' differing loci. That saves a _lot_ of time on big datasets! You won't get a histo of number-of-diffs, but you don't need one for that use-case. The "almost" is that 'find_duplicates' uses "transitivity" (if A is a dup of B and of C, then we don't need to check B vs C), so it only counts differences for not-yet-known duplicates _based on_ 'max_diff_loci'. To discard duplicates and to find entire equivalence-classes of duplicates, e.g. from a control specimen included in numerous plates, see 'drop_dup_pairwise_equiv'.
 
 'find_HSPs' relies on pre-computed values of "LOD" and "PUP" that have been set by 'kin_power'. Normally you would call the latter with 'k=0.5', since that's what HSPs are. However, the devious user can try _different_ values of 'k'- which is how 'find_POPs_lglk' works- and then the target of 'find_HSPs' will become "kin with that value of 'k'". Be very careful!!!
 
 
 .KINFORMATION
 
-The idea is that kin-finding is based on a statistic and a threshold 'eta', where the latter is chosen to keep false-positives down to a user-specified level. Anything "beyond" 'eta' will be treated as a kin-pair ("beyond" depends on how the statistic is defined, i.e. whether a kin-pair should come out very low or very high). However, you're also likely to want to look post hoc at the distro of computed statistics _near_ 'eta', to see whether separation is as clean (or otherwise) as expected - and also very unbeyond 'eta' into the zone where UPs are entirely dominant, to check that theory is OK. So, as well as returning the "interesting" pairs that have a statistic close to or on the non-UP size of 'eta', the POP and HSP versions also return _summaries_ of the distribution of the statistic. The thing is that there will be zillions of statistics from UPs - enough to blow out computer memory - and they are not individually interesting. Specifically, the main things returned are:
+The idea is that kin-finding is based on a statistic and a threshold 'eta', where the latter is chosen to keep false-positives down to a user-specified level. Anything "beyond" 'eta' will be treated as a kin-pair ("beyond" depends on how the statistic is defined, i.e. whether a kin-pair should come out very low or very high). However, you're also likely to want to look post hoc at the distro of computed statistics _near_ 'eta', to see whether separation is as clean (or otherwise) as expected - and also far away from 'eta' into the zone where UPs are entirely dominant, to check that theory is OK. So, as well as returning the "interesting" pairs that have a statistic close to or on the non-UP size of 'eta', the POP and HSP versions also return _summaries_ of the distribution of the statistic. The thing is that there will be zillions of statistics from UPs - enough to blow out computer memory - and they are not individually interesting. Specifically, the main things returned are:
 
  - Mean and variance of stats. Computation is restricted to those on the UP-side of 'eta' (which is nearly all of them, usually) in order to avoid distortion from non-UP cases. The latter will often be so rare that distortion would be negligible - but means and variances are not "robust".
 
@@ -2138,13 +2138,13 @@ But, sometimes it doesn't. In that case, the predicted values of 'eta' and 'keep
 
 VALUE
 
-A 'data.frame' with extra attributes (see below) and at least 3 columns: statistic 'PLOD' or 'wpsex' or 'ndiff' (number of mismatching genotypes), then 'i' and 'j' which are the indices/rows in 'snpg' of the two members of each pair. (In ancient times 'i' and 'j' misleadingly referred to the subsets instead, but we have moved on...) The attributes in all cases include 'bins' (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), 'binprobs' (theoretical CDF for UPs in 'find_HSPs'; should exist for _POPs_ (not UPs) in 'find_POPs' (the 'wpsex' version) but currently doesn't), some of the input parameters, and the 'call' that invoked the function. 
+A 'data.frame' with extra attributes (see below) and at least 3 columns: statistic 'PLOD' or 'wpsex' or 'ndiff' (number of mismatching genotypes), then 'i' and 'j' which are the indices/rows in 'snpg' of the two members of each pair. (In ancient times 'i' and 'j' misleadingly referred to the subsets instead, but we have moved on...) The attributes in all cases include 'bins' (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), 'binprobs' (theoretical CDF for UPs in 'find_HSPs'; should also exist for _POPs_ in the old "wpsex"-based 'find_POPs', but currently doesn't), some of the input parameters, and the 'call' that invoked the function. 
 
-'find_POPs' adds a column named 'nABOO', showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, I was seeing values typically in the low 20s, which is pretty good separation. 
+'find_POPs' adds a column named 'nABOO', showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, we have seen values typically in the low 20s, which is pretty good separation. A 2D scatter-plot of 'wpsex' and 'nABOO' can be more informative than either statistic on its own.
 
-'find_HSPs' and 'find_POPs' have a bunch of extra attributes which should be reeeeasonably clear. For 'find_HSPs', 'mean_sub_PLOD' and 'var_sub_PLOD' are the empirical means & var below 'eta', andy they should be close to 'mean_UP' and 'var_UP' _iff_ 'eta' has been chosen sensibly. For 'find_POPs', the same goes for 'mean_wpsex_hi' and 'var_wpsex_hi'. 
+'find_HSPs' and 'find_POPs' have a bunch of extra attributes which should be reasonably clear. For 'find_HSPs', 'mean_sub_PLOD' and 'var_sub_PLOD' are the empirical means & var below 'eta', andy they should be close to 'mean_UP' and 'var_UP' _iff_ 'eta' has been chosen sensibly. For 'find_POPs', the same goes for 'mean_wpsex_hi' and 'var_wpsex_hi'. 
 
-For duplicates, not _all_ pairwise duplicates are recorded, unless the subsets are different - otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since duplication is transitive (ie if i & j are the same, and i & k are the same, then j & k must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. For example, if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
+For duplicates, not _all_ pairwise duplicates are recorded, unless the subsets are different - otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since duplication is transitive (ie if _i_ & _j_ are the same, and _i_ & _k_ are the same, then _j_ & _k_ must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. For example, if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
 
 %%#
     i j
@@ -2154,17 +2154,17 @@ For duplicates, not _all_ pairwise duplicates are recorded, unless the subsets a
 
 but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function 'drop_dups_pairwise_equiv' - see _Examples_. 
 
-For POPs and HSPs, the items below are also returned as attributes (which can be more conveniently accessed by '@' if 'atease' is loaded, as per EXMAPLES). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.
+For POPs and HSPs, the items below are also returned as attributes (which can be more conveniently accessed by '@' if 'atease' is loaded, as per EXAMPLES). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. The names sometimes change depending on which statistic is being used.
 
-  - eta: false-positive cutoff to be applied to the statistic in question (automatically done if 'rough_n_pairs_to_keep==NA', or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of 'eta'. However, the set of retained pairs/individuals is actually controlled by...
+  - eta: false-positive cutoff to be applied to the statistic in question (automatically done if 'rough_n_pairs_to_keep=NA', or up to you if not). Variance of the stat will only be calculated from values to the "UP side" of 'eta'. However, the set of retained pairs/individuals is actually controlled by...
 
   - keep_thresh: the cutoff used to retain "interesting" pairs. Usually obvious from the range of statistic values.
 
-  - mean_sub_stat, var_sub_stat (where stat is PLOD, wpsex, or ndiff): empirical values for the statistic when it is below 'eta' (ie nearly always).
+  - mean_sub_<stat>, var_sub_<stat>: (where 'stat' is 'PLOD', 'wpsex', or 'ndiff'): empirical values for the statistic when it is below 'eta' (ie nearly always).
 
   - mean_theory, var_theory: of the statistic, to compare to previous.
 
-  - n_stat_in_bin (where stat is PLOD, wpsex, or ndiff): number of pairs whose statstic fell within the range of each bin
+  - n_stat_in_bin: (where 'stat' is 'PLOD', 'wpsex', or 'ndiff'): number of pairs whose statstic fell within the range of each bin.
 
   - bins: cutpoints for the bins. These should be quantiles, according to the SPA; so if practice matches theory, the numbers-per-bin should all be similar.
 
@@ -2172,7 +2172,7 @@ For POPs and HSPs, the items below are also returned as attributes (which can be
 EXAMPLES
 
 ## find_duplicates
-library( atease) # @ used somewhere below
+library( atease) # @ used below for clarity
 library( mvbutils) # IDNK if this is needed explicitly
 
 define_genotypes()    ## creating 'genotypes4_ambig' etc
@@ -2273,11 +2273,10 @@ abline( v = pops@mean_UP, col = kinPalette("UP"), lwd = 2)
 
 pops_lglk <- find_POPs_lglk(bluefin_6, keep_thresh = 0, gerr = 0.01)
 pops_lglk@mean_UP     ## as before
-pops_lglk@mean_POP    ## both mean_POP and mean_UP, because E(stat | k = UP) is
-## no longer zero
+pops_lglk@mean_POP    
 
 ## plot the full distribution from binned records
-histoPLOD( pops_lglk, log=TRUE, mean_show=cq( POP, UP))
+histoPLOD( pops_lglk, log=TRUE)
 }")
 
 )
@@ -2509,7 +2508,7 @@ stopifnot(
 
   if( is.null( maxbin)) {
     EPOP <- sum( li$E_POP)
-    maxbin <- EPOP + (EPOP - EHSP) * 0.1
+    maxbin <- EPOP + (EPOP - EHSP) * 0.5 # changed from 0.1 in 6/2025
   }
   bins <- seq( from=minbin, to=maxbin, length=nbins)
   binterval <- bins[2] - bins[1]
@@ -2849,13 +2848,11 @@ stopifnot(
 
   atts <- attributes( result) %without.name% 'call'
   atts <- atts[ names( atts) %that.dont.match% 'FSP']
-  names( atts) <- sub( 'HSP', 'POP', names( atts))
   attributes( result) <- atts
 
-  # assign extra info as attributes
-  result@mean_UP <- snpg@Kenv$dK( 0)   # was called mean_theory
-  result@var_UP <- snpg@Kenv$ddK( 0)
-  result@mean_POP <- snpg@Kenv$dK( 0) + sum(snpg@locinfo$Ediff)
+  # Not sure if the FSP & HSP means are OK (might be fine; HSP looks OK...)
+  # Confusing cozza the sneaky use of kin_power(), too lazy to figure it out
+  # ... so, don't plot them subsequently
   result@trustplot_FSP_HSP_means <- FALSE
 
   # ... which is slightly lower than sum( snpg@locinfo$E_POP). Cozza gerr?
@@ -5500,6 +5497,55 @@ function( snpg, candipairs) {
   return(ret)
 }
 
+
+"upairid" <-
+structure( function( i, j, sep='/'){
+  if( missing( j) && (i %is.a% 'list')){ # called direct
+    j <- i$j
+    i <- i$i
+  }
+  paste( pmin( i, j), pmax( i, j), sep=sep)
+}
+, doc =  mvbutils::docattr( r"{
+upairid    package:kinference
+
+Label kin-pairs
+
+
+DESCRIPTION
+
+'find_HSPs' etc return _pairs_ of kin, labelled by 'i' and 'j'. If you want to see whether one or more pairs also occur in another set of kin, eg from calling 'find_POPs_lglk', it's tempting to 'paste' together each set's 'i' and 'j', and then use 'match'. But that will go fail if the order has switched, so that 'i' in the first set corresponds to 'j' in the second, and so on--- which can definitely happen with 'find_XXX' (for good reasons). To avoid that, 'upairid' sorts each (i,j) pair into order before pasting them, so that you can use 'match( upairid( first_set), upairid( second_set))' with no need to worry about order-switching.
+
+
+USAGE
+
+upairid(i, j, sep='/') 
+
+
+ARGUMENTS
+
+ i, j: If 'i' is a list (presumably from a call to 'find_XXX') and 'j' is missing, then i. Otherwise, 'i' and 'j' can be vectors of numbers or characters.
+ 
+ sep: character (or string) to put between each 'i' and 'j'.
+ 
+
+VALUE
+
+A character vector of pairwise-sorted, pasted, IDs.
+
+
+EXAMPLES
+
+upairid( 1:5, 5:1)
+d1 <- list( i=1:3, j=4:6)
+d2 <- list( i=4:6, j=1:3) # swapped
+match( paste( d1$i, d1$j), paste( d2$i, d2$j)) # nope
+match( upairid( d1), upairid( d2)) # yep
+
+
+}")
+
+)
 
 "var_PLOD_kin" <-
 structure( function(

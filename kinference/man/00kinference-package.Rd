@@ -55,14 +55,14 @@ The vignette \code{kinference-vignette} (qv).
 And for the categories of task, and the functions within each:
 \subsection{Locus qc}{\code{\link{check6and4}}
 }
-\subsection{Sample qc}{\code{\link{ilglk_geno}}, \code{\link{hetzminoo_fancy}}, \code{\link{find_duplicates}}, \code{\link{find_dups_with_missing}}, \code{\link{drop_dups_pairwise_equiv}}
+\subsection{Sample qc}{\code{\link{ilglk_geno}}, \code{\link{hetzminoo_fancy}}, \code{\link{find_duplicates}}, \code{\link{find_dups_with_missing}}, \code{\link{drop_dups_pairwise_equiv}} (and, after kin-finding, \code{\link{chain_pairwise}}).
 }
 \subsection{Allele frequency estimation}{\code{\link{est_ALF_ABO_quick}}, \code{\link{est_ALF_nonulls}}, or less likely \code{\link{est_ALF_6way}}, \code{\link{est_ALF_ABCO}}, \code{\link{re_est_ALF}}
 }
 \subsection{Pairwise kin finding}{
 \code{\link{find_POPs}} and \code{\link{find_POPs_lglk}}; \code{\link{find_HSPs}}; \code{\link{histoPLOD}} and 'k
 
-inPalette' for graphics; \code{\link{split_FSPs_from_HSPs}} and other \code{split_x_from_y} functions; \code{\link{autopick_threshold}} and \code{\link{var_PLOD_kin}} for separating 2KP from more-distant kin.
+inPalette' for graphics; \code{\link{split_FSPs_from_HSPs}} and other \code{split_x_from_y} functions; \code{\link{autopick_threshold}} and \code{\link{var_PLOD_kin}} for separating 2KP from more-distant kin. Also \code{\link{chain_pairwise}} and \code{\link{get_chain}} for post-hoc consistency checks on likely HSPs.
 }
 \subsection{Predicting locus power for kin finding}{\code{\link{kin_power}} (qv)
 }
