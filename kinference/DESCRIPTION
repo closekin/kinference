@@ -18,5 +18,4 @@ KeepSource: TRUE
 Collate: kinference.R Cloaders_kinference.R
 LazyData: yes
 LazyDataCompression: xz
-Version: 1.2.20
-RoxygenNote: 7.3.2
+Version: 1.2.23

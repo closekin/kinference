@@ -1,20 +1,21 @@
-kinference-package                     Kin-finding and QC for Close-Kin Mark-Recapture
-autopick_threshold                     PLOD threshold for HSPs
-bluefin                                Southern Bluefin Tuna data
-chain_pairwise                         Sib-groups within HSPs
-check6and4                             Locus QC check
-drop_dups_pairwise_equiv               Grouping duplicate samples
-dropbears                              Red-rumped Dropbear data
-est_ALF_6way                           Estimate ALFs from 6-way genotypes and snerr
-est_ALF_ABCO                           Estimate allele frequencies olde-style, including nulls
-est_ALF_ABO_quick                      Estimate allele frequencies with nulls
-find_duplicates                        Kin-finders for loads-of-SNPs datasets
-find_dups_with_missing                 Duplicate-finding with some missing genotypes
-hetzminoo_fancy                        QC checks on sample heterozygosity
-histoPLOD                              Histogram PLODs
-ilglk_geno                             Check individual multilocus genotypes for typicality
-kin_power                              Locus selection for kin-finding
-kinPalette                             Colors for different kinships
-prepare_PLOD_SPA                       Prepare for kin-finding
-split_FSPs_from_HSPs                   Discriminate between kinships of known close-kin
-var_PLOD_kin                           Predict variance of PLOD for HTPs and HCPs
+kinference-package                              Kin-finding and QC for Close-Kin Mark-Recapture
+autopick_threshold                              PLOD threshold for HSPs
+bluefin                                         Southern Bluefin Tuna data
+chain_pairwise                                  Sib-groups within HSPs
+check6and4                                      Locus QC check
+drop_dups_pairwise_equiv                        Grouping duplicate samples
+dropbears                                       Red-rumped Dropbear data
+est_ALF_6way                                    Estimate ALFs from 6-way genotypes and snerr
+est_ALF_ABCO                                    Estimate allele frequencies olde-style, including nulls
+est_ALF_ABO_quick                               Estimate allele frequencies with nulls
+find_duplicates                                 Kin-finders for loads-of-SNPs datasets
+find_dups_with_missing                          Duplicate-finding with some missing genotypes
+hetzminoo_fancy                                 QC checks on sample heterozygosity
+histoPLOD                                       Histogram PLODs
+ilglk_geno                                      Check individual multilocus genotypes for typicality
+kin_power                                       Locus selection for kin-finding
+kinPalette                                      Colors for different kinships
+prepare_PLOD_SPA                                Prepare for kin-finding
+split_FSPs_from_HSPs                            Discriminate between kinships of known close-kin
+upairid                                         Label kin-pairs
+var_PLOD_kin                                    Predict variance of PLOD for HTPs and HCPs

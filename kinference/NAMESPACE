@@ -23,6 +23,7 @@ export( "autopick_threshold",
 "split_FSPs_from_HSPs",
 "split_FSPs_from_POPs",
 "split_HSPs_from_HTPs",
+"upairid",
 "var_PLOD_kin")
 import( gbasics)
 import( Rcpp)
