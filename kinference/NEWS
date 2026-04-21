@@ -1,3 +1,6 @@
+1.2.24
+ - Fixed typos and out-of-dates in doco of 'find_XXX' and 'drop_dups_pairwise_equiv'.
+
 1.2.22
  - Fixed mislocated PLOD mean for POPs in 'find_POPs_lglk'. Added 'upairid' to help cross-check sets of kin-pairs. Some typos and linguistic infelicities fixed in doco of 'find_XXX'.
 
