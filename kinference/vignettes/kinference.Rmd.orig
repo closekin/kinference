@@ -10,27 +10,9 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-<!-- MVB: This bloody rmarkdown process has gotten WAY too complicated.
-YAML headers, HTML syntax (here), what bit of code is doing what? aaaargh
-Good intentions, but people have tried to make it do TOO MUCH
-and the proliferation of low-level details have obscured the high-level appeal.
-and I am spending more time trying to get it to all work together than I am on writing the docu
-and I worry that in 6 months' time when I revisit it, I will have forgetton how to make stuff work... (just verified; it's true :/)
-And EG, how good is it that we need yet another comment marker; # // % not enough it seems
-or someone suggests ~~~{=comment} ... ~~~ of course how clear
-but that doesn't even work
-and we are stuck with this mess
-no doubt all it needs is another format, maybe add some json :/ 
-("joke")
--->
-
-<!--
-The other big problem is that vignettes are an undebuggable horrorshow
-FWIW I *did* have the 'debug' package working on vignettes at one point... but apparently no longer...
--->
 
 ```{r startupchunkachunka, include=FALSE}
-# I cannot get the bloody cache to work :/
+# I cannot get the excellent cache to work :/
 knitr::opts_chunk$set( 
     dev = 'png', fig.path='./figures-kinference/', fig.keep='high',
     cache= FALSE
@@ -282,7 +264,7 @@ legend("topright", legend = c("POP expectation", "FSP expectation"),
 ## rest a mix of FSPs, HSPs, and possibly weaker kin.
 
 POPs <- splitPOPs[splitPOPs$PLOD_FP < 0,] ## our first set of definite kin pairs
-POPs$ij <- paste(POPs$i, POPs$j) ## a pair ID
+POPs$ij <- upairid(POPs$i, POPs$j) ## a pair ID
 ```
 
 We now have a set of definite POPs; next we need to find FSPs and 2KPs.
@@ -385,7 +367,7 @@ FSPs.
 
 ```{r FSPlitty}
 POPsOrFSPs <- HSPs_1[HSPs_1$PLOD > 110,]           ## anywhere in the valley
-POPsOrFSPs$ij <- paste(POPsOrFSPs$i, POPsOrFSPs$j) ## pair ID to match the one in POPs
+POPsOrFSPs$ij <- upairid(POPsOrFSPs$i, POPsOrFSPs$j) ## pair ID to match the one in POPs
 FSPs <- POPsOrFSPs[!POPsOrFSPs$ij %in% POPs$ij,]   ## find our FSPs
 ```
 
@@ -407,13 +389,56 @@ false-negative 2KPs are likely to have fallen below the cutoff. Unlike
 with 1KPs vs 2KPs, there won't be a clean break, so things get a bit
 more complicated.
 
-The idea of choosing the cutoff is to let us retain a (hopefully large) proportion of true 2KPs, subject to a tolerance on the expected number of contaminating 3KPs and 4KPs that by chance fall above the threshold. That tolerance is up to you; you really don't want many false-positives from 3KPs because they can mess up a CK model. The problem isn't the _number_ of false-positives; rather, it's the different dynamics that different kinships have. Most of all, 3KPs tend to have much longer birth-gaps than HSPs, so that mislabelling even a couple of 3KPs as "HSPs" can cause a substantial bias in mortality-rate estimates. (Note that it doesn't cause bias to discard some true 2KPs below the cutoff, because we can compensate by incorporating the estimated false-negative rate directly into the CKMR model.) While it's a good idea to choose a high cutoff for that reason, there is a trade-off; higher cutoffs do lead to fewer definite 2KPs going into the model, and thus to higher variances, as well as making it harder to check model diagnostics. Nevertheless, you should certainly go high enough to get your estimated false-positive rate well _below_ the false-negative rate; you defintely _don't_ want "equal probabilities" here.
+The idea of choosing the cutoff is to let us retain a (hopefully
+large) proportion of true 2KPs, subject to a tolerance on the expected
+number of contaminating 3KPs and 4KPs that by chance fall above the
+threshold. That tolerance is up to you; you really don't want many
+false-positives from 3KPs because they can mess up a CK model. The
+problem isn't the _number_ of false-positives; rather, it's the
+different dynamics that different kinships have. Most of all, 3KPs
+tend to have much longer birth-gaps than HSPs, so that mislabelling
+even a couple of 3KPs as "HSPs" can cause a substantial bias in
+mortality-rate estimates. (Note that it doesn't cause bias to discard
+some true 2KPs below the cutoff, because we can compensate by
+incorporating the estimated false-negative rate directly into the CKMR
+model.) While it's a good idea to choose a high cutoff (i.e., few
+false-positives) to minimise the bias from 3KPs, there is a trade-off;
+higher cutoffs do lead to fewer definite 2KPs going into the model,
+and thus to higher variances, as well as making it harder to check
+model diagnostics. Nevertheless, you should certainly go high enough
+to get your estimated false-positive rate well _below_ the
+false-negative rate; you defintely _don't_ want "equal probabilities"
+here.
 
-We have often chosen the cutoff at a round number by eye, but a more systematic approach is via the `autopick_threshold` function. This takes the empirical distribution of PLODs in the tentative 2KPs, estimates the impact of linkage, and--- on the assumption that each comes from either a 2KP, 3KP, or 4KP--- fits a constrained mixture decomposition (see function documentation and MS for details) to estimate the underlying distributions and numbers of 2KPs/3KPs/4KPs, before numerically choosing a cutoff to achieve the desired tolerance. When `autopick_threshold` works well, it's great; but don't trust its output if it doesn't look sensible, because it may have too much flexibility in fitting especially when the number of kin-pairs is low. Whether-or-not you use `autopick_threshold`, the process _is_ intrinsically subjective, because _you_ have to decide how many 3KPs you are willing to tolerate. So, picking a cutoff by eye is also OK (because the false-negative rate computed afterwards will eliminate bias), as long as you don't try to "tweak" the cutoff to include/exclude specific pairs.
+We have often chosen the cutoff at a round number by eye, but a more
+systematic approach is via the `autopick_threshold` function. This
+takes the empirical distribution of PLODs in the tentative HSPs,
+estimates the impact of linkage, and--- on the assumption that each
+comes from either a HSP, HTP, or half first cousin pair (H1CP)--- fits
+a constrained mixture decomposition (see function documentation and MS
+for details) to estimate the underlying distributions and numbers of
+HSPs/HTPs/H1CPs, before numerically choosing a cutoff to achieve the
+desired tolerance.^[note that we're using 'HSP', 'HTP', and 'H1CP' in
+this assumption, rather than '2KP', '3KP', and '4KP'. The distinction
+arises because, although expected PLODs are the same within each of
+2KP, 3KP, and 4KP, linkage means that PLOD _variances_ can differ
+between kin-types within a kinship order, and 'autopick_threshold'
+assumes HSPs, HTPs, and H1CPs specifically. This is unlikely to have
+much impact in practice, but is one more reason to use demographic
+information to minimise the number of non-HSP 2KPs at this stage of
+the analysis] When `autopick_threshold` works well, it's great; but
+don't trust its output if it doesn't look sensible, because it may
+have too much flexibility in fitting especially when the number of
+kin-pairs is low. Whether-or-not you use `autopick_threshold`, the
+process _is_ intrinsically subjective, because _you_ have to decide
+how many 3KPs you are willing to tolerate. So, picking a cutoff by eye
+is also OK (because the false-negative rate computed afterwards will
+eliminate bias), as long as you don't try to "tweak" the cutoff to
+include/exclude specific pairs.
 
 
 ```{r splitHSPsFromThiatics}
-HSPs_1$ij <- paste(HSPs_1$i, HSPs_1$j)
+HSPs_1$ij <- upairid(HSPs_1$i, HSPs_1$j)
 HSPs_2 <- HSPs_1[!HSPs_1$ij %in% c(POPs$ij, FSPs$ij),] 
 ## plot the empirical PLODs with the expected distribution
 ## of the PLOD for half-sibling pairs
