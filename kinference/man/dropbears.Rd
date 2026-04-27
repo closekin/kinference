@@ -3,7 +3,7 @@
 \docType{data}
 \title{Red-rumped Dropbear data}
 \description{
-An anonymised \code{snpgeno} dataset of Red-rumped Dropbear (\emph{Thylarctos plummetus}, ssp. \emph{haemorhous}) genotypes for 480 individuals at 2000 loci.
+An anonymised \code{snpgeno} dataset of Red-rumped Dropbear (\emph{Thylarctos plummetus}, ssp. \emph{haemorhous}) genotypes for 480 individuals at 2000 loci. Owing difficulties retaining field staff for dropbear research, these data represent only a single sampling year.
 
 Genotypes are "4-way", ie single-nulls and homozygotes are not distinguished, and double-nulls are potentially allowed for, although there aren't any in this dataset.
 
