@@ -8,6 +8,7 @@ Imports: Rcpp (>= 0.12.11), atease, mvbutils (>= 2.12), vecless
 Suggests: knitr, rmarkdown, tinytest
 VignetteBuilder: knitr, rmarkdown
 LinkingTo: Rcpp, RcppArmadillo
+Additional_repositories: https://markbravington.r-universe.dev
 KeepPlaintextDoco: YES
 NeedsCompilation: YES
 Encoding: UTF-8
@@ -15,4 +16,4 @@ KeepSource: TRUE
 Collate: kinference.R Cloaders_kinference.R
 LazyData: yes
 LazyDataCompression: xz
-Version: 1.2.30
+Version: 1.2.31
