@@ -19,11 +19,10 @@ kin_power( lociar, want_LOD_table=TRUE, k,
 }
 \value{
 A \code{snpgeno} object with augmented columns in \code{$locinfo}. Those are:
-\item{ E_UP, V_UP}{mean & variance for UPs}
-\item{ E_HSP, E_POP,E_FSP}{as you would expect}
-\item{ Ediff}{\code{E_HSP-E_POP} ie the "absolute" power of that locus}
-\item{ sdiff}{\code{(E_HSP-E_POP)/sqrt(V_UP)} which is arguably better than \code{Ediff} for ranking loci}
-It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a matrix) to \code{$locinfo}. They have been made dull (see \code{mvbutils::make_dull}) to improve your viewing experience, but they work fine for all normal purposes (and you can always \code{unclass} them to remove the S3 class \code{dull}).
+\item{  E_UP, V_UP}{mean & variance for UPs}
+\item{  E_HSP, E_POP, E_FSP}{as you would expect}
+\item{  Ediff}{\code{E_HSP-E_POP} ie the "absolute" power of that locus}
+\item{  sdiff}{\code{(E_HSP-E_POP)/sqrt(V_UP)} which is arguably better than \code{Ediff} for ranking loci It also attaches \code{LOD}, \code{PUP}, and \code{ev01} elements (each a matrix) to \code{$locinfo}. They have been made dull (see \code{mvbutils::make_dull}) to improve your viewing experience, but they work fine for all normal purposes (and you can always \code{unclass} them to remove the S3 class \code{dull}).}
 }
 \examples{
 ## Next will fail cozza missing pre-calculated objects necessary for kin-finding:

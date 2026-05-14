@@ -10,10 +10,9 @@ Although the biggest linkage effect comes from the main "order" of kinship (2KP,
 \subsection{Nature of linkage}{
 The two extreme alternatives considered by \code{var_PLOD_kin} each use one parameter to capture "linkage", but the parameter has quite different meanings. The two versions are:
 
-\itemize{
-\item separate chromosomes, each containing the same number of loci, with \emph{no} recombination. The linkage parameter is the number of such chromosomes.
-\item one single chromosome containing all the loci, equally spaced, with random recombination at multiple places. The linkaage parameter is the probability of recombination between adjacent loci.
-}
+ separate chromosomes, each containing the same number of loci, with \emph{no} recombination. The linkage parameter is the number of such chromosomes.
+
+ one single chromosome containing all the loci, equally spaced, with random recombination at multiple places. The linkaage parameter is the probability of recombination between adjacent loci.
 }
 }
 \usage{
@@ -32,9 +31,9 @@ var_PLOD_kin(
 \item{  debug}{Logical flag, not for regular folks to use! Defaults to FALSE. The \pkg{debug} package needs to be loaded beforehand.}
 \item{  C_equiv}{for artificial test, with \code{emp_V_HSP} set to the no-crossover variance from \code{C_equiv} chromos (need not be integer). Ignored if \code{emp_V_HSP} is set.}
 }
-\section{Gruesome details}{The "per-locus LOD" (whose properties are stored in the columns \code{e0}, \code{e1}, \code{v0}, \code{v1} in \code{linfo}) is created by calling \code{\link{kin_power}} (qv). The normal use-case would be from \code{kin_power(...,k=0.5)}, so that the (P)LOD pertains to 2KP/UP comparisons. However, if you called \code{kin_power(...,k=0.25)} then the (P)LOD would be designed for 3KP/UP comparisons, and so on. In fact, you could even hand-tweak the calculations to contain LODs for 3KP/2KP comparisons, which \emph{might} in principle improve the resolution (but you'd have to fiddle manually; you could actually do it based on two calls to \code{\link{kin_power}}, one with \code{k=0.5} and one with \code{k=0.25}, and manipulating the results).
-}
 \value{Matrix with two rows \code{V0} and \code{Vx}, and one column for each element of \code{n_meio} (which is always augmented to include 2), named "M2" etc. The two rows pertain respectively to the no-crossover multiple-chromosome scenario, and the single-chromosome multiple-crossover scenario. The matrix also has an attribute \code{info}, which is a numeric vector of elements named \code{V_UP}, \code{V_HSP}, \code{C_hat}, and \code{rho_hat} (note that \code{V_HSP} should duplicate the first column of the matrix) \code{C_hat} is estimated equivalent number of chromosomes for the no-crossover scenario, and \code{rho_hat} is per-locus crossover rate for the all-crossover scenario.
+}
+\section{Gruesome details}{The "per-locus LOD" (whose properties are stored in the columns \code{e0}, \code{e1}, \code{v0}, \code{v1} in \code{linfo}) is created by calling \code{\link{kin_power}} (qv). The normal use-case would be from \code{kin_power(...,k=0.5)}, so that the (P)LOD pertains to 2KP/UP comparisons. However, if you called \code{kin_power(...,k=0.25)} then the (P)LOD would be designed for 3KP/UP comparisons, and so on. In fact, you could even hand-tweak the calculations to contain LODs for 3KP/2KP comparisons, which \emph{might} in principle improve the resolution (but you'd have to fiddle manually; you could actually do it based on two calls to \code{\link{kin_power}}, one with \code{k=0.5} and one with \code{k=0.25}, and manipulating the results).
 }
 \examples{
 # COMPLETELY MADE-UP e/v values! Nothing to do with genetics :)

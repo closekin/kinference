@@ -26,14 +26,14 @@ est_ALF_nonulls( x=NULL, AB, AA, BB,
 \item{  return_unconverged}{if TRUE and some loci still haven't converged after \code{MAX_AITKEN} iterations, then just return the indices of those loci. By default (ie if this is FALSE), you'll just get the estimates with a warning, and that's probably fine.}
 \item{  pbonzer_format}{if \code{est_ALF_nonulls} is called directly on \code{AB} etc rather than on \code{x}, then \code{pbonzer_format} determines the format of the returned allele frequency estimates:TRUE means you get a 4-column matrix suitable for \code{kinference} (to go in \code{$locinfo$pbonzer}) and FALSE means you just get a vector of the major (A) allele frequencies.}
 }
+\value{If \code{x} is supplied, then its \code{locinfo} attribute will be augmented with the \code{pbonzer} (allele frequency) matrix required by most \code{\link{kinference}} functions. Note that \code{pbonzer} has 4 columns always, so here the 3rd column ("C") is set to zero. If \code{x} is not supplied, then a 3-column matrix matrix is returned. Rowsums of the matrix are always 1 in either case.
+}
 \section{Beyond 4 way genotypes}{
 \code{est_ALF_ABO_quick} does actually accept 6-way genotypes, but it would be a bit weird to use it, because the first thing it then does is to re-encode the genotypes as 4-way, thus sacrificing some statistical information. It starts by merging the single-nulls with true homozygotes, and then tries to "unmerge" them statistically! It would be better to use \code{\link{est_ALF_6way}}, though you might need to first run \code{\link{est_ALF_ABCO}} or \code{est_ALF_ABO_quick} to get starting values.
 
 \code{\link{est_ALF_ABCO}} (qv) is a much slower version that can handle triallelic SNPs (ie potentially with a C allele). Like \code{est_ALF_ABO}, it does not distinguish between single-nulls and homozygotes. It should give the same results as \code{est_ALF_ABO} for loci without a C allele. Syntax is a bit different because of its role in the legacy 6-way pipeline, so you might prefer to use \code{\link{re_est_ALF}} (qv) which does the same thing but with different (easier?) formatting of the input.
 
 \code{\link{est_ALF_6way}} (qv) uses 6-way genotypes, where single nulls are called separately from homozygotes, but potentially with error. It requires error estimates in \code{$locinfo$snerr}. Unless you are dealing with a legacy 6-way dataset, you don't want to go near this!
-}
-\value{If \code{x} is supplied, then its \code{locinfo} attribute will be augmented with the \code{pbonzer} (allele frequency) matrix required by most \code{\link{kinference}} functions. Note that \code{pbonzer} has 4 columns always, so here the 3rd column ("C") is set to zero. If \code{x} is not supplied, then a 3-column matrix matrix is returned. Rowsums of the matrix are always 1 in either case.
 }
 \examples{
 #dropbears$locinfo$pbonzer <- NULL ## no population allele frequency estimates!

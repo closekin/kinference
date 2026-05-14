@@ -1,17 +1,18 @@
 \name{kinference-package}
 \alias{kinference}
 \alias{kinference-package}
+\alias{kinference-package}
 \alias{kinference}
 \docType{package}
 \title{Kin-finding and QC for Close-Kin Mark-Recapture}
 \description{
 \code{kinference} covers the preparatory steps for Close-Kin Mark-Recapture, for a multilocus SNP dataset from many individuals that have already been genotyped. Specifically, it covers:
 
-\itemize{
-\item allele frequency estimation, followed by...
-\item ... QC of samples and loci, with the goal of then being able to...
-\item ... find close-kin pairs and duplicated samples.
-}
+ allele frequency estimation, followed by...
+
+ ... QC of samples and loci, with the goal of then being able to...
+
+ ... find close-kin pairs and duplicated samples.
 
 These tasks break down into finer categories, and the various functions under each are mentioned under \bold{See also} below. There is a vignette, \code{kinference-vignette}, which demonstrates many but not all features. For detailed explanations of the algorithms, see the manuscript under \bold{References}.
 
@@ -21,7 +22,7 @@ Note that \code{kinference} does not build or fit CKMR models per se. It "just" 
 \subsection{Genetic inputs}{
 \code{kinference} handles diploid biallelic SNP genotypes for thousands of loci. Genotyping errors are tolerated, but error rate should be low: no "3X coverage" etc! Loci are assumed to be in HWE, which can be checked. Genuine null alleles (see below) are allowed for, but uncalled/unknown genotypes are \emph{not} permitted in most functions; every sample and locus must be called, even if some calls are wrong. The types of close-kin considered are POP, FSP, and 2KPs (2nd-order kin, ie HSP, GGP, FTP), which is the limit of resolution in the absence of genome-assembly data (outside the scope of \code{kinference} version 1).
 
-\code{kinference} does \emph{not} call/score the genotypes--- you need to do that beforehand. The starting point for \code{kinference} must always be a \code{snpgeno} object (see package \pkg{gbasics}) containing already-called genotypes for \emph{every} sample and locus, plus the crucial sample-specific information ("metadata" to geneticists, "covariates" to population dynamicists and statisticians!) such as sampling-year, age, sex, etc depending on the dataset. The original object gets augmented with extra data (eg allele and genotype frequency estimates) as the steps proceed.
+\code{kinference} does \emph{not} call/score the genotypes- you need to do that beforehand. The starting point for \code{kinference} must always be a \code{snpgeno} object (see package \pkg{gbasics}) containing already-called genotypes for \emph{every} sample and locus, plus the crucial sample-specific information ("metadata" to geneticists, "covariates" to population dynamicists and statisticians!) such as sampling-year, age, sex, etc depending on the dataset. The original object gets augmented with extra data (eg allele and genotype frequency estimates) as the steps proceed.
 
 There's no requirement for one particular genotyping method (\code{kinference} has been used successfully with sequencer data and with microarrays) but there \emph{are} limitations and expectations on the properties of the data. Some of these are mentioned here, and you may find more information in \code{kinference-vignette} (qv).
 }
@@ -42,11 +43,11 @@ Of course, \code{kinference} can perfectly well cope with datasets \emph{without
 \subsection{Linkage and linkage disequilibrium}{
 \code{kinference} is designed for datasets of a few thousand SNPs, where Linkage Disequilibrium (LD) is unlikely to be substantial; almost inevitably, a few loci \emph{will} be in LD just because they happen to be close together genomically, but that won't noticeably affect the results. If you have zillions of SNPs, eg from Whole-Genome-Sequencing (WGS), then LD \emph{will} be a problem and you won't be able to get \code{kinference} to work properly unless you thin your dataset a lot. However, a more significant problem with WGS is likely to be low coverage, leading to unacceptable levels of dropout...
 
-Given its intended use, \code{kinference} quite reasonably ignores LD. However, \emph{linkage} per se--- the fact that long consecutive stretches from the same strand of DNA are inherited at meiosis, rather than each locus being inherited independently--- is absolutely \emph{not} ignorable for finding 2KPs (or FSPs). \code{kinference} has quite a bit of code that deals practically with linkage, as inferred from pairs that clearly are 2KP.
+Given its intended use, \code{kinference} quite reasonably ignores LD. However, \emph{linkage} per se- the fact that long consecutive stretches from the same strand of DNA are inherited at meiosis, rather than each locus being inherited independently- is absolutely \emph{not} ignorable for finding 2KPs (or FSPs). \code{kinference} has quite a bit of code that deals practically with linkage, as inferred from pairs that clearly are 2KP.
 }
 }
 \references{Bravington, Mark and Baylis, Shane (2025): "Finding kin-pairs for Close-Kin Mark-Recapture". Journal of Joy, v1 p1.
-\subsection{Historical note}{\code{kinference} has evolved considerably since its birth at CSIRO in ~2018. It was originally developed for ddRAD datasets back in the "Bronze Age", and a couple of those datasets are still in practical use within CSIRO. Thus, \code{kinference} has to support some legacy types of data that would best be avoided in new projects--- most notably, the challenging (albeit successful) "6-way genotyping" that tried to explicitly distinguish single-nulls from homozygotes, based on read-depth. That, and a few other quirky cases, lead to some pretty complicated code in parts of \code{kinference}, and to several options (especially for null alleles) which might be confusing for new users who "just want to analyse their data". Such is life--- sorry!
+\subsection{Historical note}{\code{kinference} has evolved considerably since its birth at CSIRO in ~2018. It was originally developed for ddRAD datasets back in the "Bronze Age", and a couple of those datasets are still in practical use within CSIRO. Thus, \code{kinference} has to support some legacy types of data that would best be avoided in new projects- most notably, the challenging (albeit successful) "6-way genotyping" that tried to explicitly distinguish single-nulls from homozygotes, based on read-depth. That, and a few other quirky cases, lead to some pretty complicated code in parts of \code{kinference}, and to several options (especially for null alleles) which might be confusing for new users who "just want to analyse their data". Such is life- sorry!
 }
 }
 \seealso{

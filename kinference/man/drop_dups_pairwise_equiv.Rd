@@ -2,7 +2,7 @@
 \alias{drop_dups_pairwise_equiv}
 \title{Grouping duplicate samples}
 \description{
-\code{\link{find_duplicates}} only does pairwise comparisons. However, tissue from the same animal may turn up in multiple samples, so that one sample may turn up in many duplicate-pairs, and the pairs are linked. This function constructs equivalence classes--- each corresponding notionally to one \emph{animal}--- showing which samples belong in each class. It can either return the entire set of classes, or it can pick just one sample from each class and then return the "surplus" duplicate samples. With the latter, if you then drop those elements as per \code{vignette("kinference")}, only one sample from each animal will be retained.
+\code{\link{find_duplicates}} only does pairwise comparisons. However, tissue from the same animal may turn up in multiple samples, so that one sample may turn up in many duplicate-pairs, and the pairs are linked. This function constructs equivalence classes- each corresponding notionally to one \emph{animal}- showing which samples belong in each class. It can either return the entire set of classes, or it can pick just one sample from each class and then return the "surplus" duplicate samples. With the latter, if you then drop those elements as per \code{vignette("kinference")}, only one sample from each animal will be retained.
 
 The algorithm merges two classes whenever any sample in the first class is flagged as a duplicate of any sample in the second. Thus, it will be sensitive to false-positive duplicates (though less so to false-negative ones). It's up to you to make sure that the input really contains true duplicates!
 }

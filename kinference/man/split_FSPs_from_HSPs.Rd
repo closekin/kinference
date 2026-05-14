@@ -16,32 +16,32 @@ split_HSPs_from_HTPs(snpg, candipairs)
 \item{  gerr}{genotyping error rate, where 0.01 would mean \code{1\%}. It's there to make the POP case robust; you have to choose it, but the precise value should not matter. See \bold{Details}.}
 \item{  use_obsolete_version}{the original code for POPs-vs-FSPs was based on a different non-likelihood-based statistic. It turned out to have low statistical power, but did not require specifying a \code{gerr}. For replicability purposes, you can still run it by setting this parameter to \code{TRUE}, but otherwise don't bother.}
 }
-\value{
-A dataframe with columns \code{PLOD_FH} (or similar depending on what is being split), \code{i}, and \code{j}, containing the indices of each pair.
-Theoretical means for the two kinships in the function's name are returned as attributes (variances cannot be predicted), as is the \code{call}.
-}
 \details{
 The idea of \code{split_FSPs_from_POPs}- though this is not the only possible workflow- is that pairs which are \emph{either} POPs \emph{or} FSPs should stand out very clearly from everything else, via \code{\link{find_POPs}}. Then the job is to pick between those possibilities. The workflow is supposed to be:
 
-\itemize{
-\item nail POPs/FSPs first with \code{\link{find_POPs}};
-\item pick between them with \code{split_FSPs_from_POPs}, making use of eg age data too;
-\item look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs;
-\item filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}.
-}
+ nail POPs/FSPs first with \code{\link{find_POPs}};
+
+ pick between them with \code{split_FSPs_from_POPs}, making use of eg age data too;
+
+ look for HSPs (and potentially some HTPs) and filter out already-known POPs and FSPs;
+
+ filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}}.
 
 However, an equally reasonable workflow might be:
 
-\itemize{
-\item nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}};
-\item split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs};
-\item filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}};
-\item use \code{split_FSPs_from_POPs} to do just what it says. (Again, age data may help in marginal cases.)
-}
+ nail HSPs and everything stronger (and potentially some HTPs) with \code{\link{find_HSPs}};
+
+ split HSPs/HTPs from POPs/FSPs with \code{split_FSPs_from_HSPs};
+
+ filter out HTPs from the remaining set of HSPs with \code{split_HSPs_from_HTPs} and/or \code{\link{autopick_threshold}};
+
+ use \code{split_FSPs_from_POPs} to do just what it says. (Again, age data may help in marginal cases.)
 
 All \code{split_<blah>} functions return expected values under different possible kin-types (but not variances, since these cannot be predicted for all kin-types).
 
 The \code{gerr} parameter in \code{split_FSPs_from_POPs} is there to alleviate the problem that a single locus displaying apparent Mendelian exclusion is in theory reason enough to prove that a pair is \emph{not} a POP (if a likelihood-based criterion is used). But, of course, we can have genotyping errors (and, in a reasonably big dataset, mutations). Allowing for a small amount of error gives the method much mor flexibility, without paying a high price in statistical efficiency (provided \code{gerr} is small). The technical interpretation is that, if a genotyping error occurs at a locus, then the true genotype is replaced by a randomly-drawn genotype from the marginal distro of genotypes at that locus. Real genotyping errors don't work like that, but it is mathematically convenient and achieves the desired effect of robustifying the FSP-vs-POP statistic. The value to use is up to you; you can experiment; if you really want to estimate it, then look at replicate genotypes.
+}
+\value{A dataframe with columns \code{PLOD_FH} (or similar depending on what is being split), \code{i}, and \code{j}, containing the indices of each pair. Theoretical means for the two kinships in the function's name are returned as attributes (variances cannot be predicted), as is the \code{call}.
 }
 \examples{
 library( atease) # so x@att--- easier than attr( x, 'att')

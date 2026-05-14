@@ -25,8 +25,8 @@ so that any palette changes are temporary and can be undone.
 \usage{kinPalette( kinships= names( kincolours), setPalette= FALSE)
 }
 \arguments{
-\item{ kinships}{which kinships to return colors for. Default is all of them.}
-\item{ setPalette}{set to TRUE if you really want to set graphics palette.}
+\item{  kinships}{which kinships to return colors for. Default is all of them.}
+\item{  setPalette}{set to TRUE if you really want to set graphics palette.}
 }
 \value{A character vector of hex codes, with names "POP" etc. If the \code{kinships} argument is specified, then just the corresponding elements will be returned.
 }

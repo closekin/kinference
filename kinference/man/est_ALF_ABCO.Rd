@@ -13,10 +13,9 @@ The original use-case for these functions was datasets where bona fide 3rd allel
 
 If there are no 3rd alleles, then \code{re_est_ALF} is not the best choice. If you really do have 6-way genotypes (i.e. differentiating single-nulls from homozygotes, at least approximately) then you \emph{could} use \code{re_est_ALF} but the problems are:
 
-\itemize{
-\item \code{re_est_ALF} does not use the extra statistical information on single-null vs homozygote that is available with 6-way genotypes, whereas \code{\link{est_ALF_6way}} does;
-\item and in the absence of that information, it's much slower than \code{\link{est_ALF_ABO_quick}} would be, so why not use that instead?!
-}
+ \code{re_est_ALF} does not use the extra statistical information on single-null vs homozygote that is available with 6-way genotypes, whereas \code{\link{est_ALF_6way}} does;
+
+ and in the absence of that information, it's much slower than \code{\link{est_ALF_ABO_quick}} would be, so why not use that instead?!
 }
 \usage{
 re_est_ALF( snpg)
