@@ -1,7 +1,14 @@
-## Package 'kinference': finding close-kin pairs for Close-Kin Mark-Recapture
+## Package 'kinference': installation instructions
 
-For now, install like this:
+Hello! I now live in the R-universe. You can install me, plus my dependencies, like this:
 
-`install.packages( "kinference", repos = unique( c( closekin= "https://closekin.r-universe.dev", markbravington= "https://markbravington.r-universe.dev", getOption( "repos")[ "CRAN"], "https://cloud.r-project.org")))`
-
-In due course, 'kinference' will move to a different R-universe (ie not "closekin"), once the licence is sorted out. 
+```
+# Tell R where I live
+options(repos = unique( c(
+    closekin= 'https://closekin.r-universe.dev',
+    markbravington= 'https://markbravington.r-universe.dev',
+    getOption( 'repos')[ 'CRAN'],
+    'https://cloud.r-project.org'
+)))
+install.packages( "kinference")
+```

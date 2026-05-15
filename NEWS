@@ -1,3 +1,8 @@
+1.2.31
+ - Vignette renamed to plain old "kinference"
+ - Probably not much else. Just tiddling around to check that it all works from R-universe... 
+ - ... eg licence temporarily nonsensicalized to keep bureaucradonts placid
+
 1.2.24
  - Fixed typos and out-of-dates in doco of 'find_XXX' and 'drop_dups_pairwise_equiv'.
 
