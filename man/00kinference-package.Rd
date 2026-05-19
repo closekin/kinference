@@ -46,12 +46,12 @@ Of course, \code{kinference} can perfectly well cope with datasets \emph{without
 Given its intended use, \code{kinference} quite reasonably ignores LD. However, \emph{linkage} per se- the fact that long consecutive stretches from the same strand of DNA are inherited at meiosis, rather than each locus being inherited independently- is absolutely \emph{not} ignorable for finding 2KPs (or FSPs). \code{kinference} has quite a bit of code that deals practically with linkage, as inferred from pairs that clearly are 2KP.
 }
 }
-\references{Bravington, Mark and Baylis, Shane (2025): "Finding kin-pairs for Close-Kin Mark-Recapture". Journal of Joy, v1 p1.
+\references{Bravington, Mark and Baylis, Shane and Eveson, Paige and Feutry, Pierre (2026): "kinference: Pairwise kinship detection for Close-Kin Mark-Recapture", bioRxiv (being uploaded now: DOI to come).
 \subsection{Historical note}{\code{kinference} has evolved considerably since its birth at CSIRO in ~2018. It was originally developed for ddRAD datasets back in the "Bronze Age", and a couple of those datasets are still in practical use within CSIRO. Thus, \code{kinference} has to support some legacy types of data that would best be avoided in new projects- most notably, the challenging (albeit successful) "6-way genotyping" that tried to explicitly distinguish single-nulls from homozygotes, based on read-depth. That, and a few other quirky cases, lead to some pretty complicated code in parts of \code{kinference}, and to several options (especially for null alleles) which might be confusing for new users who "just want to analyse their data". Such is life- sorry!
 }
 }
 \seealso{
-The vignette \code{kinference-vignette} (qv).
+\code{vignette( "kinference")} (qv).
 
 And for the categories of task, and the functions within each:
 \subsection{Locus qc}{\code{\link{check6and4}}

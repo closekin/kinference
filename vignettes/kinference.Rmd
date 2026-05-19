@@ -185,9 +185,9 @@ names( attributes( strongKin)) # or atts( strongKin) thx2 'atease'
 ```
 
 ```
-##  [1] "names"          "row.names"      "class"          "bins"           "n_wpsex_in_bin"
-##  [6] "eta"            "keep_thresh"    "n_loci"         "mean_UP"        "var_UP"        
-## [11] "call"
+##  [1] "names"          "row.names"      "class"          "bins"          
+##  [5] "n_wpsex_in_bin" "eta"            "keep_thresh"    "n_loci"        
+##  [9] "mean_UP"        "var_UP"         "call"
 ```
 
 ``` r
@@ -554,12 +554,14 @@ thresh
 ## attr(,"FPtol_pairs")
 ## [1] 1
 ## attr(,"info")
-##        V0_M3        Vx_M3        V0_M4        Vx_M4         V_UP        V_HSP        C_hat 
-## 179.66091016 192.07090954 162.47650979 166.37340040 135.90524760 185.86912547 211.68747051 
-##      rho_hat           E2           E3           E4          SD2          SD3          SD4 
-##   0.05300852  61.60599802  -1.43495747 -32.95543522  13.63338276  13.85896495  12.89858133 
-##           P2           P3           P4           N3         Nall       thresh      Pr_FNeg 
-##   0.14357251   0.13856494   0.71786255  49.27040441 355.57627543  26.94363293   0.00550372
+##        V0_M3        Vx_M3        V0_M4        Vx_M4         V_UP        V_HSP 
+## 179.66091016 192.07090954 162.47650979 166.37340040 135.90524760 185.86912547 
+##        C_hat      rho_hat           E2           E3           E4          SD2 
+## 211.68747051   0.05300852  61.60599802  -1.43495747 -32.95543522  13.63338276 
+##          SD3          SD4           P2           P3           P4           N3 
+##  13.85896495  12.89858133   0.14357251   0.13856494   0.71786255  49.27040441 
+##         Nall       thresh      Pr_FNeg 
+## 355.57627543  26.94363293   0.00550372
 ```
 
 Well, that plot looks great! With that cutoff, we can select our "definite 2KPs" and the estimated false-positive and false-negative rates of that set:
@@ -593,13 +595,20 @@ summary( dropbears$info[ c( HSPs$i, HSPs$j), ]) ## samples in HSPs
 ```
 
 ```
-##   Our_sample            sex              weight_kg          popn            dropheight_m   
-##  Length:104         Length:104         Min.   : 47.30   Length:104         Min.   : 0.000  
-##  Class :character   Class :character   1st Qu.: 84.42   Class :character   1st Qu.: 2.000  
-##  Mode  :character   Mode  :character   Median :101.30   Mode  :character   Median : 3.000  
-##                                        Mean   : 98.88                      Mean   : 3.442  
-##                                        3rd Qu.:116.40                      3rd Qu.: 4.000  
-##                                        Max.   :138.50                      Max.   :10.000
+##      Our_sample         sex        weight_kg             popn    
+##  Length   :104   Length   :104   Min.   : 47.30   Length   :104  
+##  N.unique :104   N.unique :  4   1st Qu.: 84.42   N.unique :  3  
+##  N.blank  :  0   N.blank  :  0   Median :101.30   N.blank  :  0  
+##  Min.nchar: 10   Min.nchar:  1   Mean   : 98.88   Min.nchar:  3  
+##  Max.nchar: 10   Max.nchar:  3   3rd Qu.:116.40   Max.nchar:  7  
+##                                  Max.   :138.50                  
+##   dropheight_m   
+##  Min.   : 0.000  
+##  1st Qu.: 2.000  
+##  Median : 3.000  
+##  Mean   : 3.442  
+##  3rd Qu.: 4.000  
+##  Max.   :10.000
 ```
 
 ``` r
@@ -607,13 +616,20 @@ summary( dropbears$info)              ## all samples
 ```
 
 ```
-##   Our_sample            sex              weight_kg          popn            dropheight_m   
-##  Length:480         Length:480         Min.   : 29.00   Length:480         Min.   : 0.000  
-##  Class :character   Class :character   1st Qu.: 88.72   Class :character   1st Qu.: 2.000  
-##  Mode  :character   Mode  :character   Median :107.85   Mode  :character   Median : 3.000  
-##                                        Mean   :102.02                      Mean   : 3.498  
-##                                        3rd Qu.:119.03                      3rd Qu.: 5.000  
-##                                        Max.   :161.10                      Max.   :10.000
+##      Our_sample         sex        weight_kg             popn    
+##  Length   :480   Length   :480   Min.   : 29.00   Length   :480  
+##  N.unique :480   N.unique :  4   1st Qu.: 88.72   N.unique :  3  
+##  N.blank  :  0   N.blank  :  0   Median :107.85   N.blank  :  0  
+##  Min.nchar:  8   Min.nchar:  1   Mean   :102.02   Min.nchar:  3  
+##  Max.nchar: 10   Max.nchar:  3   3rd Qu.:119.03   Max.nchar:  7  
+##                                  Max.   :161.10                  
+##   dropheight_m   
+##  Min.   : 0.000  
+##  1st Qu.: 2.000  
+##  Median : 3.000  
+##  Mean   : 3.498  
+##  3rd Qu.: 5.000  
+##  Max.   :10.000
 ```
 
 ## Alternative POP statistic
@@ -666,7 +682,7 @@ Commenting out the code doesn't exclude it, at least not from tangling, so manua
 
 Your data will almost certainly need cleaning before you can do the
 kin-finding in Section One. To show how (and, in **Section 3**, _why_),
-we'll use the `bluefin` dataset included in package `kinference`.
+we'll use the `bluefin` dataset included in package `kinference`. This is a small, anonymised subset of the tuna close-kin data described in Farley et al., 2024; see `?bluefin` for details and full citation.
 
 ## Population allele frequencies
 
@@ -679,7 +695,7 @@ we won't recompute them, but here's how to do it:
 
 
 ``` r
-# 'bluefin' is a dataset that comes with 'kinference'
+# 'bluefin' is a dataset that comes with 'kinference'; see '?bluefin'
 # Check genotype encoding:
 diplos( bluefin)  # aha, 6-way genotyping (legacy CSIRO data)
 ```

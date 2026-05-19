@@ -512,7 +512,7 @@ Commenting out the code doesn't exclude it, at least not from tangling, so manua
 
 Your data will almost certainly need cleaning before you can do the
 kin-finding in Section One. To show how (and, in **Section 3**, _why_),
-we'll use the `bluefin` dataset included in package `kinference`.
+we'll use the `bluefin` dataset included in package `kinference`. This is a small, anonymised subset of the tuna close-kin data described in Farley et al., 2024; see `?bluefin` for details and full citation.
 
 ## Population allele frequencies
 
@@ -524,7 +524,7 @@ we won't recompute them, but here's how to do it:
 
 
 ```{r loady_bluefin}
-# 'bluefin' is a dataset that comes with 'kinference'
+# 'bluefin' is a dataset that comes with 'kinference'; see '?bluefin'
 # Check genotype encoding:
 diplos( bluefin)  # aha, 6-way genotyping (legacy CSIRO data)
 ## if you're using 4-way genotypes(most likely)
