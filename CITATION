@@ -1,0 +1,9 @@
+## bioRxiv link (with DOI)
+bibentry(
+  bibtype="Article",
+  author = {Bravington, Mark V and Baylis, Shane M and Eveson, Paige and Feutry, Pierre},
+  title = {kinference: Pairwise kinship detection for Close-Kin Mark-Recapture},
+  year = {2026},
+  doi = {10.64898/2026.05.18.725841},
+  journal = {bioRxiv}
+)
