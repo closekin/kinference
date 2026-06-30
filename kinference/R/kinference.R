@@ -1,4 +1,4 @@
-# This is package kinference 
+# This is package kinference
 
 ".onLoad" <-
 function( libname, pkgname) {
@@ -21,7 +21,7 @@ function( libname, pkgname) {
 
   # As of v1.2, next should prolly be TRUE...
   assign( 'are_we_deprecating_yet', FALSE, envir=asNamespace( 'kinference'))
-  
+
   # Zap attached plain-text docus, if any
   dedoc_namespace( pkgname)
 }
@@ -229,7 +229,7 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f;' %&%
     set_stuff() # N3, thresh, etc
 
     # Add spurious (and silly) SD4: won't matter cos P4==0, but lets CDF calc work OK
-    newvals3 <- returnList( SD2, SD3, SD4=0.1, P2=1-P3, P3, P4=0, 
+    newvals3 <- returnList( SD2, SD3, SD4=0.1, P2=1-P3, P3, P4=0,
         Nall, lglk, thresh, Pr_FNeg)
     allvals3 <- if( is.null( allvals3)) data.frame( newvals3) else
         rbind( allvals3, newvals3)
@@ -242,7 +242,7 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f;' %&%
           SD234= this_SD234)
       lglk <- mixlglk4( bestio$par, this_SD234)
       set_stuff()
-      newvals4 <- returnList( SD2, SD3, SD4, P2, P3, P4, 
+      newvals4 <- returnList( SD2, SD3, SD4, P2, P3, P4,
           N3, Nall, lglk, thresh, Pr_FNeg)
       allvals4 <- if( is.null( allvals4)) data.frame( newvals4) else
           rbind( allvals4, newvals4)
@@ -312,7 +312,7 @@ stop( sprintf( 'fitrange_PLOD exceeds 2nd-order mean, which is %5.2f;' %&%
 
     legend("topright", legend = c( 'Overall', 'Threshold',
         'HSP', 'HTP', if(use4th) 'HCP' else NULL),
-      lwd= c( 3, 2, 2, 2, if(use4th) 2 else NULL ), 
+      lwd= c( 3, 2, 2, 2, if(use4th) 2 else NULL ),
       lty= c( 1, 2, 2, 2, if(use4th) 2 else NULL ),
       col= c( 'black', 'black', kincols[ 'HSP'], kincols[ 'HTP'],
           if( use4th) kincols[ 'HCP'] else NULL ),
@@ -368,7 +368,7 @@ The mixture distribution treats the expected PLOD values for true 2KPs, 3KPs, an
 
 Since it is better to make the threshold too high rather than too low, you can use the 'selecto' option to choose how the 3KP variance is estimated, subject to its bounds. The options are (i) strict ML estimation, to give the best fit to the overall PLODs, or (ii) choosing whichever 3KP variance leads to the _highest_ threshold (but still fitting the 3KP bump height by ML conditional on that variance).
 
-The calculations in 'var_PLOD_kin' are in fact geared specifically to HSPs, HTPs, and HC1Ps, as opposed to the other subtypes of 2/3/4KPs. Accordingly, it is a good idea to restrict the pairs to those which, if the are indeed 2KPs, are a priori likely to be HSP rather than GGP or HTP. (If they are not 2KPs, then it probably matters less exactly what subtype they are.) Having said that, the sky will _probably_ not fall in if some GGPs are also included; in some circumstances it might even be worth doing so deliberately, in order to increase the 2KP sample size. But the general principle of kin-finding applies: it is best to concentrate on the comparisons that yield the outcomes you're interested in, rather than including lots of extraneous comparisons and then trying to filter the results. 
+The calculations in 'var_PLOD_kin' are in fact geared specifically to HSPs, HTPs, and HC1Ps, as opposed to the other subtypes of 2/3/4KPs. Accordingly, it is a good idea to restrict the pairs to those which, if the are indeed 2KPs, are a priori likely to be HSP rather than GGP or HTP. (If they are not 2KPs, then it probably matters less exactly what subtype they are.) Having said that, the sky will _probably_ not fall in if some GGPs are also included; in some circumstances it might even be worth doing so deliberately, in order to increase the 2KP sample size. But the general principle of kin-finding applies: it is best to concentrate on the comparisons that yield the outcomes you're interested in, rather than including lots of extraneous comparisons and then trying to filter the results.
 
 Despite the name 'auto...', _you_ still have to supply sensible values for a couple of parameters, based on looking at your data and understanding what you are trying to do. So it's not _completely_ automated process, and it never will be! Choosing a threshold is _not_ an "optimization process" with explicit bias/variance tradeoffs; rather, it's about ensuring that you have adequate "engineering tolerance" in the next stage of CKMR. The False-Negative Probability will, to a great extent, compensate for the choice of threshold (i.e. removing any bias in the fitted CKMR model) _unless_ you set the threshold too low, and thus end up with some 3KPs in your set of "definite 2KPs".
 
@@ -437,10 +437,10 @@ dropbears1 <- kin_power( dropbears, k = 0.5)
 hsps <- find_HSPs( dropbears1, keep_thresh = -10)
 histoPLOD( hsps, log=TRUE) ## observe HSP - POP gap centred ~ PLOD = 120.
 ## Use that air-gap to set fitrange_PLOD.
-thresh <- autopick_threshold( x= dropbears1, kin= hsps, 
+thresh <- autopick_threshold( x= dropbears1, kin= hsps,
   fitrange_PLOD= c(0, 120), FPtol_pairs= 1, use4th= TRUE, plot_bins= 5)
 thresh ## the 2nd order / 3rd order threshold value
-thresh@info["Pr_FNeg"] ## ... 
+thresh@info["Pr_FNeg"] ## ...
 ## ... the estimated 2KP false-neg rate, given that threshold
 }")
 
@@ -789,7 +789,7 @@ VALUE
 )
 
 "check6and4" <-
-structure( function( 
+structure( function(
   geno6,
   thresh_pchisq_6and4,
   return_what=c( 'just_pvals', 'all'),
@@ -844,14 +844,14 @@ structure( function(
     }
 
     if(show6) {
-      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, 
+      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred,
           test='G', showPlot = TRUE,
-          thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, 
+          thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE,
           extra_title = extra_title)@locinfo$pval
     } else {
-      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred, 
+      pval6 <- chisq_genofreq_check( geno6, gobs=g6obs, gpred=g6pred,
           test='G', showPlot = FALSE,
-          thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, 
+          thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE,
           extra_title = extra_title)@locinfo$pval
     }
     g4obs <- gtab6to4( g6obs)
@@ -867,8 +867,8 @@ structure( function(
     }
   }
 
-  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred, 
-      test='G', thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE, 
+  pval4 <- chisq_genofreq_check( geno6, gobs=g4obs, gpred=g4pred,
+      test='G', thresh_pchisq_loci=thresh_pchisq_6and4, trim=FALSE,
       extra_title = extra_title)@locinfo$pval
 
   return_what <- match.arg( return_what)
@@ -997,7 +997,7 @@ stop( 'test must be "Pearson" or "G"')
     for( g in 1:ncol( gpred)) {
       # all of 'em
       # pch='.' is too small
-      plot(gpred[,g], gobs[,g], pch=16, cex=0.4, col='lightblue', 
+      plot(gpred[,g], gobs[,g], pch=16, cex=0.4, col='lightblue',
           xlab='', ylab='', main='',
           xlim=c( 0, max( c( gpred[,g], gobs[,g]))),
           ylim=c( 0, max( c( gpred[,g], gobs[,g]))))
@@ -1005,12 +1005,12 @@ stop( 'test must be "Pearson" or "G"')
       points( gpred[ keep_loci,g], gobs[ keep_loci,g], pch=16, cex=0.4, col='green') # overplot to make visible against the line
       mtext( side=3, gtypes[ g], line=-1)
       # bad ones with X
-      points( gpred[ !keep_loci, g], gobs[ !keep_loci, g], col='magenta', 
+      points( gpred[ !keep_loci, g], gobs[ !keep_loci, g], col='magenta',
           pch=16, cex=0.6)
       if( any( iffy_loci)) {
-          points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', 
+          points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange',
               pch=4, cex=1)
-          points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange', 
+          points( gpred[ iffy_loci, g], gobs[ iffy_loci, g], col='orange',
               pch=16, cex=0.6)
           ## because otherwise we have a visible magenta shadow in the middle of each X
       }
@@ -1023,7 +1023,7 @@ stop( 'test must be "Pearson" or "G"')
     if( liffies) {
       # MVB: the "ifs" below look dodgy. Surely there should be an 'else' instead of the comma..?
       legend( 'bottomright', pch=c( 16, rep( 4, liffies)), col=c( 'magenta', if( liffies>1) 'orange', 'green'), pt.cex=c( 0.6, if( liffies>1) 1, 0.6),
-          legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 2]), 
+          legend=c( sprintf( '%4.1e < Pr ...', thresh_pchisq_loci[ 2]),
           if( liffies>1) sprintf( '... < %4.1e', thresh_pchisq_loci[1]), '... < 1') )
     }
   }
@@ -1318,9 +1318,9 @@ structure( function( lociar, geno_amb = attr( lociar, 'geno_amb')) {
   define_genotypes() # AAO etc
   ## geno_amb <- lociar@geno_amb
 
-stopifnot( 
+stopifnot(
     !is.null( geno_amb),
-    is.character( geno_amb), 
+    is.character( geno_amb),
     my.all.equal( geno_amb@diplos, genotypes_ambig))
 
   expected <- NULL
@@ -1343,7 +1343,7 @@ stopifnot(
 
   n_fish <- nrow( geno_amb)
   n_loci <- ncol( geno_amb)
-  gobs <- gpred <- matrix( 0, n_loci, length( genotypes_ambig), 
+  gobs <- gpred <- matrix( 0, n_loci, length( genotypes_ambig),
       dimnames=list( NULL, genotypes_ambig))
   for( g in genotypes_ambig) {
     gobs[,g] <- colSums( geno_amb==g)
@@ -1367,7 +1367,7 @@ stopifnot(
     # Rough ests based on presence: mild overflow guard
     pA <- 1 - sqrt( 1- sum( gobs[ll, cq( AAO, AB, AC)]) / (1 + n_fish))
     pB <- 1 - sqrt( 1- sum( gobs[ll, cq( BBO, AB, BC)]) / (1 + n_fish))
-    pC <- if( !has_C) 0 else 
+    pC <- if( !has_C) 0 else
         1 - sqrt( 1- sum( gobs[ll, cq( CCO, AC, BC)]) / (1 + n_fish))
 
     # Really, loci with rubbish pB (or pA) should have been chucked by now... but just in case...
@@ -1384,7 +1384,7 @@ stopifnot(
       pC <- pC / duhhh
     }
 
-    start_par <- c( logit( pA), logit( pB / (1-pA)), 
+    start_par <- c( logit( pA), logit( pB / (1-pA)),
         if( has_C) logit( pC / (1-pA-pB)))
 
     # Set reasonable penalty scale
@@ -1430,18 +1430,18 @@ Estimate allele frequencies olde-style, including nulls
 
 DESCRIPTION
 
-Most users should avoid these! 're_est_ALF' calculates maximum-likelhood estimates of minor, null, and 3rd-allele freqs from a 'snpgeno' object. Its workhorse is 'est_ALF_ABCO'  which has a weirder syntax unless you are using an old CSIRO "pipeline", and is documented here for that reason only. 
+Most users should avoid these! 're_est_ALF' calculates maximum-likelhood estimates of minor, null, and 3rd-allele freqs from a 'snpgeno' object. Its workhorse is 'est_ALF_ABCO'  which has a weirder syntax unless you are using an old CSIRO "pipeline", and is documented here for that reason only.
 
-'re_est_ALF' will accept genotypes 4-way genotypes including "AAO" and "BBO", 6-way genotypes (but there are better options in that case; see below), or triallelic "ABCO" genotypes. The latter corresponds to 'genotypes_ambig' as seen in the code of 'define_genotypes'; they allow for an optional 3rd allele and nulls, but do not distinguish between single-nulls and homozygotes. Historically, for CSIRO users, "ABCO"-type genotypes are produced by 'genocalldart::geno_deambig_ABC'. 
+'re_est_ALF' will accept genotypes 4-way genotypes including "AAO" and "BBO", 6-way genotypes (but there are better options in that case; see below), or triallelic "ABCO" genotypes. The latter corresponds to 'genotypes_ambig' as seen in the code of 'define_genotypes'; they allow for an optional 3rd allele and nulls, but do not distinguish between single-nulls and homozygotes. Historically, for CSIRO users, "ABCO"-type genotypes are produced by 'genocalldart::geno_deambig_ABC'.
 
-Null-allele frequency has to be estimated from HWE deviations, so good estimates require a decent sample size. 
+Null-allele frequency has to be estimated from HWE deviations, so good estimates require a decent sample size.
 
 The original use-case for these functions was datasets where bona fide 3rd alleles are common; even though they are not used in any 'kinference' step (because they get recoded to nulls, i.e. "neither A nor B"  en route), it's useful to have them around for ALF estimation. There's a bit of history behind this, which I shan't go into here.
 
 If there are no 3rd alleles, then 're_est_ALF' is not the best choice. If you really do have 6-way genotypes (i.e. differentiating single-nulls from homozygotes, at least approximately) then you _could_ use 're_est_ALF' but the problems are:
 
  - 're_est_ALF' does not use the extra statistical information on single-null vs homozygote that is available with 6-way genotypes, whereas 'est_ALF_6way' does;
- 
+
  - and in the absence of that information, it's much slower than 'est_ALF_ABO_quick' would be, so why not use that instead?!
 
 
@@ -1454,15 +1454,15 @@ est_ALF_ABCO( lociar, geno_amb = attr( lociar, 'geno_amb'))
 ARGUMENTS
 
   snpg: a 'snpgeno' object.
-  
+
   lociar: a 'loc.ar' or 'snpgeno' object, normally  with a 'geno_amb' attribute from 4-way genotyping (see next).
-  
+
   geno_amb: a set of 4-way genotypes. In CSIRO's 6-way genotyping pipeline (in package 'genocalldart', not for general use), 4-way genotypes get called first and stored in a 'geno_amb' attribute, before making initial allele frequency estimates with 'est_ALF_ABCO'. those are then used as starting values in 6-way genotype-calling and allele-frequency estimation, and the 'geno_amb' attribute gets discarded..
 
 
 VALUE
 
-'re_est_ALF' returns the input, adding a 4-column matrix 'pbonzer' to the '$locinfo' attribute, plus attributes 'gobs' and 'gpred' showing observed and expected counts of each genotype per locus. 'pbonzer' is what you want for subsequent calculations. 'est_ALF_ABCO' is similar but creates a new attribute '$locinfo$pambig', instead of creating/modifying 'pbonzer'. 
+'re_est_ALF' returns the input, adding a 4-column matrix 'pbonzer' to the '$locinfo' attribute, plus attributes 'gobs' and 'gpred' showing observed and expected counts of each genotype per locus. 'pbonzer' is what you want for subsequent calculations. 'est_ALF_ABCO' is similar but creates a new attribute '$locinfo$pambig', instead of creating/modifying 'pbonzer'.
 
 
 SEE.ALSO
@@ -1509,7 +1509,7 @@ structure( function(
 stopifnot( missing( AB), missing( AAO), missing( BBO), missing( OO))
     gbasics::define_genotypes()
 
-stopifnot( my.all.equal( x@diplos, genotypes4_ambig) | 
+stopifnot( my.all.equal( x@diplos, genotypes4_ambig) |
     my.all.equal(x@diplos, genotypes6))
 
     output6way <- FALSE
@@ -1535,7 +1535,7 @@ stopifnot( my.all.equal( x@diplos, genotypes4_ambig) |
   LLL <- length( AB)
 
 stopifnot( all( AB >= 0), all( AAO >= 0), all( BBO >= 0), all( OO >= 0),
-    n > 0, length( AAO)==LLL, length( BBO)==LLL, length( OO)==LLL)  
+    n > 0, length( AAO)==LLL, length( BBO)==LLL, length( OO)==LLL)
 
   # Need some starting values...
   omega <- 0.05 + 0.95 * sqrt( OO/n) # just tame it a bit
@@ -1581,7 +1581,7 @@ stopifnot( all( AB >= 0), all( AAO >= 0), all( BBO >= 0), all( OO >= 0),
     has_B <- BBO[ patho] > 0
     beta[ patho[ has_B]] <- 1-omega[ patho[ has_B]]
   }
-  
+
   iAit <- seq_along( AB) %except% patho
   nits <- 0
   n_super_its <- 0 # for Aitkening
@@ -1665,7 +1665,7 @@ stopifnot( all( AB >= 0), all( AAO >= 0), all( BBO >= 0), all( OO >= 0),
 
 
   if( length( iAit)){
-warning( sprintf( 
+warning( sprintf(
     "Still %i not-fully-converged loci after maximum [%i] Aitken superloops",
       length( iAit), MAX_AITKEN))
     if( return_unconverged){
@@ -1721,9 +1721,9 @@ ARGUMENTS
   EMtol: tolerance within the EM steps; after this is achieved, try an Aitken step
 
   quietly: if TRUE, then at the end print information on the number of iterations required
-  
+
   MAX_AITKEN: Maximum number of Aitken-accelerations to allow. Most loci converge within 10. We have seen a few where over 30 Aitkens are needed; however, the results after just 10 were still pretty good. You can try pushing it higher, but do check your weird loci for extreme weirdness (see next argument).
-  
+
   return_unconverged: if TRUE and some loci still haven't converged after 'MAX_AITKEN' iterations, then just return the indices of those loci. By default (ie if this is FALSE), you'll just get the estimates with a warning, and that's probably fine.
 
   pbonzer_format: if 'est_ALF_nonulls' is called directly on 'AB' etc rather than on 'x', then 'pbonzer_format' determines the format of the returned allele frequency estimates: TRUE means you get a 4-column matrix suitable for 'kinference' (to go in '$locinfo$pbonzer') and FALSE means you just get a vector of the major (A) allele frequencies.
@@ -1735,7 +1735,7 @@ BEYOND.4.WAY.GENOTYPES
 
 'est_ALF_ABCO' (qv) is a much slower version that can handle triallelic SNPs (ie potentially with a C allele). Like 'est_ALF_ABO', it does not distinguish between single-nulls and homozygotes. It should give the same results as 'est_ALF_ABO' for loci without a C allele. Syntax is a bit different because of its role in the legacy 6-way pipeline, so you might prefer to use 're_est_ALF' (qv) which does the same thing but with different (easier?) formatting of the input.
 
-'est_ALF_6way' (qv) uses 6-way genotypes, where single nulls are called separately from homozygotes, but potentially with error. It requires error estimates in '$locinfo$snerr'. Unless you are dealing with a legacy 6-way dataset, you don't want to go near this! 
+'est_ALF_6way' (qv) uses 6-way genotypes, where single nulls are called separately from homozygotes, but potentially with error. It requires error estimates in '$locinfo$snerr'. Unless you are dealing with a legacy 6-way dataset, you don't want to go near this!
 
 
 VALUE
@@ -1757,7 +1757,7 @@ nb <- nrow( dropbears)
 nl <- ncol( dropbears)
 nmiss <- round( 0.1 * nb * nl)
 
-missij <- cbind( rsample( nmiss, 1:nb, replace=TRUE), 
+missij <- cbind( rsample( nmiss, 1:nb, replace=TRUE),
     rsample( nmiss, 1:nl, replace=TRUE))
 missbears <- dropbears
 missbears[ missij] <- 'OO'
@@ -1769,17 +1769,17 @@ abline( 0, 1)
 imputor <- function( x){
   # I don't *recommend* this, but you *could* randomly impute "missing" (OO) genotypes like this
   # if you are sure there's no nulls
-  # I haven't tested the code! 
+  # I haven't tested the code!
   # Caveat emptor... and read it carefully to work out what it's
   # (hopefully)
   # doing...
-  
+
   pA <- x$locinfo$pbonzer[,1]
   pB <- 1-pA
   pAB <- 2*pA*pB
   pAA <- sqr( pA)
   pBB <- sqr( pB)
-  
+
   misso <- which( x=='OO', arr.ind=TRUE)
   r <- runif( nrow( misso))
   x[ misso] <- 'BB' # default
@@ -1787,8 +1787,8 @@ imputor <- function( x){
   x[ misso[ r < pAB[ misso[,2]],] <- 'AB'
 return( x)
 }
-  
-  
+
+
 
 }")
 
@@ -1807,7 +1807,7 @@ stopifnot( missing( AB), missing( AA), missing( BB))
 
     # Either 6way (preferable) or 4way is OK
     gbasics::define_genotypes()
-stopifnot( my.all.equal( x@diplos, genotypes4_ambig) | 
+stopifnot( my.all.equal( x@diplos, genotypes4_ambig) |
     my.all.equal(x@diplos, genotypes6))
 
     AB <- colSums( x=='AB')
@@ -1817,9 +1817,9 @@ stopifnot( sum( x=='AO')==0, sum( x=='BO')==0)
       BB <- colSums( x=='BB')
     } else if( my.all.equal( diplos( x), genotypes4_ambig)){
       AA <- colSums( x=='AAO') # let's hope you mean it!
-      BB <- colSums( x=='BBO')      
+      BB <- colSums( x=='BBO')
     } else {
-stop( "diplos(x) must be 'genotypes6' or 'genotypes4_ambig'")    
+stop( "diplos(x) must be 'genotypes6' or 'genotypes4_ambig'")
     }
   } # if !null x
 
@@ -1827,10 +1827,10 @@ stop( "diplos(x) must be 'genotypes6' or 'genotypes4_ambig'")
   LLL <- length( AB)
 
 stopifnot( all( AB >= 0), all( AA >= 0), all( BB >= 0),
-    n > 0, length( AA)==LLL, length( BB)==LLL)  
+    n > 0, length( AA)==LLL, length( BB)==LLL)
 
     pA <- (2*AA + AB) / (2*n)
-    
+
     pbonzer <- cbind( A=pA, B=1-pA, C=0, O=0)
     if( is.null( x)){
 return( if( pbonzer_format) pbonzer else pA)
@@ -1843,23 +1843,23 @@ return( x)
 
 "find.root" <-
 function(
-  f, 
-  start, step, 
-  fdirection = ifelse(f(start + step, ...) > f0, 
-      "increasing", "decreasing"), 
-  target = 0, 
-  min.x =  -Inf, max.x = Inf, 
-  args.to.uniroot = list(), 
+  f,
+  start, step,
+  fdirection = ifelse(f(start + step, ...) > f0,
+      "increasing", "decreasing"),
+  target = 0,
+  min.x =  -Inf, max.x = Inf,
+  args.to.uniroot = list(),
   ...
 ){
 ## Copied directly into 'kinference' from package 'handy2' to avoid faffing
 ## No longer so necessary thx2 changes in stats::uniroot, but don't wanna risk breaking anything in 'kinference' with last-minute changes
 ## Prolly should move to 'mvbutils' or something
 
-  # 2024: added some sanity checks and to avoid array warnings  
+  # 2024: added some sanity checks and to avoid array warnings
   target <- as.vector( target)
   f0 <- as.vector( f(start, ...))
-stopifnot( 
+stopifnot(
     length( target) == 1,
     length( f0) == 1
   )
@@ -1883,13 +1883,13 @@ return( start)
   o <- order(x <- c(start, new))
   fvals <- c(f0, f1) - target
   dotnames <- paste(c(names(f)[1], names(list(...))), collapse = ",")
-  ff <- function(...) as.vector( f(...)) - target 
+  ff <- function(...) as.vector( f(...)) - target
 
 #  ff <- c(f[ - length(f)], list(FFFF = 1, target = 1), parse(text = "FFFF(" %&% dotnames %&% ") - target"))
 #  mode(ff) <- "function"
 
-  do.call("uniroot", c(list(ff, x[o]), 
-      # f.lower = fvals[o[1]], f.upper = fvals[o[2]]), 
+  do.call("uniroot", c(list(ff, x[o]),
+      # f.lower = fvals[o[1]], f.upper = fvals[o[2]]),
       args.to.uniroot, list(...)))$root
 }
 
@@ -2046,7 +2046,7 @@ find_HSPs(
   nbins = 50,
   minbin = NULL,
   maxbin = NULL,
-  ij_numeric= is.null( rowid_field( snpg))  
+  ij_numeric= is.null( rowid_field( snpg))
 )
 find_POPs(
   snpg,
@@ -2058,7 +2058,7 @@ find_POPs(
   nbins = 50,
   maxbin = NULL,
   WPSEX_UP_POP_balance = 0.99,
-  ij_numeric= is.null( rowid_field( snpg))  
+  ij_numeric= is.null( rowid_field( snpg))
 )
 find_POPs_lglk(
   snpg,
@@ -2071,7 +2071,7 @@ find_POPs_lglk(
   nbins = 50,
   minbin = NULL,
   maxbin = NULL,
-  ij_numeric= is.null( rowid_field( snpg))  
+  ij_numeric= is.null( rowid_field( snpg))
 )
 
 
@@ -2088,7 +2088,7 @@ ARGUMENTS
   nbins, minbin, maxbin: 'find_XXX' functions summarise their pairwise comparison statistics into bins (in the part of the range where exact values are uninteresting), as well as returning specific pairs that pass the "interesting" threshold. 'nbins' sets the number of bins, 'minbin' sets the top value of the lowest bin (so that bin stretches from -Inf to 'minbin' for HSPs); 'maxbin' sets the highest. For HSPs, the minimum is 3 bins (-Inf:minbin),[minbin:maxbin),[maxbin:Inf). 'minbin' is not used for duplicates, nor for the non-likelihood 'find_POPs', since the statistics there are defined so that the lowest possible value is 0. The defaults for 'minbin' and/or 'maxbin' may not be what you need in all cases, so be prepared to select manually and then re-run. For duplicates, where calculations can be slow for big datasets, you can set 'nbins=0' to disable binning and focus instead on just finding the pairs with fewer than 'max_diff_loci' discrepancies. Each pairwise calculation normally loops over all the loci, but is aborted when the running total of discrepant loci reaches 'maxbin' (or, if 'nbins=0', when it reaches 'max_diff_loci'), thus saving considerable time. It is therefore not sensible to have 'maxbin<max_diff_loci' (think about it!).
 
   show_plot: whether to plot log histogram. Regardless, plot will not be shown if other arguments would lead to stupid result (e.g. no bins...).
-  
+
   ij_numeric: if FALSE, use the rowid field (see 'with_rowid_field') to label the pair-members, rather than their row numbers.
 
   keep_thresh: ('find_HSPs' and 'find_POPs') is the analog of 'max_diff_loci' for 'find_duplicates'. It determines which pairs to retain for individual inspection. For 'find_HSPs' and 'find_POPs_lglk', this is the lowest retained PLOD; for wpsex-based 'find_POPs', it's the highest retained 'wpsex'. Set it with the aim of including anything interesting (ie not _missing_ any interesting pairs) and do expect false positives; that is, be willing to have some weaker kin in there, and to subsequently filter those out yourself, as per vignette. For HSPs, and for POPs with 'find_POPs_lglk', values like 0 (near the HTP mean) or -5 are a good start. For POPs with wpsex-based 'find_POPs', experiment (perhaps starting with 0.1). You may have to re-run the function a few times if you have been too brutal or too generous here - though "too generous" can be fixed post hoc just by filtering the result, as long as you haven't generated tooooo many pairs (see parameter 'limit_pairs').
@@ -2098,7 +2098,7 @@ ARGUMENTS
   WPSEX_UP_POP_balance: ('find_POPs') loci receive a weight which is proportional to (difference in probability of pseudo-exclusion between UP and POP) / (variance of indicator of pseudo-exclusion). But, should this be variance assuming UP or POP? This parameter sets the balance; bigger values make it more UPpity, so placing more emphasis on avoiding false-positives, which is probably the Right Thing To Do in most cases. 0.99 could be completely fine... but hopefully the value won't affect the result much anyway.
 
   gerr: ('find_POPs_lglk') Genotyping error rate (apart from any AA/AO-type errors)- which had better be a small number. You have to pick it yourself, but it is only used to "robustify" the lglk-based (PO)PLOD for testing POPs vs UPs, and thus can be a rough guesstimate. FWIW we have used 0.01 (i.e. 1%), which is considerably higher than suggested by an analysis of our replicate samples, but it is "safe" while still being small enough not to muck up overall statistical performance. You should really do the same thing yourself, and if you are very paranoid then try sensitivity analyses; but in practice, the results of 'find_POPs_lglk' are liable to be so clear-cut that you may not feel it necessary to try more than one small value.
-  
+
 
 DETAILS
 
@@ -2123,11 +2123,11 @@ For 'find_duplicates', there are at least two different use-cases. First, you mi
 
 VALUE
 
-A 'data.frame' with extra attributes (see below) and at least 3 columns: statistic 'PLOD' or 'wpsex' or 'ndiff' (number of mismatching genotypes), then 'i' and 'j' which are the indices/rows in 'snpg' of the two members of each pair. (In ancient times 'i' and 'j' misleadingly referred to the subsets instead, but we have moved on!) The attributes in all cases include 'bins' (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), 'binprobs' (theoretical CDF for UPs in 'find_HSPs'; should also exist for _POPs_ in the old "wpsex"-based 'find_POPs', but currently doesn't), some of the input parameters, and the 'call' that invoked the function. 
+A 'data.frame' with extra attributes (see below) and at least 3 columns: statistic 'PLOD' or 'wpsex' or 'ndiff' (number of mismatching genotypes), then 'i' and 'j' which are the indices/rows in 'snpg' of the two members of each pair. (In ancient times 'i' and 'j' misleadingly referred to the subsets instead, but we have moved on!) The attributes in all cases include 'bins' (upper boundaries), some kind of count statistic for number of comparisons in each bin (names vary), 'binprobs' (theoretical CDF for UPs in 'find_HSPs'; should also exist for _POPs_ in the old "wpsex"-based 'find_POPs', but currently doesn't), some of the input parameters, and the 'call' that invoked the function.
 
 'find_POPs' adds a column named 'nABOO', showing the number of AB/OO exclusions for that potential POP. This is a useful additional diagnostic; it should be close to 0 for true POPs (it can only result from genotyping error or mutation, whereas AAO/BBO can result from nulls). For UPs, we have seen values typically in the low 20s, which is pretty good separation. A 2D scatter-plot of 'wpsex' and 'nABOO' can be more informative than either statistic on its own.
 
-'find_HSPs' and 'find_POPs' have a bunch of extra attributes which should be reasonably clear. For 'find_HSPs', 'mean_sub_PLOD' and 'var_sub_PLOD' are the empirical means & var below 'eta', andy they should be close to 'mean_UP' and 'var_UP' _iff_ 'eta' has been chosen sensibly. For 'find_POPs', the same goes for 'mean_wpsex_hi' and 'var_wpsex_hi'. 
+'find_HSPs' and 'find_POPs' have a bunch of extra attributes which should be reasonably clear. For 'find_HSPs', 'mean_sub_PLOD' and 'var_sub_PLOD' are the empirical means & var below 'eta', andy they should be close to 'mean_UP' and 'var_UP' _iff_ 'eta' has been chosen sensibly. For 'find_POPs', the same goes for 'mean_wpsex_hi' and 'var_wpsex_hi'.
 
 For duplicates, not _all_ pairwise duplicates are recorded, unless the subsets are different - otherwise you could have quadratic horror of enormous numbers of pairs arising from a cluster of say 100 identical controls! Since duplication is transitive (ie if _i_ & _j_ are the same, and _i_ & _k_ are the same, then _j_ & _k_ must also be the same), only the necessary ones are recorded to allow you to filter out yourself afterwards. For example, if samples 1, 3, 5, and 6 are all duplicates, you'll get this:
 
@@ -2137,7 +2137,7 @@ For duplicates, not _all_ pairwise duplicates are recorded, unless the subsets a
 [2] 4 3
 [3] 6 4
 
-but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function 'drop_dups_pairwise_equiv' - see EXAMPLES. 
+but you won't see the pairings for 1/4, 1/6, 3/6. If you just want to strip out all duplicates bar one in each group (and you don't care which one is kept), then you can use the function 'drop_dups_pairwise_equiv' - see EXAMPLES.
 
 For POPs and HSPs, the items below are also returned as attributes (which can be more conveniently accessed by '@' if 'atease' is loaded, as per EXAMPLES). The main point is that the "boring" below-threshold pairs get put into bins and are not kept individually. You often don't need to access these directly, since 'histoPLOD' (qv) may be enough. The names sometimes change depending on which statistic is being used.
 
@@ -2159,7 +2159,7 @@ library( atease) # @ used below for clarity
 library( mvbutils) # IDNK if this is needed explicitly
 
 define_genotypes()    ## creating 'genotypes4_ambig' etc
-x <- matrix(sample(c("AAO", "AB", "BBO", "OO"), 10000, TRUE, 
+x <- matrix(sample(c("AAO", "AB", "BBO", "OO"), 10000, TRUE,
     prob = c(0.2, 0.45, 0.2, 0.15)), nrow = 100, ncol = 100)
 minisnpg <- snpgeno(x = x, diplos = genotypes4_ambig)
 
@@ -2180,10 +2180,10 @@ exact ## finds ij pairs {1, 2} and the group {21, 22, 23}
 
 ## find (in-)exact duplicates
 ## first a plot, as a guide to where to look...
-find_duplicates( minisnpg, 
+find_duplicates( minisnpg,
     maxbin= 100, max_diff_loci= 1, show_plot=TRUE)
 ## looks like there's a few inexact ones
-inexact <- find_duplicates( minisnpg, 
+inexact <- find_duplicates( minisnpg,
     maxbin= 100, max_diff_loci= 25, show_plot=FALSE)
 inexact ## finds the exactly-matching pairs as before, plus
 ## the inexactly-matching row pairs {3, 4} and {13, 14} with
@@ -2196,7 +2196,7 @@ droppers     ## note that _all but one_ of each _group_ of
 ## (near-)duplicates is included in 'droppers'
 
 ## Drop all-but-one of each set of duplicates:
-minisnpg_nodups <- minisnpg[ - droppers,] 
+minisnpg_nodups <- minisnpg[ - droppers,]
 
 ## find_HSPs (PLOD_HU)
 
@@ -2231,7 +2231,7 @@ hsps@mean_HSP     ## mean expected PLOD for true HSPs. mean_UP (unrelated),
 
 adults <- which( bluefin_6$info$Our_plate == "plate3")
 juvs <- which( bluefin_6$info$Our_plate %in% c( "plate1", "plate2"))
-hsps_subset <- find_HSPs( bluefin_6, 
+hsps_subset <- find_HSPs( bluefin_6,
     subset1 = adults, subset2 = juvs, keep_thresh = 0)
 hsps_subset$iplate <- bluefin_6$info$Our_plate[ hsps_subset$i]
 hsps_subset$jplate <- bluefin_6$info$Our_plate[ hsps_subset$j]
@@ -2256,7 +2256,7 @@ abline( v = pops@mean_UP, col = kinPalette("UP"), lwd = 2)
 
 pops_lglk <- find_POPs_lglk(bluefin_6, keep_thresh = 0, gerr = 0.01)
 pops_lglk@mean_UP     ## as before
-pops_lglk@mean_POP    
+pops_lglk@mean_POP
 
 ## plot the full distribution from binned records
 histoPLOD( pops_lglk, log=TRUE)
@@ -2276,13 +2276,13 @@ structure( function(
   define_genotypes()
   basic_sanity_checks_pairfinding()
 stopifnot( # and...
-    !missing( max_diff_ppn),
+    !missing( max_diff_ppn)
   )
 
   og <- options( vecless.print=FALSE)
   on.exit( options( og))
 
-  make_6way_into_4way()
+  temp_snpg <- make_6way_into_4way( snpg)
 
   # Sort loci to improve speed (highest chance of mismatch first)
   # so that exit on non-dups is quicker
@@ -2879,22 +2879,22 @@ return( gt4)
 
 
 "hetzminoo_fancy" <-
-structure( function( 
-  snpg, 
-  target=c( 'rich', 'poor'), 
-  hist_pars=list(), 
+structure( function(
+  snpg,
+  target=c( 'rich', 'poor'),
+  hist_pars=list(),
   showPlot = TRUE
 ){
 ###################
   define_genotypes()
-  
+
   # Be kind to the user with informative error messages (for once...)
 stopifnot( snpg %is.a% 'snpgeno',
     all( cq( AB, OO) %in% diplos( snpg)),
     !any( grepl( 'C', diplos( snpg))))
-  pbonzer <- snpg@locinfo$pbonzer %||% stop( 
+  pbonzer <- snpg@locinfo$pbonzer %||% stop(
       "No allele freq estimates!")
-  PUP4 <- snpg@locinfo$PUP4 %||% stop( 
+  PUP4 <- snpg@locinfo$PUP4 %||% stop(
       "No PUP4; did you forget 'kin_power'?")
 
   p0 <- pbonzer[,'O'] + pbonzer[,'C']
@@ -3031,7 +3031,7 @@ ARGUMENTS
 
   showPlot: show the plot? Default TRUE
 
-  
+
 VALUE
 
 A vector of "hetzminoo" scores. You can then use it to subset your data by removing samples with unpleasant values.
@@ -3101,7 +3101,7 @@ Histogram PLODs
 
 DESCRIPTION
 
-'histoPLOD' shows a histogram of PLODs across pairwise comparisons, where PLOD has been calculated by 'find_HSPs' (qv), 'find_POPs_lglk' (qv), or something similar. The "histogram" can either be on a log-scale or the more familiar unlogged scale; the problem with the latter is that there are often so many UPs (we have hundreds of millions for tuna) that the interesting kin-bumps become squashed to the point of invisibility. The plots should show various bumps for the different kinships, overlapping to some extent; the theoretical locations of the bump-centres are shown by vertical lines for the most common kinships. 
+'histoPLOD' shows a histogram of PLODs across pairwise comparisons, where PLOD has been calculated by 'find_HSPs' (qv), 'find_POPs_lglk' (qv), or something similar. The "histogram" can either be on a log-scale or the more familiar unlogged scale; the problem with the latter is that there are often so many UPs (we have hundreds of millions for tuna) that the interesting kin-bumps become squashed to the point of invisibility. The plots should show various bumps for the different kinships, overlapping to some extent; the theoretical locations of the bump-centres are shown by vertical lines for the most common kinships.
 
 The typical workflow would be to first call with 'log=TRUE', to check that the UP bump looks good and that CK bumps (if any) are centred in the right places. For the UP bump only, the width can also be predicted theoretically, and so the entire predicted curve is shown (and it had better be a good match to the empirical distribution, otherwise there is a QC problem). Then you can focus in on interesting bits and actual pairs, by setting 'log=FALSE' and zooming with the 'lb' and 'ub' parameters.
 
@@ -3113,7 +3113,7 @@ The 'kinference-vignette' has examples.
 USAGE
 
 histoPLOD( PLODs, log = c(FALSE, TRUE)[0],
-    mean_show = c( 'POP', 'UP', 
+    mean_show = c( 'POP', 'UP',
         if( !isFALSE( PLODs@trustplot_FSP_HSP_means)) c( 'HSP', 'FSP')),
     UP_distro_show = c(SPA = TRUE, Normal = FALSE),
     HSP_distro_show = !log && !is.null( PLODs$mean_HSP),
@@ -3131,7 +3131,7 @@ ARGUMENTS
 
   log: TRUE or FALSE to call 'PLOD_loghisto' or 'HSP_histo' respectively
 
-  mean_show: for which kinships should expected PLODs values be shown? There's no harm in showing all of them, but some kinships won't make sense in particular applications, so you can turn them off with this argument. (Note that the default won't show FSP or HSP "means" for 'find_POPs_lglk', since they are calculated wrongly at present.) 
+  mean_show: for which kinships should expected PLODs values be shown? There's no harm in showing all of them, but some kinships won't make sense in particular applications, so you can turn them off with this argument. (Note that the default won't show FSP or HSP "means" for 'find_POPs_lglk', since they are calculated wrongly at present.)
 
   main: graph title, defaulting to the name of 'PLODs' argument
 
@@ -3351,7 +3351,7 @@ structure( function(snpg, hist_pars=list(), showPlot = TRUE) {
     snpg4[ snpg==AAO] <- AAO
     snpg4[ snpg==BBOO] <- BBO
     snpg4[ snpg==AB] <- AB
-  } else { 
+  } else {
 stop( "diplos( snpg) not one of the known ones")
   }
 
@@ -3567,7 +3567,7 @@ structure( function( lociar,
 
   'kin_power' (and downstream) should get a refactor. It's daft to store LODs for only one specific kin; it'd be better to always calculate P1share and P2share as well as P0share (which is PUP), and then compute whatever-is-needed later on-the-fly. As-is, we are re-computing P1 and P2 based on LOD and PUP OTF instead (which is also unsafe, because LOD could have been calculated with k != 0.5).
   }--"
-  
+
   define_genotypes()
   li <- lociar$locinfo
   if( my.all.equal( genotypes4_ambig, lociar@diplos)) {
@@ -3732,7 +3732,7 @@ structure( function( kinships= names( kincolours), setPalette= FALSE){
   if( setPalette){
     palette( kincolours)
   }
-  
+
 
 return( kincolours[ kinships])
 }
@@ -3773,7 +3773,7 @@ kinPalette( kinships= names( kincolours), setPalette= FALSE)
 ARGUMENTS
 
  kinships: which kinships to return colors for. Default is all of them.
- 
+
  setPalette: set to TRUE if you really want to set graphics palette.
 
 
@@ -4915,7 +4915,7 @@ structure( function( snpg, candipairs) {
 
   # Don't need full pairwise screening for FSPs (do post hoc on a few hundred
   # HSPs), hence all in R.
-  
+
   define_genotypes()
 
   # HSPs normally from 'find_HSPs'; or can be M*2 matrix of rows in snpg that are poss HSPs
@@ -4998,12 +4998,12 @@ structure( function( snpg, candipairs) {
   evalq(for(i in 1:nsib){
     for(l in 1:nloci){
       # P[g_1l g_2l | FSP]
-      p12fsp[l, i] <- 
+      p12fsp[l, i] <-
           kappa_fsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
           kappa_fsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
           kappa_fsp[3] * P_k2[l, g1[i, l], g2[i, l]]
       # P[g_1l g_2l | HSP]
-      p12hsp[l, i] <- 
+      p12hsp[l, i] <-
           kappa_hsp[1] * P_k0[l, g1[i, l], g2[i, l]] +
           kappa_hsp[2] * P_k1[l, g1[i, l], g2[i, l]] +
           kappa_hsp[3] * P_k2[l, g1[i, l], g2[i, l]]
@@ -5081,7 +5081,7 @@ VALUE
 
 A dataframe with columns 'PLOD_FH' (or similar depending on what is being split), 'i', and 'j', containing the indices of each pair.
 
-Theoretical means for the two kinships in the function's name are returned as attributes (variances cannot be predicted), as is the 'call'. 
+Theoretical means for the two kinships in the function's name are returned as attributes (variances cannot be predicted), as is the 'call'.
 
 
 DETAILS
@@ -5103,7 +5103,7 @@ However, an equally reasonable workflow might be:
  - split HSPs/HTPs from POPs/FSPs with 'split_FSPs_from_HSPs';
 
  - filter out HTPs from the remaining set of HSPs with 'split_HSPs_from_HTPs' and/or 'autopick_threshold';
- 
+
  - use 'split_FSPs_from_POPs' to do just what it says. (Again, age data may help in marginal cases.)
 
 All 'split_<blah>' functions return expected values under different possible kin-types (but not variances, since these cannot be predicted for all kin-types).
@@ -5139,7 +5139,7 @@ histoPLOD( hsps, log= FALSE, lb= 0, fullsib_cut= 70, HSP_distro_show= TRUE)
 ## note gap between PLOD  60 -- 70, separating likely HSPs
 ## from likely POPs and FSPs
 FSPsOrPOPs <- hsps[ hsps$PLOD > 70,]
-HSPsOrHTPs <- hsps[ hsps$PLOD < 70,] 
+HSPsOrHTPs <- hsps[ hsps$PLOD < 70,]
 ## ... implicitly >0 from keep_thresh in find_HSPs() call
 
 ## via find_POPs_lglk for 'laser-focus on POPs'
@@ -5153,7 +5153,7 @@ maybePOPs <- maybePOPs[ maybePOPs$PLOD > 60,]
 
 ## split_FSPs_from_POPs
 ### using FSPsOrPOPs
-splitFSPsOrPOPs <- split_FSPs_from_POPs( bluefin_6, 
+splitFSPsOrPOPs <- split_FSPs_from_POPs( bluefin_6,
     candipairs= FSPsOrPOPs, gerr = 0.01)
 hist(splitFSPsOrPOPs$PLOD)
 ## add line of expected PLOD if FSP
@@ -5163,7 +5163,7 @@ abline( v = splitFSPsOrPOPs@E_POP, lwd = 2, col = kinPalette("POP"))
 ## Expected PLOD is -ve for true POPs, +ve for true FSPs
 
 ### using maybePOPs
-splitmaybePOPs <- split_FSPs_from_POPs( bluefin_6, 
+splitmaybePOPs <- split_FSPs_from_POPs( bluefin_6,
     candipairs= maybePOPs, gerr = 0.01)
 hist(splitmaybePOPs$PLOD)
 ## add line of expected PLOD if FSP
@@ -5502,15 +5502,15 @@ DESCRIPTION
 
 USAGE
 
-upairid(i, j, sep='/') 
+upairid(i, j, sep='/')
 
 
 ARGUMENTS
 
  i, j: If 'i' is a list (presumably from a call to 'find_XXX') and 'j' is missing, then i. Otherwise, 'i' and 'j' can be vectors of numbers or characters.
- 
+
  sep: character (or string) to put between each 'i' and 'j'.
- 
+
 
 VALUE
 
@@ -5677,7 +5677,7 @@ Although the biggest linkage effect comes from the main "order" of kinship (2KP,
 The two extreme alternatives considered by 'var_PLOD_kin' each use one parameter to capture "linkage", but the parameter has quite different meanings. The two versions are:
 
  - separate chromosomes, each containing the same number of loci, with _no_ recombination. The linkage parameter is the number of such chromosomes.
- 
+
  - one single chromosome containing all the loci, equally spaced, with random recombination at multiple places. The linkaage parameter is the probability of recombination between adjacent loci.
 
 
