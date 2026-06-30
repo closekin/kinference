@@ -1,0 +1,16 @@
+1.2.31
+ - Vignette renamed to plain old "kinference"
+ - Probably not much else. Just tiddling around to check that it all works from R-universe... 
+ - ... eg licence temporarily nonsensicalized to keep bureaucradonts placid
+
+1.2.24
+ - Fixed typos and out-of-dates in doco of 'find_XXX' and 'drop_dups_pairwise_equiv'.
+
+1.2.22
+ - Fixed mislocated PLOD mean for POPs in 'find_POPs_lglk'. Added 'upairid' to help cross-check sets of kin-pairs. Some typos and linguistic infelicities fixed in doco of 'find_XXX'.
+
+1.2.21
+ - Micro tweak to package doc, mentioning 'chain_pairwise'. Increased default 'maxbin' in 'find_HSPs' to have a better chance of exceeding all POPs and FSPs.
+
+1.1.20
+ - First beta release. Lots of tidy-ups, mostly docu. Now passes CMD CHECK with just one warning, and just a stupid one at that (so, no plans to "fix" it). We're reeady to roll!

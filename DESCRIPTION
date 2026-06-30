@@ -1,0 +1,19 @@
+Package: kinference
+Title: Pairwise kin-finding from genotypes
+Authors@R: c( person( 'Mark', 'Bravington', role='aut', email='markb2@summerinsouth.net'), person( 'Shane', 'Baylis', role=c( 'aut', 'cre'), email='shane.m.baylis@gmail.com'), person( 'David L', 'Miller', role='ctb') )
+Description: Kin-finding and QC tools for Close-Kin Mark-Recapture
+License: GPL (>=3)
+Depends: R (>= 4.3.0), gbasics (>= 1.2)
+Imports: Rcpp (>= 0.12.11), atease, mvbutils (>= 2.12), vecless
+Suggests: knitr, rmarkdown, tinytest
+VignetteBuilder: knitr, rmarkdown
+LinkingTo: Rcpp, RcppArmadillo
+Additional_repositories: https://markbravington.r-universe.dev
+KeepPlaintextDoco: YES
+NeedsCompilation: YES
+Encoding: UTF-8
+KeepSource: TRUE
+Collate: kinference.R Cloaders_kinference.R
+LazyData: yes
+LazyDataCompression: xz
+Version: 1.2.48
