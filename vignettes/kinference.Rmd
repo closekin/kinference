@@ -678,6 +678,47 @@ covariates.
 Commenting out the code doesn't exclude it, at least not from tangling, so manually added eval & include equals false  I do not like this
 -->
 	
+## Restricting comparisons with sample metadata
+
+The `subset1` and `subset2` arguments select **rows of the supplied
+`snpgeno`**, not sample names or positions within another subset. Use
+positive numeric indices, for example those returned by `which()`.
+The two subsets must be identical or disjoint; partially overlapping
+subsets are not supported. Identical subsets compare each distinct pair
+once, without self-comparisons. Disjoint subsets compare across the two
+groups only.
+
+For illustration, the following compares samples labelled `Imm` with
+those labelled `M` or `F` in the example data. These labels are specific
+to this dataset; use validated age/maturity metadata in a real study.
+This is a demonstration of restricting comparisons, not a recommendation
+to exclude other HSP comparisons.
+
+```{r subset-comparisons}
+subset_data <- kinference::kin_power(kinference::dropbears, k = 0.5)
+immature <- which(subset_data$info$sex == "Imm")
+adult_label <- which(subset_data$info$sex %in% c("M", "F"))
+stopifnot(length(immature) > 0L, length(adult_label) > 0L,
+          length(intersect(immature, adult_label)) == 0L)
+subset_hsps <- kinference::find_HSPs(
+  subset_data, subset1 = immature, subset2 = adult_label,
+  keep_thresh = 0, limit_pairs = 1000, ij_numeric = TRUE
+)
+# Returned i and j refer to the ORIGINAL rows in subset_data.
+subset_hsps$sample1 <- subset_data$info$Our_sample[subset_hsps$i]
+subset_hsps$sample2 <- subset_data$info$Our_sample[subset_hsps$j]
+stopifnot(all(subset_hsps$i %in% immature),
+          all(subset_hsps$j %in% adult_label))
+head(subset_hsps)
+```
+
+Subset selection changes which pairs are searched. It does **not**
+re-estimate allele frequencies for each group, adjust population
+structure, or correct plate/batch effects. Those assumptions and data
+quality checks still need attention before interpreting relationships.
+The `limit_pairs` cap may truncate retained candidates; inspect any
+truncation message and increase it where appropriate.
+
 # Section 2: cleaning the bluefin dataset
 
 Your data will almost certainly need cleaning before you can do the
@@ -1262,7 +1303,6 @@ histoPLOD( hsps, log=FALSE, lb = -5, fullsib_cut = 100)
 ```
 
 ![plot of chunk ctm_bluefin_loci2](./figures-kinference/ctm_bluefin_loci2-10.png)
-
 
 
 
