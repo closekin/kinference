@@ -14,7 +14,7 @@ snpg$locinfo$useN <- rep(3L, 2)
 
 # No snpg4 object is supplied: the function must initialize it from snpg.
 observed <- kinference::ilglk_geno(snpg, showPlot = FALSE)
-tinytest::expect_equal(length(observed), 3L)
-tinytest::expect_true(all(is.finite(observed)))
+expect_equal(length(observed), 3L)
+expect_true(all(is.finite(observed)))
 # Two loci, no null alleles: P(AB)=0.5, P(AAO)=P(BBOO)=0.25.
-tinytest::expect_equal(as.numeric(observed), 2 * log(c(.5, .25, .25)))
+expect_equal(as.numeric(observed), 2 * log(c(.5, .25, .25)))
