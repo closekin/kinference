@@ -18,12 +18,12 @@ check_identifiers <- function(fun, args) {
     c(list(snpg = snpg, ij_numeric = TRUE), args)))
   named_pairs <- suppressMessages(do.call(fun,
     c(list(snpg = snpg, ij_numeric = FALSE), args)))
-  tinytest::expect_true(nrow(numeric_pairs) > 0L)
-  tinytest::expect_identical(named_pairs$i, ids[numeric_pairs$i])
-  tinytest::expect_identical(named_pairs$j, ids[numeric_pairs$j])
+  expect_true(nrow(numeric_pairs) > 0L)
+  expect_identical(named_pairs$i, ids[numeric_pairs$i])
+  expect_identical(named_pairs$j, ids[numeric_pairs$j])
   # Includes nABOO for parent-offspring pairs.
   for (column in setdiff(names(numeric_pairs), c("i", "j"))) {
-    tinytest::expect_identical(named_pairs[[column]], numeric_pairs[[column]])
+    expect_identical(named_pairs[[column]], numeric_pairs[[column]])
   }
 }
 
