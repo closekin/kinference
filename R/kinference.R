@@ -3303,8 +3303,8 @@ structure( function(snpg, hist_pars=list(), showPlot = TRUE) {
     snpg4 <- snpgeno(
       NULL,
       diplos = genotypes4_ambig,
-      info= snpg4@info,
-      locinfo = snpg4@locinfo
+      info= snpg@info,
+      locinfo = snpg@locinfo
     )
     snpg4[ snpg==AAO] <- AAO
     snpg4[ snpg==BBOO] <- BBO
