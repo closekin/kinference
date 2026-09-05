@@ -1853,13 +1853,20 @@ return( start)
 
   step <- abs(step) * ifelse(xor(f0 < target, fdirection == "decreasing"), 1, -1)
   bound <- ifelse(xor.thing <- (step < 0), min.x, max.x)
-  repeat {
+  for (bracket_iteration in seq_len(1024L)) {
     new <- start + step
     if(xor(new > bound, xor.thing))
       new <- (start + bound)/2
+    if (!is.finite(new) || new == start)
+      stop("Cannot bracket target within the supplied bounds")
     f1 <- as.vector( f(new, ...))
+    if (length(f1) != 1L || !is.finite(f1))
+      stop("Non-finite or non-scalar function value while bracketing")
+    if (f1 == target) return(new)
     if(xor(f0 < target, f1 < target))
       break
+    if (bracket_iteration == 1024L)
+      stop("Cannot bracket target after 1024 iterations")
     start <- new
     f0 <- f1
     step <- step * 2
