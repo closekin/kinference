@@ -1961,7 +1961,7 @@ stopifnot( # ... and....
   result <- with( result, data.frame(
       ndiff=big_similar, i= subset1[ big_i], j= subset2[ big_j]))
   if( !ij_numeric){
-    result <- make_ij_character( result, temp_snpg)
+    result <- make_ij_character( result, snpg)
   }
 
   result@call <- sys.call()
@@ -2301,7 +2301,7 @@ stop( sprintf( 'Hit limit=%i dups by %i-th sample; aborting', limit, result))
       i= subset1[ big_i], j= subset2[ big_j],
       ndiff=big_ndiff, ncomp=big_ncomp))
   if( !ij_numeric){
-    result <- make_ij_character( result, temp_snpg)
+    result <- make_ij_character( result, snpg)
   }
 
 
@@ -2506,7 +2506,7 @@ stopifnot(
   result <- with( xresult, data.frame(
       PLOD=big_PLOD, i= subset1[ big_i], j= subset2[ big_j]))
   if( !ij_numeric){
-    result <- make_ij_character( result, temp_snpg)
+    result <- make_ij_character( result, snpg)
   }
 
   attributes( result) <- c( attributes( result),
@@ -2722,16 +2722,14 @@ stopifnot( all( ww>0))
   # construct the result
   result <- with( result, data.frame(
       wpsex=big_wpsex, i= subset1[ big_i], j= subset2[ big_j]))
-  if( !ij_numeric){
-    result <- make_ij_character( result, temp_snpg)
-  }
-
-
   # calculate nABOO, only for interesting pairs
   snpg_i <- snpg[ result$i, pop_loci]
   snpg_j <- snpg[ result$j, pop_loci]
   isABOO <- ((snpg_i==OO) & (snpg_j==AB)) + ((snpg_i==AB) & (snpg_j==OO))
   result$nABOO <- rowSums( isABOO)
+  if( !ij_numeric){
+    result <- make_ij_character( result, snpg)
+  }
 
   # probably uneccessary ?
   result <- result %without.name% cq( big_wpsex, big_i, big_j)
